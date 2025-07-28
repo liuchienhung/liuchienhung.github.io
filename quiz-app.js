@@ -50,6 +50,9 @@ class QuizApp {
         this.importBtn = document.getElementById('import-btn');
         this.importUnit = document.getElementById('import-unit');
         this.downloadPdfBtn = document.getElementById('download-pdf');
+
+        this.addSubjectBtn = document.getElementById('add-subject');
+        this.addUnitBtn = document.getElementById('add-unit');
         
         this.currentPageSpan = document.getElementById('current-page');
         this.totalPagesSpan = document.getElementById('total-pages');
@@ -69,6 +72,12 @@ class QuizApp {
         this.importBtn.addEventListener('click', () => this.importQuestions());
         if (this.downloadPdfBtn) {
             this.downloadPdfBtn.addEventListener('click', () => this.downloadPDF());
+        }
+        if (this.addSubjectBtn) {
+            this.addSubjectBtn.addEventListener('click', () => this.addSubject());
+        }
+        if (this.addUnitBtn) {
+            this.addUnitBtn.addEventListener('click', () => this.addUnit());
         }
     }
 
@@ -529,6 +538,24 @@ class QuizApp {
             }
         };
         reader.readAsText(file, 'utf-8');
+    }
+
+    addSubject() {
+        const name = prompt('請輸入科目名稱');
+        if (!name) return;
+        subjects.push({ subject: name, units: [] });
+        this.saveToStorage();
+        this.renderSubjectSelector();
+    }
+
+    addUnit() {
+        if (this.currentSubject == null) return;
+        const name = prompt('請輸入單元名稱');
+        if (!name) return;
+        this.currentSubjectData.push({ unit: name, questions: [] });
+        subjects[this.currentSubject].units = this.currentSubjectData;
+        this.saveToStorage();
+        this.renderUnitSelector();
     }
 
     downloadPDF() {
