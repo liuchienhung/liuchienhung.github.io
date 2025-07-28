@@ -9,11 +9,13 @@ class QuizApp {
         this.questionsPerPage = 1;
         this.selectedQuestions = [];
         this.timeLimit = 30 * 60; // default 30 minutes
+        this.remainingTime = this.timeLimit;
         this.timerInterval = null;
         this.userAnswers = {};
         this.showingResults = false;
         this.starredQuestions = new Set();
-        
+
+        this.loadFromStorage();
         this.initializeElements();
         this.initializeEventListeners();
         this.renderSubjectSelector();
@@ -388,6 +390,7 @@ class QuizApp {
     startTimer() {
         clearInterval(this.timerInterval);
         let remaining = this.timeLimit;
+        this.remainingTime = remaining;
         const update = () => {
             const min = Math.floor(remaining / 60);
             const sec = remaining % 60;
@@ -398,6 +401,7 @@ class QuizApp {
                 this.submitQuiz();
             }
             remaining--;
+            this.remainingTime = remaining;
         };
         update();
         this.timerInterval = setInterval(update, 1000);
@@ -517,6 +521,7 @@ class QuizApp {
                 const questions = Array.isArray(data) ? data : data.questions;
                 if (!Array.isArray(questions)) throw new Error('格式錯誤');
                 this.currentSubjectData[unitIndex].questions.push(...questions);
+                this.saveToStorage();
                 alert('匯入成功');
                 this.renderUnitSelector();
             } catch (err) {
@@ -527,20 +532,64 @@ class QuizApp {
     }
 
     downloadPDF() {
-        if (!window.jspdf || !window.jspdf.jsPDF) {
+        if (!window.jspdf || !window.jspdf.jsPDF || !window.html2canvas) {
             alert('無法載入PDF庫');
             return;
         }
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+
         const subjectName = subjects[this.currentSubject].subject;
         const unitName = this.currentUnit === -1 ? '全部單元' : this.currentSubjectData[this.currentUnit].unit;
-        doc.text('測驗結果', 10, 10);
-        doc.text(`科目：${subjectName}`, 10, 20);
-        doc.text(`單元：${unitName}`, 10, 30);
-        doc.text(this.scoreText.textContent.replace(/<br>/g, '\n'), 10, 40);
-        doc.text(`時間：${new Date().toLocaleString()}`, 10, 55);
-        doc.save('quiz-result.pdf');
+
+        const container = document.createElement('div');
+        container.style.padding = '20px';
+        container.style.fontFamily = 'Arial,\'Microsoft JhengHei\',sans-serif';
+        container.innerHTML = `
+            <h2>測驗結果</h2>
+            <p>科目：${subjectName}</p>
+            <p>單元：${unitName}</p>
+            <p>${this.scoreText.textContent}</p>
+            <p>剩餘時間：${Math.floor(this.remainingTime/60)}:${(this.remainingTime%60).toString().padStart(2,'0')}</p>
+            <hr>
+        `;
+
+        const questions = this.getQuestions();
+        questions.forEach((q, i) => {
+            const div = document.createElement('div');
+            const userAns = this.userAnswers[i] || '未作答';
+            const starred = this.starredQuestions.has(i) ? '★' : '';
+            div.innerHTML = `<strong>第 ${i+1} 題 ${starred}</strong><br>${q.question}<br>您的答案：${userAns}，正確答案：${q.answer}`;
+            div.style.marginTop = '10px';
+            container.appendChild(div);
+        });
+
+        document.body.appendChild(container);
+        html2canvas(container).then(canvas => {
+            const pdf = new jsPDF({orientation: 'p', unit: 'px', format: [canvas.width, canvas.height]});
+            const imgData = canvas.toDataURL('image/png');
+            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+            pdf.save('quiz-result.pdf');
+            document.body.removeChild(container);
+        });
+    }
+
+    loadFromStorage() {
+        try {
+            const data = localStorage.getItem('quizSubjects');
+            if (data) {
+                subjects = JSON.parse(data);
+            }
+        } catch (e) {
+            console.error('load storage failed', e);
+        }
+    }
+
+    saveToStorage() {
+        try {
+            localStorage.setItem('quizSubjects', JSON.stringify(subjects));
+        } catch (e) {
+            console.error('save storage failed', e);
+        }
     }
 }
 
