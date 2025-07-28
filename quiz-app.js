@@ -1,7 +1,9 @@
 // PT職能題庫測驗系統
 class QuizApp {
     constructor() {
+        this.currentSubject = null;
         this.currentUnit = null;
+        this.currentSubjectData = [];
         this.currentQuestionIndex = 0;
         this.currentPage = 1;
         this.questionsPerPage = 10;
@@ -10,10 +12,14 @@ class QuizApp {
         
         this.initializeElements();
         this.initializeEventListeners();
-        this.renderUnitSelector();
+        this.renderSubjectSelector();
     }
 
     initializeElements() {
+        this.subjectSelector = document.getElementById('subject-selector');
+        this.subjectButtons = document.getElementById('subject-buttons');
+        this.backToSubjectsBtn = document.getElementById('back-to-subjects');
+
         this.unitSelector = document.getElementById('unit-selector');
         this.unitButtons = document.getElementById('unit-buttons');
         this.quizArea = document.getElementById('quiz-area');
@@ -39,13 +45,41 @@ class QuizApp {
         this.nextBtn.addEventListener('click', () => this.nextPage());
         this.submitBtn.addEventListener('click', () => this.submitQuiz());
         this.backToUnitsBtn.addEventListener('click', () => this.backToUnitSelector());
+        this.backToSubjectsBtn.addEventListener('click', () => this.backToSubjectSelector());
         this.restartBtn.addEventListener('click', () => this.restartQuiz());
+    }
+
+    renderSubjectSelector() {
+        this.subjectButtons.innerHTML = '';
+        subjects.forEach((subj, index) => {
+            const button = document.createElement('button');
+            button.className = 'unit-btn';
+            const count = subj.units.reduce((s, u) => s + u.questions.length, 0);
+            button.innerHTML = `
+                <strong>${subj.subject}</strong><br>
+                <small>${count} 道題目</small>
+            `;
+            button.addEventListener('click', () => this.selectSubject(index));
+            this.subjectButtons.appendChild(button);
+        });
+
+        this.subjectSelector.style.display = 'block';
+        this.unitSelector.style.display = 'none';
+        this.quizArea.style.display = 'none';
+    }
+
+    selectSubject(index) {
+        this.currentSubject = index;
+        this.currentSubjectData = subjects[index].units;
+        this.renderUnitSelector();
+        this.subjectSelector.style.display = 'none';
+        this.unitSelector.style.display = 'block';
     }
 
     renderUnitSelector() {
         this.unitButtons.innerHTML = '';
-        
-        quizData.forEach((unit, index) => {
+
+        this.currentSubjectData.forEach((unit, index) => {
             const button = document.createElement('button');
             button.className = 'unit-btn';
             button.innerHTML = `
@@ -60,7 +94,7 @@ class QuizApp {
         const allUnitsButton = document.createElement('button');
         allUnitsButton.className = 'unit-btn';
         allUnitsButton.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
-        const totalQuestions = quizData.reduce((sum, unit) => sum + unit.questions.length, 0);
+        const totalQuestions = this.currentSubjectData.reduce((sum, unit) => sum + unit.questions.length, 0);
         allUnitsButton.innerHTML = `
             <strong>全部單元綜合測驗</strong><br>
             <small>${totalQuestions} 道題目</small>
@@ -88,7 +122,7 @@ class QuizApp {
         if (this.currentUnit === -1) {
             // 全部單元
             let allQuestions = [];
-            quizData.forEach((unit, unitIndex) => {
+            this.currentSubjectData.forEach((unit, unitIndex) => {
                 unit.questions.forEach((question, questionIndex) => {
                     allQuestions.push({
                         ...question,
@@ -100,11 +134,11 @@ class QuizApp {
             });
             return allQuestions;
         } else {
-            return quizData[this.currentUnit].questions.map((question, index) => ({
+            return this.currentSubjectData[this.currentUnit].questions.map((question, index) => ({
                 ...question,
                 unitIndex: this.currentUnit,
                 originalIndex: index,
-                unitName: quizData[this.currentUnit].unit
+                unitName: this.currentSubjectData[this.currentUnit].unit
             }));
         }
     }
@@ -292,6 +326,15 @@ class QuizApp {
     backToUnitSelector() {
         this.quizArea.style.display = 'none';
         this.unitSelector.style.display = 'block';
+        this.resetQuiz();
+    }
+
+    backToSubjectSelector() {
+        this.unitSelector.style.display = 'none';
+        this.subjectSelector.style.display = 'block';
+        this.currentSubject = null;
+        this.currentSubjectData = [];
+        this.currentUnit = null;
         this.resetQuiz();
     }
 
