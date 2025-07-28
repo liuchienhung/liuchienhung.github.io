@@ -6,9 +6,16 @@ class QuizApp {
         this.currentSubjectData = [];
         this.currentQuestionIndex = 0;
         this.currentPage = 1;
-        this.questionsPerPage = 10;
+        // 一題一頁作答
+        this.questionsPerPage = 1;
         this.userAnswers = {};
         this.showingResults = false;
+
+        // 考試相關設定
+        this.questions = [];
+        this.examQuestionCount = 0;
+        this.timerInterval = null;
+        this.timeRemaining = 0;
         
         this.initializeElements();
         this.initializeEventListeners();
@@ -39,6 +46,7 @@ class QuizApp {
         this.totalPagesSpan = document.getElementById('total-pages');
         this.currentQuestionSpan = document.getElementById('current-question');
         this.totalQuestionsSpan = document.getElementById('total-questions');
+        this.timerDisplay = document.getElementById('timer');
     }
 
     initializeEventListeners() {
@@ -111,18 +119,31 @@ class QuizApp {
         this.currentPage = 1;
         this.userAnswers = {};
         this.showingResults = false;
+        // 建立題目清單
+        const allQuestions = this.buildAllQuestions();
+
+        let qCount = parseInt(prompt('請輸入測驗題數 (5-50)', '10'));
+        if (isNaN(qCount)) qCount = 10;
+        qCount = Math.min(Math.max(qCount, 5), 50);
+        this.examQuestionCount = Math.min(qCount, allQuestions.length);
+
+        this.questions = this.shuffleArray(allQuestions).slice(0, this.examQuestionCount);
+
+        let minutes = parseInt(prompt('請輸入測驗時間(分鐘)', '30'));
+        if (isNaN(minutes) || minutes <= 0) minutes = 30;
+        this.timeRemaining = minutes * 60;
 
         // 隱藏單元選擇器，顯示測驗區域
         this.unitSelector.style.display = 'none';
         this.quizArea.style.display = 'block';
         this.scoreDisplay.style.display = 'none';
 
+        this.startTimer();
         this.renderQuiz();
     }
 
-    getQuestions() {
+    buildAllQuestions() {
         if (this.currentUnit === -1) {
-            // 全部單元
             let allQuestions = [];
             this.currentSubjectData.forEach((unit, unitIndex) => {
                 unit.questions.forEach((question, questionIndex) => {
@@ -145,15 +166,19 @@ class QuizApp {
         }
     }
 
+    getQuestions() {
+        return this.questions;
+    }
+
     renderQuiz() {
         const questions = this.getQuestions();
         const totalPages = Math.ceil(questions.length / this.questionsPerPage);
-        
+
         // 更新分頁資訊
         this.currentPageSpan.textContent = this.currentPage;
         this.totalPagesSpan.textContent = totalPages;
-        this.currentQuestionSpan.textContent = ((this.currentPage - 1) * this.questionsPerPage) + 1;
-        this.totalQuestionsSpan.textContent = Math.min(this.currentPage * this.questionsPerPage, questions.length);
+        this.currentQuestionSpan.textContent = this.currentPage;
+        this.totalQuestionsSpan.textContent = questions.length;
 
         // 渲染當前頁面的題目
         this.renderCurrentPageQuestions();
@@ -221,6 +246,14 @@ class QuizApp {
                 
                 // 保存用戶答案
                 this.userAnswers[questionIndex] = selectedOption;
+
+                // 一題一題作答，自動進入下一題
+                const totalPages = Math.ceil(this.getQuestions().length / this.questionsPerPage);
+                if (this.currentPage < totalPages) {
+                    setTimeout(() => {
+                        this.nextPage();
+                    }, 200);
+                }
             });
         });
     }
@@ -238,7 +271,17 @@ class QuizApp {
     showAnswerStatus() {
         const questions = this.getQuestions();
         const statusLines = questions.map((q, i) => `第 ${i + 1} 題：${this.userAnswers[i] ? '已作答' : '未作答'}`);
-        alert(statusLines.join('\n'));
+        const unanswered = questions.map((q, i) => (!this.userAnswers[i] ? i + 1 : null)).filter(n => n);
+        if (unanswered.length === 0) {
+            alert(statusLines.join('\n') + '\n\n已全部作答');
+            return;
+        }
+        const input = prompt(statusLines.join('\n') + '\n\n輸入要前往的未作答題號：', unanswered[0]);
+        const num = parseInt(input);
+        if (unanswered.includes(num)) {
+            this.currentPage = num;
+            this.renderQuiz();
+        }
     }
 
     updateButtonStates(totalPages) {
@@ -268,7 +311,13 @@ class QuizApp {
     nextPage() {
         const questions = this.getQuestions();
         const totalPages = Math.ceil(questions.length / this.questionsPerPage);
-        
+
+        const currentIndex = (this.currentPage - 1) * this.questionsPerPage;
+        if (!this.userAnswers[currentIndex]) {
+            alert('請先作答本題');
+            return;
+        }
+
         if (this.currentPage < totalPages) {
             this.currentPage++;
             this.renderQuiz();
@@ -277,6 +326,7 @@ class QuizApp {
 
     submitQuiz() {
         this.showingResults = true;
+        this.stopTimer();
         const questions = this.getQuestions();
         
         // 計算分數
@@ -331,6 +381,42 @@ class QuizApp {
         });
     }
 
+    startTimer() {
+        this.stopTimer();
+        this.updateTimerDisplay();
+        this.timerInterval = setInterval(() => {
+            if (this.timeRemaining <= 0) {
+                this.stopTimer();
+                alert('時間到，自動提交答案');
+                this.submitQuiz();
+            } else {
+                this.timeRemaining--;
+                this.updateTimerDisplay();
+            }
+        }, 1000);
+    }
+
+    updateTimerDisplay() {
+        if (!this.timerDisplay) return;
+        const m = String(Math.floor(this.timeRemaining / 60)).padStart(2, '0');
+        const s = String(this.timeRemaining % 60).padStart(2, '0');
+        this.timerDisplay.textContent = `剩餘時間：${m}:${s}`;
+    }
+
+    stopTimer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+    }
+
+    shuffleArray(arr) {
+        return arr
+            .map(v => ({ v, sort: Math.random() }))
+            .sort((a, b) => a.sort - b.sort)
+            .map(({ v }) => v);
+    }
+
     backToUnitSelector() {
         this.quizArea.style.display = 'none';
         this.unitSelector.style.display = 'block';
@@ -356,7 +442,10 @@ class QuizApp {
         this.currentPage = 1;
         this.userAnswers = {};
         this.showingResults = false;
-        
+        this.questions = [];
+        this.examQuestionCount = 0;
+        this.stopTimer();
+
         // 重置按鈕顯示
         this.prevBtn.style.display = 'inline-block';
         this.nextBtn.style.display = 'inline-block';
