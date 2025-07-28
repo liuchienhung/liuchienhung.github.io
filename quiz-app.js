@@ -8,6 +8,7 @@ class QuizApp {
         this.currentPage = 1;
         this.questionsPerPage = 1;
         this.selectedQuestions = [];
+        this.starredQuestions = new Set();
         this.timeLimit = 30 * 60; // default 30 minutes
         this.timerInterval = null;
         this.userAnswers = {};
@@ -38,6 +39,10 @@ class QuizApp {
         this.statusBtn = document.getElementById('status-btn');
         this.backToUnitsBtn = document.getElementById('back-to-units');
         this.restartBtn = document.getElementById('restart-quiz');
+
+        this.statusModal = document.getElementById('status-modal');
+        this.statusList = document.getElementById('status-list');
+        this.closeStatusBtn = document.getElementById('close-status');
         
         this.currentPageSpan = document.getElementById('current-page');
         this.totalPagesSpan = document.getElementById('total-pages');
@@ -50,6 +55,7 @@ class QuizApp {
         this.nextBtn.addEventListener('click', () => this.nextPage());
         this.submitBtn.addEventListener('click', () => this.submitQuiz());
         this.statusBtn.addEventListener('click', () => this.showAnswerStatus());
+        this.closeStatusBtn.addEventListener('click', () => this.statusModal.style.display = 'none');
         this.backToUnitsBtn.addEventListener('click', () => this.backToUnitSelector());
         this.backToSubjectsBtn.addEventListener('click', () => this.backToSubjectSelector());
         this.restartBtn.addEventListener('click', () => this.restartQuiz());
@@ -205,7 +211,10 @@ class QuizApp {
 
             questionDiv.innerHTML = `
                 ${unitInfo}
-                <div class="question-number">第 ${globalIndex + 1} 題</div>
+                <div class="question-header">
+                    <div class="question-number">第 ${globalIndex + 1} 題</div>
+                    <span class="star" data-question-index="${globalIndex}">☆</span>
+                </div>
                 <div class="question-text">${question.question}</div>
                 <div class="options" data-question-index="${globalIndex}">
                     ${question.options.map((option, optionIndex) => `
@@ -221,7 +230,8 @@ class QuizApp {
 
         // 添加選項點擊事件
         this.addOptionClickListeners();
-        
+        this.addStarClickListeners();
+
         // 恢復用戶之前的選擇
         this.restoreUserSelections();
     }
@@ -254,6 +264,29 @@ class QuizApp {
         });
     }
 
+    addStarClickListeners() {
+        const stars = document.querySelectorAll('.star');
+        stars.forEach(star => {
+            const idx = parseInt(star.dataset.questionIndex);
+            if (this.starredQuestions.has(idx)) {
+                star.classList.add('active');
+                star.textContent = '★';
+            }
+            star.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (this.starredQuestions.has(idx)) {
+                    this.starredQuestions.delete(idx);
+                    star.classList.remove('active');
+                    star.textContent = '☆';
+                } else {
+                    this.starredQuestions.add(idx);
+                    star.classList.add('active');
+                    star.textContent = '★';
+                }
+            });
+        });
+    }
+
     restoreUserSelections() {
         Object.keys(this.userAnswers).forEach(questionIndex => {
             const selectedOption = this.userAnswers[questionIndex];
@@ -262,19 +295,38 @@ class QuizApp {
                 optionElement.classList.add('selected');
             }
         });
+
+        this.starredQuestions.forEach(index => {
+            const starElement = document.querySelector(`.star[data-question-index="${index}"]`);
+            if (starElement) {
+                starElement.classList.add('active');
+                starElement.textContent = '★';
+            }
+        });
     }
 
     showAnswerStatus() {
         const questions = this.getQuestions();
-        const statusLines = questions.map((q, i) => `第 ${i + 1} 題：${this.userAnswers[i] ? '已作答' : '未作答'}`);
-        const input = prompt(statusLines.join('\n') + '\n\n輸入要前往的題號：');
-        if (input) {
-            const num = parseInt(input);
-            if (!isNaN(num) && num >= 1 && num <= questions.length) {
-                this.currentPage = num;
-                this.renderQuiz();
+        this.statusList.innerHTML = '';
+        questions.forEach((q, i) => {
+            const item = document.createElement('div');
+            const answered = !!this.userAnswers[i];
+            item.className = 'status-item ' + (answered ? 'answered' : 'unanswered');
+            item.textContent = `第 ${i + 1} 題`;
+            if (this.starredQuestions.has(i)) {
+                const star = document.createElement('span');
+                star.textContent = '★';
+                star.className = 'star active';
+                item.appendChild(star);
             }
-        }
+            item.addEventListener('click', () => {
+                this.statusModal.style.display = 'none';
+                this.currentPage = i + 1;
+                this.renderQuiz();
+            });
+            this.statusList.appendChild(item);
+        });
+        this.statusModal.style.display = 'flex';
     }
 
     updateButtonStates(totalPages) {
@@ -412,6 +464,7 @@ class QuizApp {
         this.userAnswers = {};
         this.showingResults = false;
         this.selectedQuestions = [];
+        this.starredQuestions = new Set();
 
         clearInterval(this.timerInterval);
         if (this.timerElement) this.timerElement.textContent = '';
