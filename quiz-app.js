@@ -43,6 +43,11 @@ class QuizApp {
         this.statusOverlay = document.getElementById('status-overlay');
         this.statusList = document.getElementById('status-list');
         this.closeStatusBtn = document.getElementById('close-status');
+
+        this.importFile = document.getElementById('import-file');
+        this.importBtn = document.getElementById('import-btn');
+        this.importUnit = document.getElementById('import-unit');
+        this.downloadPdfBtn = document.getElementById('download-pdf');
         
         this.currentPageSpan = document.getElementById('current-page');
         this.totalPagesSpan = document.getElementById('total-pages');
@@ -59,6 +64,10 @@ class QuizApp {
         this.backToSubjectsBtn.addEventListener('click', () => this.backToSubjectSelector());
         this.restartBtn.addEventListener('click', () => this.restartQuiz());
         this.closeStatusBtn.addEventListener('click', () => this.hideAnswerStatus());
+        this.importBtn.addEventListener('click', () => this.importQuestions());
+        if (this.downloadPdfBtn) {
+            this.downloadPdfBtn.addEventListener('click', () => this.downloadPDF());
+        }
     }
 
     renderSubjectSelector() {
@@ -90,6 +99,9 @@ class QuizApp {
 
     renderUnitSelector() {
         this.unitButtons.innerHTML = '';
+        if (this.importUnit) {
+            this.importUnit.innerHTML = '';
+        }
 
         this.currentSubjectData.forEach((unit, index) => {
             const button = document.createElement('button');
@@ -100,6 +112,13 @@ class QuizApp {
             `;
             button.addEventListener('click', () => this.startQuiz(index));
             this.unitButtons.appendChild(button);
+
+            if (this.importUnit) {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = unit.unit;
+                this.importUnit.appendChild(opt);
+            }
         });
 
         // 添加全部單元測驗選項
@@ -410,6 +429,7 @@ class QuizApp {
             正確率：${percentage}%
         `;
         this.scoreProgress.style.width = `${percentage}%`;
+        if (this.downloadPdfBtn) this.downloadPdfBtn.style.display = 'inline-block';
 
         // 顯示正確答案
         this.showCorrectAnswers();
@@ -469,15 +489,58 @@ class QuizApp {
         this.userAnswers = {};
         this.showingResults = false;
         this.selectedQuestions = [];
+        this.starredQuestions.clear();
+        this.hideAnswerStatus();
 
         clearInterval(this.timerInterval);
         if (this.timerElement) this.timerElement.textContent = '';
-        
+
         // 重置按鈕顯示
         this.prevBtn.style.display = 'inline-block';
         this.nextBtn.style.display = 'inline-block';
         this.submitBtn.style.display = 'none';
         this.scoreDisplay.style.display = 'none';
+        if (this.downloadPdfBtn) this.downloadPdfBtn.style.display = 'none';
+    }
+
+    importQuestions() {
+        const file = this.importFile.files[0];
+        const unitIndex = parseInt(this.importUnit.value);
+        if (!file || isNaN(unitIndex)) {
+            alert('請選擇單元與檔案');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                const questions = Array.isArray(data) ? data : data.questions;
+                if (!Array.isArray(questions)) throw new Error('格式錯誤');
+                this.currentSubjectData[unitIndex].questions.push(...questions);
+                alert('匯入成功');
+                this.renderUnitSelector();
+            } catch (err) {
+                alert('匯入失敗：檔案格式不正確');
+            }
+        };
+        reader.readAsText(file, 'utf-8');
+    }
+
+    downloadPDF() {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            alert('無法載入PDF庫');
+            return;
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const subjectName = subjects[this.currentSubject].subject;
+        const unitName = this.currentUnit === -1 ? '全部單元' : this.currentSubjectData[this.currentUnit].unit;
+        doc.text('測驗結果', 10, 10);
+        doc.text(`科目：${subjectName}`, 10, 20);
+        doc.text(`單元：${unitName}`, 10, 30);
+        doc.text(this.scoreText.textContent.replace(/<br>/g, '\n'), 10, 40);
+        doc.text(`時間：${new Date().toLocaleString()}`, 10, 55);
+        doc.save('quiz-result.pdf');
     }
 }
 
