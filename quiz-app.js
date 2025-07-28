@@ -6,7 +6,10 @@ class QuizApp {
         this.currentSubjectData = [];
         this.currentQuestionIndex = 0;
         this.currentPage = 1;
-        this.questionsPerPage = 10;
+        this.questionsPerPage = 1;
+        this.selectedQuestions = [];
+        this.timeLimit = 30 * 60; // default 30 minutes
+        this.timerInterval = null;
         this.userAnswers = {};
         this.showingResults = false;
         
@@ -24,6 +27,7 @@ class QuizApp {
         this.unitButtons = document.getElementById('unit-buttons');
         this.quizArea = document.getElementById('quiz-area');
         this.questionContainer = document.getElementById('question-container');
+        this.timerElement = document.getElementById('timer');
         this.scoreDisplay = document.getElementById('score-display');
         this.scoreText = document.getElementById('score-text');
         this.scoreProgress = document.getElementById('score-progress');
@@ -112,15 +116,29 @@ class QuizApp {
         this.userAnswers = {};
         this.showingResults = false;
 
+        const allQuestions = this.getAllQuestions();
+        let maxQuestions = Math.min(50, allQuestions.length);
+        let count = parseInt(prompt(`請輸入測驗題數 (5-${maxQuestions})`, Math.min(10, maxQuestions)));
+        if (isNaN(count)) count = Math.min(10, maxQuestions);
+        count = Math.min(Math.max(count, 5), maxQuestions);
+
+        const shuffled = allQuestions.sort(() => Math.random() - 0.5);
+        this.selectedQuestions = shuffled.slice(0, count);
+
+        let timeMin = parseInt(prompt('請輸入測驗時間(分鐘)', this.timeLimit / 60));
+        if (isNaN(timeMin) || timeMin <= 0) timeMin = this.timeLimit / 60;
+        this.timeLimit = timeMin * 60;
+
         // 隱藏單元選擇器，顯示測驗區域
         this.unitSelector.style.display = 'none';
         this.quizArea.style.display = 'block';
         this.scoreDisplay.style.display = 'none';
 
+        this.startTimer();
         this.renderQuiz();
     }
 
-    getQuestions() {
+    getAllQuestions() {
         if (this.currentUnit === -1) {
             // 全部單元
             let allQuestions = [];
@@ -145,9 +163,14 @@ class QuizApp {
         }
     }
 
+    getQuestions() {
+        return this.selectedQuestions;
+    }
+
     renderQuiz() {
         const questions = this.getQuestions();
         const totalPages = Math.ceil(questions.length / this.questionsPerPage);
+        this.totalPages = totalPages;
         
         // 更新分頁資訊
         this.currentPageSpan.textContent = this.currentPage;
@@ -221,6 +244,12 @@ class QuizApp {
                 
                 // 保存用戶答案
                 this.userAnswers[questionIndex] = selectedOption;
+
+                this.updateButtonStates(this.totalPages);
+
+                if (questionIndex === this.currentPage - 1 && this.currentPage < this.totalPages) {
+                    setTimeout(() => this.nextPage(), 300);
+                }
             });
         });
     }
@@ -238,20 +267,28 @@ class QuizApp {
     showAnswerStatus() {
         const questions = this.getQuestions();
         const statusLines = questions.map((q, i) => `第 ${i + 1} 題：${this.userAnswers[i] ? '已作答' : '未作答'}`);
-        alert(statusLines.join('\n'));
+        const input = prompt(statusLines.join('\n') + '\n\n輸入要前往的題號：');
+        if (input) {
+            const num = parseInt(input);
+            if (!isNaN(num) && num >= 1 && num <= questions.length) {
+                this.currentPage = num;
+                this.renderQuiz();
+            }
+        }
     }
 
     updateButtonStates(totalPages) {
         // 上一頁按鈕
         this.prevBtn.disabled = this.currentPage === 1;
-        
+
         // 下一頁按鈕
-        this.nextBtn.disabled = this.currentPage === totalPages;
-        
-        // 提交按鈕
+        const answered = this.userAnswers[this.currentPage - 1];
+        this.nextBtn.disabled = this.currentPage === totalPages || !answered;
+
         if (this.currentPage === totalPages) {
-            this.nextBtn.style.display = 'none';
             this.submitBtn.style.display = 'inline-block';
+            this.submitBtn.disabled = !answered;
+            this.nextBtn.style.display = 'none';
         } else {
             this.nextBtn.style.display = 'inline-block';
             this.submitBtn.style.display = 'none';
@@ -266,18 +303,36 @@ class QuizApp {
     }
 
     nextPage() {
-        const questions = this.getQuestions();
-        const totalPages = Math.ceil(questions.length / this.questionsPerPage);
-        
-        if (this.currentPage < totalPages) {
+        if (this.currentPage < this.totalPages) {
             this.currentPage++;
             this.renderQuiz();
         }
     }
 
+    startTimer() {
+        clearInterval(this.timerInterval);
+        let remaining = this.timeLimit;
+        const update = () => {
+            const min = Math.floor(remaining / 60);
+            const sec = remaining % 60;
+            this.timerElement.textContent = `剩餘時間：${min}:${sec.toString().padStart(2, '0')}`;
+            if (remaining <= 0) {
+                clearInterval(this.timerInterval);
+                alert('時間到，自動提交測驗');
+                this.submitQuiz();
+            }
+            remaining--;
+        };
+        update();
+        this.timerInterval = setInterval(update, 1000);
+    }
+
     submitQuiz() {
         this.showingResults = true;
         const questions = this.getQuestions();
+
+        clearInterval(this.timerInterval);
+        this.timerElement.textContent = '';
         
         // 計算分數
         let correctAnswers = 0;
@@ -356,6 +411,10 @@ class QuizApp {
         this.currentPage = 1;
         this.userAnswers = {};
         this.showingResults = false;
+        this.selectedQuestions = [];
+
+        clearInterval(this.timerInterval);
+        if (this.timerElement) this.timerElement.textContent = '';
         
         // 重置按鈕顯示
         this.prevBtn.style.display = 'inline-block';
