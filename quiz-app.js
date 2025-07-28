@@ -12,6 +12,7 @@ class QuizApp {
         this.timerInterval = null;
         this.userAnswers = {};
         this.showingResults = false;
+        this.starredQuestions = new Set();
         
         this.initializeElements();
         this.initializeEventListeners();
@@ -38,6 +39,10 @@ class QuizApp {
         this.statusBtn = document.getElementById('status-btn');
         this.backToUnitsBtn = document.getElementById('back-to-units');
         this.restartBtn = document.getElementById('restart-quiz');
+
+        this.statusOverlay = document.getElementById('status-overlay');
+        this.statusList = document.getElementById('status-list');
+        this.closeStatusBtn = document.getElementById('close-status');
         
         this.currentPageSpan = document.getElementById('current-page');
         this.totalPagesSpan = document.getElementById('total-pages');
@@ -53,6 +58,7 @@ class QuizApp {
         this.backToUnitsBtn.addEventListener('click', () => this.backToUnitSelector());
         this.backToSubjectsBtn.addEventListener('click', () => this.backToSubjectSelector());
         this.restartBtn.addEventListener('click', () => this.restartQuiz());
+        this.closeStatusBtn.addEventListener('click', () => this.hideAnswerStatus());
     }
 
     renderSubjectSelector() {
@@ -203,9 +209,13 @@ class QuizApp {
                 unitInfo = `<div style="color: #7f8c8d; font-size: 0.9em; margin-bottom: 10px;">${question.unitName}</div>`;
             }
 
+            const starred = this.starredQuestions.has(globalIndex) ? 'starred' : '';
             questionDiv.innerHTML = `
                 ${unitInfo}
-                <div class="question-number">第 ${globalIndex + 1} 題</div>
+                <div class="question-header">
+                    <div class="question-number">第 ${globalIndex + 1} 題</div>
+                    <div class="star ${starred}" data-question-index="${globalIndex}">${this.starredQuestions.has(globalIndex) ? '★' : '☆'}</div>
+                </div>
                 <div class="question-text">${question.question}</div>
                 <div class="options" data-question-index="${globalIndex}">
                     ${question.options.map((option, optionIndex) => `
@@ -217,6 +227,19 @@ class QuizApp {
             `;
 
             this.questionContainer.appendChild(questionDiv);
+
+            // 星號標記事件
+            const starEl = questionDiv.querySelector('.star');
+            starEl.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.dataset.questionIndex);
+                if (this.starredQuestions.has(idx)) {
+                    this.starredQuestions.delete(idx);
+                } else {
+                    this.starredQuestions.add(idx);
+                }
+                starEl.classList.toggle('starred', this.starredQuestions.has(idx));
+                starEl.textContent = this.starredQuestions.has(idx) ? '★' : '☆';
+            });
         });
 
         // 添加選項點擊事件
@@ -266,15 +289,49 @@ class QuizApp {
 
     showAnswerStatus() {
         const questions = this.getQuestions();
-        const statusLines = questions.map((q, i) => `第 ${i + 1} 題：${this.userAnswers[i] ? '已作答' : '未作答'}`);
-        const input = prompt(statusLines.join('\n') + '\n\n輸入要前往的題號：');
-        if (input) {
-            const num = parseInt(input);
-            if (!isNaN(num) && num >= 1 && num <= questions.length) {
-                this.currentPage = num;
+        this.statusList.innerHTML = '';
+        questions.forEach((q, i) => {
+            const item = document.createElement('div');
+            item.className = 'status-item ' + (this.userAnswers[i] ? 'answered' : 'unanswered');
+
+            const label = document.createElement('span');
+            label.textContent = `第 ${i + 1} 題`;
+            label.addEventListener('click', () => {
+                this.currentPage = i + 1;
+                this.hideAnswerStatus();
                 this.renderQuiz();
-            }
-        }
+            });
+
+            const star = document.createElement('span');
+            star.className = 'star ' + (this.starredQuestions.has(i) ? 'starred' : '');
+            star.dataset.index = i;
+            star.textContent = this.starredQuestions.has(i) ? '★' : '☆';
+            star.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(star.dataset.index);
+                if (this.starredQuestions.has(idx)) {
+                    this.starredQuestions.delete(idx);
+                } else {
+                    this.starredQuestions.add(idx);
+                }
+                star.classList.toggle('starred', this.starredQuestions.has(idx));
+                star.textContent = this.starredQuestions.has(idx) ? '★' : '☆';
+                const starInQuestion = document.querySelector(`.star[data-question-index="${idx}"]`);
+                if (starInQuestion) {
+                    starInQuestion.classList.toggle('starred', this.starredQuestions.has(idx));
+                    starInQuestion.textContent = this.starredQuestions.has(idx) ? '★' : '☆';
+                }
+            });
+
+            item.appendChild(label);
+            item.appendChild(star);
+            this.statusList.appendChild(item);
+        });
+        this.statusOverlay.style.display = 'flex';
+    }
+
+    hideAnswerStatus() {
+        this.statusOverlay.style.display = 'none';
     }
 
     updateButtonStates(totalPages) {
