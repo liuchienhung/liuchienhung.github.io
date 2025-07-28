@@ -50,6 +50,11 @@ class QuizApp {
         this.importBtn = document.getElementById('import-btn');
         this.importUnit = document.getElementById('import-unit');
         this.downloadPdfBtn = document.getElementById('download-pdf');
+
+        this.newSubjectInput = document.getElementById('new-subject-input');
+        this.addSubjectBtn = document.getElementById('add-subject-btn');
+        this.newUnitInput = document.getElementById('new-unit-input');
+        this.addUnitBtn = document.getElementById('add-unit-btn');
         
         this.currentPageSpan = document.getElementById('current-page');
         this.totalPagesSpan = document.getElementById('total-pages');
@@ -69,6 +74,12 @@ class QuizApp {
         this.importBtn.addEventListener('click', () => this.importQuestions());
         if (this.downloadPdfBtn) {
             this.downloadPdfBtn.addEventListener('click', () => this.downloadPDF());
+        }
+        if (this.addSubjectBtn) {
+            this.addSubjectBtn.addEventListener('click', () => this.addSubject());
+        }
+        if (this.addUnitBtn) {
+            this.addUnitBtn.addEventListener('click', () => this.addUnit());
         }
     }
 
@@ -505,6 +516,32 @@ class QuizApp {
         this.submitBtn.style.display = 'none';
         this.scoreDisplay.style.display = 'none';
         if (this.downloadPdfBtn) this.downloadPdfBtn.style.display = 'none';
+    }
+
+    addSubject() {
+        const name = this.newSubjectInput.value.trim();
+        if (!name) {
+            alert('請輸入科目名稱');
+            return;
+        }
+        subjects.push({ subject: name, units: [] });
+        this.saveToStorage();
+        this.newSubjectInput.value = '';
+        this.renderSubjectSelector();
+    }
+
+    addUnit() {
+        if (this.currentSubject === null) return;
+        const name = this.newUnitInput.value.trim();
+        if (!name) {
+            alert('請輸入單元名稱');
+            return;
+        }
+        subjects[this.currentSubject].units.push({ unit: name, questions: [] });
+        this.currentSubjectData = subjects[this.currentSubject].units;
+        this.saveToStorage();
+        this.newUnitInput.value = '';
+        this.renderUnitSelector();
     }
 
     importQuestions() {
