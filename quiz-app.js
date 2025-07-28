@@ -38,6 +38,8 @@ class QuizApp {
         this.totalPagesSpan = document.getElementById('total-pages');
         this.currentQuestionSpan = document.getElementById('current-question');
         this.totalQuestionsSpan = document.getElementById('total-questions');
+        this.answeredCountSpan = document.getElementById('answered-count');
+        this.totalCountSpan = document.getElementById('total-question-count');
     }
 
     initializeEventListeners() {
@@ -116,6 +118,7 @@ class QuizApp {
         this.scoreDisplay.style.display = 'none';
 
         this.renderQuiz();
+        this.updateAnswerStatus();
     }
 
     getQuestions() {
@@ -158,6 +161,9 @@ class QuizApp {
 
         // 更新按鈕狀態
         this.updateButtonStates(totalPages);
+
+        // 更新答題狀態
+        this.updateAnswerStatus();
     }
 
     renderCurrentPageQuestions() {
@@ -219,6 +225,8 @@ class QuizApp {
                 
                 // 保存用戶答案
                 this.userAnswers[questionIndex] = selectedOption;
+
+                this.updateAnswerStatus();
             });
         });
     }
@@ -231,6 +239,13 @@ class QuizApp {
                 optionElement.classList.add('selected');
             }
         });
+    }
+
+    updateAnswerStatus() {
+        const total = this.getQuestions().length;
+        const answered = Object.keys(this.userAnswers).length;
+        this.answeredCountSpan.textContent = answered;
+        this.totalCountSpan.textContent = total;
     }
 
     updateButtonStates(totalPages) {
@@ -354,6 +369,7 @@ class QuizApp {
         this.nextBtn.style.display = 'inline-block';
         this.submitBtn.style.display = 'none';
         this.scoreDisplay.style.display = 'none';
+        this.updateAnswerStatus();
     }
 }
 

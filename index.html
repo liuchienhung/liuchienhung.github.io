@@ -188,6 +188,12 @@
             font-size: 1em;
         }
 
+        .answer-status {
+            margin-top: 5px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+
         .score-display {
             background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
             color: white;
@@ -291,6 +297,7 @@
                     <div class="pagination-info">
                         <span id="current-page">1</span> / <span id="total-pages">1</span>
                         (<span id="current-question">1</span> / <span id="total-questions">1</span>)
+                        <span class="answer-status">已作答 <span id="answered-count">0</span>/<span id="total-question-count">0</span></span>
                     </div>
                     <button id="next-btn" class="btn">下一題</button>
                     <button id="submit-btn" class="btn btn-success" style="display: none;">提交答案</button>
