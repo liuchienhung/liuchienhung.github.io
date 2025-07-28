@@ -10,6 +10,7 @@ class QuizApp {
         this.selectedQuestions = [];
         this.timeLimit = 30 * 60; // default 30 minutes
         this.timerInterval = null;
+        this.remainingTime = this.timeLimit;
         this.userAnswers = {};
         this.showingResults = false;
         this.starredQuestions = new Set();
@@ -92,6 +93,7 @@ class QuizApp {
     selectSubject(index) {
         this.currentSubject = index;
         this.currentSubjectData = subjects[index].units;
+        this.loadCustomQuestions();
         this.renderUnitSelector();
         this.subjectSelector.style.display = 'none';
         this.unitSelector.style.display = 'block';
@@ -388,6 +390,7 @@ class QuizApp {
     startTimer() {
         clearInterval(this.timerInterval);
         let remaining = this.timeLimit;
+        this.remainingTime = remaining;
         const update = () => {
             const min = Math.floor(remaining / 60);
             const sec = remaining % 60;
@@ -398,6 +401,7 @@ class QuizApp {
                 this.submitQuiz();
             }
             remaining--;
+            this.remainingTime = remaining;
         };
         update();
         this.timerInterval = setInterval(update, 1000);
@@ -409,6 +413,7 @@ class QuizApp {
 
         clearInterval(this.timerInterval);
         this.timerElement.textContent = '';
+        this.finalRemainingTime = this.remainingTime;
         
         // 計算分數
         let correctAnswers = 0;
@@ -517,6 +522,9 @@ class QuizApp {
                 const questions = Array.isArray(data) ? data : data.questions;
                 if (!Array.isArray(questions)) throw new Error('格式錯誤');
                 this.currentSubjectData[unitIndex].questions.push(...questions);
+                const key = `customQuestions-${this.currentSubject}-${unitIndex}`;
+                const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                localStorage.setItem(key, JSON.stringify(existing.concat(questions)));
                 alert('匯入成功');
                 this.renderUnitSelector();
             } catch (err) {
@@ -526,21 +534,52 @@ class QuizApp {
         reader.readAsText(file, 'utf-8');
     }
 
+    loadCustomQuestions() {
+        this.currentSubjectData.forEach((unit, idx) => {
+            if (!unit._originalQuestions) {
+                unit._originalQuestions = unit.questions.slice();
+            }
+            const key = `customQuestions-${this.currentSubject}-${idx}`;
+            const saved = JSON.parse(localStorage.getItem(key) || '[]');
+            unit.questions = unit._originalQuestions.concat(saved);
+        });
+    }
+
     downloadPDF() {
-        if (!window.jspdf || !window.jspdf.jsPDF) {
+        if (!window.jspdf || !window.jspdf.jsPDF || !window.html2canvas) {
             alert('無法載入PDF庫');
             return;
         }
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+        const questions = this.getQuestions();
         const subjectName = subjects[this.currentSubject].subject;
         const unitName = this.currentUnit === -1 ? '全部單元' : this.currentSubjectData[this.currentUnit].unit;
-        doc.text('測驗結果', 10, 10);
-        doc.text(`科目：${subjectName}`, 10, 20);
-        doc.text(`單元：${unitName}`, 10, 30);
-        doc.text(this.scoreText.textContent.replace(/<br>/g, '\n'), 10, 40);
-        doc.text(`時間：${new Date().toLocaleString()}`, 10, 55);
-        doc.save('quiz-result.pdf');
+        const container = document.createElement('div');
+        container.style.padding = '10px';
+        const remain = `${Math.floor(this.finalRemainingTime / 60)}:${(this.finalRemainingTime % 60).toString().padStart(2,'0')}`;
+        container.innerHTML = `
+            <h2>測驗結果</h2>
+            <p>科目：${subjectName}</p>
+            <p>單元：${unitName}</p>
+            <p>${this.scoreText.innerHTML}</p>
+            <p>剩餘時間：${remain}</p>
+            ${questions.map((q,i)=>{
+                const ua = this.userAnswers[i] || '未作答';
+                const star = this.starredQuestions.has(i) ? '★' : '☆';
+                return `<div style="margin-top:8px;">
+                            <strong>第${i+1}題${star}</strong><br>${q.question}<br>
+                            使用者答案：${ua}<br>
+                            正確答案：${q.answer}
+                        </div>`;
+            }).join('')}
+        `;
+        const doc = new jsPDF();
+        doc.html(container, {
+            callback: d => d.save('quiz-result.pdf'),
+            x: 10,
+            y: 10,
+            html2canvas: { scale: 0.6 }
+        });
     }
 }
 
