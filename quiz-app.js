@@ -31,6 +31,7 @@ class QuizApp {
         this.prevBtn = document.getElementById('prev-btn');
         this.nextBtn = document.getElementById('next-btn');
         this.submitBtn = document.getElementById('submit-btn');
+        this.statusBtn = document.getElementById('status-btn');
         this.backToUnitsBtn = document.getElementById('back-to-units');
         this.restartBtn = document.getElementById('restart-quiz');
         
@@ -44,6 +45,7 @@ class QuizApp {
         this.prevBtn.addEventListener('click', () => this.previousPage());
         this.nextBtn.addEventListener('click', () => this.nextPage());
         this.submitBtn.addEventListener('click', () => this.submitQuiz());
+        this.statusBtn.addEventListener('click', () => this.showAnswerStatus());
         this.backToUnitsBtn.addEventListener('click', () => this.backToUnitSelector());
         this.backToSubjectsBtn.addEventListener('click', () => this.backToSubjectSelector());
         this.restartBtn.addEventListener('click', () => this.restartQuiz());
@@ -231,6 +233,12 @@ class QuizApp {
                 optionElement.classList.add('selected');
             }
         });
+    }
+
+    showAnswerStatus() {
+        const questions = this.getQuestions();
+        const statusLines = questions.map((q, i) => `第 ${i + 1} 題：${this.userAnswers[i] ? '已作答' : '未作答'}`);
+        alert(statusLines.join('\n'));
     }
 
     updateButtonStates(totalPages) {
