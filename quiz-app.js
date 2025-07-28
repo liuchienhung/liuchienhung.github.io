@@ -32,6 +32,10 @@ class QuizApp {
         this.scoreDisplay = document.getElementById('score-display');
         this.scoreText = document.getElementById('score-text');
         this.scoreProgress = document.getElementById('score-progress');
+
+        this.downloadPdfBtn = document.getElementById('download-pdf');
+        this.importBtn = document.getElementById('import-btn');
+        this.importFile = document.getElementById('import-file');
         
         this.prevBtn = document.getElementById('prev-btn');
         this.nextBtn = document.getElementById('next-btn');
@@ -59,6 +63,10 @@ class QuizApp {
         this.backToSubjectsBtn.addEventListener('click', () => this.backToSubjectSelector());
         this.restartBtn.addEventListener('click', () => this.restartQuiz());
         this.closeStatusBtn.addEventListener('click', () => this.hideAnswerStatus());
+
+        this.downloadPdfBtn.addEventListener('click', () => this.downloadPDF());
+        this.importBtn.addEventListener('click', () => this.importFile.click());
+        this.importFile.addEventListener('change', (e) => this.handleImportFile(e));
     }
 
     renderSubjectSelector() {
@@ -410,6 +418,7 @@ class QuizApp {
             正確率：${percentage}%
         `;
         this.scoreProgress.style.width = `${percentage}%`;
+        if (this.downloadPdfBtn) this.downloadPdfBtn.style.display = 'inline-block';
 
         // 顯示正確答案
         this.showCorrectAnswers();
@@ -478,6 +487,51 @@ class QuizApp {
         this.nextBtn.style.display = 'inline-block';
         this.submitBtn.style.display = 'none';
         this.scoreDisplay.style.display = 'none';
+        if (this.downloadPdfBtn) this.downloadPdfBtn.style.display = 'none';
+        this.starredQuestions.clear();
+        if (this.statusOverlay) this.statusOverlay.style.display = 'none';
+
+        document.querySelectorAll('.option.selected, .option.correct, .option.incorrect').forEach(el => {
+            el.classList.remove('selected', 'correct', 'incorrect');
+        });
+    }
+
+    handleImportFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!Array.isArray(data.questions)) throw new Error('格式錯誤');
+                const names = this.currentSubjectData.map((u, i) => `${i + 1}: ${u.unit}`).join('\n');
+                let idx = prompt(`請輸入欲匯入的單元編號:\n${names}`);
+                if (idx === null) return;
+                idx = parseInt(idx) - 1;
+                if (isNaN(idx) || idx < 0 || idx >= this.currentSubjectData.length) throw new Error('單元編號錯誤');
+                this.currentSubjectData[idx].questions = this.currentSubjectData[idx].questions.concat(data.questions);
+                alert(`已匯入 ${data.questions.length} 題到 ${this.currentSubjectData[idx].unit}`);
+                this.renderUnitSelector();
+            } catch(err) {
+                alert('匯入失敗：' + err.message);
+            } finally {
+                event.target.value = '';
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const subject = this.currentSubject !== null ? subjects[this.currentSubject].subject : '';
+        const unit = this.currentUnit === -1 ? '全部單元綜合測驗' : this.currentSubjectData[this.currentUnit].unit;
+        doc.text('測驗結果', 10, 10);
+        doc.text(`科目：${subject}`, 10, 20);
+        doc.text(`單元：${unit}`, 10, 30);
+        doc.text(`題數：${this.selectedQuestions.length}`, 10, 40);
+        doc.text(this.scoreText.textContent.replace(/\n/g, ''), 10, 50);
+        doc.save('quiz-result.pdf');
     }
 }
 

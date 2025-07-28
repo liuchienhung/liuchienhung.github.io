@@ -335,6 +335,9 @@
                 </div>
                 <div class="controls">
                     <button id="back-to-subjects" class="btn btn-secondary">返回科目選擇</button>
+                    <button id="import-btn" class="btn">匯入題庫</button>
+                    <input type="file" id="import-file" accept=".json" style="display:none;">
+                    <a id="download-template" class="btn btn-secondary" href="question-template.json" download>下載範例格式</a>
                 </div>
             </div>
 
@@ -346,6 +349,7 @@
                     <div class="progress-bar">
                         <div id="score-progress" class="progress-fill"></div>
                     </div>
+                    <button id="download-pdf" class="btn btn-secondary" style="margin-top:10px; display:none;">下載PDF</button>
                 </div>
 
                 <div id="timer" class="timer"></div>
@@ -382,6 +386,7 @@
     </div>
 
     <script src="quiz-data.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="quiz-app.js"></script>
 </body>
 </html>
