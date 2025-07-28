@@ -253,11 +253,22 @@
         </div>
 
         <div class="quiz-content">
+            <!-- 科目選擇區域 -->
+            <div id="subject-selector" class="unit-selector">
+                <h3>請選擇測驗科目：</h3>
+                <div class="unit-buttons" id="subject-buttons">
+                    <!-- 科目按鈕將由JavaScript動態生成 -->
+                </div>
+            </div>
+
             <!-- 單元選擇區域 -->
-            <div id="unit-selector" class="unit-selector">
+            <div id="unit-selector" class="unit-selector" style="display:none;">
                 <h3>請選擇要測驗的單元：</h3>
                 <div class="unit-buttons" id="unit-buttons">
                     <!-- 單元按鈕將由JavaScript動態生成 -->
+                </div>
+                <div class="controls">
+                    <button id="back-to-subjects" class="btn btn-secondary">返回科目選擇</button>
                 </div>
             </div>
 
