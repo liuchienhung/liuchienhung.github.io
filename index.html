@@ -169,6 +169,13 @@
             border-top: 1px solid #e9ecef;
         }
 
+        .import-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
         .btn {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
@@ -333,6 +340,12 @@
                 <div class="unit-buttons" id="unit-buttons">
                     <!-- 單元按鈕將由JavaScript動態生成 -->
                 </div>
+                <div class="import-section">
+                    <select id="import-unit"></select>
+                    <input type="file" id="import-file" accept="application/json">
+                    <button id="import-btn" class="btn">匯入題庫</button>
+                    <a href="import-format.json" download class="btn btn-secondary">下載範例</a>
+                </div>
                 <div class="controls">
                     <button id="back-to-subjects" class="btn btn-secondary">返回科目選擇</button>
                 </div>
@@ -368,6 +381,7 @@
                 <div class="controls">
                     <button id="back-to-units" class="btn btn-secondary">返回單元選擇</button>
                     <button id="restart-quiz" class="btn">重新開始</button>
+                    <button id="download-pdf" class="btn btn-success" style="display:none;">下載結果PDF</button>
                 </div>
             </div>
         </div>
@@ -382,6 +396,7 @@
     </div>
 
     <script src="quiz-data.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="quiz-app.js"></script>
 </body>
 </html>
