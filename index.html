@@ -138,6 +138,23 @@
             background: #d5f4e6;
         }
 
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .star {
+            cursor: pointer;
+            color: #ccc;
+            font-size: 1.2em;
+        }
+
+        .star.starred {
+            color: #f1c40f;
+        }
+
         .option.incorrect {
             border-color: #e74c3c;
             background: #fdeaea;
@@ -221,6 +238,48 @@
             background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
             height: 100%;
             transition: width 0.3s ease;
+        }
+
+        .status-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .status-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 80vh;
+            overflow-y: auto;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        .status-item.answered {
+            background: #e8f5e9;
+            color: #27ae60;
+        }
+
+        .status-item.unanswered {
+            background: #fdeaea;
+            color: #e74c3c;
         }
 
         @media (max-width: 768px) {
@@ -311,6 +370,14 @@
                     <button id="restart-quiz" class="btn">重新開始</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="status-overlay" class="status-overlay" style="display:none;">
+        <div class="status-content">
+            <h3>答題狀態</h3>
+            <div id="status-list"></div>
+            <button id="close-status" class="btn" style="margin-top:10px;">關閉</button>
         </div>
     </div>
 
