@@ -424,36 +424,38 @@
                             </select>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4 d-grid gap-2">
                             <input type="file" id="import-file" class="form-control" accept="application/json">
+                            <button id="file-status" class="btn btn-outline-dark disabled">未選擇檔案</button>
                         </div>
 
                         <div class="col-md-4 d-grid gap-2">
                             <button id="import-btn" class="btn btn-primary">匯入單元題庫</button>
                             <button id="export-unit-btn" class="btn btn-outline-secondary">匯出單元題庫</button>
-                            <button id="download-format-btn" class="btn btn-outline-secondary">下載範例格式</button>
+                            <button id="download-format-btn" class="btn btn-outline-info">下載範例格式</button>
                         </div>
                     </div>
                     <div class="row mb-4">
                         <div class="col-md-12 d-grid">
-                            <button id="edit-unit-btn" class="btn btn-outline-danger">編輯單元題庫（刪除題目）</button>
+                            <button id="edit-unit-btn" class="btn btn-primary">編輯單元題庫（刪除題目）</button>
                         </div>
                     </div>
 
                     <!-- 科目題庫操作 -->
                     <div class="row g-2 align-items-center">
-                        <div class="col-md-6">
+                        <div class="col-md-6 d-grid gap-2">
                             <input type="file" id="import-subject-file" class="form-control" accept="application/json">
+                            <button id="subject-file-status" class="btn btn-outline-dark disabled">未選擇檔案</button>
                         </div>
                         <div class="col-md-6 d-grid gap-2">
-                            <button id="import-subject-btn" class="btn btn-success">匯入科目題庫</button>
+                            <button id="import-subject-btn" class="btn btn-primary">匯入科目題庫</button>
                             <button id="export-subject-btn" class="btn btn-outline-secondary">匯出科目題庫</button>
                         </div>
                     </div>
                 </div>
                 <div class="controls">
-                    <button id="add-unit" class="btn">新增單元</button>
-                    <button id="remove-unit" class="btn btn-secondary">刪除單元</button>
+                    <button id="add-unit" class="btn btn-success">新增單元</button>
+                    <button id="remove-unit" class="btn btn-outline-danger">刪除單元</button>
                     <button id="back-to-subjects" class="btn btn-secondary">返回科目選擇</button>
                 </div>
             </div>

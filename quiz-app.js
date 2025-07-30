@@ -68,6 +68,8 @@ class QuizApp {
         this.addUnitBtn = document.getElementById('add-unit');
         this.removeSubjectBtn = document.getElementById('remove-subject');
         this.removeUnitBtn = document.getElementById('remove-unit');
+        this.fileStatusBtn = document.getElementById('file-status');
+        this.subjectFileStatusBtn = document.getElementById('subject-file-status');
         
         this.currentPageSpan = document.getElementById('current-page');
         this.totalPagesSpan = document.getElementById('total-pages');
@@ -114,6 +116,18 @@ class QuizApp {
         }
         if (this.editUnitBtn) {
             this.editUnitBtn.addEventListener('click', () => this.editUnitQuestions());
+        }
+        if (this.importFile && this.fileStatusBtn) {
+            this.importFile.addEventListener('change', () => {
+                const file = this.importFile.files[0];
+                this.fileStatusBtn.textContent = file ? file.name : '未選擇檔案';
+            });
+        }
+        if (this.importSubjectFile && this.subjectFileStatusBtn) {
+            this.importSubjectFile.addEventListener('change', () => {
+                const file = this.importSubjectFile.files[0];
+                this.subjectFileStatusBtn.textContent = file ? file.name : '未選擇檔案';
+            });
         }
         if (this.selectConfirm) {
             this.selectConfirm.addEventListener('click', () => this.confirmSelection());
