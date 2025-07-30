@@ -289,6 +289,16 @@
             color: #e74c3c;
         }
 
+        .select-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .select-item label {
+            margin-left: 5px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
@@ -319,7 +329,7 @@
         .footer {
             text-align: center;
             padding: 10px 0;
-            color: #555;
+            color: #fff;
         }
 
     </style>
@@ -404,6 +414,16 @@
             <h3>答題狀態</h3>
             <div id="status-list"></div>
             <button id="close-status" class="btn" style="margin-top:10px;">關閉</button>
+        </div>
+    </div>
+    <div id="select-overlay" class="status-overlay" style="display:none;">
+        <div class="status-content">
+            <h3 id="select-title"></h3>
+            <div id="select-list"></div>
+            <div style="text-align:center;margin-top:10px;">
+                <button id="select-confirm" class="btn">刪除</button>
+                <button id="select-cancel" class="btn btn-secondary">取消</button>
+            </div>
         </div>
     </div>
     <footer class="footer">
