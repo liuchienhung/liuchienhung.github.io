@@ -204,6 +204,14 @@
             margin-bottom: 10px;
         }
 
+        #download-sample-btn {
+            margin-top: 12px;
+        }
+
+        #unit-ops-row {
+            margin-top: 15px;
+        }
+
         .section-title {
             font-weight: bold;
             color: #2c3e50;
@@ -431,12 +439,12 @@
                         <div class="col-md-4 d-grid gap-2">
                             <button id="import-btn" class="btn btn-primary">匯入單元題庫</button>
                             <button id="export-unit-btn" class="btn btn-outline-secondary">匯出單元題庫</button>
-                            <a href="import-format.json" download="" class="btn btn-outline-info">下載範例格式</a>
+                            <a href="import-format.json" download="" id="download-sample-btn" class="btn btn-outline-info">下載範例格式</a>
                         </div>
                     </div>
 
                     <!-- 科目題庫操作 -->
-                    <div class="row g-2 align-items-center">
+                    <div id="unit-ops-row" class="row g-2 align-items-center">
                         <div class="col-md-6">
                             <input type="file" id="import-subject-file" class="form-control" accept="application/json">
                         </div>
