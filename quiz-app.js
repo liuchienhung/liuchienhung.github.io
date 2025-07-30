@@ -196,14 +196,24 @@ class QuizApp {
 
         const allQuestions = this.getAllQuestions();
         let maxQuestions = Math.min(50, allQuestions.length);
-        let count = parseInt(prompt(`請輸入測驗題數 (5-${maxQuestions})`, Math.min(10, maxQuestions)));
+        let countInput = prompt(`請輸入測驗題數 (5-${maxQuestions})`, Math.min(10, maxQuestions));
+        if (countInput === null) {
+            this.backToUnitSelector();
+            return;
+        }
+        let count = parseInt(countInput);
         if (isNaN(count)) count = Math.min(10, maxQuestions);
         count = Math.min(Math.max(count, 5), maxQuestions);
 
         const shuffled = allQuestions.sort(() => Math.random() - 0.5);
         this.selectedQuestions = shuffled.slice(0, count);
 
-        let timeMin = parseInt(prompt('請輸入測驗時間(分鐘)', this.timeLimit / 60));
+        let timeInput = prompt('請輸入測驗時間(分鐘)', this.timeLimit / 60);
+        if (timeInput === null) {
+            this.backToUnitSelector();
+            return;
+        }
+        let timeMin = parseInt(timeInput);
         if (isNaN(timeMin) || timeMin <= 0) timeMin = this.timeLimit / 60;
         this.timeLimit = timeMin * 60;
 
