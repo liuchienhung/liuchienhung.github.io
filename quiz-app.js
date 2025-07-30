@@ -62,6 +62,7 @@ class QuizApp {
         this.exportUnitBtn = document.getElementById('export-unit-btn');
         this.downloadPdfBtn = document.getElementById('download-pdf');
         this.downloadFormatBtn = document.getElementById('download-format-btn');
+        this.editUnitBtn = document.getElementById('edit-unit-btn');
 
         this.addSubjectBtn = document.getElementById('add-subject');
         this.addUnitBtn = document.getElementById('add-unit');
@@ -110,6 +111,9 @@ class QuizApp {
         }
         if (this.exportUnitBtn) {
             this.exportUnitBtn.addEventListener('click', () => this.exportUnit());
+        }
+        if (this.editUnitBtn) {
+            this.editUnitBtn.addEventListener('click', () => this.editUnitQuestions());
         }
         if (this.selectConfirm) {
             this.selectConfirm.addEventListener('click', () => this.confirmSelection());
@@ -710,6 +714,32 @@ class QuizApp {
             subjects[this.currentSubject].units = this.currentSubjectData;
             this.saveToStorage();
             this.renderUnitSelector();
+        });
+    }
+
+    editUnitQuestions() {
+        if (this.currentSubject == null) return;
+        const unitIndex = parseInt(this.importUnit.value);
+        if (isNaN(unitIndex)) {
+            alert('請選擇單元');
+            return;
+        }
+        const unit = this.currentSubjectData[unitIndex];
+        if (!unit.questions.length) {
+            alert('此單元尚無題目');
+            return;
+        }
+        const items = unit.questions.map((q, i) => ({
+            label: `${i + 1}. ${q.question.slice(0, 30)}`,
+            value: i
+        }));
+        this.showSelection('選擇要刪除的題目', items, (selected) => {
+            if (!selected.length) return;
+            if (!confirm('確定刪除選取的題目？')) return;
+            selected.sort((a,b) => b - a).forEach(idx => unit.questions.splice(idx, 1));
+            this.saveToStorage();
+            this.renderUnitSelector();
+            alert('已刪除題目');
         });
     }
 
