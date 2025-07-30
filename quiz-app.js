@@ -14,6 +14,7 @@ class QuizApp {
         this.userAnswers = {};
         this.showingResults = false;
         this.starredQuestions = new Set();
+        this.selectionCallback = null;
 
         this.loadFromStorage();
         this.initializeElements();
@@ -45,6 +46,12 @@ class QuizApp {
         this.statusOverlay = document.getElementById('status-overlay');
         this.statusList = document.getElementById('status-list');
         this.closeStatusBtn = document.getElementById('close-status');
+
+        this.selectOverlay = document.getElementById('select-overlay');
+        this.selectTitle = document.getElementById('select-title');
+        this.selectList = document.getElementById('select-list');
+        this.selectConfirm = document.getElementById('select-confirm');
+        this.selectCancel = document.getElementById('select-cancel');
 
         this.importFile = document.getElementById('import-file');
         this.importBtn = document.getElementById('import-btn');
@@ -86,6 +93,12 @@ class QuizApp {
         }
         if (this.removeUnitBtn) {
             this.removeUnitBtn.addEventListener('click', () => this.removeUnit());
+        }
+        if (this.selectConfirm) {
+            this.selectConfirm.addEventListener('click', () => this.confirmSelection());
+        }
+        if (this.selectCancel) {
+            this.selectCancel.addEventListener('click', () => this.hideSelection());
         }
     }
 
@@ -372,6 +385,36 @@ class QuizApp {
         this.statusOverlay.style.display = 'none';
     }
 
+    showSelection(title, items, callback) {
+        this.selectTitle.textContent = title;
+        this.selectList.innerHTML = '';
+        items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'select-item';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = item.value;
+            const label = document.createElement('label');
+            label.textContent = item.label;
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            this.selectList.appendChild(div);
+        });
+        this.selectionCallback = callback;
+        this.selectOverlay.style.display = 'flex';
+    }
+
+    hideSelection() {
+        this.selectOverlay.style.display = 'none';
+    }
+
+    confirmSelection() {
+        const cbs = this.selectList.querySelectorAll('input[type="checkbox"]');
+        const selected = Array.from(cbs).filter(cb => cb.checked).map(cb => parseInt(cb.value));
+        this.hideSelection();
+        if (this.selectionCallback) this.selectionCallback(selected);
+    }
+
     updateButtonStates(totalPages) {
         // 上一頁按鈕
         this.prevBtn.disabled = this.currentPage === 1;
@@ -568,26 +611,30 @@ class QuizApp {
 
     removeSubject() {
         if (!subjects.length) return;
-        const list = subjects.map((s, i) => `${i + 1}: ${s.subject}`).join('\n');
-        const idx = parseInt(prompt(`請輸入要刪除的科目編號：\n${list}`));
-        if (isNaN(idx) || idx < 1 || idx > subjects.length) return;
-        if (!confirm(`確定刪除科目「${subjects[idx - 1].subject}」？`)) return;
-        subjects.splice(idx - 1, 1);
-        this.saveToStorage();
-        this.renderSubjectSelector();
+        const items = subjects.map((s, i) => ({ label: s.subject, value: i }));
+        this.showSelection('選擇要刪除的科目', items, (selected) => {
+            if (!selected.length) return;
+            if (!confirm('確定刪除選取的科目？')) return;
+            selected.sort((a,b) => b - a).forEach(idx => subjects.splice(idx, 1));
+            this.saveToStorage();
+            this.renderSubjectSelector();
+        });
     }
 
     removeUnit() {
         if (this.currentSubject == null) return;
         if (!this.currentSubjectData.length) return;
-        const list = this.currentSubjectData.map((u, i) => `${i + 1}: ${u.unit}`).join('\n');
-        const idx = parseInt(prompt(`請輸入要刪除的單元編號：\n${list}`));
-        if (isNaN(idx) || idx < 1 || idx > this.currentSubjectData.length) return;
-        if (!confirm(`確定刪除單元「${this.currentSubjectData[idx - 1].unit}」？`)) return;
-        this.currentSubjectData.splice(idx - 1, 1);
-        subjects[this.currentSubject].units = this.currentSubjectData;
-        this.saveToStorage();
-        this.renderUnitSelector();
+        const items = this.currentSubjectData.map((u, i) => ({ label: u.unit, value: i }));
+        this.showSelection('選擇要刪除的單元', items, (selected) => {
+            if (!selected.length) return;
+            if (!confirm('確定刪除選取的單元？')) return;
+            selected.sort((a,b) => b - a).forEach(idx => {
+                this.currentSubjectData.splice(idx, 1);
+            });
+            subjects[this.currentSubject].units = this.currentSubjectData;
+            this.saveToStorage();
+            this.renderUnitSelector();
+        });
     }
 
     downloadPDF() {
