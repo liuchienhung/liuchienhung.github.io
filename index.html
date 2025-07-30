@@ -176,6 +176,26 @@
             margin-top: 20px;
         }
 
+        .import-section select,
+        .import-section input[type="file"] {
+            font-size: 1em;
+            padding: 6px;
+        }
+
+        .card {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .section-title {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            color: #2c3e50;
+        }
+
         .btn {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
@@ -325,6 +345,10 @@
                 flex-direction: column;
                 gap: 15px;
             }
+            .import-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
         .footer {
             text-align: center;
@@ -360,16 +384,20 @@
                 <div class="unit-buttons" id="unit-buttons">
                     <!-- 單元按鈕將由JavaScript動態生成 -->
                 </div>
-                <div class="import-section">
-                    <select id="import-unit"></select>
-                    <input type="file" id="import-file" accept="application/json">
-                    <button id="import-btn" class="btn">匯入單元題庫</button>
-                    <a href="import-format.json" download class="btn btn-secondary">下載範例</a>
-                </div>
-                <div class="import-section">
-                    <input type="file" id="import-subject-file" accept="application/json">
-                    <button id="import-subject-btn" class="btn">匯入科目題庫</button>
-                    <button id="export-subject-btn" class="btn btn-secondary">匯出科目題庫</button>
+                <div class="card file-ops">
+                    <h4 class="section-title">檔案管理操作</h4>
+                    <div class="import-section">
+                        <select id="import-unit"></select>
+                        <input type="file" id="import-file" accept="application/json">
+                        <button id="import-btn" class="btn">匯入單元題庫</button>
+                        <button id="export-unit-btn" class="btn btn-secondary">匯出單元題庫</button>
+                        <a href="import-format.json" download class="btn btn-secondary">下載範例</a>
+                    </div>
+                    <div class="import-section">
+                        <input type="file" id="import-subject-file" accept="application/json">
+                        <button id="import-subject-btn" class="btn">匯入科目題庫</button>
+                        <button id="export-subject-btn" class="btn btn-secondary">匯出科目題庫</button>
+                    </div>
                 </div>
                 <div class="controls">
                     <button id="add-unit" class="btn">新增單元</button>

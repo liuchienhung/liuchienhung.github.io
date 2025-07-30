@@ -59,6 +59,7 @@ class QuizApp {
         this.importSubjectFile = document.getElementById('import-subject-file');
         this.importSubjectBtn = document.getElementById('import-subject-btn');
         this.exportSubjectBtn = document.getElementById('export-subject-btn');
+        this.exportUnitBtn = document.getElementById('export-unit-btn');
         this.downloadPdfBtn = document.getElementById('download-pdf');
 
         this.addSubjectBtn = document.getElementById('add-subject');
@@ -102,6 +103,9 @@ class QuizApp {
         }
         if (this.exportSubjectBtn) {
             this.exportSubjectBtn.addEventListener('click', () => this.exportSubject());
+        }
+        if (this.exportUnitBtn) {
+            this.exportUnitBtn.addEventListener('click', () => this.exportUnit());
         }
         if (this.selectConfirm) {
             this.selectConfirm.addEventListener('click', () => this.confirmSelection());
@@ -544,11 +548,11 @@ class QuizApp {
 
     backToSubjectSelector() {
         this.unitSelector.style.display = 'none';
-        this.subjectSelector.style.display = 'block';
         this.currentSubject = null;
         this.currentSubjectData = [];
         this.currentUnit = null;
         this.resetQuiz();
+        this.renderSubjectSelector();
     }
 
     restartQuiz() {
@@ -598,6 +602,23 @@ class QuizApp {
             }
         };
         reader.readAsText(file, 'utf-8');
+    }
+
+    exportUnit() {
+        const unitIndex = parseInt(this.importUnit.value);
+        if (isNaN(unitIndex)) {
+            alert('請選擇單元');
+            return;
+        }
+        const unit = this.currentSubjectData[unitIndex];
+        const dataStr = JSON.stringify({ questions: unit.questions }, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${unit.unit}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
     }
 
     exportSubject() {
