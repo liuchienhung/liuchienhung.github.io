@@ -205,6 +205,77 @@
             color: #2c3e50;
         }
 
+        /* layout helpers for file operations */
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: -5px;
+        }
+
+        .row > [class^="col-"] {
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        .col-md-4 {
+            flex: 0 0 33.333%;
+            max-width: 33.333%;
+        }
+
+        .col-md-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+
+        .g-2 {
+            gap: 10px;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+
+        .align-items-center {
+            align-items: center;
+        }
+
+        .d-grid {
+            display: grid;
+        }
+
+        .gap-2 {
+            gap: 8px;
+        }
+
+        .form-control,
+        .form-select {
+            width: 100%;
+            padding: 8px;
+            font-size: 1em;
+        }
+
+        .btn-outline-secondary {
+            background: #fff;
+            color: #7f8c8d;
+            border: 1px solid #7f8c8d;
+        }
+
+        .btn-outline-secondary:hover {
+            background: #7f8c8d;
+            color: #fff;
+        }
+
+        .btn-outline-info {
+            background: #fff;
+            color: #3498db;
+            border: 1px solid #3498db;
+        }
+
+        .btn-outline-info:hover {
+            background: #3498db;
+            color: #fff;
+        }
+
         .btn {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
@@ -367,6 +438,24 @@
             .d-grid .btn {
                 width: 100%;
                 margin-bottom: 8px;
+            }
+
+            /* landscape adjustments */
+            @media (orientation: landscape) {
+                .unit-buttons {
+                    grid-template-columns: 1fr 1fr;
+                }
+
+                .d-grid {
+                    display: grid !important;
+                    grid-template-columns: 1fr 1fr;
+                }
+
+                .col-md-4,
+                .col-md-6 {
+                    flex: 0 0 50%;
+                    max-width: 50%;
+                }
             }
         }
         .footer {
