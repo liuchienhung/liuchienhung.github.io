@@ -46,6 +46,12 @@ class QuizApp {
         this.statusList = document.getElementById('status-list');
         this.closeStatusBtn = document.getElementById('close-status');
 
+        this.removeOverlay = document.getElementById('remove-overlay');
+        this.removeTitle = document.getElementById('remove-title');
+        this.removeList = document.getElementById('remove-list');
+        this.removeConfirm = document.getElementById('remove-confirm');
+        this.removeCancel = document.getElementById('remove-cancel');
+
         this.importFile = document.getElementById('import-file');
         this.importBtn = document.getElementById('import-btn');
         this.importUnit = document.getElementById('import-unit');
@@ -86,6 +92,9 @@ class QuizApp {
         }
         if (this.removeUnitBtn) {
             this.removeUnitBtn.addEventListener('click', () => this.removeUnit());
+        }
+        if (this.removeCancel) {
+            this.removeCancel.addEventListener('click', () => this.hideRemoveOverlay());
         }
     }
 
@@ -372,6 +381,10 @@ class QuizApp {
         this.statusOverlay.style.display = 'none';
     }
 
+    hideRemoveOverlay() {
+        this.removeOverlay.style.display = 'none';
+    }
+
     updateButtonStates(totalPages) {
         // 上一頁按鈕
         this.prevBtn.disabled = this.currentPage === 1;
@@ -568,26 +581,40 @@ class QuizApp {
 
     removeSubject() {
         if (!subjects.length) return;
-        const list = subjects.map((s, i) => `${i + 1}: ${s.subject}`).join('\n');
-        const idx = parseInt(prompt(`請輸入要刪除的科目編號：\n${list}`));
-        if (isNaN(idx) || idx < 1 || idx > subjects.length) return;
-        if (!confirm(`確定刪除科目「${subjects[idx - 1].subject}」？`)) return;
-        subjects.splice(idx - 1, 1);
-        this.saveToStorage();
-        this.renderSubjectSelector();
+        this.removeTitle.textContent = '選擇要刪除的科目';
+        this.removeList.innerHTML = subjects.map((s,i) =>
+            `<div><label><input type="checkbox" value="${i}"> ${s.subject}</label></div>`).join('');
+        this.removeConfirm.onclick = () => {
+            const checked = Array.from(this.removeList.querySelectorAll('input:checked'))
+                .map(cb => parseInt(cb.value)).sort((a,b) => b-a);
+            if (checked.length && confirm('確定刪除選取的科目？')) {
+                checked.forEach(idx => subjects.splice(idx,1));
+                this.saveToStorage();
+                this.renderSubjectSelector();
+            }
+            this.hideRemoveOverlay();
+        };
+        this.removeOverlay.style.display = 'flex';
     }
 
     removeUnit() {
         if (this.currentSubject == null) return;
         if (!this.currentSubjectData.length) return;
-        const list = this.currentSubjectData.map((u, i) => `${i + 1}: ${u.unit}`).join('\n');
-        const idx = parseInt(prompt(`請輸入要刪除的單元編號：\n${list}`));
-        if (isNaN(idx) || idx < 1 || idx > this.currentSubjectData.length) return;
-        if (!confirm(`確定刪除單元「${this.currentSubjectData[idx - 1].unit}」？`)) return;
-        this.currentSubjectData.splice(idx - 1, 1);
-        subjects[this.currentSubject].units = this.currentSubjectData;
-        this.saveToStorage();
-        this.renderUnitSelector();
+        this.removeTitle.textContent = '選擇要刪除的單元';
+        this.removeList.innerHTML = this.currentSubjectData.map((u,i) =>
+            `<div><label><input type="checkbox" value="${i}"> ${u.unit}</label></div>`).join('');
+        this.removeConfirm.onclick = () => {
+            const checked = Array.from(this.removeList.querySelectorAll('input:checked'))
+                .map(cb => parseInt(cb.value)).sort((a,b) => b-a);
+            if (checked.length && confirm('確定刪除選取的單元？')) {
+                checked.forEach(idx => this.currentSubjectData.splice(idx,1));
+                subjects[this.currentSubject].units = this.currentSubjectData;
+                this.saveToStorage();
+                this.renderUnitSelector();
+            }
+            this.hideRemoveOverlay();
+        };
+        this.removeOverlay.style.display = 'flex';
     }
 
     downloadPDF() {

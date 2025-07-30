@@ -319,7 +319,7 @@
         .footer {
             text-align: center;
             padding: 10px 0;
-            color: #555;
+            color: #fff;
         }
 
     </style>
@@ -404,6 +404,16 @@
             <h3>答題狀態</h3>
             <div id="status-list"></div>
             <button id="close-status" class="btn" style="margin-top:10px;">關閉</button>
+        </div>
+    </div>
+    <div id="remove-overlay" class="status-overlay" style="display:none;">
+        <div class="status-content">
+            <h3 id="remove-title"></h3>
+            <div id="remove-list"></div>
+            <div style="text-align:right;margin-top:10px;">
+                <button id="remove-confirm" class="btn">刪除</button>
+                <button id="remove-cancel" class="btn btn-secondary">取消</button>
+            </div>
         </div>
     </div>
     <footer class="footer">
