@@ -56,6 +56,9 @@ class QuizApp {
         this.importFile = document.getElementById('import-file');
         this.importBtn = document.getElementById('import-btn');
         this.importUnit = document.getElementById('import-unit');
+        this.subjectImportFile = document.getElementById('subject-import-file');
+        this.subjectImportBtn = document.getElementById('subject-import-btn');
+        this.subjectExportBtn = document.getElementById('subject-export-btn');
         this.downloadPdfBtn = document.getElementById('download-pdf');
 
         this.addSubjectBtn = document.getElementById('add-subject');
@@ -93,6 +96,12 @@ class QuizApp {
         }
         if (this.removeUnitBtn) {
             this.removeUnitBtn.addEventListener('click', () => this.removeUnit());
+        }
+        if (this.subjectImportBtn) {
+            this.subjectImportBtn.addEventListener('click', () => this.importSubject());
+        }
+        if (this.subjectExportBtn) {
+            this.subjectExportBtn.addEventListener('click', () => this.exportSubject());
         }
         if (this.selectConfirm) {
             this.selectConfirm.addEventListener('click', () => this.confirmSelection());
@@ -589,6 +598,42 @@ class QuizApp {
             }
         };
         reader.readAsText(file, 'utf-8');
+    }
+
+    importSubject() {
+        const file = this.subjectImportFile.files[0];
+        if (!file) {
+            alert('請選擇檔案');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                const units = Array.isArray(data.units) ? data.units : data;
+                if (!Array.isArray(units)) throw new Error('格式錯誤');
+                subjects[this.currentSubject].units = units;
+                this.currentSubjectData = units;
+                this.saveToStorage();
+                alert('匯入成功');
+                this.renderUnitSelector();
+            } catch (err) {
+                alert('匯入失敗：檔案格式不正確');
+            }
+        };
+        reader.readAsText(file, 'utf-8');
+    }
+
+    exportSubject() {
+        const units = subjects[this.currentSubject].units;
+        const dataStr = JSON.stringify({ units }, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${subjects[this.currentSubject].subject}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
     }
 
     addSubject() {

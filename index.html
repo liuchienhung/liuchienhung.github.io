@@ -176,6 +176,13 @@
             margin-top: 20px;
         }
 
+        .subject-import-export {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
         .btn {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
@@ -363,8 +370,13 @@
                 <div class="import-section">
                     <select id="import-unit"></select>
                     <input type="file" id="import-file" accept="application/json">
-                    <button id="import-btn" class="btn">匯入題庫</button>
+                    <button id="import-btn" class="btn">匯入單元題庫</button>
                     <a href="import-format.json" download class="btn btn-secondary">下載範例</a>
+                </div>
+                <div class="subject-import-export">
+                    <input type="file" id="subject-import-file" accept="application/json">
+                    <button id="subject-import-btn" class="btn">匯入科目題庫</button>
+                    <button id="subject-export-btn" class="btn btn-secondary">匯出科目題庫</button>
                 </div>
                 <div class="controls">
                     <button id="add-unit" class="btn">新增單元</button>
