@@ -53,6 +53,8 @@ class QuizApp {
 
         this.addSubjectBtn = document.getElementById('add-subject');
         this.addUnitBtn = document.getElementById('add-unit');
+        this.removeSubjectBtn = document.getElementById('remove-subject');
+        this.removeUnitBtn = document.getElementById('remove-unit');
         
         this.currentPageSpan = document.getElementById('current-page');
         this.totalPagesSpan = document.getElementById('total-pages');
@@ -78,6 +80,12 @@ class QuizApp {
         }
         if (this.addUnitBtn) {
             this.addUnitBtn.addEventListener('click', () => this.addUnit());
+        }
+        if (this.removeSubjectBtn) {
+            this.removeSubjectBtn.addEventListener('click', () => this.removeSubject());
+        }
+        if (this.removeUnitBtn) {
+            this.removeUnitBtn.addEventListener('click', () => this.removeUnit());
         }
     }
 
@@ -553,6 +561,30 @@ class QuizApp {
         const name = prompt('請輸入單元名稱');
         if (!name) return;
         this.currentSubjectData.push({ unit: name, questions: [] });
+        subjects[this.currentSubject].units = this.currentSubjectData;
+        this.saveToStorage();
+        this.renderUnitSelector();
+    }
+
+    removeSubject() {
+        if (!subjects.length) return;
+        const list = subjects.map((s, i) => `${i + 1}: ${s.subject}`).join('\n');
+        const idx = parseInt(prompt(`請輸入要刪除的科目編號：\n${list}`));
+        if (isNaN(idx) || idx < 1 || idx > subjects.length) return;
+        if (!confirm(`確定刪除科目「${subjects[idx - 1].subject}」？`)) return;
+        subjects.splice(idx - 1, 1);
+        this.saveToStorage();
+        this.renderSubjectSelector();
+    }
+
+    removeUnit() {
+        if (this.currentSubject == null) return;
+        if (!this.currentSubjectData.length) return;
+        const list = this.currentSubjectData.map((u, i) => `${i + 1}: ${u.unit}`).join('\n');
+        const idx = parseInt(prompt(`請輸入要刪除的單元編號：\n${list}`));
+        if (isNaN(idx) || idx < 1 || idx > this.currentSubjectData.length) return;
+        if (!confirm(`確定刪除單元「${this.currentSubjectData[idx - 1].unit}」？`)) return;
+        this.currentSubjectData.splice(idx - 1, 1);
         subjects[this.currentSubject].units = this.currentSubjectData;
         this.saveToStorage();
         this.renderUnitSelector();
