@@ -195,6 +195,16 @@
             font-size: 1.2em;
         }
 
+        .file-ops {
+            background-color: #f9fbfc;
+            border: 1px solid #d0d7de;
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
         .btn {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
@@ -349,6 +359,15 @@
                 flex-direction: column;
                 align-items: stretch;
             }
+
+            .d-grid {
+                display: block !important;
+            }
+
+            .d-grid .btn {
+                width: 100%;
+                margin-bottom: 8px;
+            }
         }
         .footer {
             text-align: center;
@@ -384,19 +403,43 @@
                 <div class="unit-buttons" id="unit-buttons">
                     <!-- 單元按鈕將由JavaScript動態生成 -->
                 </div>
-                <div class="card file-ops">
-                    <h4>檔案管理操作</h4>
-                    <div class="import-section">
-                        <select id="import-unit"></select>
-                        <input type="file" id="import-file" accept="application/json">
-                        <button id="import-btn" class="btn">匯入單元題庫</button>
-                        <button id="export-unit-btn" class="btn btn-secondary">匯出單元題庫</button>
-                        <a href="import-format.json" download class="btn btn-secondary">下載範例</a>
+                <div class="card file-ops p-4 shadow-sm rounded">
+                    <h4 class="section-title mb-3">📁 檔案管理操作</h4>
+
+                    <!-- 單元題庫操作 -->
+                    <div class="row g-2 align-items-center mb-4">
+                        <div class="col-md-4">
+                            <select id="import-unit" class="form-select">
+                                <option value="0">第一單元：滲透測試簡介</option>
+                                <option value="1">第二單元：資訊蒐集</option>
+                                <option value="2">第三單元：網路、主機及網站掃描</option>
+                                <option value="3">第四單元：弱點利用</option>
+                                <option value="4">第五單元：提升權限</option>
+                                <option value="5">第六單元：維持存取權限</option>
+                                <option value="6">第七單元：整理漏洞與撰寫報告</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <input type="file" id="import-file" class="form-control" accept="application/json">
+                        </div>
+
+                        <div class="col-md-4 d-grid gap-2">
+                            <button id="import-btn" class="btn btn-primary">匯入單元題庫</button>
+                            <button id="export-unit-btn" class="btn btn-outline-secondary">匯出單元題庫</button>
+                            <a href="import-format.json" download="" class="btn btn-outline-info">下載範例格式</a>
+                        </div>
                     </div>
-                    <div class="import-section">
-                        <input type="file" id="import-subject-file" accept="application/json">
-                        <button id="import-subject-btn" class="btn">匯入科目題庫</button>
-                        <button id="export-subject-btn" class="btn btn-secondary">匯出科目題庫</button>
+
+                    <!-- 科目題庫操作 -->
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-6">
+                            <input type="file" id="import-subject-file" class="form-control" accept="application/json">
+                        </div>
+                        <div class="col-md-6 d-grid gap-2">
+                            <button id="import-subject-btn" class="btn btn-success">匯入科目題庫</button>
+                            <button id="export-subject-btn" class="btn btn-outline-secondary">匯出科目題庫</button>
+                        </div>
                     </div>
                 </div>
                 <div class="controls">
