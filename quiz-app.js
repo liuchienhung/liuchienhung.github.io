@@ -56,6 +56,9 @@ class QuizApp {
         this.importFile = document.getElementById('import-file');
         this.importBtn = document.getElementById('import-btn');
         this.importUnit = document.getElementById('import-unit');
+        this.importSubjectFile = document.getElementById('import-subject-file');
+        this.importSubjectBtn = document.getElementById('import-subject-btn');
+        this.exportSubjectBtn = document.getElementById('export-subject-btn');
         this.downloadPdfBtn = document.getElementById('download-pdf');
 
         this.addSubjectBtn = document.getElementById('add-subject');
@@ -93,6 +96,12 @@ class QuizApp {
         }
         if (this.removeUnitBtn) {
             this.removeUnitBtn.addEventListener('click', () => this.removeUnit());
+        }
+        if (this.importSubjectBtn) {
+            this.importSubjectBtn.addEventListener('click', () => this.importSubject());
+        }
+        if (this.exportSubjectBtn) {
+            this.exportSubjectBtn.addEventListener('click', () => this.exportSubject());
         }
         if (this.selectConfirm) {
             this.selectConfirm.addEventListener('click', () => this.confirmSelection());
@@ -581,6 +590,41 @@ class QuizApp {
                 const questions = Array.isArray(data) ? data : data.questions;
                 if (!Array.isArray(questions)) throw new Error('格式錯誤');
                 this.currentSubjectData[unitIndex].questions.push(...questions);
+                this.saveToStorage();
+                alert('匯入成功');
+                this.renderUnitSelector();
+            } catch (err) {
+                alert('匯入失敗：檔案格式不正確');
+            }
+        };
+        reader.readAsText(file, 'utf-8');
+    }
+
+    exportSubject() {
+        if (this.currentSubject == null) return;
+        const dataStr = JSON.stringify(this.currentSubjectData, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${subjects[this.currentSubject].subject}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    importSubject() {
+        const file = this.importSubjectFile.files[0];
+        if (!file) {
+            alert('請選擇檔案');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!Array.isArray(data)) throw new Error('格式錯誤');
+                this.currentSubjectData = data;
+                subjects[this.currentSubject].units = data;
                 this.saveToStorage();
                 alert('匯入成功');
                 this.renderUnitSelector();
