@@ -61,6 +61,7 @@ class QuizApp {
         this.exportSubjectBtn = document.getElementById('export-subject-btn');
         this.exportUnitBtn = document.getElementById('export-unit-btn');
         this.downloadPdfBtn = document.getElementById('download-pdf');
+        this.downloadFormatBtn = document.getElementById('download-format-btn');
 
         this.addSubjectBtn = document.getElementById('add-subject');
         this.addUnitBtn = document.getElementById('add-unit');
@@ -85,6 +86,9 @@ class QuizApp {
         this.importBtn.addEventListener('click', () => this.importQuestions());
         if (this.downloadPdfBtn) {
             this.downloadPdfBtn.addEventListener('click', () => this.downloadPDF());
+        }
+        if (this.downloadFormatBtn) {
+            this.downloadFormatBtn.addEventListener('click', () => this.downloadFormat());
         }
         if (this.addSubjectBtn) {
             this.addSubjectBtn.addEventListener('click', () => this.addSubject());
@@ -631,6 +635,13 @@ class QuizApp {
         a.download = `${unit.unit}.json`;
         a.click();
         URL.revokeObjectURL(url);
+    }
+
+    downloadFormat() {
+        const a = document.createElement('a');
+        a.href = 'import-format.json';
+        a.download = 'import-format.json';
+        a.click();
     }
 
     importSubject() {
