@@ -63,13 +63,17 @@ class QuizApp {
         this.importFileMulti = document.getElementById('import-file-multi');
         this.importMultiBtn = document.getElementById('import-multi-btn');
         this.importUnitMulti = document.getElementById('import-unit-multi');
-        this.importSubjectFile = document.getElementById('import-subject-file');
-        this.importSubjectBtn = document.getElementById('import-subject-btn');
-        this.exportSubjectBtn = document.getElementById('export-subject-btn');
+        this.importAllFile = document.getElementById('import-all-file');
+        this.importAllBtn = document.getElementById('import-all-btn');
+        this.exportAllBtn = document.getElementById('export-all-btn');
+        this.importAllFileMulti = document.getElementById('import-all-file-multi');
+        this.importAllMultiBtn = document.getElementById('import-all-multi-btn');
+        this.exportAllMultiBtn = document.getElementById('export-all-multi-btn');
         this.exportUnitBtn = document.getElementById('export-unit-btn');
         this.exportUnitMultiBtn = document.getElementById('export-unit-multi-btn');
         this.downloadPdfBtn = document.getElementById('download-pdf');
         this.downloadFormatBtn = document.getElementById('download-format-btn');
+        this.downloadMultiFormatBtn = document.getElementById('download-multi-format-btn');
         this.editUnitMultiBtn = document.getElementById('edit-unit-multi-btn');
         this.editUnitBtn = document.getElementById('edit-unit-btn');
 
@@ -103,6 +107,9 @@ class QuizApp {
         if (this.downloadFormatBtn) {
             this.downloadFormatBtn.addEventListener('click', () => this.downloadFormat());
         }
+        if (this.downloadMultiFormatBtn) {
+            this.downloadMultiFormatBtn.addEventListener('click', () => this.downloadFormatMulti());
+        }
         if (this.addSubjectBtn) {
             this.addSubjectBtn.addEventListener('click', () => this.addSubject());
         }
@@ -115,11 +122,17 @@ class QuizApp {
         if (this.removeUnitBtn) {
             this.removeUnitBtn.addEventListener('click', () => this.removeUnit());
         }
-        if (this.importSubjectBtn) {
-            this.importSubjectBtn.addEventListener('click', () => this.importSubject());
+        if (this.importAllBtn) {
+            this.importAllBtn.addEventListener('click', () => this.importAllQuestions());
         }
-        if (this.exportSubjectBtn) {
-            this.exportSubjectBtn.addEventListener('click', () => this.exportSubject());
+        if (this.exportAllBtn) {
+            this.exportAllBtn.addEventListener('click', () => this.exportAllQuestions());
+        }
+        if (this.importAllMultiBtn) {
+            this.importAllMultiBtn.addEventListener('click', () => this.importAllQuestionsMulti());
+        }
+        if (this.exportAllMultiBtn) {
+            this.exportAllMultiBtn.addEventListener('click', () => this.exportAllQuestionsMulti());
         }
         if (this.exportUnitBtn) {
             this.exportUnitBtn.addEventListener('click', () => this.exportUnit());
@@ -731,7 +744,7 @@ class QuizApp {
         reader.readAsText(file, 'utf-8');
     }
 
-    exportSubject() {
+    exportAllQuestions() {
         if (this.currentSubject == null) return;
         const dataStr = JSON.stringify(this.currentSubjectData, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
@@ -779,6 +792,18 @@ class QuizApp {
         URL.revokeObjectURL(url);
     }
 
+    exportAllQuestionsMulti() {
+        if (this.currentSubject == null) return;
+        const dataStr = JSON.stringify(this.currentMultiUnits, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${subjects[this.currentSubject].subject}-multi.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
     downloadFormat() {
         const a = document.createElement('a');
         a.href = 'import-format.json';
@@ -786,8 +811,15 @@ class QuizApp {
         a.click();
     }
 
-    importSubject() {
-        const file = this.importSubjectFile.files[0];
+    downloadFormatMulti() {
+        const a = document.createElement('a');
+        a.href = 'import-multi-format.json';
+        a.download = 'import-multi-format.json';
+        a.click();
+    }
+
+    importAllQuestions() {
+        const file = this.importAllFile.files[0];
         if (!file) {
             alert('請選擇檔案');
             return;
@@ -796,9 +828,34 @@ class QuizApp {
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target.result);
-                if (!Array.isArray(data)) throw new Error('格式錯誤');
-                this.currentSubjectData = data;
-                subjects[this.currentSubject].units = data;
+                const units = Array.isArray(data) ? data : data.units;
+                if (!Array.isArray(units)) throw new Error('格式錯誤');
+                this.currentSubjectData = units;
+                subjects[this.currentSubject].units = units;
+                this.saveToStorage();
+                alert('匯入成功');
+                this.renderUnitSelector();
+            } catch (err) {
+                alert('匯入失敗：檔案格式不正確');
+            }
+        };
+        reader.readAsText(file, 'utf-8');
+    }
+
+    importAllQuestionsMulti() {
+        const file = this.importAllFileMulti.files[0];
+        if (!file) {
+            alert('請選擇檔案');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                const units = Array.isArray(data) ? data : data.units;
+                if (!Array.isArray(units)) throw new Error('格式錯誤');
+                this.currentMultiUnits = units;
+                subjects[this.currentSubject].multiUnits = units;
                 this.saveToStorage();
                 alert('匯入成功');
                 this.renderUnitSelector();
