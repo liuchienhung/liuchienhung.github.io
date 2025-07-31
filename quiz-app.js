@@ -18,6 +18,7 @@ class QuizApp {
         this.showingResults = false;
         this.starredQuestions = new Set();
         this.selectionCallback = null;
+        this.toastElement = null;
 
         this.loadFromStorage();
         this.initializeElements();
@@ -86,6 +87,13 @@ class QuizApp {
         this.totalPagesSpan = document.getElementById('total-pages');
         this.currentQuestionSpan = document.getElementById('current-question');
         this.totalQuestionsSpan = document.getElementById('total-questions');
+
+        this.toastElement = document.getElementById('toast');
+
+        if (this.importBtn) this.importBtn.disabled = true;
+        if (this.importMultiBtn) this.importMultiBtn.disabled = true;
+        if (this.importAllBtn) this.importAllBtn.disabled = true;
+        if (this.importAllMultiBtn) this.importAllMultiBtn.disabled = true;
     }
 
     initializeEventListeners() {
@@ -100,6 +108,26 @@ class QuizApp {
         this.importBtn.addEventListener('click', () => this.importQuestions());
         if (this.importMultiBtn) {
             this.importMultiBtn.addEventListener('click', () => this.importQuestionsMulti());
+        }
+        if (this.importFile) {
+            this.importFile.addEventListener('change', () => {
+                this.importBtn.disabled = !this.importFile.files.length;
+            });
+        }
+        if (this.importFileMulti) {
+            this.importFileMulti.addEventListener('change', () => {
+                this.importMultiBtn.disabled = !this.importFileMulti.files.length;
+            });
+        }
+        if (this.importAllFile) {
+            this.importAllFile.addEventListener('change', () => {
+                this.importAllBtn.disabled = !this.importAllFile.files.length;
+            });
+        }
+        if (this.importAllFileMulti) {
+            this.importAllFileMulti.addEventListener('change', () => {
+                this.importAllMultiBtn.disabled = !this.importAllFileMulti.files.length;
+            });
         }
         if (this.downloadPdfBtn) {
             this.downloadPdfBtn.addEventListener('click', () => this.downloadPDF());
@@ -529,6 +557,16 @@ class QuizApp {
         if (this.selectionCallback) this.selectionCallback(selected);
     }
 
+    showToast(message, isError = false) {
+        if (!this.toastElement) return alert(message);
+        this.toastElement.textContent = message;
+        this.toastElement.style.background = isError ? '#dc3545' : '#333';
+        this.toastElement.classList.add('show');
+        setTimeout(() => {
+            this.toastElement.classList.remove('show');
+        }, 3000);
+    }
+
     updateButtonStates(totalPages) {
         // 上一頁按鈕
         this.prevBtn.disabled = this.currentPage === 1;
@@ -710,10 +748,10 @@ class QuizApp {
                 if (!Array.isArray(questions)) throw new Error('格式錯誤');
                 this.currentSubjectData[unitIndex].questions.push(...questions);
                 this.saveToStorage();
-                alert('匯入成功');
+                this.showToast('匯入成功');
                 this.renderUnitSelector();
             } catch (err) {
-                alert('匯入失敗：檔案格式不正確');
+                this.showToast('匯入失敗：檔案格式不正確', true);
             }
         };
         reader.readAsText(file, 'utf-8');
@@ -735,10 +773,10 @@ class QuizApp {
                 this.currentMultiUnits[unitIndex].questions.push(...questions);
                 subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
                 this.saveToStorage();
-                alert('匯入成功');
+                this.showToast('匯入成功');
                 this.renderUnitSelector();
             } catch (err) {
-                alert('匯入失敗：檔案格式不正確');
+                this.showToast('匯入失敗：檔案格式不正確', true);
             }
         };
         reader.readAsText(file, 'utf-8');
@@ -833,10 +871,10 @@ class QuizApp {
                 this.currentSubjectData = units;
                 subjects[this.currentSubject].units = units;
                 this.saveToStorage();
-                alert('匯入成功');
+                this.showToast('匯入成功');
                 this.renderUnitSelector();
             } catch (err) {
-                alert('匯入失敗：檔案格式不正確');
+                this.showToast('匯入失敗：檔案格式不正確', true);
             }
         };
         reader.readAsText(file, 'utf-8');
@@ -857,10 +895,10 @@ class QuizApp {
                 this.currentMultiUnits = units;
                 subjects[this.currentSubject].multiUnits = units;
                 this.saveToStorage();
-                alert('匯入成功');
+                this.showToast('匯入成功');
                 this.renderUnitSelector();
             } catch (err) {
-                alert('匯入失敗：檔案格式不正確');
+                this.showToast('匯入失敗：檔案格式不正確', true);
             }
         };
         reader.readAsText(file, 'utf-8');
