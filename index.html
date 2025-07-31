@@ -204,6 +204,22 @@
             margin-bottom: 10px;
         }
 
+        .file-ops-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        @media (max-width: 576px) {
+            .file-ops-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .file-ops-buttons .btn {
+                width: 100%;
+            }
+        }
+
         .section-title {
             font-weight: bold;
             color: #2c3e50;
@@ -494,7 +510,7 @@
                             <div class="col-md-6 col-lg-4">
                                 <input type="file" id="import-file" class="form-control" placeholder="請選擇 json 檔案" accept="application/json">
                             </div>
-                            <div class="col-12 col-lg-4 d-flex flex-wrap gap-2">
+                            <div class="col-12 col-lg-4 file-ops-buttons">
                                 <button id="import-btn" class="btn btn-primary btn-sm" disabled>⬆ 匯入單選題庫</button>
                                 <button id="export-unit-btn" class="btn btn-outline-primary btn-sm">⬇ 匯出單選題庫</button>
                                 <button id="edit-unit-btn" class="btn btn-secondary btn-sm">✏ 編輯</button>
@@ -505,7 +521,7 @@
                             <div class="col-md-6">
                                 <input type="file" id="import-all-file" class="form-control" placeholder="請選擇 json 檔案" accept="application/json">
                             </div>
-                            <div class="col-md-6 d-flex flex-wrap gap-2">
+                            <div class="col-md-6 file-ops-buttons">
                                 <button id="import-all-btn" class="btn btn-primary btn-sm" disabled>⬆ 全部匯入</button>
                                 <button id="export-all-btn" class="btn btn-outline-primary btn-sm">⬇ 全部匯出</button>
                             </div>
@@ -522,7 +538,7 @@
                             <div class="col-md-6 col-lg-4">
                                 <input type="file" id="import-file-multi" class="form-control" placeholder="請選擇 json 檔案" accept="application/json">
                             </div>
-                            <div class="col-12 col-lg-4 d-flex flex-wrap gap-2">
+                            <div class="col-12 col-lg-4 file-ops-buttons">
                                 <button id="import-multi-btn" class="btn btn-primary btn-sm" disabled>⬆ 匯入多選題庫</button>
                                 <button id="export-unit-multi-btn" class="btn btn-outline-primary btn-sm">⬇ 匯出多選題庫</button>
                                 <button id="edit-unit-multi-btn" class="btn btn-secondary btn-sm">✏ 編輯</button>
@@ -533,7 +549,7 @@
                             <div class="col-md-6">
                                 <input type="file" id="import-all-file-multi" class="form-control" placeholder="請選擇 json 檔案" accept="application/json">
                             </div>
-                            <div class="col-md-6 d-flex flex-wrap gap-2">
+                            <div class="col-md-6 file-ops-buttons">
                                 <button id="import-all-multi-btn" class="btn btn-primary btn-sm" disabled>⬆ 全部匯入</button>
                                 <button id="export-all-multi-btn" class="btn btn-outline-primary btn-sm">⬇ 全部匯出</button>
                             </div>
