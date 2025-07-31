@@ -240,6 +240,50 @@
             background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
         }
 
+        .btn-outline-primary {
+            background: none;
+            border: 2px solid #3498db;
+            color: #3498db;
+        }
+
+        .btn-outline-primary:hover {
+            background: #3498db;
+            color: #fff;
+        }
+
+        .btn-outline-secondary {
+            background: none;
+            border: 2px solid #7f8c8d;
+            color: #7f8c8d;
+        }
+
+        .btn-outline-secondary:hover {
+            background: #7f8c8d;
+            color: #fff;
+        }
+
+        .btn-outline-danger {
+            background: none;
+            border: 2px solid #e74c3c;
+            color: #e74c3c;
+        }
+
+        .btn-outline-danger:hover {
+            background: #e74c3c;
+            color: #fff;
+        }
+
+        .btn-outline-info {
+            background: none;
+            border: 2px solid #17a2b8;
+            color: #17a2b8;
+        }
+
+        .btn-outline-info:hover {
+            background: #17a2b8;
+            color: #fff;
+        }
+
         .pagination-info {
             color: #7f8c8d;
             font-size: 1em;
@@ -379,6 +423,23 @@
             color: #fff;
         }
 
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 4px;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
     </style>
 </head>
 <body>
@@ -415,72 +476,69 @@
                 <div class="card file-ops p-4 shadow-sm rounded">
                     <h4 class="section-title mb-3">📁 檔案管理操作</h4>
 
-                    <!-- 單選題庫操作 -->
-                    <h5 class="section-title mb-2">單選題庫</h5>
-                    <div class="row g-2 align-items-center mb-4">
-                        <div class="col-md-4">
-                            <select id="import-unit" class="form-select">
-                                <option value="0">第一單元：滲透測試簡介</option>
-                                <option value="1">第二單元：資訊蒐集</option>
-                                <option value="2">第三單元：網路、主機及網站掃描</option>
-                                <option value="3">第四單元：弱點利用</option>
-                                <option value="4">第五單元：提升權限</option>
-                                <option value="5">第六單元：維持存取權限</option>
-                                <option value="6">第七單元：整理漏洞與撰寫報告</option>
-                            </select>
+                    <fieldset class="p-3 mb-4 shadow-sm rounded">
+                        <legend class="section-title">單選題庫</legend>
+                        <div class="row g-2 align-items-center mb-3">
+                            <div class="col-md-6 col-lg-4">
+                                <label for="import-unit" class="form-label">題庫單元</label>
+                                <select id="import-unit" class="form-select">
+                                    <option value="0">第一單元：滲透測試簡介</option>
+                                    <option value="1">第二單元：資訊蒐集</option>
+                                    <option value="2">第三單元：網路、主機及網站掃描</option>
+                                    <option value="3">第四單元：弱點利用</option>
+                                    <option value="4">第五單元：提升權限</option>
+                                    <option value="5">第六單元：維持存取權限</option>
+                                    <option value="6">第七單元：整理漏洞與撰寫報告</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <input type="file" id="import-file" class="form-control" placeholder="請選擇 json 檔案" accept="application/json">
+                            </div>
+                            <div class="col-12 col-lg-4 d-flex flex-wrap gap-2">
+                                <button id="import-btn" class="btn btn-primary btn-sm" disabled>⬆ 匯入單選題庫</button>
+                                <button id="export-unit-btn" class="btn btn-outline-primary btn-sm">⬇ 匯出單選題庫</button>
+                                <button id="edit-unit-btn" class="btn btn-secondary btn-sm">✏ 編輯</button>
+                                <button id="download-format-btn" class="btn btn-outline-info btn-sm">📄 範例下載</button>
+                            </div>
                         </div>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-6">
+                                <input type="file" id="import-all-file" class="form-control" placeholder="請選擇 json 檔案" accept="application/json">
+                            </div>
+                            <div class="col-md-6 d-flex flex-wrap gap-2">
+                                <button id="import-all-btn" class="btn btn-primary btn-sm" disabled>⬆ 全部匯入</button>
+                                <button id="export-all-btn" class="btn btn-outline-primary btn-sm">⬇ 全部匯出</button>
+                            </div>
+                        </div>
+                    </fieldset>
 
-                        <div class="col-md-4">
-                            <input type="file" id="import-file" class="form-control" accept="application/json">
+                    <fieldset class="p-3 mt-5 mb-4 shadow-sm rounded">
+                        <legend class="section-title">多選題庫</legend>
+                        <div class="row g-2 align-items-center mb-3">
+                            <div class="col-md-6 col-lg-4">
+                                <label for="import-unit-multi" class="form-label">題庫單元</label>
+                                <select id="import-unit-multi" class="form-select"></select>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <input type="file" id="import-file-multi" class="form-control" placeholder="請選擇 json 檔案" accept="application/json">
+                            </div>
+                            <div class="col-12 col-lg-4 d-flex flex-wrap gap-2">
+                                <button id="import-multi-btn" class="btn btn-primary btn-sm" disabled>⬆ 匯入多選題庫</button>
+                                <button id="export-unit-multi-btn" class="btn btn-outline-primary btn-sm">⬇ 匯出多選題庫</button>
+                                <button id="edit-unit-multi-btn" class="btn btn-secondary btn-sm">✏ 編輯</button>
+                                <button id="download-multi-format-btn" class="btn btn-outline-info btn-sm">📄 範例下載</button>
+                            </div>
                         </div>
-
-                        <div class="col-md-4 d-grid gap-2">
-                            <button id="import-btn" class="btn btn-primary">匯入單選題庫</button>
-                            <button id="export-unit-btn" class="btn btn-outline-secondary">匯出單選題庫</button>
-                            <button id="edit-unit-btn" class="btn btn-outline-danger">編輯單選題庫（刪除題目）</button>
-						</div>
-						
-                        <div class="col-md-4">
-                            <button id="download-format-btn" class="btn btn-outline-secondary">下載範例格式</button>
-						</div>
-                    </div>
-                    <div class="row g-2 align-items-center mb-4">
-                        <div class="col-md-6">
-                            <input type="file" id="import-all-file" class="form-control" accept="application/json">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-6">
+                                <input type="file" id="import-all-file-multi" class="form-control" placeholder="請選擇 json 檔案" accept="application/json">
+                            </div>
+                            <div class="col-md-6 d-flex flex-wrap gap-2">
+                                <button id="import-all-multi-btn" class="btn btn-primary btn-sm" disabled>⬆ 全部匯入</button>
+                                <button id="export-all-multi-btn" class="btn btn-outline-primary btn-sm">⬇ 全部匯出</button>
+                            </div>
                         </div>
-                        <div class="col-md-6 d-grid gap-2">
-                            <button id="import-all-btn" class="btn btn-primary">匯入全部單選題庫</button>
-                            <button id="export-all-btn" class="btn btn-outline-secondary">匯出全部單選題庫</button>
-                        </div>
-                    </div>
-
-                    <!-- 多選題庫操作 -->
-                    <h5 class="section-title mb-2 mt-3">多選題庫</h5>
-                    <div class="row g-2 align-items-center mb-4">
-                        <div class="col-md-4">
-                            <select id="import-unit-multi" class="form-select"></select>
-                        </div>
-                        <div class="col-md-4">
-                            <input type="file" id="import-file-multi" class="form-control" accept="application/json">
-                        </div>
-                        <div class="col-md-4 d-grid gap-2">
-                            <button id="import-multi-btn" class="btn btn-primary">匯入多選題庫</button>
-                            <button id="export-unit-multi-btn" class="btn btn-outline-secondary">匯出多選題庫</button>
-							<button id="edit-unit-multi-btn" class="btn btn-outline-danger">編輯多選題庫（刪除題目）</button>
-						</div>
-                        <div class="col-md-4">
-                            <button id="download-multi-format-btn" class="btn btn-outline-secondary">下載範例格式</button> 
-						</div>
-                    </div>
-                    <div class="row g-2 align-items-center mb-4">
-                        <div class="col-md-6">
-                            <input type="file" id="import-all-file-multi" class="form-control" accept="application/json">
-                        </div>
-                        <div class="col-md-6 d-grid gap-2">
-                            <button id="import-all-multi-btn" class="btn btn-primary">匯入全部多選題庫</button>
-                            <button id="export-all-multi-btn" class="btn btn-outline-secondary">匯出全部多選題庫</button>
-                        </div>
-                    </div>
+                    </fieldset>
                 </div>
                 <div class="controls">
                     <button id="add-unit" class="btn">新增單元</button>
@@ -545,6 +603,7 @@
     <footer class="footer">
         Copyright © 2025 by Neil 三寶爸(劉建宏)
     </footer>
+    <div id="toast" class="toast"></div>
     <script src="quiz-data.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

@@ -18,6 +18,7 @@ class QuizApp {
         this.showingResults = false;
         this.starredQuestions = new Set();
         this.selectionCallback = null;
+        this.toastTimer = null;
 
         this.loadFromStorage();
         this.initializeElements();
@@ -98,8 +99,18 @@ class QuizApp {
         this.restartBtn.addEventListener('click', () => this.restartQuiz());
         this.closeStatusBtn.addEventListener('click', () => this.hideAnswerStatus());
         this.importBtn.addEventListener('click', () => this.importQuestions());
+        if (this.importFile) {
+            this.importFile.addEventListener('change', () => {
+                this.importBtn.disabled = !this.importFile.files.length;
+            });
+        }
         if (this.importMultiBtn) {
             this.importMultiBtn.addEventListener('click', () => this.importQuestionsMulti());
+        }
+        if (this.importFileMulti) {
+            this.importFileMulti.addEventListener('change', () => {
+                this.importMultiBtn.disabled = !this.importFileMulti.files.length;
+            });
         }
         if (this.downloadPdfBtn) {
             this.downloadPdfBtn.addEventListener('click', () => this.downloadPDF());
@@ -124,12 +135,22 @@ class QuizApp {
         }
         if (this.importAllBtn) {
             this.importAllBtn.addEventListener('click', () => this.importAllQuestions());
+            if (this.importAllFile) {
+                this.importAllFile.addEventListener('change', () => {
+                    this.importAllBtn.disabled = !this.importAllFile.files.length;
+                });
+            }
         }
         if (this.exportAllBtn) {
             this.exportAllBtn.addEventListener('click', () => this.exportAllQuestions());
         }
         if (this.importAllMultiBtn) {
             this.importAllMultiBtn.addEventListener('click', () => this.importAllQuestionsMulti());
+            if (this.importAllFileMulti) {
+                this.importAllFileMulti.addEventListener('change', () => {
+                    this.importAllMultiBtn.disabled = !this.importAllFileMulti.files.length;
+                });
+            }
         }
         if (this.exportAllMultiBtn) {
             this.exportAllMultiBtn.addEventListener('click', () => this.exportAllQuestionsMulti());
@@ -710,10 +731,10 @@ class QuizApp {
                 if (!Array.isArray(questions)) throw new Error('格式錯誤');
                 this.currentSubjectData[unitIndex].questions.push(...questions);
                 this.saveToStorage();
-                alert('匯入成功');
+                this.showToast('匯入成功');
                 this.renderUnitSelector();
             } catch (err) {
-                alert('匯入失敗：檔案格式不正確');
+                this.showToast('匯入失敗：檔案格式不正確');
             }
         };
         reader.readAsText(file, 'utf-8');
@@ -735,10 +756,10 @@ class QuizApp {
                 this.currentMultiUnits[unitIndex].questions.push(...questions);
                 subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
                 this.saveToStorage();
-                alert('匯入成功');
+                this.showToast('匯入成功');
                 this.renderUnitSelector();
             } catch (err) {
-                alert('匯入失敗：檔案格式不正確');
+                this.showToast('匯入失敗：檔案格式不正確');
             }
         };
         reader.readAsText(file, 'utf-8');
@@ -833,10 +854,10 @@ class QuizApp {
                 this.currentSubjectData = units;
                 subjects[this.currentSubject].units = units;
                 this.saveToStorage();
-                alert('匯入成功');
+                this.showToast('匯入成功');
                 this.renderUnitSelector();
             } catch (err) {
-                alert('匯入失敗：檔案格式不正確');
+                this.showToast('匯入失敗：檔案格式不正確');
             }
         };
         reader.readAsText(file, 'utf-8');
@@ -857,10 +878,10 @@ class QuizApp {
                 this.currentMultiUnits = units;
                 subjects[this.currentSubject].multiUnits = units;
                 this.saveToStorage();
-                alert('匯入成功');
+                this.showToast('匯入成功');
                 this.renderUnitSelector();
             } catch (err) {
-                alert('匯入失敗：檔案格式不正確');
+                this.showToast('匯入失敗：檔案格式不正確');
             }
         };
         reader.readAsText(file, 'utf-8');
@@ -1005,6 +1026,18 @@ class QuizApp {
             pdf.save('quiz-result.pdf');
             document.body.removeChild(container);
         });
+    }
+
+    showToast(message) {
+        const toast = document.getElementById('toast');
+        if (!toast) {
+            alert(message);
+            return;
+        }
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(this.toastTimer);
+        this.toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
     loadFromStorage() {
