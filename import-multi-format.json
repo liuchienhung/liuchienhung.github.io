@@ -1,0 +1,14 @@
+{
+    "questions": [
+        {
+            "question": "範例多選題內容",
+            "options": [
+                "A) 選項A",
+                "B) 選項B",
+                "C) 選項C",
+                "D) 選項D"
+            ],
+            "answers": ["A", "C"]
+        }
+    ]
+}
