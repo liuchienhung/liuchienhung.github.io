@@ -1003,14 +1003,18 @@ class QuizApp {
         if (this.currentSubject == null) return;
         const name = prompt('請輸入單元名稱');
         if (!name) return;
+        if (!Array.isArray(subjects[this.currentSubject].multiUnits)) {
+            subjects[this.currentSubject].multiUnits = [];
+        }
+        this.currentMultiUnits = subjects[this.currentSubject].multiUnits;
         this.currentMultiUnits.push({ unit: name, questions: [] });
-        subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
         this.saveToStorage();
         this.renderUnitSelector();
     }
 
     removeUnitMulti() {
         if (this.currentSubject == null) return;
+        this.currentMultiUnits = subjects[this.currentSubject].multiUnits || [];
         if (!this.currentMultiUnits.length) return;
         const items = this.currentMultiUnits.map((u, i) => ({ label: u.unit, value: i }));
         this.showSelection('選擇要刪除的單元', items, (selected) => {
