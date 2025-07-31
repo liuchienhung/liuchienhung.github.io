@@ -63,9 +63,13 @@ class QuizApp {
         this.importFileMulti = document.getElementById('import-file-multi');
         this.importMultiBtn = document.getElementById('import-multi-btn');
         this.importUnitMulti = document.getElementById('import-unit-multi');
-        this.importSubjectFile = document.getElementById('import-subject-file');
-        this.importSubjectBtn = document.getElementById('import-subject-btn');
-        this.exportSubjectBtn = document.getElementById('export-subject-btn');
+        this.importAllSingleFile = document.getElementById('import-all-single-file');
+        this.importAllSingleBtn = document.getElementById('import-all-single-btn');
+        this.exportAllSingleBtn = document.getElementById('export-all-single-btn');
+        this.importAllMultiFile = document.getElementById('import-all-multi-file');
+        this.importAllMultiBtn = document.getElementById('import-all-multi-btn');
+        this.exportAllMultiBtn = document.getElementById('export-all-multi-btn');
+        this.downloadMultiFormatBtn = document.getElementById('download-multi-format-btn');
         this.exportUnitBtn = document.getElementById('export-unit-btn');
         this.exportUnitMultiBtn = document.getElementById('export-unit-multi-btn');
         this.downloadPdfBtn = document.getElementById('download-pdf');
@@ -115,17 +119,26 @@ class QuizApp {
         if (this.removeUnitBtn) {
             this.removeUnitBtn.addEventListener('click', () => this.removeUnit());
         }
-        if (this.importSubjectBtn) {
-            this.importSubjectBtn.addEventListener('click', () => this.importSubject());
-        }
-        if (this.exportSubjectBtn) {
-            this.exportSubjectBtn.addEventListener('click', () => this.exportSubject());
-        }
         if (this.exportUnitBtn) {
             this.exportUnitBtn.addEventListener('click', () => this.exportUnit());
         }
         if (this.exportUnitMultiBtn) {
             this.exportUnitMultiBtn.addEventListener('click', () => this.exportUnitMulti());
+        }
+        if (this.importAllSingleBtn) {
+            this.importAllSingleBtn.addEventListener('click', () => this.importAllSingle());
+        }
+        if (this.exportAllSingleBtn) {
+            this.exportAllSingleBtn.addEventListener('click', () => this.exportAllSingle());
+        }
+        if (this.importAllMultiBtn) {
+            this.importAllMultiBtn.addEventListener('click', () => this.importAllMulti());
+        }
+        if (this.exportAllMultiBtn) {
+            this.exportAllMultiBtn.addEventListener('click', () => this.exportAllMulti());
+        }
+        if (this.downloadMultiFormatBtn) {
+            this.downloadMultiFormatBtn.addEventListener('click', () => this.downloadMultiFormat());
         }
         if (this.editUnitBtn) {
             this.editUnitBtn.addEventListener('click', () => this.editUnitQuestions());
@@ -731,18 +744,6 @@ class QuizApp {
         reader.readAsText(file, 'utf-8');
     }
 
-    exportSubject() {
-        if (this.currentSubject == null) return;
-        const dataStr = JSON.stringify(this.currentSubjectData, null, 2);
-        const blob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${subjects[this.currentSubject].subject}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-
     exportUnit() {
         if (this.currentSubject == null) return;
         const unitIndex = parseInt(this.importUnit.value);
@@ -786,8 +787,15 @@ class QuizApp {
         a.click();
     }
 
-    importSubject() {
-        const file = this.importSubjectFile.files[0];
+    downloadMultiFormat() {
+        const a = document.createElement('a');
+        a.href = 'import-multi-format.json';
+        a.download = 'import-multi-format.json';
+        a.click();
+    }
+
+    importAllSingle() {
+        const file = this.importAllSingleFile.files[0];
         if (!file) {
             alert('請選擇檔案');
             return;
@@ -797,7 +805,7 @@ class QuizApp {
             try {
                 const data = JSON.parse(e.target.result);
                 if (!Array.isArray(data)) throw new Error('格式錯誤');
-                this.currentSubjectData = data;
+                this.currentSingleUnits = data;
                 subjects[this.currentSubject].units = data;
                 this.saveToStorage();
                 alert('匯入成功');
@@ -807,6 +815,53 @@ class QuizApp {
             }
         };
         reader.readAsText(file, 'utf-8');
+    }
+
+    importAllMulti() {
+        const file = this.importAllMultiFile.files[0];
+        if (!file) {
+            alert('請選擇檔案');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (!Array.isArray(data)) throw new Error('格式錯誤');
+                this.currentMultiUnits = data;
+                subjects[this.currentSubject].multiUnits = data;
+                this.saveToStorage();
+                alert('匯入成功');
+                this.renderUnitSelector();
+            } catch (err) {
+                alert('匯入失敗：檔案格式不正確');
+            }
+        };
+        reader.readAsText(file, 'utf-8');
+    }
+
+    exportAllSingle() {
+        if (this.currentSubject == null) return;
+        const dataStr = JSON.stringify(this.currentSingleUnits, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${subjects[this.currentSubject].subject}-single.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    exportAllMulti() {
+        if (this.currentSubject == null) return;
+        const dataStr = JSON.stringify(this.currentMultiUnits, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${subjects[this.currentSubject].subject}-multi.json`;
+        a.click();
+        URL.revokeObjectURL(url);
     }
 
     addSubject() {

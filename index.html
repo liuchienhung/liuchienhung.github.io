@@ -417,12 +417,12 @@
 
                     <!-- 單選題庫操作 -->
                     <h5 class="section-title mb-2">單選題庫</h5>
-                    <div class="row g-2 align-items-center mb-4">
-                        <div class="col-md-4">
-                            <select id="import-unit" class="form-select">
-                                <option value="0">第一單元：滲透測試簡介</option>
-                                <option value="1">第二單元：資訊蒐集</option>
-                                <option value="2">第三單元：網路、主機及網站掃描</option>
+                        <div class="row g-2 align-items-center mb-4">
+                            <div class="col-md-4">
+                                <select id="import-unit" class="form-select">
+                                    <option value="0">第一單元：滲透測試簡介</option>
+                                    <option value="1">第二單元：資訊蒐集</option>
+                                    <option value="2">第三單元：網路、主機及網站掃描</option>
                                 <option value="3">第四單元：弱點利用</option>
                                 <option value="4">第五單元：提升權限</option>
                                 <option value="5">第六單元：維持存取權限</option>
@@ -445,6 +445,15 @@
                             <button id="download-format-btn" class="btn btn-outline-secondary">下載範例格式</button>
                         </div>
                     </div>
+                    <div class="row g-2 align-items-center mb-4">
+                        <div class="col-md-6">
+                            <input type="file" id="import-all-single-file" class="form-control" accept="application/json">
+                        </div>
+                        <div class="col-md-6 d-grid gap-2">
+                            <button id="import-all-single-btn" class="btn btn-primary">匯入全部單選題庫</button>
+                            <button id="export-all-single-btn" class="btn btn-outline-secondary">匯出全部單選題庫</button>
+                        </div>
+                    </div>
 
                     <!-- 多選題庫操作 -->
                     <h5 class="section-title mb-2 mt-3">多選題庫</h5>
@@ -465,15 +474,18 @@
                             <button id="edit-unit-multi-btn" class="btn btn-outline-danger">編輯多選題庫（刪除題目）</button>
                         </div>
                     </div>
-
-                    <!-- 科目題庫操作 -->
-                    <div class="row g-2 align-items-center">
+                    <div class="row g-2 align-items-center mb-4">
                         <div class="col-md-6">
-                            <input type="file" id="import-subject-file" class="form-control" accept="application/json">
+                            <input type="file" id="import-all-multi-file" class="form-control" accept="application/json">
                         </div>
                         <div class="col-md-6 d-grid gap-2">
-                            <button id="import-subject-btn" class="btn btn-success">匯入科目題庫</button>
-                            <button id="export-subject-btn" class="btn btn-outline-secondary">匯出科目題庫</button>
+                            <button id="import-all-multi-btn" class="btn btn-primary">匯入全部多選題庫</button>
+                            <button id="export-all-multi-btn" class="btn btn-outline-secondary">匯出全部多選題庫</button>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-12 d-grid">
+                            <button id="download-multi-format-btn" class="btn btn-outline-secondary">下載範例格式</button>
                         </div>
                     </div>
                 </div>
