@@ -95,7 +95,11 @@ class QuizApp {
     initializeEventListeners() {
         this.prevBtn.addEventListener('click', () => this.previousPage());
         this.nextBtn.addEventListener('click', () => this.nextPage());
-        this.submitBtn.addEventListener('click', () => this.submitQuiz());
+        this.submitBtn.addEventListener('click', () => {
+            if (confirm('確定要結束作答並交卷嗎？')) {
+                this.submitQuiz();
+            }
+        });
         this.statusBtn.addEventListener('click', () => this.showAnswerStatus());
         this.backToUnitsBtn.addEventListener('click', () => this.backToUnitSelector());
         this.backToSubjectsBtn.addEventListener('click', () => this.backToSubjectSelector());
@@ -464,6 +468,7 @@ class QuizApp {
             // 星號標記事件
             const starEl = questionDiv.querySelector('.star');
             starEl.addEventListener('click', (e) => {
+                if (this.showingResults) return;
                 const idx = parseInt(e.target.dataset.questionIndex);
                 if (this.starredQuestions.has(idx)) {
                     this.starredQuestions.delete(idx);
@@ -576,6 +581,7 @@ class QuizApp {
             star.dataset.index = i;
             star.textContent = this.starredQuestions.has(i) ? '★' : '☆';
             star.addEventListener('click', (e) => {
+                if (this.showingResults) return;
                 e.stopPropagation();
                 const idx = parseInt(star.dataset.index);
                 if (this.starredQuestions.has(idx)) {
@@ -641,9 +647,12 @@ class QuizApp {
         // 下一頁按鈕
         this.nextBtn.disabled = this.currentPage === totalPages;
 
-        // 結束作答按鈕隨時可用
-        this.submitBtn.style.display = 'inline-block';
-        this.submitBtn.disabled = false;
+        if (this.showingResults) {
+            this.submitBtn.style.display = 'none';
+        } else {
+            this.submitBtn.style.display = 'inline-block';
+            this.submitBtn.disabled = false;
+        }
 
         if (this.currentPage === totalPages) {
             this.nextBtn.style.display = 'none';
