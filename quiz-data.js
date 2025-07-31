@@ -602,8 +602,56 @@ const introData = [
 ];
 
 // 科目列表
+
+// 多選題庫範例
+const multiIntroData = [
+    {
+        "unit": "多選題範例",
+        "questions": [
+            {
+                "question": "資訊安全三大核心目標有哪些？",
+                "options": [
+                    "A) 機密性",
+                    "B) 完整性",
+                    "C) 費用性",
+                    "D) 可用性"
+                ],
+                "answers": ["A", "B", "D"]
+            }
+        ]
+    }
+];
+
+const multiQuizData = [
+    {
+        "unit": "多選題範例單元",
+        "questions": [
+            {
+                "question": "滲透測試流程常見的步驟有哪些？",
+                "options": [
+                    "A) 資訊蒐集",
+                    "B) 弱點利用",
+                    "C) 安裝防毒軟體",
+                    "D) 撰寫報告"
+                ],
+                "answers": ["A", "B", "D"]
+            },
+            {
+                "question": "以下哪些屬於社交工程手法？",
+                "options": [
+                    "A) 釣魚郵件",
+                    "B) 網頁挖礦",
+                    "C) 假冒客服",
+                    "D) 散布惡意連結"
+                ],
+                "answers": ["A", "C", "D"]
+            }
+        ]
+    }
+];
+
 let subjects = [
-    { subject: "資安概論", units: introData },
-    { subject: "系統及網站滲透測試", units: quizData }
+    { subject: "資安概論", units: introData, multiUnits: multiIntroData },
+    { subject: "系統及網站滲透測試", units: quizData, multiUnits: multiQuizData }
 ];
 
