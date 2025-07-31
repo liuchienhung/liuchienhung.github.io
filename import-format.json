@@ -9,6 +9,16 @@
                 "D) 選項D"
             ],
             "answer": "A"
+        },
+        {
+            "question": "多選題範例",
+            "options": [
+                "A) 選項A",
+                "B) 選項B",
+                "C) 選項C",
+                "D) 選項D"
+            ],
+            "answer": ["A", "C"]
         }
     ]
 }

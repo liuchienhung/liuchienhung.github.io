@@ -1,6 +1,6 @@
 // PT職能題庫數據
 const quizData = [
-    {
+    {"type":"single",
         "unit": "第一單元：滲透測試簡介",
         "questions": [
             {
@@ -155,7 +155,7 @@ const quizData = [
             }
         ]
     },
-    {
+    {"type":"single",
         "unit": "第二單元：資訊蒐集",
         "questions": [
             {
@@ -210,7 +210,7 @@ const quizData = [
             }
         ]
     },
-    {
+    {"type":"single",
         "unit": "第三單元：網路、主機及網站掃描",
         "questions": [
             {
@@ -265,7 +265,7 @@ const quizData = [
             }
         ]
     },
-    {
+    {"type":"single",
         "unit": "第四單元：弱點利用",
         "questions": [
             {
@@ -320,7 +320,7 @@ const quizData = [
             }
         ]
     },
-    {
+    {"type":"single",
         "unit": "第五單元：提升權限",
         "questions": [
             {
@@ -375,7 +375,7 @@ const quizData = [
             }
         ]
     },
-    {
+    {"type":"single",
         "unit": "第六單元：維持存取權限",
         "questions": [
             {
@@ -430,7 +430,7 @@ const quizData = [
             }
         ]
     },
-    {
+    {"type":"single",
         "unit": "第七單元：整理漏洞與撰寫報告",
         "questions": [
             {
@@ -484,12 +484,37 @@ const quizData = [
                 "answer": "C"
             }
         ]
+    },
+    {"type":"multi",
+        "unit": "多選題示範單元",
+        "questions": [
+            {
+                "question": "下列哪些屬於常見的Web攻擊手法？",
+                "options": [
+                    "A) SQL Injection",
+                    "B) XSS",
+                    "C) CSRF",
+                    "D) SSH Bruteforce"
+                ],
+                "answer": ["A","B","C"]
+            },
+            {
+                "question": "滲透測試報告中應包含哪些內容？",
+                "options": [
+                    "A) 測試範圍與目標",
+                    "B) 發現的漏洞與風險",
+                    "C) 改善建議",
+                    "D) 受測組織的營收"
+                ],
+                "answer": ["A","B","C"]
+            }
+        ]
     }
 ];
 
 // 資安概論題庫（示例）
 const introData = [
-    {
+    {"type":"single",
         "unit": "第一單元：資訊安全基礎",
         "questions": [
             {
@@ -544,7 +569,7 @@ const introData = [
             }
         ]
     },
-    {
+    {"type":"single",
         "unit": "第二單元：資訊安全管理",
         "questions": [
             {

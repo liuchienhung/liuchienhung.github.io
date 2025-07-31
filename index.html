@@ -404,24 +404,24 @@
             <!-- 單元選擇區域 -->
             <div id="unit-selector" class="unit-selector" style="display:none;">
                 <h3>請選擇要測驗的單元：</h3>
-                <div class="unit-buttons" id="unit-buttons">
-                    <!-- 單元按鈕將由JavaScript動態生成 -->
+                <div id="single-unit-section" style="margin-bottom:20px;">
+                    <h4 class="section-title">單選題</h4>
+                    <div class="unit-buttons" id="unit-buttons-single">
+                        <!-- 單選單元按鈕由JavaScript生成 -->
+                    </div>
+                </div>
+                <div id="multi-unit-section">
+                    <h4 class="section-title">多選題</h4>
+                    <div class="unit-buttons" id="unit-buttons-multi">
+                        <!-- 多選單元按鈕由JavaScript生成 -->
+                    </div>
                 </div>
                 <div class="card file-ops p-4 shadow-sm rounded">
-                    <h4 class="section-title mb-3">📁 檔案管理操作</h4>
+                    <h4 class="section-title mb-3">📁 單選題庫操作</h4>
 
-                    <!-- 單元題庫操作 -->
                     <div class="row g-2 align-items-center mb-4">
                         <div class="col-md-4">
-                            <select id="import-unit" class="form-select">
-                                <option value="0">第一單元：滲透測試簡介</option>
-                                <option value="1">第二單元：資訊蒐集</option>
-                                <option value="2">第三單元：網路、主機及網站掃描</option>
-                                <option value="3">第四單元：弱點利用</option>
-                                <option value="4">第五單元：提升權限</option>
-                                <option value="5">第六單元：維持存取權限</option>
-                                <option value="6">第七單元：整理漏洞與撰寫報告</option>
-                            </select>
+                            <select id="import-unit" class="form-select"></select>
                         </div>
 
                         <div class="col-md-4">
@@ -437,6 +437,28 @@
                     <div class="row mb-4">
                         <div class="col-md-12 d-grid">
                             <button id="edit-unit-btn" class="btn btn-outline-danger">編輯單元題庫（刪除題目）</button>
+                        </div>
+                    </div>
+
+                    <h4 class="section-title mb-3">📁 多選題庫操作</h4>
+
+                    <div class="row g-2 align-items-center mb-4">
+                        <div class="col-md-4">
+                            <select id="import-unit-multi" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <input type="file" id="import-file-multi" class="form-control" accept="application/json">
+                        </div>
+
+                        <div class="col-md-4 d-grid gap-2">
+                            <button id="import-btn-multi" class="btn btn-primary">匯入多選題庫</button>
+                            <button id="export-unit-btn-multi" class="btn btn-outline-secondary">匯出多選題庫</button>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-12 d-grid">
+                            <button id="edit-unit-btn-multi" class="btn btn-outline-danger">編輯多選題庫（刪除題目）</button>
                         </div>
                     </div>
 
