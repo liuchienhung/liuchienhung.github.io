@@ -513,10 +513,6 @@ class QuizApp {
                     questionOptions.forEach(opt => opt.classList.remove('selected'));
                     e.target.classList.add('selected');
                     this.userAnswers[questionIndex] = selectedOption;
-
-                    if (questionIndex === this.currentPage - 1 && this.currentPage < this.totalPages) {
-                        setTimeout(() => this.nextPage(), 300);
-                    }
                 }
 
                 this.updateButtonStates(this.totalPages);
@@ -544,7 +540,28 @@ class QuizApp {
         this.statusList.innerHTML = '';
         questions.forEach((q, i) => {
             const item = document.createElement('div');
-            item.className = 'status-item ' + (this.userAnswers[i] ? 'answered' : 'unanswered');
+            let mark = null;
+            if (this.showingResults) {
+                const userAnswer = this.userAnswers[i];
+                let isCorrect = false;
+                if (Array.isArray(q.answers)) {
+                    const ans = Array.isArray(userAnswer) ? userAnswer.slice().sort() : [];
+                    const correct = (q.answers || []).slice().sort();
+                    if (ans.length === correct.length && ans.every((v,idx)=>v===correct[idx])) {
+                        isCorrect = true;
+                    }
+                } else {
+                    if (userAnswer === q.answer) {
+                        isCorrect = true;
+                    }
+                }
+                item.className = 'status-item ' + (isCorrect ? 'correct' : 'incorrect');
+                mark = document.createElement('span');
+                mark.className = 'status-mark ' + (isCorrect ? 'correct' : 'incorrect');
+                mark.textContent = isCorrect ? '✓' : '✗';
+            } else {
+                item.className = 'status-item ' + (this.userAnswers[i] ? 'answered' : 'unanswered');
+            }
 
             const label = document.createElement('span');
             label.textContent = `第 ${i + 1} 題`;
@@ -576,6 +593,7 @@ class QuizApp {
             });
 
             item.appendChild(label);
+            if (mark) item.appendChild(mark);
             item.appendChild(star);
             this.statusList.appendChild(item);
         });
