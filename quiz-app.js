@@ -34,6 +34,7 @@ class QuizApp {
         this.unitSelector = document.getElementById('unit-selector');
         this.singleUnitButtons = document.getElementById('single-unit-buttons');
         this.multiUnitButtons = document.getElementById('multi-unit-buttons');
+        this.mixUnitButtons = document.getElementById('mix-unit-buttons');
         this.quizArea = document.getElementById('quiz-area');
         this.questionContainer = document.getElementById('question-container');
         this.timerElement = document.getElementById('timer');
@@ -208,6 +209,7 @@ class QuizApp {
     renderUnitSelector() {
         this.singleUnitButtons.innerHTML = '';
         this.multiUnitButtons.innerHTML = '';
+        if (this.mixUnitButtons) this.mixUnitButtons.innerHTML = '';
         if (this.importUnit) this.importUnit.innerHTML = '';
         if (this.importUnitMulti) this.importUnitMulti.innerHTML = '';
 
@@ -273,30 +275,78 @@ class QuizApp {
             allMultiBtn.addEventListener('click', () => this.startQuiz(-1, 'multi'));
             this.multiUnitButtons.appendChild(allMultiBtn);
         }
+
+        // 混和題綜合測驗按鈕
+        if (this.mixUnitButtons) {
+            const mixBtn = document.createElement('button');
+            mixBtn.className = 'unit-btn';
+            mixBtn.style.background = 'linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%)';
+            mixBtn.innerHTML = `
+                <strong>混和題綜合測驗</strong><br>
+                <small>單選40題 + 多選10題</small>
+            `;
+            mixBtn.addEventListener('click', () => this.startQuiz(-1, 'mix'));
+            this.mixUnitButtons.appendChild(mixBtn);
+        }
     }
 
     startQuiz(unitIndex, type = 'single') {
         this.currentUnitType = type;
-        this.currentSubjectData = type === 'multi' ? this.currentMultiUnits : this.currentSingleUnits;
+        if (type === 'multi') {
+            this.currentSubjectData = this.currentMultiUnits;
+        } else if (type === 'single') {
+            this.currentSubjectData = this.currentSingleUnits;
+        } else {
+            this.currentSubjectData = [];
+        }
         this.currentUnit = unitIndex;
         this.currentQuestionIndex = 0;
         this.currentPage = 1;
         this.userAnswers = {};
         this.showingResults = false;
+        if (type === 'mix') {
+            let singleQs = [];
+            this.currentSingleUnits.forEach((unit, uIdx) => {
+                unit.questions.forEach((q, qIdx) => {
+                    singleQs.push({
+                        ...q,
+                        unitIndex: uIdx,
+                        originalIndex: qIdx,
+                        unitName: unit.unit,
+                        questionType: 'single'
+                    });
+                });
+            });
+            let multiQs = [];
+            this.currentMultiUnits.forEach((unit, uIdx) => {
+                unit.questions.forEach((q, qIdx) => {
+                    multiQs.push({
+                        ...q,
+                        unitIndex: uIdx,
+                        originalIndex: qIdx,
+                        unitName: unit.unit,
+                        questionType: 'multi'
+                    });
+                });
+            });
+            const selectedSingle = singleQs.sort(() => Math.random() - 0.5).slice(0, Math.min(40, singleQs.length));
+            const selectedMulti = multiQs.sort(() => Math.random() - 0.5).slice(0, Math.min(10, multiQs.length));
+            this.selectedQuestions = selectedSingle.concat(selectedMulti).sort(() => Math.random() - 0.5);
+        } else {
+            const allQuestions = this.getAllQuestions();
+            let maxQuestions = Math.min(50, allQuestions.length);
+            let countInput = prompt(`請輸入測驗題數 (5-${maxQuestions})`, Math.min(10, maxQuestions));
+            if (countInput === null) {
+                this.backToUnitSelector();
+                return;
+            }
+            let count = parseInt(countInput);
+            if (isNaN(count)) count = Math.min(10, maxQuestions);
+            count = Math.min(Math.max(count, 5), maxQuestions);
 
-        const allQuestions = this.getAllQuestions();
-        let maxQuestions = Math.min(50, allQuestions.length);
-        let countInput = prompt(`請輸入測驗題數 (5-${maxQuestions})`, Math.min(10, maxQuestions));
-        if (countInput === null) {
-            this.backToUnitSelector();
-            return;
+            const shuffled = allQuestions.sort(() => Math.random() - 0.5);
+            this.selectedQuestions = shuffled.slice(0, count);
         }
-        let count = parseInt(countInput);
-        if (isNaN(count)) count = Math.min(10, maxQuestions);
-        count = Math.min(Math.max(count, 5), maxQuestions);
-
-        const shuffled = allQuestions.sort(() => Math.random() - 0.5);
-        this.selectedQuestions = shuffled.slice(0, count);
 
         let timeInput = prompt('請輸入測驗時間(分鐘)', this.timeLimit / 60);
         if (timeInput === null) {
@@ -317,6 +367,7 @@ class QuizApp {
     }
 
     getAllQuestions() {
+        const qType = this.currentUnitType;
         if (this.currentUnit === -1) {
             // 全部單元
             let allQuestions = [];
@@ -326,7 +377,8 @@ class QuizApp {
                         ...question,
                         unitIndex: unitIndex,
                         originalIndex: questionIndex,
-                        unitName: unit.unit
+                        unitName: unit.unit,
+                        questionType: qType
                     });
                 });
             });
@@ -336,7 +388,8 @@ class QuizApp {
                 ...question,
                 unitIndex: this.currentUnit,
                 originalIndex: index,
-                unitName: this.currentSubjectData[this.currentUnit].unit
+                unitName: this.currentSubjectData[this.currentUnit].unit,
+                questionType: qType
             }));
         }
     }
@@ -391,7 +444,7 @@ class QuizApp {
                 <div class="question-text">${question.question}</div>
                 <div class="options" data-question-index="${globalIndex}">
                     ${question.options.map((option, optionIndex) => `
-                        <div class="option" data-option="${option.charAt(0)}" data-question-index="${globalIndex}">
+                        <div class="option" data-option="${option.charAt(0)}" data-question-index="${globalIndex}" data-type="${question.questionType}">
                             ${option}
                         </div>
                     `).join('')}
@@ -429,8 +482,9 @@ class QuizApp {
 
                 const questionIndex = parseInt(e.target.dataset.questionIndex);
                 const selectedOption = e.target.dataset.option;
+                const qType = e.target.dataset.type || this.currentUnitType;
 
-                if (this.currentUnitType === 'multi') {
+                if (qType === 'multi') {
                     if (!Array.isArray(this.userAnswers[questionIndex])) {
                         this.userAnswers[questionIndex] = [];
                     }
@@ -613,7 +667,8 @@ class QuizApp {
         let correctAnswers = 0;
         questions.forEach((question, index) => {
             const userAnswer = this.userAnswers[index];
-            if (this.currentUnitType === 'multi') {
+            const qType = question.questionType || this.currentUnitType;
+            if (qType === 'multi') {
                 const ans = Array.isArray(userAnswer) ? userAnswer.sort() : [];
                 const correct = (question.answers || []).slice().sort();
                 if (ans.length === correct.length && ans.every((v,i)=>v===correct[i])) {
@@ -658,7 +713,8 @@ class QuizApp {
             const questionOptions = document.querySelectorAll(`[data-question-index="${index}"]`);
             questionOptions.forEach(option => {
                 const optionLetter = option.dataset.option;
-                if (this.currentUnitType === 'multi') {
+                const qType = question.questionType || this.currentUnitType;
+                if (qType === 'multi') {
                     const correctAnswers = question.answers || [];
                     if (correctAnswers.includes(optionLetter)) {
                         option.classList.add('correct');
