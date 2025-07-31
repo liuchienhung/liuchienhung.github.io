@@ -81,8 +81,10 @@ class QuizApp {
 
         this.addSubjectBtn = document.getElementById('add-subject');
         this.addUnitBtn = document.getElementById('add-unit');
+        this.addUnitMultiBtn = document.getElementById('add-unit-multi');
         this.removeSubjectBtn = document.getElementById('remove-subject');
         this.removeUnitBtn = document.getElementById('remove-unit');
+        this.removeUnitMultiBtn = document.getElementById('remove-unit-multi');
         
         this.currentPageSpan = document.getElementById('current-page');
         this.totalPagesSpan = document.getElementById('total-pages');
@@ -128,11 +130,17 @@ class QuizApp {
         if (this.addUnitBtn) {
             this.addUnitBtn.addEventListener('click', () => this.addUnit());
         }
+        if (this.addUnitMultiBtn) {
+            this.addUnitMultiBtn.addEventListener('click', () => this.addUnitMulti());
+        }
         if (this.removeSubjectBtn) {
             this.removeSubjectBtn.addEventListener('click', () => this.removeSubject());
         }
         if (this.removeUnitBtn) {
             this.removeUnitBtn.addEventListener('click', () => this.removeUnit());
+        }
+        if (this.removeUnitMultiBtn) {
+            this.removeUnitMultiBtn.addEventListener('click', () => this.removeUnitMulti());
         }
         if (this.importAllBtn) {
             this.importAllBtn.addEventListener('click', () => this.importAllQuestions());
@@ -986,6 +994,32 @@ class QuizApp {
                 this.currentSubjectData.splice(idx, 1);
             });
             subjects[this.currentSubject].units = this.currentSubjectData;
+            this.saveToStorage();
+            this.renderUnitSelector();
+        });
+    }
+
+    addUnitMulti() {
+        if (this.currentSubject == null) return;
+        const name = prompt('請輸入單元名稱');
+        if (!name) return;
+        this.currentMultiUnits.push({ unit: name, questions: [] });
+        subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
+        this.saveToStorage();
+        this.renderUnitSelector();
+    }
+
+    removeUnitMulti() {
+        if (this.currentSubject == null) return;
+        if (!this.currentMultiUnits.length) return;
+        const items = this.currentMultiUnits.map((u, i) => ({ label: u.unit, value: i }));
+        this.showSelection('選擇要刪除的單元', items, (selected) => {
+            if (!selected.length) return;
+            if (!confirm('確定刪除選取的單元？')) return;
+            selected.sort((a,b) => b - a).forEach(idx => {
+                this.currentMultiUnits.splice(idx, 1);
+            });
+            subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
             this.saveToStorage();
             this.renderUnitSelector();
         });
