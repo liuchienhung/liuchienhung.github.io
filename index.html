@@ -404,13 +404,19 @@
             <!-- 單元選擇區域 -->
             <div id="unit-selector" class="unit-selector" style="display:none;">
                 <h3>請選擇要測驗的單元：</h3>
-                <div class="unit-buttons" id="unit-buttons">
-                    <!-- 單元按鈕將由JavaScript動態生成 -->
+                <h4 class="section-title mb-2">單選題</h4>
+                <div class="unit-buttons" id="single-unit-buttons">
+                    <!-- 單選單元按鈕將由JavaScript動態生成 -->
+                </div>
+                <h4 class="section-title mb-2" style="margin-top:20px;">多選題</h4>
+                <div class="unit-buttons" id="multi-unit-buttons">
+                    <!-- 多選單元按鈕將由JavaScript動態生成 -->
                 </div>
                 <div class="card file-ops p-4 shadow-sm rounded">
                     <h4 class="section-title mb-3">📁 檔案管理操作</h4>
 
-                    <!-- 單元題庫操作 -->
+                    <!-- 單選題庫操作 -->
+                    <h5 class="section-title mb-2">單選題庫</h5>
                     <div class="row g-2 align-items-center mb-4">
                         <div class="col-md-4">
                             <select id="import-unit" class="form-select">
@@ -429,14 +435,34 @@
                         </div>
 
                         <div class="col-md-4 d-grid gap-2">
-                            <button id="import-btn" class="btn btn-primary">匯入單元題庫</button>
-                            <button id="export-unit-btn" class="btn btn-outline-secondary">匯出單元題庫</button>
-                            <button id="download-format-btn" class="btn btn-outline-secondary">下載範例格式</button>
+                            <button id="import-btn" class="btn btn-primary">匯入單選題庫</button>
+                            <button id="export-unit-btn" class="btn btn-outline-secondary">匯出單選題庫</button>
+                            <button id="edit-unit-btn" class="btn btn-outline-danger">編輯單選題庫（刪除題目）</button>
                         </div>
                     </div>
                     <div class="row mb-4">
                         <div class="col-md-12 d-grid">
-                            <button id="edit-unit-btn" class="btn btn-outline-danger">編輯單元題庫（刪除題目）</button>
+                            <button id="download-format-btn" class="btn btn-outline-secondary">下載範例格式</button>
+                        </div>
+                    </div>
+
+                    <!-- 多選題庫操作 -->
+                    <h5 class="section-title mb-2 mt-3">多選題庫</h5>
+                    <div class="row g-2 align-items-center mb-4">
+                        <div class="col-md-4">
+                            <select id="import-unit-multi" class="form-select"></select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="file" id="import-file-multi" class="form-control" accept="application/json">
+                        </div>
+                        <div class="col-md-4 d-grid gap-2">
+                            <button id="import-multi-btn" class="btn btn-primary">匯入多選題庫</button>
+                            <button id="export-unit-multi-btn" class="btn btn-outline-secondary">匯出多選題庫</button>
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-12 d-grid">
+                            <button id="edit-unit-multi-btn" class="btn btn-outline-danger">編輯多選題庫（刪除題目）</button>
                         </div>
                     </div>
 

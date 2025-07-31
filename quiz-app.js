@@ -4,6 +4,9 @@ class QuizApp {
         this.currentSubject = null;
         this.currentUnit = null;
         this.currentSubjectData = [];
+        this.currentSingleUnits = [];
+        this.currentMultiUnits = [];
+        this.currentUnitType = 'single';
         this.currentQuestionIndex = 0;
         this.currentPage = 1;
         this.questionsPerPage = 1;
@@ -28,7 +31,8 @@ class QuizApp {
         this.backToSubjectsBtn = document.getElementById('back-to-subjects');
 
         this.unitSelector = document.getElementById('unit-selector');
-        this.unitButtons = document.getElementById('unit-buttons');
+        this.singleUnitButtons = document.getElementById('single-unit-buttons');
+        this.multiUnitButtons = document.getElementById('multi-unit-buttons');
         this.quizArea = document.getElementById('quiz-area');
         this.questionContainer = document.getElementById('question-container');
         this.timerElement = document.getElementById('timer');
@@ -56,12 +60,17 @@ class QuizApp {
         this.importFile = document.getElementById('import-file');
         this.importBtn = document.getElementById('import-btn');
         this.importUnit = document.getElementById('import-unit');
+        this.importFileMulti = document.getElementById('import-file-multi');
+        this.importMultiBtn = document.getElementById('import-multi-btn');
+        this.importUnitMulti = document.getElementById('import-unit-multi');
         this.importSubjectFile = document.getElementById('import-subject-file');
         this.importSubjectBtn = document.getElementById('import-subject-btn');
         this.exportSubjectBtn = document.getElementById('export-subject-btn');
         this.exportUnitBtn = document.getElementById('export-unit-btn');
+        this.exportUnitMultiBtn = document.getElementById('export-unit-multi-btn');
         this.downloadPdfBtn = document.getElementById('download-pdf');
         this.downloadFormatBtn = document.getElementById('download-format-btn');
+        this.editUnitMultiBtn = document.getElementById('edit-unit-multi-btn');
         this.editUnitBtn = document.getElementById('edit-unit-btn');
 
         this.addSubjectBtn = document.getElementById('add-subject');
@@ -85,6 +94,9 @@ class QuizApp {
         this.restartBtn.addEventListener('click', () => this.restartQuiz());
         this.closeStatusBtn.addEventListener('click', () => this.hideAnswerStatus());
         this.importBtn.addEventListener('click', () => this.importQuestions());
+        if (this.importMultiBtn) {
+            this.importMultiBtn.addEventListener('click', () => this.importQuestionsMulti());
+        }
         if (this.downloadPdfBtn) {
             this.downloadPdfBtn.addEventListener('click', () => this.downloadPDF());
         }
@@ -112,8 +124,14 @@ class QuizApp {
         if (this.exportUnitBtn) {
             this.exportUnitBtn.addEventListener('click', () => this.exportUnit());
         }
+        if (this.exportUnitMultiBtn) {
+            this.exportUnitMultiBtn.addEventListener('click', () => this.exportUnitMulti());
+        }
         if (this.editUnitBtn) {
             this.editUnitBtn.addEventListener('click', () => this.editUnitQuestions());
+        }
+        if (this.editUnitMultiBtn) {
+            this.editUnitMultiBtn.addEventListener('click', () => this.editUnitQuestionsMulti());
         }
         if (this.selectConfirm) {
             this.selectConfirm.addEventListener('click', () => this.confirmSelection());
@@ -128,10 +146,11 @@ class QuizApp {
         subjects.forEach((subj, index) => {
             const button = document.createElement('button');
             button.className = 'unit-btn';
-            const count = subj.units.reduce((s, u) => s + u.questions.length, 0);
+            const singleCount = subj.units.reduce((s, u) => s + u.questions.length, 0);
+            const multiCount = (subj.multiUnits || []).reduce((s, u) => s + u.questions.length, 0);
             button.innerHTML = `
                 <strong>${subj.subject}</strong><br>
-                <small>${count} 道題目</small>
+                <small>單選 ${singleCount} / 多選 ${multiCount}</small>
             `;
             button.addEventListener('click', () => this.selectSubject(index));
             this.subjectButtons.appendChild(button);
@@ -144,27 +163,29 @@ class QuizApp {
 
     selectSubject(index) {
         this.currentSubject = index;
-        this.currentSubjectData = subjects[index].units;
+        this.currentSingleUnits = subjects[index].units;
+        this.currentMultiUnits = subjects[index].multiUnits || [];
+        this.currentSubjectData = this.currentSingleUnits;
         this.renderUnitSelector();
         this.subjectSelector.style.display = 'none';
         this.unitSelector.style.display = 'block';
     }
 
     renderUnitSelector() {
-        this.unitButtons.innerHTML = '';
-        if (this.importUnit) {
-            this.importUnit.innerHTML = '';
-        }
+        this.singleUnitButtons.innerHTML = '';
+        this.multiUnitButtons.innerHTML = '';
+        if (this.importUnit) this.importUnit.innerHTML = '';
+        if (this.importUnitMulti) this.importUnitMulti.innerHTML = '';
 
-        this.currentSubjectData.forEach((unit, index) => {
+        this.currentSingleUnits.forEach((unit, index) => {
             const button = document.createElement('button');
             button.className = 'unit-btn';
             button.innerHTML = `
                 <strong>${unit.unit}</strong><br>
                 <small>${unit.questions.length} 道題目</small>
             `;
-            button.addEventListener('click', () => this.startQuiz(index));
-            this.unitButtons.appendChild(button);
+            button.addEventListener('click', () => this.startQuiz(index, 'single'));
+            this.singleUnitButtons.appendChild(button);
 
             if (this.importUnit) {
                 const opt = document.createElement('option');
@@ -174,20 +195,55 @@ class QuizApp {
             }
         });
 
-        // 添加全部單元測驗選項
-        const allUnitsButton = document.createElement('button');
-        allUnitsButton.className = 'unit-btn';
-        allUnitsButton.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
-        const totalQuestions = this.currentSubjectData.reduce((sum, unit) => sum + unit.questions.length, 0);
-        allUnitsButton.innerHTML = `
-            <strong>全部單元綜合測驗</strong><br>
-            <small>${totalQuestions} 道題目</small>
-        `;
-        allUnitsButton.addEventListener('click', () => this.startQuiz(-1));
-        this.unitButtons.appendChild(allUnitsButton);
+        const totalSingle = this.currentSingleUnits.reduce((sum,u)=>sum+u.questions.length,0);
+        if (totalSingle > 0) {
+            const allUnitsButton = document.createElement('button');
+            allUnitsButton.className = 'unit-btn';
+            allUnitsButton.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
+            allUnitsButton.innerHTML = `
+                <strong>全部單元綜合測驗</strong><br>
+                <small>${totalSingle} 道題目</small>
+            `;
+            allUnitsButton.addEventListener('click', () => this.startQuiz(-1, 'single'));
+            this.singleUnitButtons.appendChild(allUnitsButton);
+        }
+
+        // 多選題單元
+        this.currentMultiUnits.forEach((unit, index) => {
+            const button = document.createElement('button');
+            button.className = 'unit-btn';
+            button.innerHTML = `
+                <strong>${unit.unit}</strong><br>
+                <small>${unit.questions.length} 道題目</small>
+            `;
+            button.addEventListener('click', () => this.startQuiz(index, 'multi'));
+            this.multiUnitButtons.appendChild(button);
+
+            if (this.importUnitMulti) {
+                const opt = document.createElement('option');
+                opt.value = index;
+                opt.textContent = unit.unit;
+                this.importUnitMulti.appendChild(opt);
+            }
+        });
+
+        const totalMulti = this.currentMultiUnits.reduce((sum,u)=>sum+u.questions.length,0);
+        if (totalMulti > 0) {
+            const allMultiBtn = document.createElement('button');
+            allMultiBtn.className = 'unit-btn';
+            allMultiBtn.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
+            allMultiBtn.innerHTML = `
+                <strong>全部單元綜合測驗</strong><br>
+                <small>${totalMulti} 道題目</small>
+            `;
+            allMultiBtn.addEventListener('click', () => this.startQuiz(-1, 'multi'));
+            this.multiUnitButtons.appendChild(allMultiBtn);
+        }
     }
 
-    startQuiz(unitIndex) {
+    startQuiz(unitIndex, type = 'single') {
+        this.currentUnitType = type;
+        this.currentSubjectData = type === 'multi' ? this.currentMultiUnits : this.currentSingleUnits;
         this.currentUnit = unitIndex;
         this.currentQuestionIndex = 0;
         this.currentPage = 1;
@@ -339,22 +395,31 @@ class QuizApp {
 
                 const questionIndex = parseInt(e.target.dataset.questionIndex);
                 const selectedOption = e.target.dataset.option;
-                
-                // 清除同一題目的其他選項的選中狀態
-                const questionOptions = document.querySelectorAll(`[data-question-index="${questionIndex}"]`);
-                questionOptions.forEach(opt => opt.classList.remove('selected'));
-                
-                // 標記當前選項為選中
-                e.target.classList.add('selected');
-                
-                // 保存用戶答案
-                this.userAnswers[questionIndex] = selectedOption;
+
+                if (this.currentUnitType === 'multi') {
+                    if (!Array.isArray(this.userAnswers[questionIndex])) {
+                        this.userAnswers[questionIndex] = [];
+                    }
+                    const arr = this.userAnswers[questionIndex];
+                    if (arr.includes(selectedOption)) {
+                        e.target.classList.remove('selected');
+                        this.userAnswers[questionIndex] = arr.filter(o => o !== selectedOption);
+                    } else {
+                        e.target.classList.add('selected');
+                        arr.push(selectedOption);
+                    }
+                } else {
+                    const questionOptions = document.querySelectorAll(`[data-question-index="${questionIndex}"]`);
+                    questionOptions.forEach(opt => opt.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    this.userAnswers[questionIndex] = selectedOption;
+
+                    if (questionIndex === this.currentPage - 1 && this.currentPage < this.totalPages) {
+                        setTimeout(() => this.nextPage(), 300);
+                    }
+                }
 
                 this.updateButtonStates(this.totalPages);
-
-                if (questionIndex === this.currentPage - 1 && this.currentPage < this.totalPages) {
-                    setTimeout(() => this.nextPage(), 300);
-                }
             });
         });
     }
@@ -362,9 +427,14 @@ class QuizApp {
     restoreUserSelections() {
         Object.keys(this.userAnswers).forEach(questionIndex => {
             const selectedOption = this.userAnswers[questionIndex];
-            const optionElement = document.querySelector(`[data-question-index="${questionIndex}"][data-option="${selectedOption}"]`);
-            if (optionElement) {
-                optionElement.classList.add('selected');
+            if (Array.isArray(selectedOption)) {
+                selectedOption.forEach(opt => {
+                    const el = document.querySelector(`[data-question-index="${questionIndex}"][data-option="${opt}"]`);
+                    if (el) el.classList.add('selected');
+                });
+            } else {
+                const optionElement = document.querySelector(`[data-question-index="${questionIndex}"][data-option="${selectedOption}"]`);
+                if (optionElement) optionElement.classList.add('selected');
             }
         });
     }
@@ -509,8 +579,16 @@ class QuizApp {
         let correctAnswers = 0;
         questions.forEach((question, index) => {
             const userAnswer = this.userAnswers[index];
-            if (userAnswer === question.answer) {
-                correctAnswers++;
+            if (this.currentUnitType === 'multi') {
+                const ans = Array.isArray(userAnswer) ? userAnswer.sort() : [];
+                const correct = (question.answers || []).slice().sort();
+                if (ans.length === correct.length && ans.every((v,i)=>v===correct[i])) {
+                    correctAnswers++;
+                }
+            } else {
+                if (userAnswer === question.answer) {
+                    correctAnswers++;
+                }
             }
         });
 
@@ -543,16 +621,23 @@ class QuizApp {
         
         questions.forEach((question, index) => {
             const userAnswer = this.userAnswers[index];
-            const correctAnswer = question.answer;
-            
             const questionOptions = document.querySelectorAll(`[data-question-index="${index}"]`);
             questionOptions.forEach(option => {
                 const optionLetter = option.dataset.option;
-                
-                if (optionLetter === correctAnswer) {
-                    option.classList.add('correct');
-                } else if (optionLetter === userAnswer && userAnswer !== correctAnswer) {
-                    option.classList.add('incorrect');
+                if (this.currentUnitType === 'multi') {
+                    const correctAnswers = question.answers || [];
+                    if (correctAnswers.includes(optionLetter)) {
+                        option.classList.add('correct');
+                    }
+                    if (Array.isArray(userAnswer) && userAnswer.includes(optionLetter) && !correctAnswers.includes(optionLetter)) {
+                        option.classList.add('incorrect');
+                    }
+                } else {
+                    if (optionLetter === question.answer) {
+                        option.classList.add('correct');
+                    } else if (optionLetter === userAnswer && userAnswer !== question.answer) {
+                        option.classList.add('incorrect');
+                    }
                 }
             });
         });
@@ -574,7 +659,7 @@ class QuizApp {
 
     restartQuiz() {
         this.resetQuiz();
-        this.startQuiz(this.currentUnit);
+        this.startQuiz(this.currentUnit, this.currentUnitType);
     }
 
     resetQuiz() {
@@ -621,6 +706,31 @@ class QuizApp {
         reader.readAsText(file, 'utf-8');
     }
 
+    importQuestionsMulti() {
+        const file = this.importFileMulti.files[0];
+        const unitIndex = parseInt(this.importUnitMulti.value);
+        if (!file || isNaN(unitIndex)) {
+            alert('請選擇單元與檔案');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                const questions = Array.isArray(data) ? data : data.questions;
+                if (!Array.isArray(questions)) throw new Error('格式錯誤');
+                this.currentMultiUnits[unitIndex].questions.push(...questions);
+                subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
+                this.saveToStorage();
+                alert('匯入成功');
+                this.renderUnitSelector();
+            } catch (err) {
+                alert('匯入失敗：檔案格式不正確');
+            }
+        };
+        reader.readAsText(file, 'utf-8');
+    }
+
     exportSubject() {
         if (this.currentSubject == null) return;
         const dataStr = JSON.stringify(this.currentSubjectData, null, 2);
@@ -641,6 +751,24 @@ class QuizApp {
             return;
         }
         const unit = this.currentSubjectData[unitIndex];
+        const dataStr = JSON.stringify({ questions: unit.questions }, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${unit.unit}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    exportUnitMulti() {
+        if (this.currentSubject == null) return;
+        const unitIndex = parseInt(this.importUnitMulti.value);
+        if (isNaN(unitIndex)) {
+            alert('請選擇單元');
+            return;
+        }
+        const unit = this.currentMultiUnits[unitIndex];
         const dataStr = JSON.stringify({ questions: unit.questions }, null, 2);
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -747,6 +875,33 @@ class QuizApp {
             if (!selected.length) return;
             if (!confirm('確定刪除選取的題目？')) return;
             selected.sort((a,b) => b - a).forEach(idx => unit.questions.splice(idx, 1));
+            this.saveToStorage();
+            this.renderUnitSelector();
+            alert('已刪除題目');
+        });
+    }
+
+    editUnitQuestionsMulti() {
+        if (this.currentSubject == null) return;
+        const unitIndex = parseInt(this.importUnitMulti.value);
+        if (isNaN(unitIndex)) {
+            alert('請選擇單元');
+            return;
+        }
+        const unit = this.currentMultiUnits[unitIndex];
+        if (!unit.questions.length) {
+            alert('此單元尚無題目');
+            return;
+        }
+        const items = unit.questions.map((q, i) => ({
+            label: `${i + 1}. ${q.question.slice(0, 30)}`,
+            value: i
+        }));
+        this.showSelection('選擇要刪除的題目', items, (selected) => {
+            if (!selected.length) return;
+            if (!confirm('確定刪除選取的題目？')) return;
+            selected.sort((a,b) => b - a).forEach(idx => unit.questions.splice(idx, 1));
+            subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
             this.saveToStorage();
             this.renderUnitSelector();
             alert('已刪除題目');
