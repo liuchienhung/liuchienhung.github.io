@@ -472,6 +472,10 @@ class QuizApp {
         
         // 恢復用戶之前的選擇
         this.restoreUserSelections();
+
+        if (this.showingResults) {
+            this.showCorrectAnswers();
+        }
     }
 
     addOptionClickListeners() {
@@ -609,23 +613,16 @@ class QuizApp {
         this.prevBtn.disabled = this.currentPage === 1;
 
         // 下一頁按鈕
-        const q = this.getQuestions()[this.currentPage - 1];
-        const ans = this.userAnswers[this.currentPage - 1];
-        let isAnswered;
-        if (q && Array.isArray(q.answers)) {
-            isAnswered = Array.isArray(ans) && ans.length > 0;
-        } else {
-            isAnswered = !!ans;
-        }
-        this.nextBtn.disabled = this.currentPage === totalPages || !isAnswered;
+        this.nextBtn.disabled = this.currentPage === totalPages;
+
+        // 結束作答按鈕隨時可用
+        this.submitBtn.style.display = 'inline-block';
+        this.submitBtn.disabled = false;
 
         if (this.currentPage === totalPages) {
-            this.submitBtn.style.display = 'inline-block';
-            this.submitBtn.disabled = !isAnswered;
             this.nextBtn.style.display = 'none';
         } else {
             this.nextBtn.style.display = 'inline-block';
-            this.submitBtn.style.display = 'none';
         }
     }
 
@@ -702,9 +699,9 @@ class QuizApp {
         // 顯示正確答案
         this.showCorrectAnswers();
 
-        // 隱藏導航按鈕
-        this.prevBtn.style.display = 'none';
-        this.nextBtn.style.display = 'none';
+        // 提交後仍可瀏覽題目
+        this.prevBtn.style.display = 'inline-block';
+        this.nextBtn.style.display = 'inline-block';
         this.submitBtn.style.display = 'none';
 
         // 滾動到頂部
@@ -1014,6 +1011,10 @@ class QuizApp {
             if (!selected.length) return;
             if (!confirm('確定刪除選取的題目？')) return;
             selected.sort((a,b) => b - a).forEach(idx => unit.questions.splice(idx, 1));
+            if (unit.questions.length === 0) {
+                this.currentSubjectData.splice(unitIndex, 1);
+                subjects[this.currentSubject].units = this.currentSubjectData;
+            }
             this.saveToStorage();
             this.renderUnitSelector();
             alert('已刪除題目');
@@ -1040,6 +1041,9 @@ class QuizApp {
             if (!selected.length) return;
             if (!confirm('確定刪除選取的題目？')) return;
             selected.sort((a,b) => b - a).forEach(idx => unit.questions.splice(idx, 1));
+            if (unit.questions.length === 0) {
+                this.currentMultiUnits.splice(unitIndex, 1);
+            }
             subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
             this.saveToStorage();
             this.renderUnitSelector();
