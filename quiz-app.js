@@ -90,6 +90,8 @@ class QuizApp {
         this.totalPagesSpan = document.getElementById('total-pages');
         this.currentQuestionSpan = document.getElementById('current-question');
         this.totalQuestionsSpan = document.getElementById('total-questions');
+        this.questionProgress = document.getElementById('question-progress');
+        this.progressText = document.getElementById('progress-text');
     }
 
     initializeEventListeners() {
@@ -416,10 +418,14 @@ class QuizApp {
         this.totalPages = totalPages;
         
         // 更新分頁資訊
-        this.currentPageSpan.textContent = this.currentPage;
-        this.totalPagesSpan.textContent = totalPages;
-        this.currentQuestionSpan.textContent = ((this.currentPage - 1) * this.questionsPerPage) + 1;
-        this.totalQuestionsSpan.textContent = Math.min(this.currentPage * this.questionsPerPage, questions.length);
+        if (this.currentPageSpan) this.currentPageSpan.textContent = this.currentPage;
+        if (this.totalPagesSpan) this.totalPagesSpan.textContent = totalPages;
+        if (this.currentQuestionSpan) this.currentQuestionSpan.textContent = ((this.currentPage - 1) * this.questionsPerPage) + 1;
+        if (this.totalQuestionsSpan) this.totalQuestionsSpan.textContent = Math.min(this.currentPage * this.questionsPerPage, questions.length);
+
+        const progressPercent = (this.currentPage / totalPages) * 100;
+        if (this.questionProgress) this.questionProgress.style.width = `${progressPercent}%`;
+        if (this.progressText) this.progressText.textContent = `${this.currentPage} / ${totalPages}`;
 
         // 渲染當前頁面的題目
         this.renderCurrentPageQuestions();
