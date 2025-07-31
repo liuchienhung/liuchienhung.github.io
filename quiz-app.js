@@ -34,6 +34,7 @@ class QuizApp {
         this.unitSelector = document.getElementById('unit-selector');
         this.singleUnitButtons = document.getElementById('single-unit-buttons');
         this.multiUnitButtons = document.getElementById('multi-unit-buttons');
+        this.mixedUnitButtons = document.getElementById('mixed-unit-buttons');
         this.quizArea = document.getElementById('quiz-area');
         this.questionContainer = document.getElementById('question-container');
         this.timerElement = document.getElementById('timer');
@@ -208,6 +209,7 @@ class QuizApp {
     renderUnitSelector() {
         this.singleUnitButtons.innerHTML = '';
         this.multiUnitButtons.innerHTML = '';
+        if (this.mixedUnitButtons) this.mixedUnitButtons.innerHTML = '';
         if (this.importUnit) this.importUnit.innerHTML = '';
         if (this.importUnitMulti) this.importUnitMulti.innerHTML = '';
 
@@ -273,11 +275,29 @@ class QuizApp {
             allMultiBtn.addEventListener('click', () => this.startQuiz(-1, 'multi'));
             this.multiUnitButtons.appendChild(allMultiBtn);
         }
+
+        if (this.mixedUnitButtons) {
+            const mixBtn = document.createElement('button');
+            mixBtn.className = 'unit-btn';
+            mixBtn.style.background = 'linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%)';
+            mixBtn.innerHTML = `
+                <strong>混合題綜合測驗</strong><br>
+                <small>${Math.min(40, totalSingle)} 單選 + ${Math.min(10, totalMulti)} 多選</small>
+            `;
+            mixBtn.addEventListener('click', () => this.startQuiz(-1, 'mixed'));
+            this.mixedUnitButtons.appendChild(mixBtn);
+        }
     }
 
     startQuiz(unitIndex, type = 'single') {
         this.currentUnitType = type;
-        this.currentSubjectData = type === 'multi' ? this.currentMultiUnits : this.currentSingleUnits;
+        if (type === 'multi') {
+            this.currentSubjectData = this.currentMultiUnits;
+        } else if (type === 'mixed') {
+            this.currentSubjectData = [];
+        } else {
+            this.currentSubjectData = this.currentSingleUnits;
+        }
         this.currentUnit = unitIndex;
         this.currentQuestionIndex = 0;
         this.currentPage = 1;
@@ -285,18 +305,25 @@ class QuizApp {
         this.showingResults = false;
 
         const allQuestions = this.getAllQuestions();
-        let maxQuestions = Math.min(50, allQuestions.length);
-        let countInput = prompt(`請輸入測驗題數 (5-${maxQuestions})`, Math.min(10, maxQuestions));
-        if (countInput === null) {
-            this.backToUnitSelector();
-            return;
+        let count = 0;
+        if (type === 'mixed') {
+            const singleQ = allQuestions.filter(q => !Array.isArray(q.answers)).sort(() => Math.random() - 0.5).slice(0, 40);
+            const multiQ = allQuestions.filter(q => Array.isArray(q.answers)).sort(() => Math.random() - 0.5).slice(0, 10);
+            this.selectedQuestions = singleQ.concat(multiQ).sort(() => Math.random() - 0.5);
+            count = this.selectedQuestions.length;
+        } else {
+            let maxQuestions = Math.min(50, allQuestions.length);
+            let countInput = prompt(`請輸入測驗題數 (5-${maxQuestions})`, Math.min(10, maxQuestions));
+            if (countInput === null) {
+                this.backToUnitSelector();
+                return;
+            }
+            count = parseInt(countInput);
+            if (isNaN(count)) count = Math.min(10, maxQuestions);
+            count = Math.min(Math.max(count, 5), maxQuestions);
+            const shuffled = allQuestions.sort(() => Math.random() - 0.5);
+            this.selectedQuestions = shuffled.slice(0, count);
         }
-        let count = parseInt(countInput);
-        if (isNaN(count)) count = Math.min(10, maxQuestions);
-        count = Math.min(Math.max(count, 5), maxQuestions);
-
-        const shuffled = allQuestions.sort(() => Math.random() - 0.5);
-        this.selectedQuestions = shuffled.slice(0, count);
 
         let timeInput = prompt('請輸入測驗時間(分鐘)', this.timeLimit / 60);
         if (timeInput === null) {
@@ -317,6 +344,31 @@ class QuizApp {
     }
 
     getAllQuestions() {
+        if (this.currentUnitType === 'mixed') {
+            let all = [];
+            this.currentSingleUnits.forEach((unit, unitIndex) => {
+                unit.questions.forEach((q, qi) => {
+                    all.push({
+                        ...q,
+                        unitIndex,
+                        originalIndex: qi,
+                        unitName: unit.unit
+                    });
+                });
+            });
+            this.currentMultiUnits.forEach((unit, unitIndex) => {
+                unit.questions.forEach((q, qi) => {
+                    all.push({
+                        ...q,
+                        unitIndex,
+                        originalIndex: qi,
+                        unitName: unit.unit
+                    });
+                });
+            });
+            return all;
+        }
+
         if (this.currentUnit === -1) {
             // 全部單元
             let allQuestions = [];
@@ -429,8 +481,9 @@ class QuizApp {
 
                 const questionIndex = parseInt(e.target.dataset.questionIndex);
                 const selectedOption = e.target.dataset.option;
+                const question = this.getQuestions()[questionIndex];
 
-                if (this.currentUnitType === 'multi') {
+                if (Array.isArray(question.answers)) {
                     if (!Array.isArray(this.userAnswers[questionIndex])) {
                         this.userAnswers[questionIndex] = [];
                     }
@@ -555,12 +608,19 @@ class QuizApp {
         this.prevBtn.disabled = this.currentPage === 1;
 
         // 下一頁按鈕
-        const answered = this.userAnswers[this.currentPage - 1];
-        this.nextBtn.disabled = this.currentPage === totalPages || !answered;
+        const q = this.getQuestions()[this.currentPage - 1];
+        const ans = this.userAnswers[this.currentPage - 1];
+        let isAnswered;
+        if (q && Array.isArray(q.answers)) {
+            isAnswered = Array.isArray(ans) && ans.length > 0;
+        } else {
+            isAnswered = !!ans;
+        }
+        this.nextBtn.disabled = this.currentPage === totalPages || !isAnswered;
 
         if (this.currentPage === totalPages) {
             this.submitBtn.style.display = 'inline-block';
-            this.submitBtn.disabled = !answered;
+            this.submitBtn.disabled = !isAnswered;
             this.nextBtn.style.display = 'none';
         } else {
             this.nextBtn.style.display = 'inline-block';
@@ -613,8 +673,8 @@ class QuizApp {
         let correctAnswers = 0;
         questions.forEach((question, index) => {
             const userAnswer = this.userAnswers[index];
-            if (this.currentUnitType === 'multi') {
-                const ans = Array.isArray(userAnswer) ? userAnswer.sort() : [];
+            if (Array.isArray(question.answers)) {
+                const ans = Array.isArray(userAnswer) ? userAnswer.slice().sort() : [];
                 const correct = (question.answers || []).slice().sort();
                 if (ans.length === correct.length && ans.every((v,i)=>v===correct[i])) {
                     correctAnswers++;
@@ -658,7 +718,7 @@ class QuizApp {
             const questionOptions = document.querySelectorAll(`[data-question-index="${index}"]`);
             questionOptions.forEach(option => {
                 const optionLetter = option.dataset.option;
-                if (this.currentUnitType === 'multi') {
+                if (Array.isArray(question.answers)) {
                     const correctAnswers = question.answers || [];
                     if (correctAnswers.includes(optionLetter)) {
                         option.classList.add('correct');
