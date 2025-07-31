@@ -482,14 +482,24 @@
             <div id="unit-selector" class="unit-selector" style="display:none;">
                 <div class="card file-ops p-4 shadow-sm rounded mb-4">
                     <h3 class="mb-3">請選擇要測驗的單元：</h3>
-                    <h4 class="section-title mb-2">單選題</h4>
-                    <div class="unit-buttons" id="single-unit-buttons">
-                        <!-- 單選單元按鈕將由JavaScript動態生成 -->
-                    </div>
-                    <h4 class="section-title mb-2" style="margin-top:20px;">多選題</h4>
-                    <div class="unit-buttons" id="multi-unit-buttons">
-                        <!-- 多選單元按鈕將由JavaScript動態生成 -->
-                    </div>
+                    <fieldset class="p-3 mb-4 shadow-sm rounded">
+                        <legend class="section-title">單選題</legend>
+                        <div class="unit-buttons" id="single-unit-buttons">
+                            <!-- 單選單元按鈕將由JavaScript動態生成 -->
+                        </div>
+                    </fieldset>
+                    <fieldset class="p-3 mb-4 shadow-sm rounded">
+                        <legend class="section-title">多選題</legend>
+                        <div class="unit-buttons" id="multi-unit-buttons">
+                            <!-- 多選單元按鈕將由JavaScript動態生成 -->
+                        </div>
+                    </fieldset>
+                    <fieldset class="p-3 mb-4 shadow-sm rounded">
+                        <legend class="section-title">混和題</legend>
+                        <div class="unit-buttons" id="mix-unit-buttons">
+                            <!-- 混和題按鈕將由JavaScript動態生成 -->
+                        </div>
+                    </fieldset>
                 </div>
                 <div class="card file-ops p-4 shadow-sm rounded">
                     <h4 class="section-title mb-3">📁 檔案管理操作</h4>
