@@ -319,6 +319,13 @@ class QuizApp {
             mixBtn.addEventListener('click', () => this.startQuiz(-1, 'mixed'));
             this.mixedUnitButtons.appendChild(mixBtn);
         }
+
+        if (this.syncUnitToMultiBtn) {
+            this.syncUnitToMultiBtn.disabled = !this.importUnit || this.importUnit.options.length === 0;
+        }
+        if (this.syncUnitMultiToSingleBtn) {
+            this.syncUnitMultiToSingleBtn.disabled = !this.importUnitMulti || this.importUnitMulti.options.length === 0;
+        }
     }
 
     startQuiz(unitIndex, type = 'single', predefinedCount = null, predefinedTime = null) {
@@ -1117,6 +1124,10 @@ class QuizApp {
 
     syncSingleToMulti() {
         if (this.currentSubject == null) return;
+        if (!this.currentSingleUnits.length) {
+            this.showToast('目前沒有單選題庫單元');
+            return;
+        }
         if (!confirm('確定要同步單選題庫單元至多選題庫？(僅同步下拉選單，不會同步題目)')) return;
         const units = this.currentSingleUnits.map(u => ({ unit: u.unit, questions: [] }));
         this.currentMultiUnits = units;
@@ -1128,6 +1139,10 @@ class QuizApp {
 
     syncMultiToSingle() {
         if (this.currentSubject == null) return;
+        if (!this.currentMultiUnits.length) {
+            this.showToast('目前沒有多選題庫單元');
+            return;
+        }
         if (!confirm('確定要同步多選題庫單元至單選題庫？(僅同步下拉選單，不會同步題目)')) return;
         const units = this.currentMultiUnits.map(u => ({ unit: u.unit, questions: [] }));
         this.currentSingleUnits = units;
