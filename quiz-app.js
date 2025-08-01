@@ -304,7 +304,7 @@ class QuizApp {
         }
     }
 
-    startQuiz(unitIndex, type = 'single') {
+    startQuiz(unitIndex, type = 'single', predefinedCount = null, predefinedTime = null) {
         this.currentUnitType = type;
         if (type === 'multi') {
             this.currentSubjectData = this.currentMultiUnits;
@@ -319,7 +319,7 @@ class QuizApp {
         this.userAnswers = {};
         this.showingResults = false;
 
-            const allQuestions = this.getAllQuestions();
+        const allQuestions = this.getAllQuestions();
         let count = 0;
         if (type === 'mixed') {
             const singleQ = allQuestions.filter(q => !Array.isArray(q.answers)).sort(() => Math.random() - 0.5).slice(0, 40);
@@ -328,7 +328,7 @@ class QuizApp {
             count = this.selectedQuestions.length;
         } else {
             let maxQuestions = Math.min(50, allQuestions.length);
-            let countInput = prompt(`請輸入測驗題數 (5-${maxQuestions})`, Math.min(10, maxQuestions));
+            let countInput = predefinedCount !== null ? predefinedCount : prompt(`請輸入測驗題數 (5-${maxQuestions})`, Math.min(10, maxQuestions));
             if (countInput === null) {
                 this.backToUnitSelector();
                 return;
@@ -341,7 +341,7 @@ class QuizApp {
             this.selectedQuestions = shuffled.slice(0, count);
         }
 
-        let timeInput = prompt('請輸入測驗時間(分鐘)', this.timeLimit / 60);
+        let timeInput = predefinedTime !== null ? predefinedTime : prompt('請輸入測驗時間(分鐘)', this.timeLimit / 60);
         if (timeInput === null) {
             this.backToUnitSelector();
             return;
@@ -798,8 +798,21 @@ class QuizApp {
     }
 
     restartQuiz() {
+        const allQuestions = this.getAllQuestions();
+        let maxQuestions = Math.min(50, allQuestions.length);
+        let countInput = prompt(`請輸入測驗題數 (5-${maxQuestions})`, Math.min(10, maxQuestions));
+        if (countInput === null) return;
+        let count = parseInt(countInput);
+        if (isNaN(count)) count = Math.min(10, maxQuestions);
+        count = Math.min(Math.max(count, 5), maxQuestions);
+
+        let timeInput = prompt('請輸入測驗時間(分鐘)', this.timeLimit / 60);
+        if (timeInput === null) return;
+        let timeMin = parseInt(timeInput);
+        if (isNaN(timeMin) || timeMin <= 0) timeMin = this.timeLimit / 60;
+
         this.resetQuiz();
-        this.startQuiz(this.currentUnit, this.currentUnitType);
+        this.startQuiz(this.currentUnit, this.currentUnitType, count, timeMin);
     }
 
     resetQuiz() {

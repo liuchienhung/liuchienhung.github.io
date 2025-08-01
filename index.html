@@ -375,16 +375,14 @@
         }
 
         .progress-container {
-            position: relative;
             margin-top: 20px;
             margin-bottom: 10px;
+            text-align: center;
         }
 
         #progress-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            display: block;
+            margin-top: 5px;
             font-weight: bold;
             color: #2c3e50;
         }
@@ -709,6 +707,7 @@
     <div id="toast" class="toast"></div>
     <script src="quiz-data.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="quiz-app.js"></script>
 </body>
 </html>
