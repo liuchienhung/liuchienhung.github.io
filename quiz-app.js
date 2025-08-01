@@ -93,6 +93,8 @@ class QuizApp {
         this.totalQuestionsSpan = document.getElementById('total-questions');
         this.questionProgress = document.getElementById('question-progress');
         this.progressText = document.getElementById('progress-text');
+        this.settingsBtn = document.getElementById('settings-btn');
+        this.fileOpsCard = document.getElementById('file-ops-card');
     }
 
     initializeEventListeners() {
@@ -108,6 +110,12 @@ class QuizApp {
         this.backToSubjectsBtn.addEventListener('click', () => this.backToSubjectSelector());
         this.restartBtn.addEventListener('click', () => this.restartQuiz());
         this.closeStatusBtn.addEventListener('click', () => this.hideAnswerStatus());
+        if (this.settingsBtn && this.fileOpsCard) {
+            this.settingsBtn.addEventListener('click', () => {
+                const isHidden = getComputedStyle(this.fileOpsCard).display === 'none';
+                this.fileOpsCard.style.display = isHidden ? 'block' : 'none';
+            });
+        }
         this.importBtn.addEventListener('click', () => this.importQuestions());
         if (this.importFile) {
             this.importFile.addEventListener('change', () => {
@@ -1176,23 +1184,24 @@ class QuizApp {
 
         document.body.appendChild(container);
         html2canvas(container, { scale: 2 }).then(canvas => {
+            const margin = 25.4; // Word standard margin in mm
             const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
             const imgData = canvas.toDataURL('image/png');
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
-            const imgWidth = pageWidth;
+            const imgWidth = pageWidth - margin * 2;
             const imgHeight = canvas.height * imgWidth / canvas.width;
             let heightLeft = imgHeight;
-            let position = 0;
+            let position = margin;
 
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
+            pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+            heightLeft -= (pageHeight - margin * 2);
 
             while (heightLeft > 0) {
-                position = heightLeft - imgHeight;
+                position = heightLeft - imgHeight + margin;
                 pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
+                pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+                heightLeft -= (pageHeight - margin * 2);
             }
 
             pdf.save('quiz-result.pdf');

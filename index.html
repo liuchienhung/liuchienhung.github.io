@@ -52,6 +52,7 @@
 
         .unit-selector {
             margin-bottom: 30px;
+            position: relative;
         }
 
         .unit-selector h3 {
@@ -201,6 +202,28 @@
         .file-ops {
             background-color: #f9fbfc;
             border: 1px solid #d0d7de;
+        }
+
+        #file-ops-card {
+            display: none;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        @media (max-width: 576px) {
+            .settings-btn {
+                font-size: 1.3em;
+                top: 5px;
+                right: 5px;
+            }
         }
 
         .file-ops .row > div {
@@ -542,6 +565,7 @@
 
             <!-- 單元選擇區域 -->
             <div id="unit-selector" class="unit-selector" style="display:none;">
+                <button id="settings-btn" class="settings-btn" aria-label="設定">⚙</button>
                 <div class="card file-ops p-4 shadow-sm rounded mb-4">
                     <h3 class="mb-3">請選擇要測驗的單元：</h3>
                     <fieldset class="p-3 mb-4 shadow-sm rounded">
@@ -563,7 +587,7 @@
                         </div>
                     </fieldset>
                 </div>
-                <div class="card file-ops p-4 shadow-sm rounded">
+                <div id="file-ops-card" class="card file-ops p-4 shadow-sm rounded">
                     <h4 class="section-title mb-3">📁 檔案管理操作</h4>
 
                     <fieldset class="p-3 mb-4 shadow-sm rounded">
