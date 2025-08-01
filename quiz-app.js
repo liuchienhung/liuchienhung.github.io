@@ -89,6 +89,8 @@ class QuizApp {
         this.removeSubjectBtn = document.getElementById('remove-subject');
         this.removeUnitBtn = document.getElementById('remove-unit');
         this.removeUnitMultiBtn = document.getElementById('remove-unit-multi');
+        this.syncToMultiBtn = document.getElementById('sync-to-multi');
+        this.syncToSingleBtn = document.getElementById('sync-to-single');
         
         this.currentPageSpan = document.getElementById('current-page');
         this.totalPagesSpan = document.getElementById('total-pages');
@@ -157,6 +159,12 @@ class QuizApp {
         }
         if (this.removeUnitMultiBtn) {
             this.removeUnitMultiBtn.addEventListener('click', () => this.removeUnitMulti());
+        }
+        if (this.syncToMultiBtn) {
+            this.syncToMultiBtn.addEventListener('click', () => this.syncToMulti());
+        }
+        if (this.syncToSingleBtn) {
+            this.syncToSingleBtn.addEventListener('click', () => this.syncToSingle());
         }
         if (this.importAllBtn) {
             this.importAllBtn.addEventListener('click', () => this.importAllQuestions());
@@ -1105,6 +1113,29 @@ class QuizApp {
             this.saveToStorage();
             this.renderUnitSelector();
         });
+    }
+
+    syncToMulti() {
+        if (this.currentSubject == null) return;
+        if (!confirm('確定將單選題庫下拉選單同步至多選題庫？\n此操作僅同步單元名稱，不會同步題目。')) return;
+        const source = subjects[this.currentSubject].units || [];
+        subjects[this.currentSubject].multiUnits = source.map(u => ({ unit: u.unit, questions: [] }));
+        this.currentMultiUnits = subjects[this.currentSubject].multiUnits;
+        this.saveToStorage();
+        this.renderUnitSelector();
+        this.showToast('已同步到多選題庫');
+    }
+
+    syncToSingle() {
+        if (this.currentSubject == null) return;
+        if (!confirm('確定將多選題庫下拉選單同步至單選題庫？\n此操作僅同步單元名稱，不會同步題目。')) return;
+        const source = subjects[this.currentSubject].multiUnits || [];
+        subjects[this.currentSubject].units = source.map(u => ({ unit: u.unit, questions: [] }));
+        this.currentSingleUnits = subjects[this.currentSubject].units;
+        this.currentSubjectData = this.currentSingleUnits;
+        this.saveToStorage();
+        this.renderUnitSelector();
+        this.showToast('已同步到單選題庫');
     }
 
     editUnitQuestions() {
