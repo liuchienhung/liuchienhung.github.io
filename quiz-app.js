@@ -80,6 +80,9 @@ class QuizApp {
         this.editUnitMultiBtn = document.getElementById('edit-unit-multi-btn');
         this.editUnitBtn = document.getElementById('edit-unit-btn');
 
+        this.unitSettingsBtn = document.getElementById('unit-settings-btn');
+        this.unitSettingsPanel = document.getElementById('unit-settings-panel');
+
         this.addSubjectBtn = document.getElementById('add-subject');
         this.addUnitBtn = document.getElementById('add-unit');
         this.addUnitMultiBtn = document.getElementById('add-unit-multi');
@@ -124,6 +127,12 @@ class QuizApp {
         }
         if (this.downloadPdfBtn) {
             this.downloadPdfBtn.addEventListener('click', () => this.downloadPDF());
+        }
+
+        if (this.unitSettingsBtn && this.unitSettingsPanel) {
+            this.unitSettingsBtn.addEventListener('click', () => {
+                this.unitSettingsPanel.style.display = this.unitSettingsPanel.style.display === 'none' ? 'block' : 'none';
+            });
         }
         if (this.downloadFormatBtn) {
             this.downloadFormatBtn.addEventListener('click', () => this.downloadFormat());
@@ -350,6 +359,9 @@ class QuizApp {
         if (isNaN(timeMin) || timeMin <= 0) timeMin = this.timeLimit / 60;
         this.timeLimit = timeMin * 60;
 
+        if (this.unitSettingsPanel) {
+            this.unitSettingsPanel.style.display = 'none';
+        }
         // 隱藏單元選擇器，顯示測驗區域
         this.unitSelector.style.display = 'none';
         this.quizArea.style.display = 'block';
@@ -787,6 +799,9 @@ class QuizApp {
         this.quizArea.style.display = 'none';
         this.unitSelector.style.display = 'block';
         this.resetQuiz();
+        if (this.unitSettingsPanel) {
+            this.unitSettingsPanel.style.display = 'none';
+        }
     }
 
     backToSubjectSelector() {
@@ -795,6 +810,9 @@ class QuizApp {
         this.currentUnit = null;
         this.resetQuiz();
         this.renderSubjectSelector();
+        if (this.unitSettingsPanel) {
+            this.unitSettingsPanel.style.display = 'none';
+        }
     }
 
     restartQuiz() {
@@ -1180,19 +1198,22 @@ class QuizApp {
             const imgData = canvas.toDataURL('image/png');
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
-            const imgWidth = pageWidth;
+            const margin = 25.4; // Word 標準邊界 (1 吋)
+            const usableWidth = pageWidth - margin * 2;
+            const usableHeight = pageHeight - margin * 2;
+            const imgWidth = usableWidth;
             const imgHeight = canvas.height * imgWidth / canvas.width;
             let heightLeft = imgHeight;
-            let position = 0;
+            let position = margin;
 
-            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
+            pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+            heightLeft -= usableHeight;
 
             while (heightLeft > 0) {
-                position = heightLeft - imgHeight;
+                position = heightLeft - imgHeight + margin;
                 pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
+                pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+                heightLeft -= usableHeight;
             }
 
             pdf.save('quiz-result.pdf');
