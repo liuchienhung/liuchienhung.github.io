@@ -727,14 +727,19 @@ class QuizApp {
 
         const totalQuestions = questions.length;
         const percentage = Math.round((correctAnswers / totalQuestions) * 100);
+        const passText = percentage >= 70 ? '通過' : '未通過';
 
         // 顯示結果
         this.scoreDisplay.style.display = 'block';
         this.scoreText.innerHTML = `
             您答對了 ${correctAnswers} 題，共 ${totalQuestions} 題<br>
-            正確率：${percentage}%
+            正確率：${percentage}%<br>
+            得分：${percentage} 分 - ${passText}
         `;
         this.scoreProgress.style.width = `${percentage}%`;
+        this.scoreProgress.style.background = percentage >= 70
+            ? 'linear-gradient(135deg, #27ae60 0%, #229954 100%)'
+            : 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
         if (this.downloadPdfBtn) this.downloadPdfBtn.style.display = 'inline-block';
 
         // 顯示正確答案
