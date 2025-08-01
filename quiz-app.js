@@ -796,7 +796,7 @@ class QuizApp {
             if (!userAnswer || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
                 const numberEl = document.querySelector(`.question-number[data-question-index="${index}"]`);
                 if (numberEl && !numberEl.textContent.includes('未作答')) {
-                    numberEl.textContent += '（未作答）';
+					numberEl.innerHTML += '<span style="color:red">（未作答）</span>';
                 }
             }
         });
