@@ -1130,45 +1130,57 @@ class QuizApp {
     }
 
     downloadPDF() {
-        if (!window.jspdf || !window.jspdf.jsPDF || !window.html2canvas) {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
             alert('無法載入PDF庫');
             return;
         }
+
         const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
 
         const subjectName = subjects[this.currentSubject].subject;
         const unitName = this.currentUnit === -1 ? '全部單元' : this.currentSubjectData[this.currentUnit].unit;
 
-        const container = document.createElement('div');
-        container.style.padding = '20px';
-        container.style.fontFamily = 'Arial,\'Microsoft JhengHei\',sans-serif';
-        container.innerHTML = `
-            <h2>測驗結果</h2>
-            <p>科目：${subjectName}</p>
-            <p>單元：${unitName}</p>
-            <p>${this.scoreText.textContent}</p>
-            <p>剩餘時間：${Math.floor(this.remainingTime/60)}:${(this.remainingTime%60).toString().padStart(2,'0')}</p>
-            <hr>
-        `;
+        const margin = 10;
+        let y = margin;
+
+        pdf.setFontSize(16);
+        pdf.text('測驗結果', 105, y, { align: 'center' });
+        y += 10;
+
+        pdf.setFontSize(12);
+        pdf.text(`科目：${subjectName}`, margin, y); y += 7;
+        pdf.text(`單元：${unitName}`, margin, y); y += 7;
+        pdf.text(this.scoreText.textContent, margin, y); y += 7;
+        const timeText = `剩餘時間：${Math.floor(this.remainingTime/60)}:${(this.remainingTime%60).toString().padStart(2,'0')}`;
+        pdf.text(timeText, margin, y);
+        y += 10;
+
+        const lineHeight = 7;
+        const maxWidth = 190;
+        const pageHeight = pdf.internal.pageSize.getHeight() - margin;
 
         const questions = this.getQuestions();
         questions.forEach((q, i) => {
-            const div = document.createElement('div');
-            const userAns = this.userAnswers[i] || '未作答';
             const starred = this.starredQuestions.has(i) ? '★' : '';
-            div.innerHTML = `<strong>第 ${i+1} 題 ${starred}</strong><br>${q.question}<br>您的答案：${userAns}，正確答案：${q.answer}`;
-            div.style.marginTop = '10px';
-            container.appendChild(div);
+            const header = `第 ${i + 1} 題 ${starred}`;
+            const questionLines = pdf.splitTextToSize(q.question, maxWidth);
+            const userAns = this.userAnswers[i] || '未作答';
+            const answerLines = pdf.splitTextToSize(`您的答案：${userAns}，正確答案：${q.answer}`, maxWidth);
+
+            const requiredHeight = lineHeight * (1 + questionLines.length + answerLines.length) + 5;
+            if (y + requiredHeight > pageHeight) {
+                pdf.addPage();
+                y = margin;
+            }
+
+            pdf.text(header, margin, y); y += lineHeight;
+            questionLines.forEach(line => { pdf.text(line, margin, y); y += lineHeight; });
+            answerLines.forEach(line => { pdf.text(line, margin, y); y += lineHeight; });
+            y += 5;
         });
 
-        document.body.appendChild(container);
-        html2canvas(container).then(canvas => {
-            const pdf = new jsPDF({orientation: 'p', unit: 'px', format: [canvas.width, canvas.height]});
-            const imgData = canvas.toDataURL('image/png');
-            pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-            pdf.save('quiz-result.pdf');
-            document.body.removeChild(container);
-        });
+        pdf.save('quiz-result.pdf');
     }
 
     showToast(message) {

@@ -366,6 +366,29 @@
             transition: width 0.3s ease;
         }
 
+        #quiz-controls {
+            padding: 0 15px;
+        }
+
+        #quiz-controls .file-ops-buttons {
+            margin-bottom: 15px;
+        }
+
+        .progress-container {
+            position: relative;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        #progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
         .status-overlay {
             position: fixed;
             top: 0;
@@ -642,8 +665,8 @@
                     <!-- 題目內容將由JavaScript動態生成 -->
                 </div>
 
-                <div id="quiz-controls" class="container mt-4 px-3">
-                    <div class="file-ops-buttons mb-3">
+                <div id="quiz-controls">
+                    <div class="file-ops-buttons">
                         <button id="prev-btn" class="btn btn-outline-secondary btn-sm">上一題</button>
                         <button id="next-btn" class="btn btn-primary btn-sm">下一題</button>
                         <button id="submit-btn" class="btn btn-success btn-sm" style="display:none;">✅ 結束作答</button>
@@ -652,11 +675,11 @@
                         <button id="restart-quiz" class="btn btn-outline-primary btn-sm">🔁 重新開始</button>
                         <button id="download-pdf" class="btn btn-success btn-sm" style="display:none;">下載結果PDF</button>
                     </div>
-                    <div class="position-relative mt-4 mb-2">
+                    <div class="progress-container">
                         <div class="progress" style="height: 8px;">
                             <div id="question-progress" class="progress-bar" role="progressbar" style="width: 0%;"></div>
                         </div>
-                        <small id="progress-text" class="position-absolute top-50 start-50 translate-middle fw-bold text-dark">1 / 1</small>
+                        <small id="progress-text">1 / 1</small>
                     </div>
                 </div>
             </div>
@@ -686,7 +709,6 @@
     <div id="toast" class="toast"></div>
     <script src="quiz-data.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="quiz-app.js"></script>
 </body>
 </html>
