@@ -89,6 +89,8 @@ class QuizApp {
         this.removeSubjectBtn = document.getElementById('remove-subject');
         this.removeUnitBtn = document.getElementById('remove-unit');
         this.removeUnitMultiBtn = document.getElementById('remove-unit-multi');
+        this.syncUnitToMultiBtn = document.getElementById('sync-unit-to-multi');
+        this.syncUnitMultiToSingleBtn = document.getElementById('sync-unit-multi-to-single');
         
         this.currentPageSpan = document.getElementById('current-page');
         this.totalPagesSpan = document.getElementById('total-pages');
@@ -157,6 +159,12 @@ class QuizApp {
         }
         if (this.removeUnitMultiBtn) {
             this.removeUnitMultiBtn.addEventListener('click', () => this.removeUnitMulti());
+        }
+        if (this.syncUnitToMultiBtn) {
+            this.syncUnitToMultiBtn.addEventListener('click', () => this.syncSingleToMulti());
+        }
+        if (this.syncUnitMultiToSingleBtn) {
+            this.syncUnitMultiToSingleBtn.addEventListener('click', () => this.syncMultiToSingle());
         }
         if (this.importAllBtn) {
             this.importAllBtn.addEventListener('click', () => this.importAllQuestions());
@@ -1105,6 +1113,29 @@ class QuizApp {
             this.saveToStorage();
             this.renderUnitSelector();
         });
+    }
+
+    syncSingleToMulti() {
+        if (this.currentSubject == null) return;
+        if (!confirm('確定要同步單選題庫單元至多選題庫？(僅同步下拉選單，不會同步題目)')) return;
+        const units = this.currentSingleUnits.map(u => ({ unit: u.unit, questions: [] }));
+        this.currentMultiUnits = units;
+        subjects[this.currentSubject].multiUnits = units;
+        this.saveToStorage();
+        this.renderUnitSelector();
+        this.showToast('多選題庫下拉選單已同步');
+    }
+
+    syncMultiToSingle() {
+        if (this.currentSubject == null) return;
+        if (!confirm('確定要同步多選題庫單元至單選題庫？(僅同步下拉選單，不會同步題目)')) return;
+        const units = this.currentMultiUnits.map(u => ({ unit: u.unit, questions: [] }));
+        this.currentSingleUnits = units;
+        this.currentSubjectData = units;
+        subjects[this.currentSubject].units = units;
+        this.saveToStorage();
+        this.renderUnitSelector();
+        this.showToast('單選題庫下拉選單已同步');
     }
 
     editUnitQuestions() {
