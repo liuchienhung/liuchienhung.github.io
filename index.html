@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>資通安全題庫線上測驗</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -639,6 +638,7 @@
                         <button id="status-btn" class="btn btn-outline-dark btn-sm">👁 檢視答題狀態</button>
                         <button id="back-to-units" class="btn btn-outline-secondary btn-sm">🔙 返回單元選擇</button>
                         <button id="restart-quiz" class="btn btn-outline-primary btn-sm">🔁 重新開始</button>
+						<button id="download-pdf" class="btn btn-success btn-sm" style="display:none;">下載結果PDF</button>
                     </div>
                     <div class="progress mt-3" style="height: 6px;">
                         <div id="question-progress" class="progress-bar" role="progressbar" style="width: 0%;"></div>
@@ -646,9 +646,6 @@
                     <div class="text-center mt-1">
                         <small id="progress-text">1 / 1</small>
                     </div>
-                </div>
-                <div class="d-flex justify-content-end my-2">
-                    <button id="download-pdf" class="btn btn-success btn-sm" style="display:none;">下載結果PDF</button>
                 </div>
             </div>
         </div>
@@ -678,7 +675,6 @@
     <script src="quiz-data.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="quiz-app.js"></script>
 </body>
 </html>
