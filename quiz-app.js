@@ -730,9 +730,13 @@ class QuizApp {
 
         // 顯示結果
         this.scoreDisplay.style.display = 'block';
+        const passMessage = percentage >= 70
+            ? '<span style="color:green;">恭喜您通過測驗！</span>'
+            : '<span style="color:red;">未達通過分數，請再接再厲！</span>';
         this.scoreText.innerHTML = `
             您答對了 ${correctAnswers} 題，共 ${totalQuestions} 題<br>
-            正確率：${percentage}%
+            正確率：${percentage}%<br>
+            ${passMessage}
         `;
         this.scoreProgress.style.width = `${percentage}%`;
         if (this.downloadPdfBtn) this.downloadPdfBtn.style.display = 'inline-block';
