@@ -209,8 +209,8 @@
         }
 
         .file-ops-buttons {
-            display: flex;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 8px;
         }
 
@@ -227,11 +227,7 @@
 
         @media (max-width: 576px) {
             .file-ops-buttons {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .file-ops-buttons .btn {
-                width: 100%;
+                grid-template-columns: 1fr;
             }
         }
 
