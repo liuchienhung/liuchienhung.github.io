@@ -210,8 +210,13 @@
 
         .file-ops-buttons {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 8px;
+            align-items: stretch;
+        }
+
+        .file-ops-buttons .btn {
+            width: 100%;
         }
 
         fieldset {
@@ -223,16 +228,6 @@
         fieldset legend {
             padding: 0 5px;
             font-weight: bold;
-        }
-
-        @media (max-width: 576px) {
-            .file-ops-buttons {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .file-ops-buttons .btn {
-                width: 100%;
-            }
         }
 
         .section-title {
