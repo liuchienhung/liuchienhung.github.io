@@ -473,6 +473,7 @@ class QuizApp {
                     <div class="star ${starred}" data-question-index="${globalIndex}">${this.starredQuestions.has(globalIndex) ? '★' : '☆'}</div>
                 </div>
                 <div class="question-text">${question.question}</div>
+                <div class="unanswered-flag" style="display:none;">未作答</div>
                 <div class="options" data-question-index="${globalIndex}">
                     ${question.options.map((option, optionIndex) => `
                         <div class="option" data-option="${option.charAt(0)}" data-question-index="${globalIndex}">
@@ -483,6 +484,15 @@ class QuizApp {
             `;
 
             this.questionContainer.appendChild(questionDiv);
+
+            // 顯示未作答標記
+            if (this.showingResults) {
+                const ans = this.userAnswers[globalIndex];
+                if (!ans || (Array.isArray(ans) && ans.length === 0)) {
+                    const flag = questionDiv.querySelector('.unanswered-flag');
+                    if (flag) flag.style.display = 'block';
+                }
+            }
 
             // 星號標記事件
             const starEl = questionDiv.querySelector('.star');
@@ -756,13 +766,8 @@ class QuizApp {
             : 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
         if (this.downloadPdfBtn) this.downloadPdfBtn.style.display = 'inline-block';
 
-        // 顯示正確答案
-        this.showCorrectAnswers();
-
-        // 提交後仍可瀏覽題目
-        this.prevBtn.style.display = 'inline-block';
-        this.nextBtn.style.display = 'inline-block';
-        this.submitBtn.style.display = 'none';
+        // 重新渲染題目顯示答案與未作答標記
+        this.renderQuiz();
 
         // 滾動到頂部
         window.scrollTo(0, 0);
@@ -1173,6 +1178,7 @@ class QuizApp {
         const container = document.createElement('div');
         container.style.padding = '20px';
         container.style.fontFamily = 'Arial,\'Microsoft JhengHei\',sans-serif';
+        container.style.fontSize = '32px';
         container.innerHTML = `
             <h2>測驗結果</h2>
             <p>科目：${subjectName}</p>
