@@ -239,6 +239,24 @@
             color: #2c3e50;
         }
 
+        .unit-selector {
+            position: relative;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        .settings-panel {
+            display: none;
+        }
+
         .btn {
             background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
@@ -542,6 +560,7 @@
 
             <!-- 單元選擇區域 -->
             <div id="unit-selector" class="unit-selector" style="display:none;">
+                <button id="unit-settings-btn" class="settings-btn">⚙</button>
                 <div class="card file-ops p-4 shadow-sm rounded mb-4">
                     <h3 class="mb-3">請選擇要測驗的單元：</h3>
                     <fieldset class="p-3 mb-4 shadow-sm rounded">
@@ -563,7 +582,7 @@
                         </div>
                     </fieldset>
                 </div>
-                <div class="card file-ops p-4 shadow-sm rounded">
+                <div id="unit-settings-panel" class="card file-ops p-4 shadow-sm rounded settings-panel">
                     <h4 class="section-title mb-3">📁 檔案管理操作</h4>
 
                     <fieldset class="p-3 mb-4 shadow-sm rounded">
