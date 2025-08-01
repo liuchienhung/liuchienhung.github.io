@@ -469,7 +469,7 @@ class QuizApp {
             questionDiv.innerHTML = `
                 ${unitInfo}
                 <div class="question-header">
-                    <div class="question-number">第 ${globalIndex + 1} 題</div>
+                    <div class="question-number" data-question-index="${globalIndex}">第 ${globalIndex + 1} 題</div>
                     <div class="star ${starred}" data-question-index="${globalIndex}">${this.starredQuestions.has(globalIndex) ? '★' : '☆'}</div>
                 </div>
                 <div class="question-text">${question.question}</div>
@@ -773,7 +773,7 @@ class QuizApp {
         
         questions.forEach((question, index) => {
             const userAnswer = this.userAnswers[index];
-            const questionOptions = document.querySelectorAll(`[data-question-index="${index}"]`);
+            const questionOptions = document.querySelectorAll(`.option[data-question-index="${index}"]`);
             questionOptions.forEach(option => {
                 const optionLetter = option.dataset.option;
                 if (Array.isArray(question.answers)) {
@@ -792,6 +792,13 @@ class QuizApp {
                     }
                 }
             });
+
+            if (!userAnswer || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
+                const numberEl = document.querySelector(`.question-number[data-question-index="${index}"]`);
+                if (numberEl && !numberEl.textContent.includes('未作答')) {
+                    numberEl.textContent += '（未作答）';
+                }
+            }
         });
     }
 
@@ -1173,6 +1180,7 @@ class QuizApp {
         const container = document.createElement('div');
         container.style.padding = '20px';
         container.style.fontFamily = 'Arial,\'Microsoft JhengHei\',sans-serif';
+        container.style.fontSize = '32px';
         container.innerHTML = `
             <h2>測驗結果</h2>
             <p>科目：${subjectName}</p>
