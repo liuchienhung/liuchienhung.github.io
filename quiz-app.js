@@ -798,8 +798,44 @@ class QuizApp {
     }
 
     restartQuiz() {
+        const allQuestions = this.getAllQuestions();
+        let newQuestions = [];
+
+        if (this.currentUnitType === 'mixed') {
+            const singleQ = allQuestions
+                .filter(q => !Array.isArray(q.answers))
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 40);
+            const multiQ = allQuestions
+                .filter(q => Array.isArray(q.answers))
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 10);
+            newQuestions = singleQ.concat(multiQ).sort(() => Math.random() - 0.5);
+        } else {
+            const maxQuestions = Math.min(50, allQuestions.length);
+            const countInput = prompt(`請輸入測驗題數 (5-${maxQuestions})`, Math.min(10, maxQuestions));
+            if (countInput === null) {
+                return;
+            }
+            let count = parseInt(countInput);
+            if (isNaN(count)) count = Math.min(10, maxQuestions);
+            count = Math.min(Math.max(count, 5), maxQuestions);
+            const shuffled = allQuestions.sort(() => Math.random() - 0.5);
+            newQuestions = shuffled.slice(0, count);
+        }
+
+        const timeInput = prompt('請輸入測驗時間(分鐘)', this.timeLimit / 60);
+        if (timeInput === null) {
+            return;
+        }
+        let timeMin = parseInt(timeInput);
+        if (isNaN(timeMin) || timeMin <= 0) timeMin = this.timeLimit / 60;
+        this.timeLimit = timeMin * 60;
+
         this.resetQuiz();
-        this.startQuiz(this.currentUnit, this.currentUnitType);
+        this.selectedQuestions = newQuestions;
+        this.startTimer();
+        this.renderQuiz();
     }
 
     resetQuiz() {
