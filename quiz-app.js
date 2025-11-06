@@ -20,6 +20,11 @@ class QuizApp {
         this.starredQuestions = new Set();
         this.selectionCallback = null;
         this.toastTimer = null;
+        this.optionExplanations = {};
+        this.llmConfig = {
+            baseUrl: 'http://140.127.4.166:6044',
+            model: 'gpt-oss:120b'
+        };
 
         this.loadFromStorage();
         this.initializeElements();
@@ -346,6 +351,7 @@ class QuizApp {
         this.currentPage = 1;
         this.userAnswers = {};
         this.showingResults = false;
+        this.optionExplanations = {};
 
         const allQuestions = this.getAllQuestions();
         let count = 0;
@@ -503,6 +509,39 @@ class QuizApp {
 
             this.questionContainer.appendChild(questionDiv);
 
+            if (this.showingResults) {
+                const explanationSection = document.createElement('div');
+                explanationSection.className = 'option-explanation-section';
+
+                const explanationHeader = document.createElement('div');
+                explanationHeader.className = 'option-explanation-header';
+                explanationHeader.textContent = 'LLM 選項解析';
+
+                const generateButton = document.createElement('button');
+                generateButton.className = 'btn btn-outline-info llm-explain-btn';
+                generateButton.textContent = '生成選項說明';
+                generateButton.dataset.llmButton = globalIndex;
+                generateButton.addEventListener('click', () => this.generateOptionExplanations(globalIndex, question));
+
+                const statusDiv = document.createElement('div');
+                statusDiv.className = 'llm-explanation-status';
+                statusDiv.dataset.llmStatus = globalIndex;
+
+                const resultsDiv = document.createElement('div');
+                resultsDiv.className = 'llm-explanation-results';
+                resultsDiv.dataset.llmResults = globalIndex;
+
+                explanationSection.appendChild(explanationHeader);
+                explanationSection.appendChild(generateButton);
+                explanationSection.appendChild(statusDiv);
+                explanationSection.appendChild(resultsDiv);
+
+                questionDiv.appendChild(explanationSection);
+
+                this.renderOptionExplanationState(globalIndex);
+                this.renderOptionExplanationResults(globalIndex);
+            }
+
             // 星號標記事件
             const starEl = questionDiv.querySelector('.star');
             starEl.addEventListener('click', (e) => {
@@ -527,6 +566,184 @@ class QuizApp {
         if (this.showingResults) {
             this.showCorrectAnswers();
         }
+    }
+
+    renderOptionExplanationState(questionIndex) {
+        const statusEl = this.questionContainer.querySelector(`[data-llm-status="${questionIndex}"]`);
+        if (!statusEl) return;
+
+        const info = this.optionExplanations[questionIndex];
+        statusEl.classList.remove('error');
+
+        if (!info) {
+            statusEl.textContent = '點擊上方按鈕即可生成各選項的說明。';
+            return;
+        }
+
+        if (info.state === 'loading') {
+            statusEl.textContent = 'LLM 生成中，請稍候...';
+        } else if (info.state === 'error') {
+            statusEl.textContent = `生成失敗：${info.errorMessage}`;
+            statusEl.classList.add('error');
+        } else if (info.state === 'ready') {
+            statusEl.textContent = '已生成說明，可再次點擊重新生成。';
+        } else {
+            statusEl.textContent = '';
+        }
+    }
+
+    renderOptionExplanationResults(questionIndex) {
+        const resultsEl = this.questionContainer.querySelector(`[data-llm-results="${questionIndex}"]`);
+        if (!resultsEl) return;
+
+        const info = this.optionExplanations[questionIndex];
+        resultsEl.innerHTML = '';
+
+        if (!info || info.state !== 'ready' || !Array.isArray(info.explanations)) {
+            return;
+        }
+
+        const question = this.getQuestions()[questionIndex];
+        info.explanations.forEach(item => {
+            const optionLetter = (item.option || '').toString().trim().charAt(0).toUpperCase();
+            const optionText = optionLetter && question && Array.isArray(question.options)
+                ? question.options.find(opt => opt.trim().toUpperCase().startsWith(optionLetter)) || ''
+                : '';
+
+            const explanationItem = document.createElement('div');
+            explanationItem.className = 'llm-explanation-item';
+            if (item.isCorrect === true) {
+                explanationItem.classList.add('correct');
+            } else if (item.isCorrect === false) {
+                explanationItem.classList.add('incorrect');
+            }
+
+            const title = document.createElement('div');
+            title.className = 'llm-explanation-option';
+            title.textContent = optionText ? `${optionText}` : `選項 ${optionLetter || '?'}`;
+
+            const body = document.createElement('div');
+            body.className = 'llm-explanation-text';
+            body.textContent = item.explanation || '';
+
+            explanationItem.appendChild(title);
+            explanationItem.appendChild(body);
+            resultsEl.appendChild(explanationItem);
+        });
+    }
+
+    async generateOptionExplanations(questionIndex, question) {
+        const existing = this.optionExplanations[questionIndex];
+        if (existing && existing.state === 'loading') {
+            return;
+        }
+
+        const button = this.questionContainer.querySelector(`[data-llm-button="${questionIndex}"]`);
+        if (button) {
+            button.disabled = true;
+        }
+
+        this.optionExplanations[questionIndex] = { state: 'loading' };
+        this.renderOptionExplanationState(questionIndex);
+        this.renderOptionExplanationResults(questionIndex);
+
+        try {
+            const prompt = this.buildOptionExplanationPrompt(question);
+            const response = await fetch(`${this.llmConfig.baseUrl}/api/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: this.llmConfig.model,
+                    prompt,
+                    stream: false
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            const rawText = (data && (data.response || data.message || ''));
+            let explanations = [];
+
+            if (rawText) {
+                let parsed;
+                try {
+                    parsed = JSON.parse(rawText);
+                } catch (parseError) {
+                    const start = rawText.indexOf('{');
+                    const end = rawText.lastIndexOf('}');
+                    if (start !== -1 && end !== -1 && end > start) {
+                        try {
+                            parsed = JSON.parse(rawText.slice(start, end + 1));
+                        } catch (innerError) {
+                            parsed = null;
+                        }
+                    }
+                }
+
+                if (parsed && Array.isArray(parsed.options)) {
+                    explanations = parsed.options.map(opt => {
+                        const optionValue = (opt.option || opt.label || '').toString().trim().charAt(0).toUpperCase();
+                        const explanationText = opt.explanation || opt.detail || opt.reason || '';
+                        const correctnessRaw = typeof opt.is_correct !== 'undefined' ? opt.is_correct : opt.correct;
+                        let correctness;
+                            if (typeof correctnessRaw === 'string') {
+                                const normalized = correctnessRaw.trim().toLowerCase();
+                                if (['true', 'yes', 'y', 'correct', 'right'].includes(normalized)) {
+                                    correctness = true;
+                                } else if (['false', 'no', 'n', 'incorrect', 'wrong'].includes(normalized)) {
+                                    correctness = false;
+                                }
+                            } else if (typeof correctnessRaw === 'boolean') {
+                                correctness = correctnessRaw;
+                            }
+                            return {
+                                option: optionValue,
+                                explanation: explanationText,
+                                isCorrect: correctness
+                            };
+                        });
+                } else {
+                    explanations = [{ option: '', explanation: rawText.trim() }];
+                }
+            }
+
+            this.optionExplanations[questionIndex] = {
+                state: 'ready',
+                explanations
+            };
+        } catch (error) {
+            this.optionExplanations[questionIndex] = {
+                state: 'error',
+                errorMessage: error.message || '未知錯誤'
+            };
+        } finally {
+            if (button) {
+                button.disabled = false;
+            }
+            this.renderOptionExplanationState(questionIndex);
+            this.renderOptionExplanationResults(questionIndex);
+        }
+    }
+
+    buildOptionExplanationPrompt(question) {
+        const type = Array.isArray(question.answers) ? '多選題' : '單選題';
+        const optionsText = (question.options || []).map(opt => opt).join('\n');
+        const correctAnswer = Array.isArray(question.answers)
+            ? question.answers.join(', ')
+            : question.answer;
+
+        return `你是一名資安測驗講師，請針對下列${type}的每一個選項提供精簡解析。` +
+            `\n題目：${question.question}` +
+            `\n選項：\n${optionsText}` +
+            `\n正確答案：${correctAnswer}` +
+            `\n請使用JSON格式回覆，並且只輸出JSON，不要包含任何解釋文字。` +
+            `\nJSON 格式為：{"options":[{"option":"A","explanation":"說明文字","is_correct":true}]}` +
+            `\n其中 option 為選項英文字母，explanation 為說明文字，is_correct 表示該選項是否正確。`;
     }
 
     addOptionClickListeners() {
@@ -866,6 +1083,7 @@ class QuizApp {
         this.showingResults = false;
         this.selectedQuestions = [];
         this.starredQuestions.clear();
+        this.optionExplanations = {};
         this.hideAnswerStatus();
 
         clearInterval(this.timerInterval);

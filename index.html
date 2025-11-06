@@ -536,6 +536,69 @@
             opacity: 1;
         }
 
+        .option-explanation-section {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #eef2f7;
+            border: 1px solid #d6e0f0;
+        }
+
+        .option-explanation-header {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .option-explanation-section .btn {
+            margin-bottom: 10px;
+        }
+
+        .llm-explanation-status {
+            font-size: 0.95em;
+            color: #34495e;
+        }
+
+        .llm-explanation-status.error {
+            color: #e74c3c;
+        }
+
+        .llm-explanation-results {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .llm-explanation-item {
+            background: #fff;
+            border-radius: 8px;
+            padding: 12px;
+            border-left: 4px solid #95a5a6;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .llm-explanation-item.correct {
+            border-left-color: #27ae60;
+            background: #e9f7ef;
+        }
+
+        .llm-explanation-item.incorrect {
+            border-left-color: #e74c3c;
+            background: #fdecea;
+        }
+
+        .llm-explanation-option {
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: #2c3e50;
+        }
+
+        .llm-explanation-text {
+            line-height: 1.6;
+            color: #34495e;
+        }
+
     </style>
 </head>
 <body>
