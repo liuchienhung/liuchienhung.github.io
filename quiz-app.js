@@ -1212,65 +1212,92 @@ class QuizApp {
     }
 
     downloadPDF() {
-        if (!window.jspdf || !window.jspdf.jsPDF || !window.html2canvas) {
+        if (!window.jspdf || !window.jspdf.jsPDF) {
             alert('無法載入PDF庫');
             return;
         }
-        const { jsPDF } = window.jspdf;
 
-        const subjectName = subjects[this.currentSubject].subject;
-        const unitName = this.currentUnit === -1 ? '全部單元' : this.currentSubjectData[this.currentUnit].unit;
-
-        const container = document.createElement('div');
-        container.style.padding = '20px';
-        container.style.fontFamily = 'Arial,\'Microsoft JhengHei\',sans-serif';
-        container.style.fontSize = '32px';
-        container.innerHTML = `
-            <h2>測驗結果</h2>
-            <p>科目：${subjectName}</p>
-            <p>單元：${unitName}</p>
-            <p>${this.scoreText.textContent}</p>
-            <p>剩餘時間：${Math.floor(this.remainingTime/60)}:${(this.remainingTime%60).toString().padStart(2,'0')}</p>
-            <hr>
-        `;
-
-        const questions = this.getQuestions();
-        questions.forEach((q, i) => {
-            const div = document.createElement('div');
-            const userAns = this.userAnswers[i] || '未作答';
-            const starred = this.starredQuestions.has(i) ? '★' : '';
-            div.innerHTML = `<strong>第 ${i+1} 題 ${starred}</strong><br>${q.question}<br>您的答案：${userAns}，正確答案：${q.answer}`;
-            div.style.marginTop = '10px';
-            container.appendChild(div);
-        });
-
-        document.body.appendChild(container);
-        html2canvas(container, { scale: 2 }).then(canvas => {
+        try {
+            const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-            const imgData = canvas.toDataURL('image/png');
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
             const margin = 25.4; // Word 標準邊界 (1 吋)
-            const usableWidth = pageWidth - margin * 2;
-            const usableHeight = pageHeight - margin * 2;
-            const imgWidth = usableWidth;
-            const imgHeight = canvas.height * imgWidth / canvas.width;
-            let heightLeft = imgHeight;
-            let position = margin;
+            const contentWidth = pageWidth - margin * 2;
+            const marginTop = margin;
+            const marginBottom = margin;
+            let cursorY = marginTop;
 
-            pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-            heightLeft -= usableHeight;
+            const addParagraph = (text, { fontSize = 12, bold = false, extraGap = 2 } = {}) => {
+                const lines = Array.isArray(text)
+                    ? text.flatMap(line => pdf.splitTextToSize(line, contentWidth))
+                    : pdf.splitTextToSize(text, contentWidth);
+                const lineHeight = fontSize * 0.5 + 0.5;
+                pdf.setFont('helvetica', bold ? 'bold' : 'normal');
+                pdf.setFontSize(fontSize);
+                lines.forEach(line => {
+                    if (cursorY + lineHeight > pageHeight - marginBottom) {
+                        pdf.addPage();
+                        cursorY = marginTop;
+                    }
+                    pdf.text(line, margin, cursorY);
+                    cursorY += lineHeight;
+                });
+                cursorY += extraGap;
+            };
 
-            while (heightLeft > 0) {
-                position = heightLeft - imgHeight + margin;
-                pdf.addPage();
-                pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
-                heightLeft -= usableHeight;
+            const subjectName = subjects[this.currentSubject].subject;
+            const unitName = this.currentUnit === -1 ? '全部單元' : this.currentSubjectData[this.currentUnit].unit;
+            const remainingSeconds = Math.max(0, this.remainingTime || 0);
+            const remainingText = `${Math.floor(remainingSeconds / 60)}:${(remainingSeconds % 60).toString().padStart(2, '0')}`;
+
+            addParagraph('測驗結果', { fontSize: 18, bold: true, extraGap: 4 });
+            addParagraph(`科目：${subjectName}`, { fontSize: 12 });
+            addParagraph(`單元：${unitName}`, { fontSize: 12 });
+            if (this.scoreText && this.scoreText.textContent) {
+                addParagraph(this.scoreText.textContent, { fontSize: 12 });
             }
+            addParagraph(`剩餘時間：${remainingText}`, { fontSize: 12, extraGap: 6 });
+
+            const questions = this.getQuestions();
+            questions.forEach((q, index) => {
+                const starred = this.starredQuestions.has(index) ? ' ★' : '';
+                addParagraph(`第 ${index + 1} 題${starred}`, { fontSize: 12, bold: true, extraGap: 1 });
+                addParagraph(q.question, { fontSize: 11, extraGap: 1 });
+                if (Array.isArray(q.options) && q.options.length) {
+                    const optionLines = q.options.map(opt => `• ${opt}`);
+                    addParagraph(optionLines, { fontSize: 10, extraGap: 1 });
+                }
+
+                const userAnswerRaw = this.userAnswers[index];
+                let userAnswerText = '未作答';
+                if (Array.isArray(q.answers)) {
+                    const answerArray = Array.isArray(userAnswerRaw) ? userAnswerRaw.slice().sort() : [];
+                    if (answerArray.length) {
+                        userAnswerText = answerArray.join(', ');
+                    }
+                } else if (userAnswerRaw) {
+                    userAnswerText = userAnswerRaw;
+                }
+
+                const correctAnswer = Array.isArray(q.answers)
+                    ? (q.answers || []).slice().sort().join(', ')
+                    : q.answer;
+
+                addParagraph(`您的答案：${userAnswerText}`, { fontSize: 10, extraGap: 1 });
+                addParagraph(`正確答案：${correctAnswer}`, { fontSize: 10, extraGap: 4 });
+            });
 
             pdf.save('quiz-result.pdf');
-            document.body.removeChild(container);
-        });
+        } catch (error) {
+            console.error('download pdf failed', error);
+            const message = `PDF 生成失敗：${error.message || error}`;
+            if (this.showToast) {
+                this.showToast(message);
+            } else {
+                alert(message);
+            }
+        }
     }
 
     showToast(message) {
