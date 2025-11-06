@@ -20,6 +20,7 @@ class QuizApp {
         this.starredQuestions = new Set();
         this.selectionCallback = null;
         this.toastTimer = null;
+        this.isGeneratingPdf = false;
 
         this.loadFromStorage();
         this.initializeElements();
@@ -1211,11 +1212,21 @@ class QuizApp {
         });
     }
 
-    downloadPDF() {
+    async downloadPDF() {
         if (!window.jspdf || !window.jspdf.jsPDF || !window.html2canvas) {
             alert('無法載入PDF庫');
             return;
         }
+
+        if (this.isGeneratingPdf) {
+            return;
+        }
+
+        this.isGeneratingPdf = true;
+        if (this.downloadPdfBtn) {
+            this.downloadPdfBtn.disabled = true;
+        }
+
         const { jsPDF } = window.jspdf;
 
         const subjectName = subjects[this.currentSubject].subject;
@@ -1223,29 +1234,61 @@ class QuizApp {
 
         const container = document.createElement('div');
         container.style.padding = '20px';
-        container.style.fontFamily = 'Arial,\'Microsoft JhengHei\',sans-serif';
-        container.style.fontSize = '32px';
+        container.style.fontFamily = "Arial,'Microsoft JhengHei',sans-serif";
+        container.style.fontSize = '16px';
+        container.style.lineHeight = '1.6';
+        container.style.backgroundColor = '#ffffff';
+        container.style.color = '#000000';
+        container.style.width = '100%';
+
+        const scoreInfo = this.scoreText ? this.scoreText.innerHTML : '';
         container.innerHTML = `
-            <h2>測驗結果</h2>
+            <h2 style="margin-bottom: 10px;">測驗結果</h2>
             <p>科目：${subjectName}</p>
             <p>單元：${unitName}</p>
-            <p>${this.scoreText.textContent}</p>
+            <p>${scoreInfo}</p>
             <p>剩餘時間：${Math.floor(this.remainingTime/60)}:${(this.remainingTime%60).toString().padStart(2,'0')}</p>
-            <hr>
+            <hr style="margin: 20px 0;">
         `;
 
         const questions = this.getQuestions();
         questions.forEach((q, i) => {
             const div = document.createElement('div');
-            const userAns = this.userAnswers[i] || '未作答';
-            const starred = this.starredQuestions.has(i) ? '★' : '';
-            div.innerHTML = `<strong>第 ${i+1} 題 ${starred}</strong><br>${q.question}<br>您的答案：${userAns}，正確答案：${q.answer}`;
-            div.style.marginTop = '10px';
+            const userAns = this.userAnswers[i];
+            let userAnswerText = '未作答';
+            if (Array.isArray(userAns)) {
+                userAnswerText = userAns.length ? userAns.slice().sort().join(', ') : '未作答';
+            } else if (userAns) {
+                userAnswerText = userAns;
+            }
+
+            const correctAnswer = Array.isArray(q.answers)
+                ? (q.answers || []).slice().sort().join(', ')
+                : (q.answer || '');
+            const starred = this.starredQuestions.has(i) ? '★ ' : '';
+
+            div.innerHTML = `
+                <strong>${starred}第 ${i + 1} 題</strong><br>
+                <span>${q.question}</span><br>
+                <em>您的答案：${userAnswerText || '未作答'}，正確答案：${correctAnswer}</em>
+            `;
+            div.style.marginTop = '12px';
             container.appendChild(div);
         });
 
         document.body.appendChild(container);
-        html2canvas(container, { scale: 2 }).then(canvas => {
+
+        try {
+            await new Promise(resolve => requestAnimationFrame(resolve));
+
+            const canvas = await window.html2canvas(container, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                logging: false
+            });
+
             const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
             const imgData = canvas.toDataURL('image/png');
             const pageWidth = pdf.internal.pageSize.getWidth();
@@ -1269,8 +1312,19 @@ class QuizApp {
             }
 
             pdf.save('quiz-result.pdf');
-            document.body.removeChild(container);
-        });
+        } catch (error) {
+            console.error('PDF 生成失敗', error);
+            const message = error && error.message ? error.message : '無法擷取畫面';
+            this.showToast(`解析生成失敗：${message}`);
+        } finally {
+            if (document.body.contains(container)) {
+                document.body.removeChild(container);
+            }
+            this.isGeneratingPdf = false;
+            if (this.downloadPdfBtn) {
+                this.downloadPdfBtn.disabled = false;
+            }
+        }
     }
 
     showToast(message) {
