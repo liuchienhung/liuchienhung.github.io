@@ -1,4 +1,9 @@
 // PT職能題庫測驗系統
+const OLLAMA_CONFIG = {
+    baseUrl: 'http://140.127.4.166:6044',
+    model: 'gpt-oss:120b'
+};
+
 class QuizApp {
     constructor() {
         this.currentSubject = null;
@@ -20,6 +25,8 @@ class QuizApp {
         this.starredQuestions = new Set();
         this.selectionCallback = null;
         this.toastTimer = null;
+        this.optionExplanations = {};
+        this.explanationGenerationState = {};
 
         this.loadFromStorage();
         this.initializeElements();
@@ -499,6 +506,12 @@ class QuizApp {
                         </div>
                     `).join('')}
                 </div>
+                <div class="explanation-section">
+                    <button class="btn btn-outline-primary explanation-btn" data-question-index="${globalIndex}" style="display: ${this.showingResults ? 'inline-block' : 'none'};">
+                        ${this.optionExplanations[globalIndex] ? '重新生成解析' : '生成選項解析'}
+                    </button>
+                    <div class="explanations" data-question-index="${globalIndex}"></div>
+                </div>
             `;
 
             this.questionContainer.appendChild(questionDiv);
@@ -516,16 +529,24 @@ class QuizApp {
                 starEl.classList.toggle('starred', this.starredQuestions.has(idx));
                 starEl.textContent = this.starredQuestions.has(idx) ? '★' : '☆';
             });
+
+            const explanationBtn = questionDiv.querySelector('.explanation-btn');
+            explanationBtn.textContent = this.optionExplanations[globalIndex] ? '重新生成解析' : '生成選項解析';
+            explanationBtn.addEventListener('click', () => this.handleExplanationRequest(globalIndex, explanationBtn));
+            if (this.optionExplanations[globalIndex]) {
+                this.renderOptionExplanations(globalIndex);
+            }
         });
 
         // 添加選項點擊事件
         this.addOptionClickListeners();
-        
+
         // 恢復用戶之前的選擇
         this.restoreUserSelections();
 
         if (this.showingResults) {
             this.showCorrectAnswers();
+            this.toggleExplanationButtons(true);
         }
     }
 
@@ -777,6 +798,7 @@ class QuizApp {
 
         // 顯示正確答案
         this.showCorrectAnswers();
+        this.toggleExplanationButtons(true);
 
         // 提交後仍可瀏覽題目
         this.prevBtn.style.display = 'inline-block';
@@ -789,7 +811,7 @@ class QuizApp {
 
     showCorrectAnswers() {
         const questions = this.getQuestions();
-        
+
         questions.forEach((question, index) => {
             const userAnswer = this.userAnswers[index];
             const questionOptions = document.querySelectorAll(`.option[data-question-index="${index}"]`);
@@ -815,10 +837,142 @@ class QuizApp {
             if (!userAnswer || (Array.isArray(userAnswer) && userAnswer.length === 0)) {
                 const numberEl = document.querySelector(`.question-number[data-question-index="${index}"]`);
                 if (numberEl && !numberEl.textContent.includes('未作答')) {
-					numberEl.innerHTML += '<span style="color:red">（未作答）</span>';
+                    numberEl.innerHTML += '<span style="color:red">（未作答）</span>';
                 }
             }
         });
+    }
+
+    toggleExplanationButtons(show) {
+        const buttons = document.querySelectorAll('.explanation-btn');
+        buttons.forEach(button => {
+            button.style.display = show ? 'inline-block' : 'none';
+        });
+    }
+
+    async handleExplanationRequest(questionIndex, button) {
+        if (this.explanationGenerationState[questionIndex] === 'loading') return;
+
+        const container = this.getExplanationContainer(questionIndex);
+        if (!container) return;
+
+        this.explanationGenerationState[questionIndex] = 'loading';
+        const originalLabel = button.textContent;
+        button.disabled = true;
+        button.textContent = '生成中...';
+        container.innerHTML = '<div class="explanation-loading">正在向LLM生成解析...</div>';
+
+        try {
+            const explanations = await this.generateOptionExplanations(questionIndex);
+            this.optionExplanations[questionIndex] = explanations;
+            this.renderOptionExplanations(questionIndex);
+            button.textContent = '重新生成解析';
+        } catch (error) {
+            console.error('Failed to generate explanation', error);
+            container.innerHTML = `<div class="explanation-error">解析生成失敗：${error.message || '請稍後再試'}</div>`;
+            button.textContent = originalLabel;
+        } finally {
+            button.disabled = false;
+            this.explanationGenerationState[questionIndex] = 'idle';
+        }
+    }
+
+    async generateOptionExplanations(questionIndex) {
+        const question = this.getQuestionByIndex(questionIndex);
+        if (!question) throw new Error('找不到題目資料');
+
+        const optionsText = question.options.map(opt => opt).join('\n');
+        const correctAnswers = Array.isArray(question.answers) ? question.answers.join('、') : question.answer;
+        const payload = {
+            model: OLLAMA_CONFIG.model,
+            prompt: `請針對以下題目的每個選項提供精簡說明，使用台灣繁體中文書寫。` +
+                `若為正確選項，請在說明開頭加入「✅正確」，若為錯誤選項，請加入「❌錯誤」並簡述理由。` +
+                `請務必以JSON格式回覆，不要包含其他文字。JSON物件的鍵為選項代號，例如{"A":"說明"}。` +
+                `\n題目：${question.question}\n選項：\n${optionsText}\n正確答案：${correctAnswers}\n僅輸出JSON。`,
+            stream: false
+        };
+
+        const response = await fetch(`${OLLAMA_CONFIG.baseUrl}/api/generate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`伺服器錯誤 (${response.status})`);
+        }
+
+        const data = await response.json();
+        const rawText = typeof data.response === 'string' ? data.response : JSON.stringify(data);
+        const parsed = this.parseExplanationResponse(rawText);
+        if (!parsed) {
+            throw new Error('無法解析LLM回覆');
+        }
+        return parsed;
+    }
+
+    renderOptionExplanations(questionIndex) {
+        const container = this.getExplanationContainer(questionIndex);
+        if (!container) return;
+        const explanations = this.optionExplanations[questionIndex];
+        const question = this.getQuestionByIndex(questionIndex);
+        if (!question) return;
+
+        container.innerHTML = '';
+        if (explanations && typeof explanations === 'object' && !Array.isArray(explanations)) {
+            question.options.forEach(option => {
+                const key = this.normalizeOptionKey(option);
+                const text = explanations[key] || explanations[`${key})`] || '（無回覆）';
+                const item = document.createElement('div');
+                item.className = 'explanation-item';
+                item.innerHTML = `
+                    <div class="explanation-option">${option}</div>
+                    <div class="explanation-text">${text}</div>
+                `;
+                container.appendChild(item);
+            });
+        } else if (typeof explanations === 'string') {
+            const item = document.createElement('div');
+            item.className = 'explanation-item';
+            item.innerHTML = `<div class="explanation-text">${explanations}</div>`;
+            container.appendChild(item);
+        }
+    }
+
+    parseExplanationResponse(rawText) {
+        try {
+            return JSON.parse(rawText);
+        } catch (e) {
+            try {
+                const start = rawText.indexOf('{');
+                const end = rawText.lastIndexOf('}');
+                if (start !== -1 && end !== -1) {
+                    const jsonSegment = rawText.slice(start, end + 1);
+                    return JSON.parse(jsonSegment);
+                }
+            } catch (err) {
+                console.warn('Failed to parse JSON segment', err);
+            }
+        }
+        return null;
+    }
+
+    normalizeOptionKey(option) {
+        const match = option.match(/^\s*([A-Z])\)/i);
+        if (match) {
+            return match[1].toUpperCase();
+        }
+        return option.trim().charAt(0).toUpperCase();
+    }
+
+    getExplanationContainer(questionIndex) {
+        return document.querySelector(`.explanations[data-question-index="${questionIndex}"]`);
+    }
+
+    getQuestionByIndex(index) {
+        return this.selectedQuestions[index];
     }
 
     backToUnitSelector() {
@@ -866,6 +1020,8 @@ class QuizApp {
         this.showingResults = false;
         this.selectedQuestions = [];
         this.starredQuestions.clear();
+        this.optionExplanations = {};
+        this.explanationGenerationState = {};
         this.hideAnswerStatus();
 
         clearInterval(this.timerInterval);
