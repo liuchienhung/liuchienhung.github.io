@@ -8,7 +8,8 @@ class ExamReaderApp {
             selectedPageNumber: 1,
             speechRate: 1,
             isAnalyzing: false,
-            lastAnalysisTitle: ''
+            lastAnalysisTitle: '',
+            studentMode: true
         };
 
         this.sectionTypeMap = {
@@ -54,6 +55,7 @@ class ExamReaderApp {
         this.clearBtn = document.getElementById('reader-clear-btn');
         this.exportBtn = document.getElementById('reader-export-json');
         this.stopSpeechBtn = document.getElementById('reader-stop-speech');
+        this.studentModeBtn = document.getElementById('reader-student-mode-btn');
 
         this.layoutModeSelect = document.getElementById('reader-layout-mode');
         this.ocrModeSelect = document.getElementById('reader-ocr-mode');
@@ -102,6 +104,9 @@ class ExamReaderApp {
         if (this.stopSpeechBtn) {
             this.stopSpeechBtn.addEventListener('click', () => this.stopSpeech());
         }
+        if (this.studentModeBtn) {
+            this.studentModeBtn.addEventListener('click', () => this.toggleStudentMode());
+        }
         if (this.rateInput) {
             this.rateInput.addEventListener('input', () => {
                 this.state.speechRate = Number(this.rateInput.value || 1);
@@ -119,12 +124,30 @@ class ExamReaderApp {
         if (this.liveServiceCount) {
             this.liveServiceCount.textContent = '2';
         }
+        this.applyStudentMode();
         this.updateStatus('尚未開始分析', '請先選擇 PDF 或圖片檔，再按下「開始分析」。');
         this.renderSummary();
         this.renderPageList();
         this.renderPreview();
         this.renderQuestionList();
         this.renderQuestionDetail();
+    }
+
+    toggleStudentMode() {
+        this.state.studentMode = !this.state.studentMode;
+        this.applyStudentMode();
+    }
+
+    applyStudentMode() {
+        if (this.readerServiceApp) {
+            this.readerServiceApp.classList.toggle('student-mode', this.state.studentMode);
+        }
+
+        if (this.studentModeBtn) {
+            this.studentModeBtn.classList.toggle('active', this.state.studentMode);
+            this.studentModeBtn.textContent = this.state.studentMode ? '學生模式' : '編輯模式';
+            this.studentModeBtn.title = this.state.studentMode ? '目前為學生操作版面' : '目前為編輯校正版面';
+        }
     }
 
     handleFileSelection(event) {
@@ -151,6 +174,7 @@ class ExamReaderApp {
         if (this.readerServiceApp) {
             this.readerServiceApp.style.display = 'block';
         }
+        this.applyStudentMode();
     }
 
     returnToHome() {
@@ -905,40 +929,43 @@ class ExamReaderApp {
                     })
                     .join('');
 
-                const optionHotspots =
-                    currentQuestion && currentQuestion.pageNumber === page.pageNumber
-                        ? currentQuestion.options
-                              .filter((option) => option.bbox)
-                              .map(
-                                  (option, index) => `
-                                    <button
-                                        class="reader-option-hotspot"
-                                        type="button"
-                                        data-hotspot-option="${index}"
-                                        data-hotspot-question-ref="${currentQuestion.id}"
-                                        style="left:${option.bbox.leftPct}%;top:${option.bbox.topPct}%;width:${option.bbox.widthPct}%;height:${option.bbox.heightPct}%;"
-                                        title="${this.escapeHtml(option.key)} ${this.escapeHtml(option.text)}">
-                                        <span class="reader-hotspot-label">${this.escapeHtml(option.key)}</span>
-                                    </button>
-                                `
-                              )
-                              .join('')
-                        : '';
-
-                const passageHotspot =
-                    currentQuestion && currentQuestion.pageNumber === page.pageNumber && currentQuestion.passageBox
-                        ? `
+                const optionHotspots = pageQuestions
+                    .flatMap((question) =>
+                        (question.options || [])
+                            .map((option, index) => ({ question, option, index }))
+                            .filter(({ option }) => option.bbox)
+                    )
+                    .map(
+                        ({ question, option, index }) => `
                             <button
-                                class="reader-passage-hotspot"
+                                class="reader-option-hotspot ${question.id === this.state.selectedQuestionId ? 'active' : ''}"
+                                type="button"
+                                data-hotspot-option="${index}"
+                                data-hotspot-question-ref="${question.id}"
+                                style="left:${option.bbox.leftPct}%;top:${option.bbox.topPct}%;width:${option.bbox.widthPct}%;height:${option.bbox.heightPct}%;"
+                                title="${this.escapeHtml(option.key)} ${this.escapeHtml(option.text)}">
+                                <span class="reader-hotspot-label">${this.escapeHtml(option.key)}</span>
+                            </button>
+                        `
+                    )
+                    .join('');
+
+                const passageHotspot = pageQuestions
+                    .filter((question) => question.passageBox && question.passage)
+                    .map(
+                        (question) => `
+                            <button
+                                class="reader-passage-hotspot ${question.id === this.state.selectedQuestionId ? 'active' : ''}"
                                 type="button"
                                 data-hotspot-passage="1"
-                                data-hotspot-question-ref="${currentQuestion.id}"
-                                style="left:${currentQuestion.passageBox.leftPct}%;top:${currentQuestion.passageBox.topPct}%;width:${currentQuestion.passageBox.widthPct}%;height:${currentQuestion.passageBox.heightPct}%;"
+                                data-hotspot-question-ref="${question.id}"
+                                style="left:${question.passageBox.leftPct}%;top:${question.passageBox.topPct}%;width:${question.passageBox.widthPct}%;height:${question.passageBox.heightPct}%;"
                                 title="題組文章">
                                 <span class="reader-hotspot-label">題組文章</span>
                             </button>
                         `
-                        : '';
+                    )
+                    .join('');
 
                 const pageActiveClass = page.pageNumber === this.state.selectedPageNumber ? 'active' : '';
 
@@ -982,12 +1009,17 @@ class ExamReaderApp {
 
         this.pageCanvasWrap.querySelectorAll('[data-hotspot-option]').forEach((button) => {
             button.addEventListener('click', () => {
+                this.state.selectedQuestionId = button.dataset.hotspotQuestionRef || this.state.selectedQuestionId;
                 const question = this.getSelectedQuestion();
                 if (!question) {
                     return;
                 }
                 const option = question.options[Number(button.dataset.hotspotOption || 0)];
                 if (option) {
+                    this.state.selectedPageNumber = question.pageNumber;
+                    this.renderQuestionList();
+                    this.renderPreview();
+                    this.renderQuestionDetail();
                     this.speakOption(question, option);
                 }
             });
@@ -995,8 +1027,13 @@ class ExamReaderApp {
 
         this.pageCanvasWrap.querySelectorAll('[data-hotspot-passage]').forEach((passageButton) => {
             passageButton.addEventListener('click', () => {
+                this.state.selectedQuestionId = passageButton.dataset.hotspotQuestionRef || this.state.selectedQuestionId;
                 const question = this.getSelectedQuestion();
                 if (question) {
+                    this.state.selectedPageNumber = question.pageNumber;
+                    this.renderQuestionList();
+                    this.renderPreview();
+                    this.renderQuestionDetail();
                     this.speakPassage(question);
                 }
             });
