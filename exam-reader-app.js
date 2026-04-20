@@ -186,8 +186,8 @@ class ExamReaderApp {
 
         try {
             this.updateStatus('準備分析', `開始分析 ${file.name}`);
-            let pages = [];
 
+            let pages = [];
             if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
                 pages = await this.processPdfFile(file);
             } else {
@@ -199,11 +199,10 @@ class ExamReaderApp {
             }
 
             const questions = this.buildQuestionModelFromPages(pages);
-
             this.state.pages = pages;
             this.state.questions = questions;
-            this.state.selectedPageNumber = 1;
             this.state.selectedQuestionId = questions.length ? questions[0].id : null;
+            this.state.selectedPageNumber = questions.length ? questions[0].pageNumber : 1;
             this.state.lastAnalysisTitle = file.name.replace(/\.[^/.]+$/, '');
 
             this.renderSummary();
@@ -219,10 +218,11 @@ class ExamReaderApp {
                 [
                     `頁面數: ${pages.length}`,
                     `題目數: ${questions.length}`,
+                    `可點擊版面題目: ${questions.filter((question) => question.bbox).length}`,
                     `待人工校正: ${warningCount}`,
                     warningCount
-                        ? '建議先檢查標成「待校正」的題目，必要時修正題型、題幹與選項。'
-                        : '目前題型與選項切分看起來相對完整，可直接開始朗讀。'
+                        ? '可先直接點頁面上的題目與選項。若有切題不準，再用右側修正欄調整。'
+                        : '目前已可直接從頁面版面點題目與選項朗讀。'
                 ].join('\n')
             );
         } catch (error) {
@@ -243,7 +243,8 @@ class ExamReaderApp {
         const buffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
         const pages = [];
-        const useOcrMode = this.ocrModeSelect ? this.ocrModeSelect.value : 'prefer-text';
+        const ocrMode = this.ocrModeSelect ? this.ocrModeSelect.value : 'prefer-text';
+        const layoutMode = this.layoutModeSelect ? this.layoutModeSelect.value : 'vertical';
 
         for (let index = 1; index <= pdf.numPages; index += 1) {
             this.updateStatus('分析 PDF', `處理第 ${index} / ${pdf.numPages} 頁...`);
@@ -253,22 +254,19 @@ class ExamReaderApp {
             const context = canvas.getContext('2d', { willReadFrequently: true });
             canvas.width = viewport.width;
             canvas.height = viewport.height;
-
             await page.render({ canvasContext: context, viewport }).promise;
 
+            let textBundle = null;
             let extractedText = '';
             let extractionMethod = 'pdf-text';
 
-            if (useOcrMode !== 'ocr-force') {
+            if (ocrMode !== 'ocr-force') {
                 const textContent = await page.getTextContent();
-                extractedText = this.extractPageTextFromPdfItems(
-                    textContent.items || [],
-                    viewport,
-                    this.layoutModeSelect ? this.layoutModeSelect.value : 'vertical'
-                );
+                textBundle = this.buildTextBundle(textContent.items || [], viewport, layoutMode);
+                extractedText = textBundle.displayText;
             }
 
-            if ((!extractedText || extractedText.length < 80) && useOcrMode !== 'prefer-text') {
+            if ((!extractedText || extractedText.length < 80) && ocrMode !== 'prefer-text') {
                 extractionMethod = 'ocr';
                 extractedText = await this.runOcrFromDataUrl(canvas.toDataURL('image/png'));
             }
@@ -277,7 +275,10 @@ class ExamReaderApp {
                 pageNumber: index,
                 imageSrc: canvas.toDataURL('image/png'),
                 extractedText,
-                extractionMethod
+                extractionMethod,
+                width: viewport.width,
+                height: viewport.height,
+                textBundle
             });
         }
 
@@ -294,58 +295,80 @@ class ExamReaderApp {
                 pageNumber: 1,
                 imageSrc,
                 extractedText,
-                extractionMethod: 'ocr'
+                extractionMethod: 'ocr',
+                width: 1,
+                height: 1,
+                textBundle: null
             }
         ];
     }
 
-    extractPageTextFromPdfItems(items, viewport, layoutMode) {
-        if (!items.length) {
-            return '';
-        }
-
+    buildTextBundle(items, viewport, layoutMode) {
         const enriched = items
-            .map((item) => {
-                const transform = item.transform || [1, 0, 0, 1, 0, 0];
-                return {
-                    text: item.str || '',
-                    x: transform[4] || 0,
-                    y: viewport.height - (transform[5] || 0),
-                    width: item.width || 0,
-                    height: item.height || 0,
-                    angleA: transform[0] || 0,
-                    angleB: transform[1] || 0
-                };
-            })
-            .filter((item) => item.text);
+            .map((item) => this.enrichPdfItem(item, viewport))
+            .filter((item) => item.text && item.compactText);
 
         const isVertical = this.detectVerticalLayout(enriched, layoutMode);
+        const grouped = isVertical
+            ? this.groupItemsByAxis(enriched, 'left', 14).sort((left, right) => right.key - left.key)
+            : this.groupItemsByAxis(enriched, 'top', 12).sort((top, bottom) => top.key - bottom.key);
 
-        if (isVertical) {
-            const columns = this.groupItemsByAxis(enriched, 'x', 14);
-            const columnTexts = columns
-                .sort((left, right) => right.key - left.key)
-                .map((column) =>
-                    column.items
-                        .sort((top, bottom) => top.y - bottom.y)
-                        .map((item) => item.text)
-                        .join('')
-                );
+        const orderedItems = [];
+        const displayColumns = grouped.map((group) => {
+            const groupItems = isVertical
+                ? group.items.sort((top, bottom) => top.top - bottom.top)
+                : group.items.sort((left, right) => left.left - right.left);
+            orderedItems.push(...groupItems);
+            return groupItems.map((item) => item.text).join('');
+        });
 
-            return columnTexts.join('\n');
-        }
+        const displayText = displayColumns.join('\n');
+        let compactText = '';
+        const itemRanges = [];
 
-        const rows = this.groupItemsByAxis(enriched, 'y', 12);
-        const rowTexts = rows
-            .sort((top, bottom) => top.key - bottom.key)
-            .map((row) =>
-                row.items
-                    .sort((left, right) => left.x - right.x)
-                    .map((item) => item.text)
-                    .join('')
-            );
+        orderedItems.forEach((item, index) => {
+            const start = compactText.length;
+            compactText += item.compactText;
+            const end = compactText.length;
+            itemRanges.push({
+                itemIndex: index,
+                start,
+                end
+            });
+        });
 
-        return rowTexts.join('\n');
+        return {
+            displayText,
+            compactText,
+            itemRanges,
+            orderedItems,
+            width: viewport.width,
+            height: viewport.height,
+            isVertical
+        };
+    }
+
+    enrichPdfItem(item, viewport) {
+        const transform = item.transform || [1, 0, 0, 1, 0, 0];
+        const rawText = (item.str || '').normalize('NFKC');
+        const compactText = rawText.replace(/\s+/g, '');
+        const height = Math.max(item.height || Math.abs(transform[0]) || 10, 10);
+        const width = Math.max(item.width || Math.abs(transform[1]) || height * 0.7, 8);
+        const left = transform[4] || 0;
+        const top = viewport.height - (transform[5] || 0) - height;
+
+        return {
+            text: rawText,
+            compactText,
+            left,
+            top,
+            width,
+            height,
+            right: left + width,
+            bottom: top + height,
+            angleA: transform[0] || 0,
+            angleB: transform[1] || 0
+        };
     }
 
     detectVerticalLayout(items, layoutMode) {
@@ -414,7 +437,10 @@ class ExamReaderApp {
         let questionIndex = 1;
 
         pages.forEach((page) => {
-            const parsedQuestions = this.parseQuestionsFromText(page.extractedText, page.pageNumber);
+            const parsedQuestions = page.textBundle
+                ? this.parseQuestionsFromBundle(page.textBundle, page.pageNumber)
+                : this.parseQuestionsFromText(page.extractedText, page.pageNumber);
+
             parsedQuestions.forEach((question) => {
                 question.id = `reader-q-${questionIndex}`;
                 questionIndex += 1;
@@ -432,11 +458,185 @@ class ExamReaderApp {
                 options: [],
                 confidence: 0.2,
                 rawText: page.extractedText,
-                sourceLabel: page.extractionMethod
+                sourceLabel: page.extractionMethod,
+                bbox: null
             }));
         }
 
         return questions;
+    }
+
+    parseQuestionsFromBundle(bundle, pageNumber) {
+        const compact = bundle.compactText;
+        const titlePattern = /([一二三四五六七八九十]+)、(寫國字或注音|改錯字|連連看|選擇題|照樣寫短語|造句|閱讀測驗)[：:]/g;
+        const sectionMatches = [...compact.matchAll(titlePattern)];
+
+        if (!sectionMatches.length) {
+            return [];
+        }
+
+        const questions = [];
+
+        sectionMatches.forEach((match, index) => {
+            const blockStart = match.index || 0;
+            const blockEnd = index + 1 < sectionMatches.length ? sectionMatches[index + 1].index || compact.length : compact.length;
+            const sectionBlock = compact.slice(blockStart, blockEnd);
+            const sectionTitle = match[2];
+            const sectionType = this.sectionTypeMap[sectionTitle] || 'unknown';
+            const headerLength = (match[0] || '').length;
+
+            let sectionQuestions = [];
+            if (sectionTitle === '選擇題' || sectionTitle === '閱讀測驗') {
+                sectionQuestions = this.parseChoiceQuestionsFromBundle(sectionBlock, sectionTitle, sectionType, pageNumber, bundle, blockStart, headerLength);
+            } else {
+                sectionQuestions = this.parseGenericQuestionsFromBundle(sectionBlock, sectionTitle, sectionType, pageNumber, bundle, blockStart, headerLength);
+            }
+
+            questions.push(...sectionQuestions);
+        });
+
+        return questions;
+    }
+
+    parseChoiceQuestionsFromBundle(sectionBlock, sectionTitle, sectionType, pageNumber, bundle, blockStart, headerLength) {
+        const bodyBlock = sectionBlock.slice(headerLength);
+        const firstQuestionIndex = this.findFirstQuestionIndex(bodyBlock);
+        if (firstQuestionIndex < 0) {
+            return [];
+        }
+
+        const introBlock = bodyBlock.slice(0, firstQuestionIndex);
+        const bodyStart = blockStart + headerLength;
+        const bodyText = bodyBlock.slice(firstQuestionIndex);
+        const bodyOffset = bodyStart + firstQuestionIndex;
+        const questionMatches = [...bodyText.matchAll(/(?:[(（]\d+[)）]|[(（]?\d+[)）]?)([\s\S]*?)(?=(?:[(（]\d+[)）]|[(（]?\d+[)）]?)|$)/g)];
+        const passageText = sectionTitle === '閱讀測驗' ? this.toDisplayText(introBlock) : '';
+        const passageBox = passageText ? this.computeBoundsFromRange(bundle, bodyStart, bodyStart + firstQuestionIndex) : null;
+
+        return questionMatches
+            .map((match) => {
+                const fullMatch = match[0] || '';
+                const matchStart = bodyOffset + (match.index || 0);
+                const matchEnd = matchStart + fullMatch.length;
+                const prefixMatch = fullMatch.match(/^(?:[(（]\d+[)）]|[(（]?\d+[)）]?)/);
+                const prefixLength = prefixMatch ? prefixMatch[0].length : 0;
+                const numberMatch = fullMatch.match(/\d+/);
+                const number = numberMatch ? numberMatch[0] : '';
+                const content = fullMatch.slice(prefixLength);
+                const contentStart = matchStart + prefixLength;
+                const split = this.splitChoiceOptionsDetailed(content);
+                const prompt = this.toDisplayText(split.prompt);
+                const promptRangeEnd = split.options.length ? contentStart + split.options[0].start : matchEnd;
+                const bbox = this.computeBoundsFromRange(bundle, contentStart, matchEnd);
+                const promptBox = this.computeBoundsFromRange(bundle, contentStart, promptRangeEnd);
+                const options = split.options.map((option) => ({
+                    key: option.key,
+                    text: this.toDisplayText(option.text),
+                    bbox: this.computeBoundsFromRange(bundle, contentStart + option.start, contentStart + option.end)
+                }));
+
+                return {
+                    pageNumber,
+                    sectionTitle,
+                    type: sectionTitle === '閱讀測驗' ? 'reading-choice' : sectionType,
+                    prompt,
+                    options,
+                    number,
+                    confidence: options.length >= 2 && bbox ? 0.9 : 0.58,
+                    rawText: this.toDisplayText(content),
+                    sourceLabel: 'auto',
+                    passage: passageText,
+                    bbox,
+                    promptBox,
+                    passageBox
+                };
+            })
+            .filter((question) => question.prompt);
+    }
+
+    parseGenericQuestionsFromBundle(sectionBlock, sectionTitle, sectionType, pageNumber, bundle, blockStart, headerLength) {
+        const bodyBlock = sectionBlock.slice(headerLength);
+        const firstQuestionIndex = this.findFirstQuestionIndex(bodyBlock);
+        if (firstQuestionIndex < 0) {
+            return [
+                {
+                    pageNumber,
+                    sectionTitle,
+                    type: sectionType,
+                    prompt: this.toDisplayText(bodyBlock),
+                    options: [],
+                    number: '',
+                    confidence: 0.45,
+                    rawText: this.toDisplayText(bodyBlock),
+                    sourceLabel: 'auto',
+                    bbox: this.computeBoundsFromRange(bundle, blockStart + headerLength, blockStart + sectionBlock.length)
+                }
+            ];
+        }
+
+        const questionBody = bodyBlock.slice(firstQuestionIndex);
+        const questionBodyOffset = blockStart + headerLength + firstQuestionIndex;
+        const questionMatches = [...questionBody.matchAll(/(?:[(（]\d+[)）]|[(（]?\d+[)）]?)([\s\S]*?)(?=(?:[(（]\d+[)）]|[(（]?\d+[)）]?)|$)/g)];
+
+        return questionMatches
+            .map((match) => {
+                const fullMatch = match[0] || '';
+                const matchStart = questionBodyOffset + (match.index || 0);
+                const matchEnd = matchStart + fullMatch.length;
+                const prefixMatch = fullMatch.match(/^(?:[(（]\d+[)）]|[(（]?\d+[)）]?)/);
+                const prefixLength = prefixMatch ? prefixMatch[0].length : 0;
+                const numberMatch = fullMatch.match(/\d+/);
+                const number = numberMatch ? numberMatch[0] : '';
+                const content = fullMatch.slice(prefixLength);
+
+                return {
+                    pageNumber,
+                    sectionTitle,
+                    type: sectionType,
+                    prompt: this.toDisplayText(content),
+                    options: [],
+                    number,
+                    confidence: 0.8,
+                    rawText: this.toDisplayText(content),
+                    sourceLabel: 'auto',
+                    bbox: this.computeBoundsFromRange(bundle, matchStart + prefixLength, matchEnd)
+                };
+            })
+            .filter((question) => question.prompt);
+    }
+
+    computeBoundsFromRange(bundle, start, end) {
+        if (!bundle || !bundle.itemRanges?.length || end <= start) {
+            return null;
+        }
+
+        const matchedRanges = bundle.itemRanges.filter((range) => range.end > start && range.start < end);
+        if (!matchedRanges.length) {
+            return null;
+        }
+
+        const items = matchedRanges.map((range) => bundle.orderedItems[range.itemIndex]).filter(Boolean);
+        if (!items.length) {
+            return null;
+        }
+
+        const left = Math.max(Math.min(...items.map((item) => item.left)) - 8, 0);
+        const top = Math.max(Math.min(...items.map((item) => item.top)) - 8, 0);
+        const right = Math.min(Math.max(...items.map((item) => item.right)) + 8, bundle.width);
+        const bottom = Math.min(Math.max(...items.map((item) => item.bottom)) + 8, bundle.height);
+        const width = Math.max(right - left, 18);
+        const height = Math.max(bottom - top, 18);
+
+        return {
+            left,
+            top,
+            width,
+            height,
+            leftPct: (left / bundle.width) * 100,
+            topPct: (top / bundle.height) * 100,
+            widthPct: (width / bundle.width) * 100,
+            heightPct: (height / bundle.height) * 100
+        };
     }
 
     parseQuestionsFromText(rawText, pageNumber) {
@@ -463,11 +663,10 @@ class ExamReaderApp {
             const sectionType = this.sectionTypeMap[sectionTitle] || 'unknown';
 
             let sectionQuestions = [];
-
             if (sectionTitle === '選擇題' || sectionTitle === '閱讀測驗') {
-                sectionQuestions = this.parseChoiceQuestions(sectionBlock, sectionTitle, sectionType, pageNumber);
+                sectionQuestions = this.parseChoiceQuestionsFromText(sectionBlock, sectionTitle, sectionType, pageNumber);
             } else {
-                sectionQuestions = this.parseGenericQuestions(sectionBlock, sectionTitle, sectionType, pageNumber);
+                sectionQuestions = this.parseGenericQuestionsFromText(sectionBlock, sectionTitle, sectionType, pageNumber);
             }
 
             questions.push(...sectionQuestions);
@@ -476,7 +675,7 @@ class ExamReaderApp {
         return questions;
     }
 
-    parseChoiceQuestions(sectionBlock, sectionTitle, sectionType, pageNumber) {
+    parseChoiceQuestionsFromText(sectionBlock, sectionTitle, sectionType, pageNumber) {
         const firstQuestionIndex = this.findFirstQuestionIndex(sectionBlock);
         if (firstQuestionIndex < 0) {
             return [];
@@ -485,7 +684,7 @@ class ExamReaderApp {
         const introBlock = sectionBlock.slice(0, firstQuestionIndex);
         const questionBody = sectionBlock.slice(firstQuestionIndex);
         const questionMatches = [...questionBody.matchAll(/(?:[(（]\d+[)）]|[(（]?\d+[)）]?)([\s\S]*?)(?=(?:[(（]\d+[)）]|[(（]?\d+[)）]?)|$)/g)];
-        const passageText = sectionTitle === '閱讀測驗' ? this.toDisplayText(this.cleanSectionHeader(introBlock)) : '';
+        const passageText = sectionTitle === '閱讀測驗' ? this.toDisplayText(introBlock) : '';
 
         return questionMatches
             .map((match) => {
@@ -493,45 +692,32 @@ class ExamReaderApp {
                 const numberMatch = fullMatch.match(/\d+/);
                 const number = numberMatch ? numberMatch[0] : '';
                 const content = fullMatch.replace(/^(?:[(（]\d+[)）]|[(（]?\d+[)）]?)/, '');
-                const optionSplit = this.splitChoiceOptions(content);
-                const prompt = this.toDisplayText(optionSplit.prompt);
-                const options = optionSplit.options.map((option) => ({
-                    key: option.key,
-                    text: this.toDisplayText(option.text)
-                }));
-
+                const optionSplit = this.splitChoiceOptionsDetailed(content);
                 return {
                     pageNumber,
                     sectionTitle,
                     type: sectionTitle === '閱讀測驗' ? 'reading-choice' : sectionType,
-                    prompt,
-                    options,
+                    prompt: this.toDisplayText(optionSplit.prompt),
+                    options: optionSplit.options.map((option) => ({
+                        key: option.key,
+                        text: this.toDisplayText(option.text),
+                        bbox: null
+                    })),
                     number,
-                    confidence: options.length >= 2 ? 0.86 : 0.52,
+                    confidence: 0.52,
                     rawText: this.toDisplayText(content),
+                    sourceLabel: 'auto',
                     passage: passageText,
-                    sourceLabel: 'auto'
+                    bbox: null
                 };
             })
             .filter((question) => question.prompt);
     }
 
-    parseGenericQuestions(sectionBlock, sectionTitle, sectionType, pageNumber) {
+    parseGenericQuestionsFromText(sectionBlock, sectionTitle, sectionType, pageNumber) {
         const firstQuestionIndex = this.findFirstQuestionIndex(sectionBlock);
         if (firstQuestionIndex < 0) {
-            return [
-                {
-                    pageNumber,
-                    sectionTitle,
-                    type: sectionType,
-                    prompt: this.toDisplayText(this.cleanSectionHeader(sectionBlock)),
-                    options: [],
-                    number: '',
-                    confidence: 0.45,
-                    rawText: this.toDisplayText(sectionBlock),
-                    sourceLabel: 'auto'
-                }
-            ];
+            return [];
         }
 
         const questionBody = sectionBlock.slice(firstQuestionIndex);
@@ -543,7 +729,6 @@ class ExamReaderApp {
                 const numberMatch = fullMatch.match(/\d+/);
                 const number = numberMatch ? numberMatch[0] : '';
                 const content = fullMatch.replace(/^(?:[(（]\d+[)）]|[(（]?\d+[)）]?)/, '');
-
                 return {
                     pageNumber,
                     sectionTitle,
@@ -551,20 +736,13 @@ class ExamReaderApp {
                     prompt: this.toDisplayText(content),
                     options: [],
                     number,
-                    confidence: 0.72,
+                    confidence: 0.66,
                     rawText: this.toDisplayText(content),
-                    sourceLabel: 'auto'
+                    sourceLabel: 'auto',
+                    bbox: null
                 };
             })
             .filter((question) => question.prompt);
-    }
-
-    cleanSectionHeader(sectionBlock) {
-        const firstQuestionIndex = this.findFirstQuestionIndex(sectionBlock);
-        if (firstQuestionIndex < 0) {
-            return sectionBlock;
-        }
-        return sectionBlock.slice(0, firstQuestionIndex);
     }
 
     findFirstQuestionIndex(sectionBlock) {
@@ -582,10 +760,9 @@ class ExamReaderApp {
         return -1;
     }
 
-    splitChoiceOptions(content) {
+    splitChoiceOptionsDetailed(content) {
         const markerPattern = /(ロ|ヮ|ワ|ヰ|①|②|③|④|A|B|C|D|a|b|c|d)/g;
         const markers = [...content.matchAll(markerPattern)];
-
         if (!markers.length) {
             return {
                 prompt: content,
@@ -598,10 +775,12 @@ class ExamReaderApp {
             const key = marker[0];
             const start = marker.index || 0;
             const end = index + 1 < markers.length ? markers[index + 1].index || content.length : content.length;
-            const optionText = content.slice(start + key.length, end);
+            const text = content.slice(start + key.length, end);
             return {
                 key,
-                text: optionText
+                text,
+                start,
+                end
             };
         });
 
@@ -618,10 +797,7 @@ class ExamReaderApp {
             .replace(/[ \n]+/g, '')
             .replace(/[（(][ 　]*[)）]/g, '');
 
-        return {
-            display: normalized,
-            compact
-        };
+        return { display: normalized, compact };
     }
 
     toDisplayText(text) {
@@ -669,11 +845,12 @@ class ExamReaderApp {
         this.pageList.innerHTML = this.state.pages
             .map((page) => {
                 const activeClass = page.pageNumber === this.state.selectedPageNumber ? 'active' : '';
+                const clickableCount = this.state.questions.filter((question) => question.pageNumber === page.pageNumber && question.bbox).length;
                 return `
                     <button class="reader-page-card ${activeClass}" type="button" data-page-number="${page.pageNumber}">
                         <strong>第 ${page.pageNumber} 頁</strong>
                         <div class="reader-question-meta">來源: ${page.extractionMethod === 'ocr' ? 'OCR' : 'PDF 文字層'}</div>
-                        <div class="reader-question-meta">擷取字數: ${(page.extractedText || '').length}</div>
+                        <div class="reader-question-meta">可點題目: ${clickableCount}</div>
                     </button>
                 `;
             })
@@ -702,8 +879,108 @@ class ExamReaderApp {
             return;
         }
 
-        this.previewMeta.textContent = `第 ${page.pageNumber} 頁，擷取方式: ${page.extractionMethod === 'ocr' ? 'OCR' : 'PDF 文字層'}`;
-        this.pageCanvasWrap.innerHTML = `<img src="${page.imageSrc}" alt="第 ${page.pageNumber} 頁預覽">`;
+        const currentQuestion = this.getSelectedQuestion();
+        const pageQuestions = this.state.questions.filter((question) => question.pageNumber === page.pageNumber);
+        const pageHotspots = pageQuestions
+            .filter((question) => question.bbox)
+            .map((question) => {
+                const classes = [
+                    'reader-hotspot',
+                    question.id === this.state.selectedQuestionId ? 'active' : '',
+                    question.confidence < 0.7 ? 'warning' : ''
+                ]
+                    .filter(Boolean)
+                    .join(' ');
+                return `
+                    <button
+                        class="${classes}"
+                        type="button"
+                        data-hotspot-question="${question.id}"
+                        style="left:${question.bbox.leftPct}%;top:${question.bbox.topPct}%;width:${question.bbox.widthPct}%;height:${question.bbox.heightPct}%;">
+                        <span class="reader-hotspot-label">${this.escapeHtml(question.sectionTitle)}${question.number ? `-${this.escapeHtml(question.number)}` : ''}</span>
+                    </button>
+                `;
+            })
+            .join('');
+
+        const optionHotspots =
+            currentQuestion && currentQuestion.pageNumber === page.pageNumber
+                ? currentQuestion.options
+                      .filter((option) => option.bbox)
+                      .map(
+                          (option, index) => `
+                            <button
+                                class="reader-option-hotspot"
+                                type="button"
+                                data-hotspot-option="${index}"
+                                style="left:${option.bbox.leftPct}%;top:${option.bbox.topPct}%;width:${option.bbox.widthPct}%;height:${option.bbox.heightPct}%;">
+                                <span class="reader-hotspot-label">${this.escapeHtml(option.key)}</span>
+                            </button>
+                        `
+                      )
+                      .join('')
+                : '';
+
+        const passageHotspot =
+            currentQuestion && currentQuestion.pageNumber === page.pageNumber && currentQuestion.passageBox
+                ? `
+                    <button
+                        class="reader-passage-hotspot"
+                        type="button"
+                        data-hotspot-passage="1"
+                        style="left:${currentQuestion.passageBox.leftPct}%;top:${currentQuestion.passageBox.topPct}%;width:${currentQuestion.passageBox.widthPct}%;height:${currentQuestion.passageBox.heightPct}%;">
+                        <span class="reader-hotspot-label">題組文章</span>
+                    </button>
+                `
+                : '';
+
+        this.previewMeta.textContent = `第 ${page.pageNumber} 頁，擷取方式: ${page.extractionMethod === 'ocr' ? 'OCR' : 'PDF 文字層'}，可直接點頁面區塊朗讀。`;
+        this.pageCanvasWrap.innerHTML = `
+            <div class="reader-page-stage">
+                <img src="${page.imageSrc}" alt="第 ${page.pageNumber} 頁預覽">
+                <div class="reader-overlay-layer">
+                    ${pageHotspots}
+                    ${passageHotspot}
+                    ${optionHotspots}
+                </div>
+            </div>
+        `;
+
+        this.pageCanvasWrap.querySelectorAll('[data-hotspot-question]').forEach((button) => {
+            button.addEventListener('click', () => {
+                this.state.selectedQuestionId = button.dataset.hotspotQuestion;
+                this.renderQuestionList();
+                this.renderPreview();
+                this.renderQuestionDetail();
+                const question = this.getSelectedQuestion();
+                if (question) {
+                    this.speakQuestion(question);
+                }
+            });
+        });
+
+        this.pageCanvasWrap.querySelectorAll('[data-hotspot-option]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const question = this.getSelectedQuestion();
+                if (!question) {
+                    return;
+                }
+                const option = question.options[Number(button.dataset.hotspotOption || 0)];
+                if (option) {
+                    this.speakOption(question, option);
+                }
+            });
+        });
+
+        const passageButton = this.pageCanvasWrap.querySelector('[data-hotspot-passage]');
+        if (passageButton) {
+            passageButton.addEventListener('click', () => {
+                const question = this.getSelectedQuestion();
+                if (question) {
+                    this.speakPassage(question);
+                }
+            });
+        }
     }
 
     renderQuestionList() {
@@ -762,7 +1039,7 @@ class ExamReaderApp {
             this.detailCard.innerHTML = `
                 <div class="reader-empty-state">
                     <h3>尚未選擇題目</h3>
-                    <p>點選題目卡片後，可在這裡朗讀題目、逐項朗讀選項，並手動修正內容。</p>
+                    <p>點選題目卡片或直接點頁面上的題目框後，可在這裡朗讀題目、逐項朗讀選項，並手動修正內容。</p>
                 </div>
             `;
             return;
@@ -899,11 +1176,12 @@ class ExamReaderApp {
         question.type = typeField ? typeField.value : question.type;
         question.prompt = promptField ? promptField.value.trim() : question.prompt;
         question.passage = passageField ? passageField.value.trim() : question.passage;
-        question.options = this.deserializeOptions(optionsField ? optionsField.value : '');
+        question.options = this.deserializeOptions(optionsField ? optionsField.value : '', question.options);
         question.confidence = Math.max(question.confidence, 0.92);
 
         this.renderSummary();
         this.renderQuestionList();
+        this.renderPreview();
         this.renderQuestionDetail();
         this.updateStatus('已儲存修正', `已更新 ${question.sectionTitle} 第 ${question.number || '?'} 題。`);
     }
@@ -912,29 +1190,31 @@ class ExamReaderApp {
         return (options || []).map((option) => `${option.key}|${option.text}`).join('\n');
     }
 
-    deserializeOptions(rawValue) {
+    deserializeOptions(rawValue, previousOptions) {
+        const previous = previousOptions || [];
         return rawValue
             .split('\n')
             .map((line) => line.trim())
             .filter(Boolean)
-            .map((line) => {
+            .map((line, index) => {
                 const [key, ...rest] = line.split('|');
                 return {
                     key: (key || '').trim(),
-                    text: rest.join('|').trim()
+                    text: rest.join('|').trim(),
+                    bbox: previous[index]?.bbox || null
                 };
             })
             .filter((option) => option.key && option.text);
     }
 
     speakQuestion(question) {
-        const textParts = [];
-        textParts.push(`${question.sectionTitle}。`);
+        const parts = [];
+        parts.push(`${question.sectionTitle}。`);
         if (question.number) {
-            textParts.push(`第 ${question.number} 題。`);
+            parts.push(`第 ${question.number} 題。`);
         }
-        textParts.push(question.prompt);
-        this.speakText(textParts.join(' '));
+        parts.push(question.prompt);
+        this.speakText(parts.join(' '));
     }
 
     speakPassage(question) {
@@ -953,9 +1233,8 @@ class ExamReaderApp {
         if (!question.options.length) {
             return;
         }
-        const joined = question.options.map((option) => `${option.key}。${option.text}`).join('。 ');
-        const prefix = question.number ? `第 ${question.number} 題所有選項。 ` : '所有選項。 ';
-        this.speakText(`${prefix}${joined}`);
+        const text = question.options.map((option) => `${option.key}。${option.text}`).join('。 ');
+        this.speakText(`${question.number ? `第 ${question.number} 題。` : ''}${text}`);
     }
 
     speakText(text) {
@@ -968,13 +1247,8 @@ class ExamReaderApp {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'zh-TW';
         utterance.rate = this.state.speechRate;
-        utterance.onstart = () => {
-            this.updateStatus('朗讀中', text);
-        };
-        utterance.onend = () => {
-            this.updateStatus('朗讀完成', text);
-        };
-
+        utterance.onstart = () => this.updateStatus('朗讀中', text);
+        utterance.onend = () => this.updateStatus('朗讀完成', text);
         window.speechSynthesis.speak(utterance);
     }
 
@@ -1057,7 +1331,10 @@ class ExamReaderApp {
             return;
         }
 
-        this.statusBox.querySelector('strong').textContent = title;
+        const titleNode = this.statusBox.querySelector('strong');
+        if (titleNode) {
+            titleNode.textContent = title;
+        }
         this.statusLog.textContent = body;
     }
 
