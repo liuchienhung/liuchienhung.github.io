@@ -861,14 +861,13 @@ class ExamReaderApp {
                 this.state.selectedPageNumber = Number(button.dataset.pageNumber || 1);
                 this.renderPageList();
                 this.renderPreview();
+                this.scrollToPage(this.state.selectedPageNumber);
             });
         });
     }
 
     renderPreview() {
-        const page = this.state.pages.find((candidate) => candidate.pageNumber === this.state.selectedPageNumber) || this.state.pages[0];
-
-        if (!page) {
+        if (!this.state.pages.length) {
             this.previewMeta.textContent = '尚未載入頁面';
             this.pageCanvasWrap.innerHTML = `
                 <div class="reader-empty-state">
@@ -880,79 +879,101 @@ class ExamReaderApp {
         }
 
         const currentQuestion = this.getSelectedQuestion();
-        const pageQuestions = this.state.questions.filter((question) => question.pageNumber === page.pageNumber);
-        const pageHotspots = pageQuestions
-            .filter((question) => question.bbox)
-            .map((question) => {
-                const classes = [
-                    'reader-hotspot',
-                    question.id === this.state.selectedQuestionId ? 'active' : '',
-                    question.confidence < 0.7 ? 'warning' : ''
-                ]
-                    .filter(Boolean)
-                    .join(' ');
+        const pageMarkup = this.state.pages
+            .map((page) => {
+                const pageQuestions = this.state.questions.filter((question) => question.pageNumber === page.pageNumber);
+                const pageHotspots = pageQuestions
+                    .filter((question) => question.bbox)
+                    .map((question) => {
+                        const classes = [
+                            'reader-hotspot',
+                            question.id === this.state.selectedQuestionId ? 'active' : '',
+                            question.confidence < 0.7 ? 'warning' : ''
+                        ]
+                            .filter(Boolean)
+                            .join(' ');
+                        return `
+                            <button
+                                class="${classes}"
+                                type="button"
+                                data-hotspot-question="${question.id}"
+                                style="left:${question.bbox.leftPct}%;top:${question.bbox.topPct}%;width:${question.bbox.widthPct}%;height:${question.bbox.heightPct}%;"
+                                title="${this.escapeHtml(question.sectionTitle)}${question.number ? ` 第 ${this.escapeHtml(question.number)} 題` : ''}">
+                                <span class="reader-hotspot-label">${this.escapeHtml(question.sectionTitle)}${question.number ? `-${this.escapeHtml(question.number)}` : ''}</span>
+                            </button>
+                        `;
+                    })
+                    .join('');
+
+                const optionHotspots =
+                    currentQuestion && currentQuestion.pageNumber === page.pageNumber
+                        ? currentQuestion.options
+                              .filter((option) => option.bbox)
+                              .map(
+                                  (option, index) => `
+                                    <button
+                                        class="reader-option-hotspot"
+                                        type="button"
+                                        data-hotspot-option="${index}"
+                                        data-hotspot-question-ref="${currentQuestion.id}"
+                                        style="left:${option.bbox.leftPct}%;top:${option.bbox.topPct}%;width:${option.bbox.widthPct}%;height:${option.bbox.heightPct}%;"
+                                        title="${this.escapeHtml(option.key)} ${this.escapeHtml(option.text)}">
+                                        <span class="reader-hotspot-label">${this.escapeHtml(option.key)}</span>
+                                    </button>
+                                `
+                              )
+                              .join('')
+                        : '';
+
+                const passageHotspot =
+                    currentQuestion && currentQuestion.pageNumber === page.pageNumber && currentQuestion.passageBox
+                        ? `
+                            <button
+                                class="reader-passage-hotspot"
+                                type="button"
+                                data-hotspot-passage="1"
+                                data-hotspot-question-ref="${currentQuestion.id}"
+                                style="left:${currentQuestion.passageBox.leftPct}%;top:${currentQuestion.passageBox.topPct}%;width:${currentQuestion.passageBox.widthPct}%;height:${currentQuestion.passageBox.heightPct}%;"
+                                title="題組文章">
+                                <span class="reader-hotspot-label">題組文章</span>
+                            </button>
+                        `
+                        : '';
+
+                const pageActiveClass = page.pageNumber === this.state.selectedPageNumber ? 'active' : '';
+
                 return `
-                    <button
-                        class="${classes}"
-                        type="button"
-                        data-hotspot-question="${question.id}"
-                        style="left:${question.bbox.leftPct}%;top:${question.bbox.topPct}%;width:${question.bbox.widthPct}%;height:${question.bbox.heightPct}%;">
-                        <span class="reader-hotspot-label">${this.escapeHtml(question.sectionTitle)}${question.number ? `-${this.escapeHtml(question.number)}` : ''}</span>
-                    </button>
+                    <section class="reader-document-page ${pageActiveClass}" data-page-stage="${page.pageNumber}">
+                        <div class="reader-document-page-title">
+                            <span>第 ${page.pageNumber} 頁</span>
+                            <span class="reader-muted">${page.extractionMethod === 'ocr' ? 'OCR' : 'PDF 文字層'}</span>
+                        </div>
+                        <div class="reader-page-stage">
+                            <img src="${page.imageSrc}" alt="第 ${page.pageNumber} 頁預覽">
+                            <div class="reader-overlay-layer">
+                                ${pageHotspots}
+                                ${passageHotspot}
+                                ${optionHotspots}
+                            </div>
+                        </div>
+                    </section>
                 `;
             })
             .join('');
 
-        const optionHotspots =
-            currentQuestion && currentQuestion.pageNumber === page.pageNumber
-                ? currentQuestion.options
-                      .filter((option) => option.bbox)
-                      .map(
-                          (option, index) => `
-                            <button
-                                class="reader-option-hotspot"
-                                type="button"
-                                data-hotspot-option="${index}"
-                                style="left:${option.bbox.leftPct}%;top:${option.bbox.topPct}%;width:${option.bbox.widthPct}%;height:${option.bbox.heightPct}%;">
-                                <span class="reader-hotspot-label">${this.escapeHtml(option.key)}</span>
-                            </button>
-                        `
-                      )
-                      .join('')
-                : '';
-
-        const passageHotspot =
-            currentQuestion && currentQuestion.pageNumber === page.pageNumber && currentQuestion.passageBox
-                ? `
-                    <button
-                        class="reader-passage-hotspot"
-                        type="button"
-                        data-hotspot-passage="1"
-                        style="left:${currentQuestion.passageBox.leftPct}%;top:${currentQuestion.passageBox.topPct}%;width:${currentQuestion.passageBox.widthPct}%;height:${currentQuestion.passageBox.heightPct}%;">
-                        <span class="reader-hotspot-label">題組文章</span>
-                    </button>
-                `
-                : '';
-
-        this.previewMeta.textContent = `第 ${page.pageNumber} 頁，擷取方式: ${page.extractionMethod === 'ocr' ? 'OCR' : 'PDF 文字層'}，可直接點頁面區塊朗讀。`;
-        this.pageCanvasWrap.innerHTML = `
-            <div class="reader-page-stage">
-                <img src="${page.imageSrc}" alt="第 ${page.pageNumber} 頁預覽">
-                <div class="reader-overlay-layer">
-                    ${pageHotspots}
-                    ${passageHotspot}
-                    ${optionHotspots}
-                </div>
-            </div>
-        `;
+        this.previewMeta.textContent = `共 ${this.state.pages.length} 頁，保留原始 PDF 版面，點頁面上的題目或選項即可朗讀。`;
+        this.pageCanvasWrap.innerHTML = `<div class="reader-document-stack">${pageMarkup}</div>`;
 
         this.pageCanvasWrap.querySelectorAll('[data-hotspot-question]').forEach((button) => {
             button.addEventListener('click', () => {
                 this.state.selectedQuestionId = button.dataset.hotspotQuestion;
+                const question = this.getSelectedQuestion();
+                if (question) {
+                    this.state.selectedPageNumber = question.pageNumber;
+                }
                 this.renderQuestionList();
                 this.renderPreview();
                 this.renderQuestionDetail();
-                const question = this.getSelectedQuestion();
                 if (question) {
                     this.speakQuestion(question);
                 }
@@ -972,15 +993,14 @@ class ExamReaderApp {
             });
         });
 
-        const passageButton = this.pageCanvasWrap.querySelector('[data-hotspot-passage]');
-        if (passageButton) {
+        this.pageCanvasWrap.querySelectorAll('[data-hotspot-passage]').forEach((passageButton) => {
             passageButton.addEventListener('click', () => {
                 const question = this.getSelectedQuestion();
                 if (question) {
                     this.speakPassage(question);
                 }
             });
-        }
+        });
     }
 
     renderQuestionList() {
@@ -1268,6 +1288,14 @@ class ExamReaderApp {
         this.state.selectedPageNumber = this.state.pages[nextIndex].pageNumber;
         this.renderPageList();
         this.renderPreview();
+        this.scrollToPage(this.state.selectedPageNumber);
+    }
+
+    scrollToPage(pageNumber) {
+        const target = this.pageCanvasWrap.querySelector(`[data-page-stage="${pageNumber}"]`);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     clearAnalysis() {

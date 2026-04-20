@@ -1021,6 +1021,29 @@
             width: 100%;
         }
 
+        .reader-document-stack {
+            display: grid;
+            gap: 24px;
+        }
+
+        .reader-document-page {
+            display: grid;
+            gap: 12px;
+        }
+
+        .reader-document-page.active .reader-page-stage img {
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.18);
+        }
+
+        .reader-document-page-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            color: #16324f;
+            font-weight: 600;
+        }
+
         .reader-page-canvas-wrap img {
             display: block;
             width: 100%;
@@ -1681,15 +1704,15 @@
             <div class="reader-layout">
                 <div class="reader-left-column">
                     <section class="reader-panel">
-                        <h3 class="reader-section-title">頁面預覽</h3>
-                        <p class="reader-muted">目前版本先提供頁面預覽與結構化題目清單。題目點擊區塊以右側互動卡片為主。</p>
+                        <h3 class="reader-section-title">頁面導覽</h3>
+                        <p class="reader-muted">點頁碼可快速定位到該頁。主畫面會保留 PDF 原始出題版面，直接點版面上的題目與選項朗讀。</p>
                         <div id="reader-page-list" class="reader-page-list"></div>
                     </section>
 
                     <section class="reader-page-preview">
                         <div class="reader-preview-header">
                             <div>
-                                <h3>目前頁面</h3>
+                                <h3>原始 PDF 版面</h3>
                                 <div id="reader-preview-meta" class="reader-preview-meta">尚未載入頁面</div>
                             </div>
                             <div class="reader-page-actions">
