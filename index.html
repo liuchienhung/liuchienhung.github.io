@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>資通安全題庫線上測驗</title>
+    <title>多應用服務入口</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,10 @@
 
         body {
             font-family: 'Microsoft JhengHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background:
+                radial-gradient(circle at top left, rgba(255, 199, 95, 0.25), transparent 28%),
+                radial-gradient(circle at top right, rgba(0, 173, 181, 0.18), transparent 30%),
+                linear-gradient(160deg, #0f172a 0%, #102542 45%, #16324f 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -536,13 +539,504 @@
             opacity: 1;
         }
 
+        .service-home {
+            max-width: 1180px;
+            margin: 0 auto 24px;
+            color: #eff6ff;
+        }
+
+        .service-shell {
+            background: rgba(10, 18, 31, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 28px;
+            padding: 32px;
+            box-shadow: 0 24px 80px rgba(2, 6, 23, 0.35);
+            backdrop-filter: blur(18px);
+        }
+
+        .service-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.9fr);
+            gap: 24px;
+            align-items: stretch;
+            margin-bottom: 28px;
+        }
+
+        .hero-panel,
+        .hero-summary,
+        .service-card,
+        .roadmap-note {
+            border-radius: 24px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.72));
+        }
+
+        .hero-panel {
+            padding: 32px;
+        }
+
+        .hero-eyebrow,
+        .section-eyebrow,
+        .service-badge,
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            background: rgba(14, 165, 233, 0.14);
+            color: #7dd3fc;
+            border: 1px solid rgba(125, 211, 252, 0.24);
+        }
+
+        .hero-panel h1 {
+            margin: 18px 0 14px;
+            font-size: clamp(2.2rem, 4vw, 3.5rem);
+            line-height: 1.08;
+            letter-spacing: -0.04em;
+        }
+
+        .hero-panel p {
+            max-width: 700px;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: rgba(226, 232, 240, 0.82);
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .hero-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 150px;
+            padding: 12px 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            color: #eff6ff;
+            text-decoration: none;
+            background: rgba(15, 23, 42, 0.4);
+        }
+
+        .hero-link:hover {
+            border-color: rgba(125, 211, 252, 0.55);
+            background: rgba(14, 165, 233, 0.12);
+        }
+
+        .hero-summary {
+            padding: 28px;
+        }
+
+        .hero-summary h2 {
+            font-size: 1.1rem;
+            margin-bottom: 18px;
+            color: #f8fafc;
+        }
+
+        .summary-metrics {
+            display: grid;
+            gap: 14px;
+        }
+
+        .metric-card {
+            padding: 18px 20px;
+            border-radius: 20px;
+            background: rgba(30, 41, 59, 0.55);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+        }
+
+        .metric-value {
+            display: block;
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 6px;
+        }
+
+        .metric-label {
+            display: block;
+            color: rgba(226, 232, 240, 0.72);
+            font-size: 0.92rem;
+        }
+
+        .service-sections {
+            display: grid;
+            gap: 28px;
+        }
+
+        .section-head {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .section-head h2 {
+            font-size: 1.55rem;
+            color: #f8fafc;
+            margin-top: 10px;
+        }
+
+        .section-head p {
+            color: rgba(226, 232, 240, 0.72);
+            line-height: 1.7;
+            max-width: 720px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .service-card {
+            padding: 24px;
+            display: grid;
+            gap: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::after {
+            content: '';
+            position: absolute;
+            inset: auto -30px -30px auto;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(125, 211, 252, 0.25), transparent 70%);
+            pointer-events: none;
+        }
+
+        .service-card.active-service {
+            background:
+                linear-gradient(180deg, rgba(12, 74, 110, 0.3), rgba(15, 23, 42, 0.88)),
+                linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.72));
+            border-color: rgba(56, 189, 248, 0.22);
+        }
+
+        .service-card.coming-soon {
+            opacity: 0.88;
+        }
+
+        .service-card-top {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .service-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: rgba(14, 165, 233, 0.12);
+            border: 1px solid rgba(125, 211, 252, 0.2);
+        }
+
+        .service-card h3 {
+            font-size: 1.25rem;
+            color: #f8fafc;
+            margin-bottom: 8px;
+        }
+
+        .service-card p {
+            color: rgba(226, 232, 240, 0.78);
+            line-height: 1.75;
+        }
+
+        .service-meta {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .service-meta-item {
+            padding: 12px;
+            border-radius: 16px;
+            background: rgba(30, 41, 59, 0.55);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        .service-meta-value {
+            display: block;
+            color: #f8fafc;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .service-meta-label {
+            display: block;
+            margin-top: 4px;
+            color: rgba(226, 232, 240, 0.62);
+            font-size: 0.85rem;
+        }
+
+        .service-launch-btn,
+        .service-disabled-btn,
+        .ghost-home-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 46px;
+            padding: 0 18px;
+            border-radius: 999px;
+            border: none;
+            font-size: 0.96rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .service-launch-btn {
+            color: #082f49;
+            background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+            box-shadow: 0 10px 24px rgba(245, 158, 11, 0.24);
+        }
+
+        .service-launch-btn:hover,
+        .ghost-home-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .service-disabled-btn {
+            color: rgba(226, 232, 240, 0.7);
+            background: rgba(51, 65, 85, 0.7);
+            cursor: default;
+        }
+
+        .roadmap-note {
+            padding: 22px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            color: rgba(226, 232, 240, 0.78);
+        }
+
+        .roadmap-note strong {
+            color: #f8fafc;
+        }
+
+        #quiz-service-app {
+            display: none;
+        }
+
+        .header-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .header-copy {
+            text-align: center;
+        }
+
+        .ghost-home-btn {
+            color: #e2e8f0;
+            background: rgba(15, 23, 42, 0.28);
+            border: 1px solid rgba(226, 232, 240, 0.18);
+        }
+
+        @media (max-width: 900px) {
+            .service-hero {
+                grid-template-columns: 1fr;
+            }
+
+            .roadmap-note,
+            .header-topbar,
+            .section-head {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-copy {
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 14px;
+            }
+
+            .service-shell,
+            .quiz-content {
+                padding: 22px;
+            }
+
+            .service-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-panel h1,
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+            }
+        }
+
     </style>
 </head>
 <body>
-    <div class="container">
+    <section id="service-home" class="service-home">
+        <div class="service-shell">
+            <div class="service-hero">
+                <div class="hero-panel">
+                    <span class="hero-eyebrow">Multi-Service Portal</span>
+                    <h1>一個首頁，集中展示持續增加中的服務。</h1>
+                    <p>
+                        這個入口頁會先列出目前已經上線的服務，並保留後續擴充空間。現在先提供題庫測驗服務，
+                        之後可陸續加入成績查詢、學習儀表板、教材中心或其他工具，不需要重做整個首頁架構。
+                    </p>
+                    <div class="hero-actions">
+                        <button id="open-quiz-service" class="service-launch-btn">進入目前服務</button>
+                        <a class="hero-link" href="#service-list">查看服務清單</a>
+                    </div>
+                </div>
+                <aside class="hero-summary">
+                    <h2>服務概況</h2>
+                    <div class="summary-metrics">
+                        <div class="metric-card">
+                            <span id="live-service-count" class="metric-value">1</span>
+                            <span class="metric-label">已上線服務</span>
+                        </div>
+                        <div class="metric-card">
+                            <span id="subject-total-count" class="metric-value">0</span>
+                            <span class="metric-label">目前測驗科目數</span>
+                        </div>
+                        <div class="metric-card">
+                            <span id="question-total-count" class="metric-value">0</span>
+                            <span class="metric-label">累計題目數</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
+            <div id="service-list" class="service-sections">
+                <section>
+                    <div class="section-head">
+                        <div>
+                            <span class="section-eyebrow">Live Services</span>
+                            <h2>目前已上線</h2>
+                        </div>
+                        <p>使用者進到首頁時會先看到可用服務。現在只有一個服務，但首頁結構已能自然擴充成多服務入口。</p>
+                    </div>
+                    <div class="services-grid">
+                        <article class="service-card active-service">
+                            <div class="service-card-top">
+                                <div class="service-icon">🛡</div>
+                                <span class="status-pill">已上線</span>
+                            </div>
+                            <div>
+                                <h3>資通安全題庫線上測驗</h3>
+                                <p>提供單選、多選、混合題測驗，支援題庫匯入匯出、收藏、計時、成績計算與 PDF 結果下載。</p>
+                            </div>
+                            <div class="service-meta">
+                                <div class="service-meta-item">
+                                    <span id="card-subject-count" class="service-meta-value">0</span>
+                                    <span class="service-meta-label">科目</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span id="card-single-count" class="service-meta-value">0</span>
+                                    <span class="service-meta-label">單選題</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span id="card-multi-count" class="service-meta-value">0</span>
+                                    <span class="service-meta-label">多選題</span>
+                                </div>
+                            </div>
+                            <button id="open-quiz-service-secondary" class="service-launch-btn">開始使用</button>
+                        </article>
+                    </div>
+                </section>
+
+                <section>
+                    <div class="section-head">
+                        <div>
+                            <span class="section-eyebrow">Roadmap</span>
+                            <h2>即將加入</h2>
+                        </div>
+                        <p>先把服務入口與版面骨架定好，後續只要增加服務卡片與對應頁面，就能持續擴充。</p>
+                    </div>
+                    <div class="services-grid">
+                        <article class="service-card coming-soon">
+                            <div class="service-card-top">
+                                <div class="service-icon">📈</div>
+                                <span class="status-pill">規劃中</span>
+                            </div>
+                            <div>
+                                <h3>成績追蹤中心</h3>
+                                <p>集中顯示各次測驗紀錄、通過率與弱項分析，讓學習狀態可持續追蹤。</p>
+                            </div>
+                            <button class="service-disabled-btn" type="button">即將推出</button>
+                        </article>
+
+                        <article class="service-card coming-soon">
+                            <div class="service-card-top">
+                                <div class="service-icon">🧭</div>
+                                <span class="status-pill">規劃中</span>
+                            </div>
+                            <div>
+                                <h3>學習路徑儀表板</h3>
+                                <p>把教材、單元與測驗結果串成學習流程，讓使用者知道接下來該練什麼。</p>
+                            </div>
+                            <button class="service-disabled-btn" type="button">即將推出</button>
+                        </article>
+
+                        <article class="service-card coming-soon">
+                            <div class="service-card-top">
+                                <div class="service-icon">🗂</div>
+                                <span class="status-pill">規劃中</span>
+                            </div>
+                            <div>
+                                <h3>教材與檔案中心</h3>
+                                <p>統一提供題庫範本、教材、公告與匯出檔案，降低使用者在不同頁面間切換的成本。</p>
+                            </div>
+                            <button class="service-disabled-btn" type="button">即將推出</button>
+                        </article>
+                    </div>
+                </section>
+
+                <div class="roadmap-note">
+                    <div>
+                        <strong>目前的首頁已經是可延展的服務入口。</strong>
+                        後續新增服務時，直接複製卡片結構並接上新頁面即可。
+                    </div>
+                    <span class="section-eyebrow">Static Ready</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="quiz-service-app" class="container">
         <div class="header">
-            <h1>資通安全題庫線上測驗</h1>
-            <p>專業能力評估系統</p>
+            <div class="header-topbar">
+                <button id="back-to-home" class="ghost-home-btn" type="button">← 返回服務首頁</button>
+                <span class="service-badge">Service 01</span>
+            </div>
+            <div class="header-copy">
+                <h1>資通安全題庫線上測驗</h1>
+                <p>專業能力評估系統</p>
+            </div>
         </div>
 
         <div class="quiz-content">
@@ -553,8 +1047,11 @@
                     <!-- 科目按鈕將由JavaScript動態生成 -->
                 </div>
                 <div class="controls">
-                    <button id="add-subject" class="btn">新增科目</button>
-                    <button id="remove-subject" class="btn btn-secondary">刪除科目</button>
+                    <button id="home-from-subjects" class="btn btn-secondary" type="button">返回服務首頁</button>
+                    <div class="file-ops-buttons">
+                        <button id="add-subject" class="btn">新增科目</button>
+                        <button id="remove-subject" class="btn btn-secondary">刪除科目</button>
+                    </div>
                 </div>
             </div>
 

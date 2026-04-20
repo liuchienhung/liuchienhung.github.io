@@ -25,9 +25,24 @@ class QuizApp {
         this.initializeElements();
         this.initializeEventListeners();
         this.renderSubjectSelector();
+        this.renderServiceHome();
+        this.showServiceHome();
     }
 
     initializeElements() {
+        this.serviceHome = document.getElementById('service-home');
+        this.quizServiceApp = document.getElementById('quiz-service-app');
+        this.openQuizServiceBtn = document.getElementById('open-quiz-service');
+        this.openQuizServiceSecondaryBtn = document.getElementById('open-quiz-service-secondary');
+        this.backToHomeBtn = document.getElementById('back-to-home');
+        this.homeFromSubjectsBtn = document.getElementById('home-from-subjects');
+        this.liveServiceCount = document.getElementById('live-service-count');
+        this.subjectTotalCount = document.getElementById('subject-total-count');
+        this.questionTotalCount = document.getElementById('question-total-count');
+        this.cardSubjectCount = document.getElementById('card-subject-count');
+        this.cardSingleCount = document.getElementById('card-single-count');
+        this.cardMultiCount = document.getElementById('card-multi-count');
+
         this.subjectSelector = document.getElementById('subject-selector');
         this.subjectButtons = document.getElementById('subject-buttons');
         this.backToSubjectsBtn = document.getElementById('back-to-subjects');
@@ -101,6 +116,19 @@ class QuizApp {
     }
 
     initializeEventListeners() {
+        if (this.openQuizServiceBtn) {
+            this.openQuizServiceBtn.addEventListener('click', () => this.enterQuizService());
+        }
+        if (this.openQuizServiceSecondaryBtn) {
+            this.openQuizServiceSecondaryBtn.addEventListener('click', () => this.enterQuizService());
+        }
+        if (this.backToHomeBtn) {
+            this.backToHomeBtn.addEventListener('click', () => this.returnToServiceHome());
+        }
+        if (this.homeFromSubjectsBtn) {
+            this.homeFromSubjectsBtn.addEventListener('click', () => this.returnToServiceHome());
+        }
+
         this.prevBtn.addEventListener('click', () => this.previousPage());
         this.nextBtn.addEventListener('click', () => this.nextPage());
         this.submitBtn.addEventListener('click', () => {
@@ -208,6 +236,60 @@ class QuizApp {
         }
     }
 
+    renderServiceHome() {
+        const subjectCount = subjects.length;
+        const singleCount = subjects.reduce(
+            (sum, subject) => sum + (subject.units || []).reduce((unitSum, unit) => unitSum + unit.questions.length, 0),
+            0
+        );
+        const multiCount = subjects.reduce(
+            (sum, subject) => sum + (subject.multiUnits || []).reduce((unitSum, unit) => unitSum + unit.questions.length, 0),
+            0
+        );
+        const totalQuestions = singleCount + multiCount;
+
+        if (this.liveServiceCount) this.liveServiceCount.textContent = '1';
+        if (this.subjectTotalCount) this.subjectTotalCount.textContent = subjectCount.toString();
+        if (this.questionTotalCount) this.questionTotalCount.textContent = totalQuestions.toString();
+        if (this.cardSubjectCount) this.cardSubjectCount.textContent = subjectCount.toString();
+        if (this.cardSingleCount) this.cardSingleCount.textContent = singleCount.toString();
+        if (this.cardMultiCount) this.cardMultiCount.textContent = multiCount.toString();
+    }
+
+    showServiceHome() {
+        if (this.serviceHome) this.serviceHome.style.display = 'block';
+        if (this.quizServiceApp) this.quizServiceApp.style.display = 'none';
+    }
+
+    enterQuizService() {
+        this.renderServiceHome();
+        this.renderSubjectSelector();
+        if (this.serviceHome) this.serviceHome.style.display = 'none';
+        if (this.quizServiceApp) this.quizServiceApp.style.display = 'block';
+    }
+
+    returnToServiceHome() {
+        const hasInProgressQuiz =
+            this.quizArea.style.display === 'block' &&
+            !this.showingResults &&
+            Object.keys(this.userAnswers).length > 0;
+
+        if (hasInProgressQuiz && !confirm('返回服務首頁會離開目前測驗，確定要返回嗎？')) {
+            return;
+        }
+
+        this.currentSubject = null;
+        this.currentSubjectData = [];
+        this.currentUnit = null;
+        this.resetQuiz();
+        this.renderSubjectSelector();
+        if (this.unitSettingsPanel) {
+            this.unitSettingsPanel.style.display = 'none';
+        }
+        this.renderServiceHome();
+        this.showServiceHome();
+    }
+
     renderSubjectSelector() {
         this.subjectButtons.innerHTML = '';
         subjects.forEach((subj, index) => {
@@ -223,6 +305,7 @@ class QuizApp {
             this.subjectButtons.appendChild(button);
         });
 
+        this.renderServiceHome();
         this.subjectSelector.style.display = 'block';
         this.unitSelector.style.display = 'none';
         this.quizArea.style.display = 'none';
@@ -239,6 +322,7 @@ class QuizApp {
     }
 
     renderUnitSelector() {
+        this.renderServiceHome();
         this.singleUnitButtons.innerHTML = '';
         this.multiUnitButtons.innerHTML = '';
         if (this.mixedUnitButtons) this.mixedUnitButtons.innerHTML = '';
