@@ -248,7 +248,7 @@ class QuizApp {
         );
         const totalQuestions = singleCount + multiCount;
 
-        if (this.liveServiceCount) this.liveServiceCount.textContent = '1';
+        if (this.liveServiceCount) this.liveServiceCount.textContent = '2';
         if (this.subjectTotalCount) this.subjectTotalCount.textContent = subjectCount.toString();
         if (this.questionTotalCount) this.questionTotalCount.textContent = totalQuestions.toString();
         if (this.cardSubjectCount) this.cardSubjectCount.textContent = subjectCount.toString();
@@ -259,6 +259,8 @@ class QuizApp {
     showServiceHome() {
         if (this.serviceHome) this.serviceHome.style.display = 'block';
         if (this.quizServiceApp) this.quizServiceApp.style.display = 'none';
+        const readerServiceApp = document.getElementById('reader-service-app');
+        if (readerServiceApp) readerServiceApp.style.display = 'none';
     }
 
     enterQuizService() {
@@ -1391,6 +1393,6 @@ class QuizApp {
 
 // 當頁面載入完成後初始化應用程式
 document.addEventListener('DOMContentLoaded', () => {
-    new QuizApp();
+    window.quizApp = new QuizApp();
 });
 

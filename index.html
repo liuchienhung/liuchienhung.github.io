@@ -853,6 +853,309 @@
             border: 1px solid rgba(226, 232, 240, 0.18);
         }
 
+        .reader-app {
+            display: none;
+        }
+
+        .reader-toolbar,
+        .reader-panel,
+        .reader-detail-card,
+        .reader-question-card,
+        .reader-page-card,
+        .reader-empty-state,
+        .reader-page-preview,
+        .reader-stats-card {
+            background: #f8fbff;
+            border: 1px solid #dbe7f3;
+            border-radius: 18px;
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+        }
+
+        .reader-toolbar {
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .reader-toolbar-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .reader-toolbar-top h3,
+        .reader-section-title,
+        .reader-detail-card h3,
+        .reader-panel h3 {
+            color: #16324f;
+        }
+
+        .reader-toolbar-top p,
+        .reader-panel p,
+        .reader-muted,
+        .reader-question-meta,
+        .reader-status-log,
+        .reader-preview-meta {
+            color: #556273;
+            line-height: 1.7;
+        }
+
+        .reader-upload-actions,
+        .reader-speech-actions,
+        .reader-option-buttons,
+        .reader-detail-actions,
+        .reader-form-actions,
+        .reader-page-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .reader-upload-row,
+        .reader-controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .reader-file-input,
+        .reader-select,
+        .reader-rate-input,
+        .reader-edit-field,
+        .reader-edit-textarea {
+            border: 1px solid #c6d6e5;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 0.95rem;
+            background: #fff;
+            color: #16324f;
+        }
+
+        .reader-file-input {
+            min-width: 300px;
+            flex: 1 1 320px;
+        }
+
+        .reader-rate-wrap,
+        .reader-control-group {
+            display: grid;
+            gap: 8px;
+        }
+
+        .reader-status {
+            margin-top: 18px;
+            padding: 16px 18px;
+            border-radius: 16px;
+            background: #eef6ff;
+            border: 1px solid #cfe3fb;
+        }
+
+        .reader-status strong {
+            display: block;
+            color: #0f4c81;
+            margin-bottom: 6px;
+        }
+
+        .reader-status-log {
+            white-space: pre-line;
+            font-size: 0.92rem;
+        }
+
+        .reader-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.95fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .reader-left-column,
+        .reader-right-column {
+            display: grid;
+            gap: 20px;
+        }
+
+        .reader-panel {
+            padding: 20px;
+        }
+
+        .reader-page-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .reader-page-card {
+            padding: 16px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .reader-page-card.active {
+            border-color: #0ea5e9;
+            background: #e8f8ff;
+            transform: translateY(-1px);
+        }
+
+        .reader-page-preview {
+            overflow: hidden;
+        }
+
+        .reader-preview-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid #dbe7f3;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .reader-page-canvas-wrap {
+            padding: 18px;
+            background: linear-gradient(180deg, #ecf5ff 0%, #f8fbff 100%);
+        }
+
+        .reader-page-canvas-wrap img {
+            display: block;
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid #d5e3f0;
+            background: #fff;
+        }
+
+        .reader-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .reader-stats-card {
+            padding: 16px;
+        }
+
+        .reader-stats-card strong {
+            display: block;
+            font-size: 1.4rem;
+            color: #0f4c81;
+        }
+
+        .reader-question-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+            max-height: 580px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        .reader-question-card {
+            padding: 16px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .reader-question-card.active {
+            border-color: #0ea5e9;
+            background: #e8f8ff;
+            transform: translateY(-1px);
+        }
+
+        .reader-question-card.warning {
+            border-color: #f59e0b;
+            background: #fff8eb;
+        }
+
+        .reader-question-card h4 {
+            margin-bottom: 8px;
+            color: #16324f;
+        }
+
+        .reader-badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .reader-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            background: #e0f2fe;
+            color: #0c4a6e;
+        }
+
+        .reader-chip.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .reader-empty-state,
+        .reader-detail-card {
+            padding: 24px;
+        }
+
+        .reader-empty-state {
+            text-align: center;
+        }
+
+        .reader-detail-card {
+            display: grid;
+            gap: 16px;
+        }
+
+        .reader-selected-question-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 16px;
+        }
+
+        .reader-passage-box,
+        .reader-source-box {
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: #eef6ff;
+            border: 1px solid #d7e8fb;
+        }
+
+        .reader-option-buttons {
+            margin-top: 8px;
+        }
+
+        .reader-option-btn {
+            min-width: 120px;
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        .reader-edit-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .reader-edit-field,
+        .reader-edit-textarea {
+            width: 100%;
+        }
+
+        .reader-edit-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: Consolas, 'Microsoft JhengHei', monospace;
+        }
+
+        .reader-help-list {
+            display: grid;
+            gap: 6px;
+            margin-top: 14px;
+            color: #556273;
+        }
+
         @media (max-width: 900px) {
             .service-hero {
                 grid-template-columns: 1fr;
@@ -867,6 +1170,10 @@
 
             .header-copy {
                 text-align: left;
+            }
+
+            .reader-layout {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -892,6 +1199,19 @@
             .hero-actions {
                 flex-direction: column;
             }
+
+            .reader-toolbar-top,
+            .reader-upload-row,
+            .reader-controls-row,
+            .reader-selected-question-title,
+            .reader-preview-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .reader-file-input {
+                min-width: 100%;
+            }
         }
 
     </style>
@@ -904,11 +1224,12 @@
                     <span class="hero-eyebrow">Multi-Service Portal</span>
                     <h1>一個首頁，集中展示持續增加中的服務。</h1>
                     <p>
-                        這個入口頁會先列出目前已經上線的服務，並保留後續擴充空間。現在先提供題庫測驗服務，
+                        這個入口頁會先列出目前已經上線的服務，並保留後續擴充空間。目前已提供題庫測驗與試卷報讀兩項服務，
                         之後可陸續加入成績查詢、學習儀表板、教材中心或其他工具，不需要重做整個首頁架構。
                     </p>
                     <div class="hero-actions">
                         <button id="open-quiz-service" class="service-launch-btn">進入目前服務</button>
+                        <button id="open-reader-service" class="service-launch-btn">試用報讀服務</button>
                         <a class="hero-link" href="#service-list">查看服務清單</a>
                     </div>
                 </div>
@@ -916,7 +1237,7 @@
                     <h2>服務概況</h2>
                     <div class="summary-metrics">
                         <div class="metric-card">
-                            <span id="live-service-count" class="metric-value">1</span>
+                            <span id="live-service-count" class="metric-value">2</span>
                             <span class="metric-label">已上線服務</span>
                         </div>
                         <div class="metric-card">
@@ -938,7 +1259,7 @@
                             <span class="section-eyebrow">Live Services</span>
                             <h2>目前已上線</h2>
                         </div>
-                        <p>使用者進到首頁時會先看到可用服務。現在只有一個服務，但首頁結構已能自然擴充成多服務入口。</p>
+                        <p>使用者進到首頁時會先看到可用服務。現在已經有兩個可用服務，後續也可持續擴充成更多入口。</p>
                     </div>
                     <div class="services-grid">
                         <article class="service-card active-service">
@@ -965,6 +1286,32 @@
                                 </div>
                             </div>
                             <button id="open-quiz-service-secondary" class="service-launch-btn">開始使用</button>
+                        </article>
+
+                        <article class="service-card active-service">
+                            <div class="service-card-top">
+                                <div class="service-icon">🔊</div>
+                                <span class="status-pill">已上線</span>
+                            </div>
+                            <div>
+                                <h3>國小國語試卷報讀</h3>
+                                <p>上傳國語試卷 PDF 或圖片後，自動分析題型，建立可逐題、逐選項朗讀的互動閱讀畫面。</p>
+                            </div>
+                            <div class="service-meta">
+                                <div class="service-meta-item">
+                                    <span class="service-meta-value">PDF</span>
+                                    <span class="service-meta-label">上傳來源</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span class="service-meta-value">TTS</span>
+                                    <span class="service-meta-label">題目報讀</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span class="service-meta-value">MVP</span>
+                                    <span class="service-meta-label">題型初判</span>
+                                </div>
+                            </div>
+                            <button id="open-reader-service-secondary" class="service-launch-btn">開始使用</button>
                         </article>
                     </div>
                 </section>
@@ -1202,6 +1549,147 @@
         </div>
     </div>
 
+    <div id="reader-service-app" class="container reader-app">
+        <div class="header">
+            <div class="header-topbar">
+                <button id="reader-back-to-home" class="ghost-home-btn" type="button">← 返回服務首頁</button>
+                <span class="service-badge">Service 02</span>
+            </div>
+            <div class="header-copy">
+                <h1>國小國語試卷報讀</h1>
+                <p>上傳試卷、自動分析、點題朗讀、點選項朗讀</p>
+            </div>
+        </div>
+
+        <div class="quiz-content">
+            <section class="reader-toolbar">
+                <div class="reader-toolbar-top">
+                    <div>
+                        <h3>上傳試卷並建立互動報讀畫面</h3>
+                        <p>建議優先上傳可抽文字的 PDF。圖片檔會改走 OCR，辨識結果可能需要人工修正。</p>
+                    </div>
+                    <div class="reader-speech-actions">
+                        <button id="reader-stop-speech" class="btn btn-secondary" type="button">停止朗讀</button>
+                        <button id="reader-export-json" class="btn btn-outline-primary" type="button" disabled>匯出分析 JSON</button>
+                    </div>
+                </div>
+
+                <div class="reader-upload-row">
+                    <input id="reader-file-input" class="reader-file-input" type="file" accept=".pdf,.png,.jpg,.jpeg,image/png,image/jpeg,application/pdf">
+                    <div class="reader-upload-actions">
+                        <button id="reader-analyze-btn" class="btn" type="button" disabled>開始分析</button>
+                        <button id="reader-clear-btn" class="btn btn-secondary" type="button">清除結果</button>
+                    </div>
+                </div>
+
+                <div class="reader-controls-row" style="margin-top: 16px;">
+                    <div class="reader-control-group">
+                        <label for="reader-layout-mode">版面方向</label>
+                        <select id="reader-layout-mode" class="reader-select">
+                            <option value="auto">自動判斷</option>
+                            <option value="vertical" selected>直排中文優先</option>
+                            <option value="horizontal">橫排優先</option>
+                        </select>
+                    </div>
+                    <div class="reader-control-group">
+                        <label for="reader-rate-input">朗讀語速</label>
+                        <input id="reader-rate-input" class="reader-rate-input" type="range" min="0.7" max="1.4" step="0.1" value="1">
+                    </div>
+                    <div class="reader-control-group">
+                        <label for="reader-ocr-mode">圖片辨識模式</label>
+                        <select id="reader-ocr-mode" class="reader-select">
+                            <option value="prefer-text">PDF 先用文字層</option>
+                            <option value="ocr-fallback">無文字層時用 OCR</option>
+                            <option value="ocr-force">全部走 OCR</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="reader-status" class="reader-status">
+                    <strong>尚未開始分析</strong>
+                    <div id="reader-status-log" class="reader-status-log">請先選擇 PDF 或圖片檔，再按下「開始分析」。</div>
+                </div>
+
+                <div class="reader-help-list">
+                    <div>1. 點題目卡片: 朗讀題號與題幹。</div>
+                    <div>2. 點選項按鈕: 只朗讀該選項。</div>
+                    <div>3. 若題型判斷不準，可在右側手動修正題型、題幹與選項。</div>
+                </div>
+            </section>
+
+            <div class="reader-layout">
+                <div class="reader-left-column">
+                    <section class="reader-panel">
+                        <h3 class="reader-section-title">頁面預覽</h3>
+                        <p class="reader-muted">目前版本先提供頁面預覽與結構化題目清單。題目點擊區塊以右側互動卡片為主。</p>
+                        <div id="reader-page-list" class="reader-page-list"></div>
+                    </section>
+
+                    <section class="reader-page-preview">
+                        <div class="reader-preview-header">
+                            <div>
+                                <h3>目前頁面</h3>
+                                <div id="reader-preview-meta" class="reader-preview-meta">尚未載入頁面</div>
+                            </div>
+                            <div class="reader-page-actions">
+                                <button id="reader-prev-page" class="btn btn-outline-secondary" type="button">上一頁</button>
+                                <button id="reader-next-page" class="btn btn-outline-secondary" type="button">下一頁</button>
+                            </div>
+                        </div>
+                        <div id="reader-page-canvas-wrap" class="reader-page-canvas-wrap">
+                            <div class="reader-empty-state">
+                                <h3>尚未有預覽內容</h3>
+                                <p>完成分析後，這裡會顯示試卷頁面影像。</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="reader-right-column">
+                    <section class="reader-panel">
+                        <h3 class="reader-section-title">分析摘要</h3>
+                        <div id="reader-summary-grid" class="reader-summary-grid">
+                            <div class="reader-stats-card">
+                                <strong id="reader-summary-pages">0</strong>
+                                <span class="reader-muted">頁面</span>
+                            </div>
+                            <div class="reader-stats-card">
+                                <strong id="reader-summary-questions">0</strong>
+                                <span class="reader-muted">題目</span>
+                            </div>
+                            <div class="reader-stats-card">
+                                <strong id="reader-summary-choice">0</strong>
+                                <span class="reader-muted">選擇題</span>
+                            </div>
+                            <div class="reader-stats-card">
+                                <strong id="reader-summary-warning">0</strong>
+                                <span class="reader-muted">待校正</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="reader-panel">
+                        <h3 class="reader-section-title">題目清單</h3>
+                        <p class="reader-muted">系統會依據大題標題、題號與選項結構做初步判斷。</p>
+                        <div id="reader-question-list" class="reader-question-list">
+                            <div class="reader-empty-state">
+                                <h3>尚未產生題目</h3>
+                                <p>分析完成後，這裡會出現可點擊的題目卡片。</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="reader-detail-card" class="reader-detail-card">
+                        <div class="reader-empty-state">
+                            <h3>尚未選擇題目</h3>
+                            <p>點選右側題目卡片後，可在這裡朗讀題目、逐一朗讀選項，並手動修正內容。</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="status-overlay" class="status-overlay" style="display:none;">
         <div class="status-content">
             <h3>答題狀態</h3>
@@ -1226,7 +1714,10 @@
     <script src="quiz-data.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="quiz-app.js"></script>
+    <script src="exam-reader-app.js"></script>
 </body>
 </html>
 
