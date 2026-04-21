@@ -9,7 +9,9 @@ class ExamReaderApp {
             speechRate: 1,
             isAnalyzing: false,
             lastAnalysisTitle: '',
-            studentMode: true
+            studentMode: true,
+            lastSpokenText: '',
+            activeTemplate: 'generic'
         };
 
         this.sectionTypeMap = {
@@ -56,6 +58,9 @@ class ExamReaderApp {
         this.exportBtn = document.getElementById('reader-export-json');
         this.stopSpeechBtn = document.getElementById('reader-stop-speech');
         this.studentModeBtn = document.getElementById('reader-student-mode-btn');
+        this.repeatLastBtn = document.getElementById('reader-repeat-last');
+        this.stopSpeechSecondaryBtn = document.getElementById('reader-stop-speech-secondary');
+        this.studentText = document.getElementById('reader-student-text');
 
         this.layoutModeSelect = document.getElementById('reader-layout-mode');
         this.ocrModeSelect = document.getElementById('reader-ocr-mode');
@@ -104,8 +109,18 @@ class ExamReaderApp {
         if (this.stopSpeechBtn) {
             this.stopSpeechBtn.addEventListener('click', () => this.stopSpeech());
         }
+        if (this.stopSpeechSecondaryBtn) {
+            this.stopSpeechSecondaryBtn.addEventListener('click', () => this.stopSpeech());
+        }
         if (this.studentModeBtn) {
             this.studentModeBtn.addEventListener('click', () => this.toggleStudentMode());
+        }
+        if (this.repeatLastBtn) {
+            this.repeatLastBtn.addEventListener('click', () => {
+                if (this.state.lastSpokenText) {
+                    this.speakText(this.state.lastSpokenText);
+                }
+            });
         }
         if (this.rateInput) {
             this.rateInput.addEventListener('input', () => {
@@ -222,6 +237,7 @@ class ExamReaderApp {
                 throw new Error('找不到可分析的頁面');
             }
 
+            this.state.activeTemplate = this.detectTemplate(file.name, pages);
             const questions = this.buildQuestionModelFromPages(pages);
             this.state.pages = pages;
             this.state.questions = questions;
@@ -242,6 +258,7 @@ class ExamReaderApp {
                 [
                     `頁面數: ${pages.length}`,
                     `題目數: ${questions.length}`,
+                    `試卷模板: ${this.state.activeTemplate === 'elementary-chinese-exam' ? '國語直排試卷' : '通用模式'}`,
                     `可點擊版面題目: ${questions.filter((question) => question.bbox).length}`,
                     `待人工校正: ${warningCount}`,
                     warningCount
@@ -487,7 +504,65 @@ class ExamReaderApp {
             }));
         }
 
+        questions = this.applyTemplateOptimizations(questions);
+
         return questions;
+    }
+
+    detectTemplate(fileName, pages) {
+        const source = `${fileName} ${(pages || []).map((page) => page.extractedText || '').join(' ')}`;
+        if (/國語科試卷|語文領域國語文|閱讀測驗|選擇題/.test(source)) {
+            return 'elementary-chinese-exam';
+        }
+        return 'generic';
+    }
+
+    applyTemplateOptimizations(questions) {
+        if (this.state.activeTemplate !== 'elementary-chinese-exam') {
+            return questions;
+        }
+
+        return questions.map((question) => {
+            const optimized = { ...question };
+
+            if (optimized.bbox) {
+                optimized.bbox = this.expandBox(optimized.bbox, 0.35, 0.45);
+            }
+
+            optimized.options = (optimized.options || []).map((option) => ({
+                ...option,
+                bbox: option.bbox ? this.expandBox(option.bbox, 0.6, 0.8) : null
+            }));
+
+            if (optimized.passageBox) {
+                optimized.passageBox = this.expandBox(optimized.passageBox, 0.35, 0.4);
+            }
+
+            if (optimized.type === 'multiple-choice' || optimized.type === 'reading-choice') {
+                optimized.confidence = Math.max(optimized.confidence || 0, 0.92);
+            }
+
+            return optimized;
+        });
+    }
+
+    expandBox(box, expandX, expandY) {
+        if (!box) {
+            return null;
+        }
+
+        const leftPct = Math.max(box.leftPct - expandX, 0);
+        const topPct = Math.max(box.topPct - expandY, 0);
+        const widthPct = Math.min(box.widthPct + expandX * 2, 100 - leftPct);
+        const heightPct = Math.min(box.heightPct + expandY * 2, 100 - topPct);
+
+        return {
+            ...box,
+            leftPct,
+            topPct,
+            widthPct,
+            heightPct
+        };
     }
 
     parseQuestionsFromBundle(bundle, pageNumber) {
@@ -1301,6 +1376,10 @@ class ExamReaderApp {
         }
 
         this.stopSpeech();
+        this.state.lastSpokenText = text;
+        if (this.studentText) {
+            this.studentText.textContent = text;
+        }
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'zh-TW';
         utterance.rate = this.state.speechRate;
@@ -1344,7 +1423,9 @@ class ExamReaderApp {
             questions: [],
             selectedQuestionId: null,
             selectedPageNumber: 1,
-            lastAnalysisTitle: ''
+            lastAnalysisTitle: '',
+            lastSpokenText: '',
+            activeTemplate: 'generic'
         };
 
         if (this.fileInput) {
@@ -1358,6 +1439,9 @@ class ExamReaderApp {
         this.renderPreview();
         this.renderQuestionList();
         this.renderQuestionDetail();
+        if (this.studentText) {
+            this.studentText.textContent = '點選試卷上的題目、選項或題組文章後，這裡會顯示剛剛朗讀的內容。';
+        }
         this.updateStatus('已清除結果', '可以重新上傳新的試卷檔案。');
     }
 

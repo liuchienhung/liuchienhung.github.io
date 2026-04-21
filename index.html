@@ -1273,6 +1273,12 @@
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
         }
 
+        .reader-app.student-mode .reader-panel:first-child {
+            position: sticky;
+            top: 12px;
+            z-index: 4;
+        }
+
         .reader-app.student-mode .reader-page-preview {
             border-width: 2px;
         }
@@ -1285,6 +1291,8 @@
         .reader-app.student-mode .reader-option-hotspot,
         .reader-app.student-mode .reader-passage-hotspot {
             border-width: 3px;
+            min-width: 28px;
+            min-height: 28px;
         }
 
         .reader-app.student-mode .reader-hotspot-label {
@@ -1297,6 +1305,48 @@
             top: 0;
             z-index: 5;
             background: #f8fbff;
+        }
+
+        .reader-student-bar {
+            display: none;
+        }
+
+        .reader-app.student-mode .reader-student-bar {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+            position: sticky;
+            bottom: 12px;
+            margin-top: 18px;
+            padding: 16px 18px;
+            border-radius: 20px;
+            background: rgba(15, 23, 42, 0.94);
+            color: #f8fafc;
+            box-shadow: 0 20px 48px rgba(15, 23, 42, 0.32);
+            z-index: 8;
+        }
+
+        .reader-student-bar strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .reader-student-text {
+            color: rgba(226, 232, 240, 0.9);
+            line-height: 1.65;
+        }
+
+        .reader-student-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .reader-student-actions .btn {
+            min-height: 50px;
+            padding: 0 20px;
         }
 
         @media (max-width: 900px) {
@@ -1354,6 +1404,10 @@
 
             .reader-file-input {
                 min-width: 100%;
+            }
+
+            .reader-app.student-mode .reader-student-bar {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -1785,6 +1839,17 @@
                                 <h3>尚未有預覽內容</h3>
                                 <p>完成分析後，這裡會顯示試卷頁面影像。</p>
                             </div>
+                        </div>
+                    </section>
+
+                    <section id="reader-student-bar" class="reader-student-bar">
+                        <div>
+                            <strong>目前朗讀內容</strong>
+                            <div id="reader-student-text" class="reader-student-text">點選試卷上的題目、選項或題組文章後，這裡會顯示剛剛朗讀的內容。</div>
+                        </div>
+                        <div class="reader-student-actions">
+                            <button id="reader-repeat-last" class="btn" type="button">重播剛剛內容</button>
+                            <button id="reader-stop-speech-secondary" class="btn btn-secondary" type="button">停止</button>
                         </div>
                     </section>
                 </div>
