@@ -11,7 +11,14 @@ class ExamReaderApp {
             lastAnalysisTitle: '',
             studentMode: true,
             lastSpokenText: '',
-            activeTemplate: 'generic'
+            activeTemplate: 'generic',
+            calibration: {
+                active: false,
+                questionId: null,
+                targetType: null,
+                optionIndex: null,
+                startPoint: null
+            }
         };
 
         this.sectionTypeMap = {
@@ -163,6 +170,103 @@ class ExamReaderApp {
             this.studentModeBtn.textContent = this.state.studentMode ? '學生模式' : '編輯模式';
             this.studentModeBtn.title = this.state.studentMode ? '目前為學生操作版面' : '目前為編輯校正版面';
         }
+    }
+
+    startCalibration(questionId, targetType, optionIndex = null) {
+        const question = this.state.questions.find((item) => item.id === questionId);
+        if (!question) {
+            return;
+        }
+
+        this.state.studentMode = false;
+        this.applyStudentMode();
+        this.state.selectedQuestionId = questionId;
+        this.state.selectedPageNumber = question.pageNumber;
+        this.state.calibration = {
+            active: true,
+            questionId,
+            targetType,
+            optionIndex,
+            startPoint: null
+        };
+
+        this.renderQuestionList();
+        this.renderPreview();
+        this.renderQuestionDetail();
+        this.updateStatus(
+            '校正模式',
+            '請在試卷頁面上點兩下: 第一下點選左上角，第二下點選右下角，完成熱區校正。'
+        );
+        this.scrollToPage(question.pageNumber);
+    }
+
+    cancelCalibration() {
+        this.state.calibration = {
+            active: false,
+            questionId: null,
+            targetType: null,
+            optionIndex: null,
+            startPoint: null
+        };
+        this.renderPreview();
+        this.renderQuestionDetail();
+        this.updateStatus('已取消校正', '目前已離開熱區校正模式。');
+    }
+
+    completeCalibrationPoint(pageNumber, point) {
+        const calibration = this.state.calibration;
+        if (!calibration.active || !calibration.questionId) {
+            return;
+        }
+
+        const question = this.state.questions.find((item) => item.id === calibration.questionId);
+        if (!question || question.pageNumber !== pageNumber) {
+            return;
+        }
+
+        if (!calibration.startPoint) {
+            calibration.startPoint = point;
+            this.renderPreview();
+            this.updateStatus('校正模式', '已記錄第一個點，請再點一下右下角完成框選。');
+            return;
+        }
+
+        const bbox = this.createBBoxFromPoints(calibration.startPoint, point);
+        if (calibration.targetType === 'question') {
+            question.bbox = bbox;
+            question.promptBox = bbox;
+        } else if (calibration.targetType === 'passage') {
+            question.passageBox = bbox;
+        } else if (calibration.targetType === 'option' && calibration.optionIndex != null && question.options[calibration.optionIndex]) {
+            question.options[calibration.optionIndex].bbox = bbox;
+        }
+
+        question.confidence = Math.max(question.confidence || 0, 0.98);
+        this.state.calibration = {
+            active: false,
+            questionId: null,
+            targetType: null,
+            optionIndex: null,
+            startPoint: null
+        };
+        this.renderQuestionList();
+        this.renderPreview();
+        this.renderQuestionDetail();
+        this.updateStatus('校正完成', '已更新目前題目的熱區定位。');
+    }
+
+    createBBoxFromPoints(startPoint, endPoint) {
+        const leftPct = Math.max(Math.min(startPoint.x, endPoint.x), 0);
+        const topPct = Math.max(Math.min(startPoint.y, endPoint.y), 0);
+        const widthPct = Math.min(Math.abs(endPoint.x - startPoint.x), 100 - leftPct);
+        const heightPct = Math.min(Math.abs(endPoint.y - startPoint.y), 100 - topPct);
+
+        return {
+            leftPct,
+            topPct,
+            widthPct,
+            heightPct
+        };
     }
 
     handleFileSelection(event) {
@@ -526,16 +630,18 @@ class ExamReaderApp {
             const optimized = { ...question };
 
             if (optimized.bbox) {
-                optimized.bbox = this.expandBox(optimized.bbox, 0.35, 0.45);
+                const questionExpandX = optimized.options?.length ? 0.06 : 0.12;
+                const questionExpandY = optimized.options?.length ? 0.12 : 0.2;
+                optimized.bbox = this.expandBox(optimized.bbox, questionExpandX, questionExpandY);
             }
 
             optimized.options = (optimized.options || []).map((option) => ({
                 ...option,
-                bbox: option.bbox ? this.expandBox(option.bbox, 0.6, 0.8) : null
+                bbox: option.bbox ? this.expandBox(option.bbox, 0.12, 0.18) : null
             }));
 
             if (optimized.passageBox) {
-                optimized.passageBox = this.expandBox(optimized.passageBox, 0.35, 0.4);
+                optimized.passageBox = this.expandBox(optimized.passageBox, 0.08, 0.16);
             }
 
             if (optimized.type === 'multiple-choice' || optimized.type === 'reading-choice') {
@@ -626,8 +732,8 @@ class ExamReaderApp {
                 const split = this.splitChoiceOptionsDetailed(content);
                 const prompt = this.toDisplayText(split.prompt);
                 const promptRangeEnd = split.options.length ? contentStart + split.options[0].start : matchEnd;
-                const bbox = this.computeBoundsFromRange(bundle, contentStart, matchEnd);
                 const promptBox = this.computeBoundsFromRange(bundle, contentStart, promptRangeEnd);
+                const contentBox = this.computeBoundsFromRange(bundle, contentStart, matchEnd);
                 const options = split.options.map((option) => ({
                     key: option.key,
                     text: this.toDisplayText(option.text),
@@ -641,12 +747,13 @@ class ExamReaderApp {
                     prompt,
                     options,
                     number,
-                    confidence: options.length >= 2 && bbox ? 0.9 : 0.58,
+                    confidence: options.length >= 2 && (promptBox || contentBox) ? 0.9 : 0.58,
                     rawText: this.toDisplayText(content),
                     sourceLabel: 'auto',
                     passage: passageText,
-                    bbox,
+                    bbox: promptBox || contentBox,
                     promptBox,
+                    contentBox,
                     passageBox
                 };
             })
@@ -719,10 +826,10 @@ class ExamReaderApp {
             return null;
         }
 
-        const left = Math.max(Math.min(...items.map((item) => item.left)) - 8, 0);
-        const top = Math.max(Math.min(...items.map((item) => item.top)) - 8, 0);
-        const right = Math.min(Math.max(...items.map((item) => item.right)) + 8, bundle.width);
-        const bottom = Math.min(Math.max(...items.map((item) => item.bottom)) + 8, bundle.height);
+        const left = Math.max(Math.min(...items.map((item) => item.left)) - 3, 0);
+        const top = Math.max(Math.min(...items.map((item) => item.top)) - 3, 0);
+        const right = Math.min(Math.max(...items.map((item) => item.right)) + 3, bundle.width);
+        const bottom = Math.min(Math.max(...items.map((item) => item.bottom)) + 3, bundle.height);
         const width = Math.max(right - left, 18);
         const height = Math.max(bottom - top, 18);
 
@@ -978,6 +1085,7 @@ class ExamReaderApp {
         }
 
         const currentQuestion = this.getSelectedQuestion();
+        const calibration = this.state.calibration;
         const pageMarkup = this.state.pages
             .map((page) => {
                 const pageQuestions = this.state.questions.filter((question) => question.pageNumber === page.pageNumber);
@@ -1043,6 +1151,14 @@ class ExamReaderApp {
                     .join('');
 
                 const pageActiveClass = page.pageNumber === this.state.selectedPageNumber ? 'active' : '';
+                const calibrationBox =
+                    calibration.active && calibration.questionId && calibration.startPoint && currentQuestion && currentQuestion.pageNumber === page.pageNumber
+                        ? `
+                            <div
+                                class="reader-calibration-box"
+                                style="left:${calibration.startPoint.x}%;top:${calibration.startPoint.y}%;width:2%;height:2%;"></div>
+                        `
+                        : '';
 
                 return `
                     <section class="reader-document-page ${pageActiveClass}" data-page-stage="${page.pageNumber}">
@@ -1056,6 +1172,7 @@ class ExamReaderApp {
                                 ${pageHotspots}
                                 ${passageHotspot}
                                 ${optionHotspots}
+                                ${calibrationBox}
                             </div>
                         </div>
                     </section>
@@ -1068,6 +1185,9 @@ class ExamReaderApp {
 
         this.pageCanvasWrap.querySelectorAll('[data-hotspot-question]').forEach((button) => {
             button.addEventListener('click', () => {
+                if (this.state.calibration.active) {
+                    return;
+                }
                 this.state.selectedQuestionId = button.dataset.hotspotQuestion;
                 const question = this.getSelectedQuestion();
                 if (question) {
@@ -1084,6 +1204,9 @@ class ExamReaderApp {
 
         this.pageCanvasWrap.querySelectorAll('[data-hotspot-option]').forEach((button) => {
             button.addEventListener('click', () => {
+                if (this.state.calibration.active) {
+                    return;
+                }
                 this.state.selectedQuestionId = button.dataset.hotspotQuestionRef || this.state.selectedQuestionId;
                 const question = this.getSelectedQuestion();
                 if (!question) {
@@ -1102,6 +1225,9 @@ class ExamReaderApp {
 
         this.pageCanvasWrap.querySelectorAll('[data-hotspot-passage]').forEach((passageButton) => {
             passageButton.addEventListener('click', () => {
+                if (this.state.calibration.active) {
+                    return;
+                }
                 this.state.selectedQuestionId = passageButton.dataset.hotspotQuestionRef || this.state.selectedQuestionId;
                 const question = this.getSelectedQuestion();
                 if (question) {
@@ -1113,6 +1239,23 @@ class ExamReaderApp {
                 }
             });
         });
+
+        if (this.state.calibration.active) {
+            this.pageCanvasWrap.querySelectorAll('[data-page-stage]').forEach((stage) => {
+                stage.addEventListener('click', (event) => {
+                    if (!event.target.closest('.reader-page-stage')) {
+                        return;
+                    }
+                    const pageStage = event.target.closest('.reader-page-stage');
+                    const pageSection = event.target.closest('[data-page-stage]');
+                    const rect = pageStage.getBoundingClientRect();
+                    const x = ((event.clientX - rect.left) / rect.width) * 100;
+                    const y = ((event.clientY - rect.top) / rect.height) * 100;
+                    const pageNumber = Number(pageSection.dataset.pageStage || 0);
+                    this.completeCalibrationPoint(pageNumber, { x, y });
+                });
+            });
+        }
     }
 
     renderQuestionList() {
@@ -1209,6 +1352,20 @@ class ExamReaderApp {
                 </div>
             </div>
 
+            ${this.state.calibration.active ? `
+                <div class="reader-calibration-hint">
+                    正在校正 ${this.renderCalibrationTargetLabel(question)}。請到左側試卷頁面點兩下，依序框出左上角與右下角。
+                    <div class="reader-detail-actions" style="margin-top: 10px;">
+                        <button id="reader-cancel-calibration" class="btn btn-secondary" type="button">取消校正</button>
+                    </div>
+                </div>
+            ` : `
+                <div class="reader-detail-actions">
+                    <button id="reader-calibrate-question" class="btn btn-outline-primary" type="button">校正題幹熱區</button>
+                    ${question.passage ? '<button id="reader-calibrate-passage" class="btn btn-outline-primary" type="button">校正題組文章熱區</button>' : ''}
+                </div>
+            `}
+
             ${question.passage ? `
                 <div class="reader-passage-box">
                     <strong>題組文章</strong>
@@ -1227,6 +1384,19 @@ class ExamReaderApp {
             <div>
                 <strong>選項</strong>
                 ${optionButtons}
+                ${!this.state.calibration.active && question.options.length ? `
+                    <div class="reader-detail-actions" style="margin-top: 10px;">
+                        ${question.options
+                            .map(
+                                (option, index) => `
+                                    <button class="btn btn-outline-primary" type="button" data-calibrate-option="${index}">
+                                        校正 ${this.escapeHtml(option.key)} 熱區
+                                    </button>
+                                `
+                            )
+                            .join('')}
+                    </div>
+                ` : ''}
             </div>
 
             <div class="reader-source-box">
@@ -1264,6 +1434,9 @@ class ExamReaderApp {
         const speakOptionsBtn = document.getElementById('reader-speak-options');
         const speakPassageBtn = document.getElementById('reader-speak-passage');
         const saveEditBtn = document.getElementById('reader-save-edit');
+        const calibrateQuestionBtn = document.getElementById('reader-calibrate-question');
+        const calibratePassageBtn = document.getElementById('reader-calibrate-passage');
+        const cancelCalibrationBtn = document.getElementById('reader-cancel-calibration');
 
         if (speakQuestionBtn) {
             speakQuestionBtn.addEventListener('click', () => this.speakQuestion(question));
@@ -1277,6 +1450,15 @@ class ExamReaderApp {
         if (saveEditBtn) {
             saveEditBtn.addEventListener('click', () => this.saveQuestionEdits(question.id));
         }
+        if (calibrateQuestionBtn) {
+            calibrateQuestionBtn.addEventListener('click', () => this.startCalibration(question.id, 'question'));
+        }
+        if (calibratePassageBtn) {
+            calibratePassageBtn.addEventListener('click', () => this.startCalibration(question.id, 'passage'));
+        }
+        if (cancelCalibrationBtn) {
+            cancelCalibrationBtn.addEventListener('click', () => this.cancelCalibration());
+        }
 
         this.detailCard.querySelectorAll('[data-option-index]').forEach((button) => {
             button.addEventListener('click', () => {
@@ -1286,6 +1468,26 @@ class ExamReaderApp {
                 }
             });
         });
+
+        this.detailCard.querySelectorAll('[data-calibrate-option]').forEach((button) => {
+            button.addEventListener('click', () => {
+                this.startCalibration(question.id, 'option', Number(button.dataset.calibrateOption || 0));
+            });
+        });
+    }
+
+    renderCalibrationTargetLabel(question) {
+        const calibration = this.state.calibration;
+        if (calibration.targetType === 'question') {
+            return `${question.sectionTitle} 第 ${question.number || ''} 題的題幹`;
+        }
+        if (calibration.targetType === 'passage') {
+            return `${question.sectionTitle} 的題組文章`;
+        }
+        if (calibration.targetType === 'option' && calibration.optionIndex != null && question.options[calibration.optionIndex]) {
+            return `${question.sectionTitle} 第 ${question.number || ''} 題選項 ${question.options[calibration.optionIndex].key}`;
+        }
+        return '目前熱區';
     }
 
     renderTypeOptions(currentType) {

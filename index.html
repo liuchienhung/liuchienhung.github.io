@@ -1290,14 +1290,23 @@
         .reader-app.student-mode .reader-hotspot,
         .reader-app.student-mode .reader-option-hotspot,
         .reader-app.student-mode .reader-passage-hotspot {
-            border-width: 3px;
             min-width: 28px;
             min-height: 28px;
+            border-color: transparent;
+            background: transparent;
+            box-shadow: none;
         }
 
         .reader-app.student-mode .reader-hotspot-label {
-            padding: 5px 10px;
-            font-size: 0.88rem;
+            display: none;
+        }
+
+        .reader-app.student-mode .reader-hotspot.active,
+        .reader-app.student-mode .reader-option-hotspot.active,
+        .reader-app.student-mode .reader-passage-hotspot.active {
+            border-color: transparent;
+            background: transparent;
+            box-shadow: none;
         }
 
         .reader-app.student-mode .reader-preview-header {
@@ -1347,6 +1356,24 @@
         .reader-student-actions .btn {
             min-height: 50px;
             padding: 0 20px;
+        }
+
+        .reader-calibration-hint {
+            margin-top: 12px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: #fff7ed;
+            border: 1px solid #fdba74;
+            color: #9a3412;
+            line-height: 1.7;
+        }
+
+        .reader-calibration-box {
+            position: absolute;
+            border: 2px dashed #ef4444;
+            background: rgba(239, 68, 68, 0.12);
+            border-radius: 10px;
+            pointer-events: none;
         }
 
         @media (max-width: 900px) {
