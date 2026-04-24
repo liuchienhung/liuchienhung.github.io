@@ -18,6 +18,11 @@ class ExamReaderApp {
                 targetType: null,
                 optionIndex: null,
                 startPoint: null
+            },
+            calibrationWizard: {
+                active: false,
+                queue: [],
+                currentIndex: 0
             }
         };
 
@@ -65,6 +70,7 @@ class ExamReaderApp {
         this.exportBtn = document.getElementById('reader-export-json');
         this.stopSpeechBtn = document.getElementById('reader-stop-speech');
         this.studentModeBtn = document.getElementById('reader-student-mode-btn');
+        this.calibrationWizardBtn = document.getElementById('reader-calibration-wizard-btn');
         this.repeatLastBtn = document.getElementById('reader-repeat-last');
         this.stopSpeechSecondaryBtn = document.getElementById('reader-stop-speech-secondary');
         this.studentText = document.getElementById('reader-student-text');
@@ -115,6 +121,15 @@ class ExamReaderApp {
         }
         if (this.stopSpeechBtn) {
             this.stopSpeechBtn.addEventListener('click', () => this.stopSpeech());
+        }
+        if (this.calibrationWizardBtn) {
+            this.calibrationWizardBtn.addEventListener('click', () => {
+                if (this.state.calibrationWizard.active) {
+                    this.stopCalibrationWizard('已結束校正精靈。');
+                    return;
+                }
+                this.startCalibrationWizard();
+            });
         }
         if (this.stopSpeechSecondaryBtn) {
             this.stopSpeechSecondaryBtn.addEventListener('click', () => this.stopSpeech());
@@ -172,6 +187,182 @@ class ExamReaderApp {
         }
     }
 
+    syncCalibrationWizardButton() {
+        if (!this.calibrationWizardBtn) {
+            return;
+        }
+
+        const active = this.state.calibrationWizard.active;
+        this.calibrationWizardBtn.disabled = !active && !this.state.questions.length;
+        this.calibrationWizardBtn.textContent = active
+            ? `結束校正精靈 ${this.getCalibrationWizardProgressText()}`
+            : '上傳後校正精靈';
+        this.calibrationWizardBtn.title = active
+            ? '停止目前的逐題校正流程'
+            : '依序帶你校正題幹、題組文章與選項熱區';
+    }
+
+    startCalibrationWizard() {
+        if (!this.state.questions.length) {
+            this.updateStatus('尚無可校正題目', '請先完成試卷分析，再啟動校正精靈。');
+            return;
+        }
+
+        const queue = this.buildCalibrationWizardQueue();
+        if (!queue.length) {
+            this.updateStatus('沒有可校正目標', '目前尚未找到可逐題校正的題目或選項。');
+            return;
+        }
+
+        this.state.calibrationWizard = {
+            active: true,
+            queue,
+            currentIndex: 0
+        };
+        this.focusCalibrationWizardTarget();
+    }
+
+    stopCalibrationWizard(message = '已結束校正精靈。') {
+        this.state.calibrationWizard = {
+            active: false,
+            queue: [],
+            currentIndex: 0
+        };
+        this.state.calibration = {
+            active: false,
+            questionId: null,
+            targetType: null,
+            optionIndex: null,
+            startPoint: null
+        };
+        this.renderSummary();
+        this.renderQuestionList();
+        this.renderPreview();
+        this.renderQuestionDetail();
+        this.updateStatus('校正精靈', message);
+    }
+
+    buildCalibrationWizardQueue() {
+        const orderedQuestions = [...this.state.questions].sort((left, right) => {
+            if (left.pageNumber !== right.pageNumber) {
+                return left.pageNumber - right.pageNumber;
+            }
+
+            const leftNumber = Number(left.number || 0);
+            const rightNumber = Number(right.number || 0);
+            if (!Number.isNaN(leftNumber) && !Number.isNaN(rightNumber) && leftNumber !== rightNumber) {
+                return leftNumber - rightNumber;
+            }
+
+            return String(left.id).localeCompare(String(right.id), 'zh-Hant');
+        });
+
+        const queue = [];
+        const passageKeys = new Set();
+
+        orderedQuestions.forEach((question) => {
+            if (question.prompt) {
+                queue.push({
+                    questionId: question.id,
+                    targetType: 'question',
+                    optionIndex: null
+                });
+            }
+
+            if (question.passage) {
+                const passageKey = `${question.pageNumber}|${question.sectionTitle}|${question.passage}`;
+                if (!passageKeys.has(passageKey)) {
+                    passageKeys.add(passageKey);
+                    queue.push({
+                        questionId: question.id,
+                        targetType: 'passage',
+                        optionIndex: null
+                    });
+                }
+            }
+
+            (question.options || []).forEach((option, optionIndex) => {
+                if (option.text) {
+                    queue.push({
+                        questionId: question.id,
+                        targetType: 'option',
+                        optionIndex
+                    });
+                }
+            });
+        });
+
+        return queue;
+    }
+
+    getCalibrationWizardProgressText() {
+        const wizard = this.state.calibrationWizard;
+        if (!wizard.active || !wizard.queue.length) {
+            return '';
+        }
+
+        return `(${wizard.currentIndex + 1}/${wizard.queue.length})`;
+    }
+
+    getCurrentCalibrationWizardEntry() {
+        const wizard = this.state.calibrationWizard;
+        if (!wizard.active) {
+            return null;
+        }
+
+        return wizard.queue[wizard.currentIndex] || null;
+    }
+
+    focusCalibrationWizardTarget() {
+        const entry = this.getCurrentCalibrationWizardEntry();
+        if (!entry) {
+            this.stopCalibrationWizard('校正精靈已完成。');
+            return;
+        }
+
+        const question = this.state.questions.find((item) => item.id === entry.questionId);
+        if (!question) {
+            this.advanceCalibrationWizard();
+            return;
+        }
+
+        this.state.studentMode = false;
+        this.applyStudentMode();
+        this.state.selectedQuestionId = question.id;
+        this.state.selectedPageNumber = question.pageNumber;
+        this.state.calibration = {
+            active: true,
+            questionId: question.id,
+            targetType: entry.targetType,
+            optionIndex: entry.optionIndex,
+            startPoint: null
+        };
+
+        this.renderSummary();
+        this.renderQuestionList();
+        this.renderPreview();
+        this.renderQuestionDetail();
+        this.scrollToPage(question.pageNumber);
+        this.updateStatus(
+            '校正精靈',
+            `${this.getCalibrationWizardProgressText()} 請在試卷上框選 ${this.renderCalibrationTargetLabel(question)}，先點左上角，再點右下角。`
+        );
+    }
+
+    advanceCalibrationWizard() {
+        if (!this.state.calibrationWizard.active) {
+            return;
+        }
+
+        this.state.calibrationWizard.currentIndex += 1;
+        if (this.state.calibrationWizard.currentIndex >= this.state.calibrationWizard.queue.length) {
+            this.stopCalibrationWizard('全部校正完成，已切回編輯模式。');
+            return;
+        }
+
+        this.focusCalibrationWizardTarget();
+    }
+
     startCalibration(questionId, targetType, optionIndex = null) {
         const question = this.state.questions.find((item) => item.id === questionId);
         if (!question) {
@@ -201,6 +392,11 @@ class ExamReaderApp {
     }
 
     cancelCalibration() {
+        if (this.state.calibrationWizard.active) {
+            this.stopCalibrationWizard('已中止校正精靈。');
+            return;
+        }
+
         this.state.calibration = {
             active: false,
             questionId: null,
@@ -235,10 +431,13 @@ class ExamReaderApp {
         if (calibration.targetType === 'question') {
             question.bbox = bbox;
             question.promptBox = bbox;
+            question.segments = [bbox];
         } else if (calibration.targetType === 'passage') {
             question.passageBox = bbox;
+            question.passageSegments = [bbox];
         } else if (calibration.targetType === 'option' && calibration.optionIndex != null && question.options[calibration.optionIndex]) {
             question.options[calibration.optionIndex].bbox = bbox;
+            question.options[calibration.optionIndex].segments = [bbox];
         }
 
         question.confidence = Math.max(question.confidence || 0, 0.98);
@@ -249,6 +448,13 @@ class ExamReaderApp {
             optionIndex: null,
             startPoint: null
         };
+
+        if (this.state.calibrationWizard.active) {
+            this.renderSummary();
+            this.advanceCalibrationWizard();
+            return;
+        }
+
         this.renderQuestionList();
         this.renderPreview();
         this.renderQuestionDetail();
@@ -363,11 +569,11 @@ class ExamReaderApp {
                     `頁面數: ${pages.length}`,
                     `題目數: ${questions.length}`,
                     `試卷模板: ${this.state.activeTemplate === 'elementary-chinese-exam' ? '國語直排試卷' : '通用模式'}`,
-                    `可點擊版面題目: ${questions.filter((question) => question.bbox).length}`,
+                    `可點擊版面題目: ${questions.filter((question) => this.getQuestionRegions(question).length).length}`,
                     `待人工校正: ${warningCount}`,
                     warningCount
-                        ? '可先直接點頁面上的題目與選項。若有切題不準，再用右側修正欄調整。'
-                        : '目前已可直接從頁面版面點題目與選項朗讀。'
+                        ? '可先直接點頁面上的題目與選項。若有切題不準，請按「上傳後校正精靈」。'
+                        : '目前已可直接從頁面版面點題目與選項朗讀；需要微調時可啟動校正精靈。'
                 ].join('\n')
             );
         } catch (error) {
@@ -634,14 +840,23 @@ class ExamReaderApp {
                 const questionExpandY = optimized.options?.length ? 0.12 : 0.2;
                 optimized.bbox = this.expandBox(optimized.bbox, questionExpandX, questionExpandY);
             }
+            if (optimized.segments?.length) {
+                const questionExpandX = optimized.options?.length ? 0.02 : 0.04;
+                const questionExpandY = optimized.options?.length ? 0.04 : 0.06;
+                optimized.segments = this.expandRegions(optimized.segments, questionExpandX, questionExpandY);
+            }
 
             optimized.options = (optimized.options || []).map((option) => ({
                 ...option,
-                bbox: option.bbox ? this.expandBox(option.bbox, 0.12, 0.18) : null
+                bbox: option.bbox ? this.expandBox(option.bbox, 0.04, 0.08) : null,
+                segments: option.segments?.length ? this.expandRegions(option.segments, 0.03, 0.05) : []
             }));
 
             if (optimized.passageBox) {
-                optimized.passageBox = this.expandBox(optimized.passageBox, 0.08, 0.16);
+                optimized.passageBox = this.expandBox(optimized.passageBox, 0.04, 0.08);
+            }
+            if (optimized.passageSegments?.length) {
+                optimized.passageSegments = this.expandRegions(optimized.passageSegments, 0.03, 0.05);
             }
 
             if (optimized.type === 'multiple-choice' || optimized.type === 'reading-choice') {
@@ -650,6 +865,12 @@ class ExamReaderApp {
 
             return optimized;
         });
+    }
+
+    expandRegions(regions, expandX, expandY) {
+        return (regions || [])
+            .map((region) => this.expandBox(region, expandX, expandY))
+            .filter(Boolean);
     }
 
     expandBox(box, expandX, expandY) {
@@ -717,6 +938,7 @@ class ExamReaderApp {
         const questionMatches = [...bodyText.matchAll(/(?:[(（]\d+[)）]|[(（]?\d+[)）]?)([\s\S]*?)(?=(?:[(（]\d+[)）]|[(（]?\d+[)）]?)|$)/g)];
         const passageText = sectionTitle === '閱讀測驗' ? this.toDisplayText(introBlock) : '';
         const passageBox = passageText ? this.computeBoundsFromRange(bundle, bodyStart, bodyStart + firstQuestionIndex) : null;
+        const passageSegments = passageText ? this.computeSegmentsFromRange(bundle, bodyStart, bodyStart + firstQuestionIndex) : [];
 
         return questionMatches
             .map((match) => {
@@ -733,11 +955,13 @@ class ExamReaderApp {
                 const prompt = this.toDisplayText(split.prompt);
                 const promptRangeEnd = split.options.length ? contentStart + split.options[0].start : matchEnd;
                 const promptBox = this.computeBoundsFromRange(bundle, contentStart, promptRangeEnd);
+                const promptSegments = this.computeSegmentsFromRange(bundle, contentStart, promptRangeEnd);
                 const contentBox = this.computeBoundsFromRange(bundle, contentStart, matchEnd);
                 const options = split.options.map((option) => ({
                     key: option.key,
                     text: this.toDisplayText(option.text),
-                    bbox: this.computeBoundsFromRange(bundle, contentStart + option.start, contentStart + option.end)
+                    bbox: this.computeBoundsFromRange(bundle, contentStart + option.start, contentStart + option.end),
+                    segments: this.computeSegmentsFromRange(bundle, contentStart + option.start, contentStart + option.end)
                 }));
 
                 return {
@@ -752,9 +976,11 @@ class ExamReaderApp {
                     sourceLabel: 'auto',
                     passage: passageText,
                     bbox: promptBox || contentBox,
+                    segments: promptSegments,
                     promptBox,
                     contentBox,
-                    passageBox
+                    passageBox,
+                    passageSegments
                 };
             })
             .filter((question) => question.prompt);
@@ -775,7 +1001,8 @@ class ExamReaderApp {
                     confidence: 0.45,
                     rawText: this.toDisplayText(bodyBlock),
                     sourceLabel: 'auto',
-                    bbox: this.computeBoundsFromRange(bundle, blockStart + headerLength, blockStart + sectionBlock.length)
+                    bbox: this.computeBoundsFromRange(bundle, blockStart + headerLength, blockStart + sectionBlock.length),
+                    segments: this.computeSegmentsFromRange(bundle, blockStart + headerLength, blockStart + sectionBlock.length)
                 }
             ];
         }
@@ -805,10 +1032,51 @@ class ExamReaderApp {
                     confidence: 0.8,
                     rawText: this.toDisplayText(content),
                     sourceLabel: 'auto',
-                    bbox: this.computeBoundsFromRange(bundle, matchStart + prefixLength, matchEnd)
+                    bbox: this.computeBoundsFromRange(bundle, matchStart + prefixLength, matchEnd),
+                    segments: this.computeSegmentsFromRange(bundle, matchStart + prefixLength, matchEnd)
                 };
             })
             .filter((question) => question.prompt);
+    }
+
+    computeSegmentsFromRange(bundle, start, end) {
+        if (!bundle || !bundle.itemRanges?.length || end <= start) {
+            return [];
+        }
+
+        const matchedRanges = bundle.itemRanges.filter((range) => range.end > start && range.start < end);
+        if (!matchedRanges.length) {
+            return [];
+        }
+
+        const seen = new Set();
+        return matchedRanges
+            .map((range) => bundle.orderedItems[range.itemIndex])
+            .filter(Boolean)
+            .map((item) => {
+                const left = Math.max(item.left - 2, 0);
+                const top = Math.max(item.top - 2, 0);
+                const right = Math.min(item.right + 2, bundle.width);
+                const bottom = Math.min(item.bottom + 2, bundle.height);
+                const width = Math.max(right - left, 18);
+                const height = Math.max(bottom - top, 18);
+                const key = `${Math.round(left)}:${Math.round(top)}:${Math.round(width)}:${Math.round(height)}`;
+                if (seen.has(key)) {
+                    return null;
+                }
+                seen.add(key);
+                return {
+                    left,
+                    top,
+                    width,
+                    height,
+                    leftPct: (left / bundle.width) * 100,
+                    topPct: (top / bundle.height) * 100,
+                    widthPct: (width / bundle.width) * 100,
+                    heightPct: (height / bundle.height) * 100
+                };
+            })
+            .filter(Boolean);
     }
 
     computeBoundsFromRange(bundle, start, end) {
@@ -1031,6 +1299,31 @@ class ExamReaderApp {
         this.summaryQuestions.textContent = String(questionCount);
         this.summaryChoice.textContent = String(choiceCount);
         this.summaryWarning.textContent = String(warningCount);
+        this.syncCalibrationWizardButton();
+    }
+
+    getQuestionRegions(question) {
+        if (!question) {
+            return [];
+        }
+
+        return question.segments?.length ? question.segments : question.bbox ? [question.bbox] : [];
+    }
+
+    getOptionRegions(option) {
+        if (!option) {
+            return [];
+        }
+
+        return option.segments?.length ? option.segments : option.bbox ? [option.bbox] : [];
+    }
+
+    getPassageRegions(question) {
+        if (!question) {
+            return [];
+        }
+
+        return question.passageSegments?.length ? question.passageSegments : question.passageBox ? [question.passageBox] : [];
     }
 
     renderPageList() {
@@ -1051,7 +1344,7 @@ class ExamReaderApp {
         this.pageList.innerHTML = this.state.pages
             .map((page) => {
                 const activeClass = page.pageNumber === this.state.selectedPageNumber ? 'active' : '';
-                const clickableCount = this.state.questions.filter((question) => question.pageNumber === page.pageNumber && question.bbox).length;
+                const clickableCount = this.state.questions.filter((question) => question.pageNumber === page.pageNumber && this.getQuestionRegions(question).length).length;
                 return `
                     <button class="reader-page-card ${activeClass}" type="button" data-page-number="${page.pageNumber}">
                         <strong>第 ${page.pageNumber} 頁</strong>
@@ -1090,8 +1383,10 @@ class ExamReaderApp {
             .map((page) => {
                 const pageQuestions = this.state.questions.filter((question) => question.pageNumber === page.pageNumber);
                 const pageHotspots = pageQuestions
-                    .filter((question) => question.bbox)
-                    .map((question) => {
+                    .flatMap((question) =>
+                        this.getQuestionRegions(question).map((region, regionIndex) => ({ question, region, regionIndex }))
+                    )
+                    .map(({ question, region, regionIndex }) => {
                         const classes = [
                             'reader-hotspot',
                             question.id === this.state.selectedQuestionId ? 'active' : '',
@@ -1104,7 +1399,8 @@ class ExamReaderApp {
                                 class="${classes}"
                                 type="button"
                                 data-hotspot-question="${question.id}"
-                                style="left:${question.bbox.leftPct}%;top:${question.bbox.topPct}%;width:${question.bbox.widthPct}%;height:${question.bbox.heightPct}%;"
+                                data-hotspot-region="${regionIndex}"
+                                style="left:${region.leftPct}%;top:${region.topPct}%;width:${region.widthPct}%;height:${region.heightPct}%;"
                                 title="${this.escapeHtml(question.sectionTitle)}${question.number ? ` 第 ${this.escapeHtml(question.number)} 題` : ''}">
                                 <span class="reader-hotspot-label">${this.escapeHtml(question.sectionTitle)}${question.number ? `-${this.escapeHtml(question.number)}` : ''}</span>
                             </button>
@@ -1116,16 +1412,19 @@ class ExamReaderApp {
                     .flatMap((question) =>
                         (question.options || [])
                             .map((option, index) => ({ question, option, index }))
-                            .filter(({ option }) => option.bbox)
+                            .flatMap(({ question, option, index }) =>
+                                this.getOptionRegions(option).map((region, regionIndex) => ({ question, option, index, region, regionIndex }))
+                            )
                     )
                     .map(
-                        ({ question, option, index }) => `
+                        ({ question, option, index, region, regionIndex }) => `
                             <button
                                 class="reader-option-hotspot ${question.id === this.state.selectedQuestionId ? 'active' : ''}"
                                 type="button"
                                 data-hotspot-option="${index}"
                                 data-hotspot-question-ref="${question.id}"
-                                style="left:${option.bbox.leftPct}%;top:${option.bbox.topPct}%;width:${option.bbox.widthPct}%;height:${option.bbox.heightPct}%;"
+                                data-hotspot-region="${regionIndex}"
+                                style="left:${region.leftPct}%;top:${region.topPct}%;width:${region.widthPct}%;height:${region.heightPct}%;"
                                 title="${this.escapeHtml(option.key)} ${this.escapeHtml(option.text)}">
                                 <span class="reader-hotspot-label">${this.escapeHtml(option.key)}</span>
                             </button>
@@ -1133,16 +1432,26 @@ class ExamReaderApp {
                     )
                     .join('');
 
+                const passageKeys = new Set();
                 const passageHotspot = pageQuestions
-                    .filter((question) => question.passageBox && question.passage)
+                    .filter((question) => question.passage && this.getPassageRegions(question).length)
+                    .flatMap((question) => {
+                        const key = `${question.pageNumber}|${question.sectionTitle}|${question.passage}`;
+                        if (passageKeys.has(key)) {
+                            return [];
+                        }
+                        passageKeys.add(key);
+                        return this.getPassageRegions(question).map((region, regionIndex) => ({ question, region, regionIndex }));
+                    })
                     .map(
-                        (question) => `
+                        ({ question, region, regionIndex }) => `
                             <button
                                 class="reader-passage-hotspot ${question.id === this.state.selectedQuestionId ? 'active' : ''}"
                                 type="button"
                                 data-hotspot-passage="1"
                                 data-hotspot-question-ref="${question.id}"
-                                style="left:${question.passageBox.leftPct}%;top:${question.passageBox.topPct}%;width:${question.passageBox.widthPct}%;height:${question.passageBox.heightPct}%;"
+                                data-hotspot-region="${regionIndex}"
+                                style="left:${region.leftPct}%;top:${region.topPct}%;width:${region.widthPct}%;height:${region.heightPct}%;"
                                 title="題組文章">
                                 <span class="reader-hotspot-label">題組文章</span>
                             </button>
@@ -1336,6 +1645,19 @@ class ExamReaderApp {
             `
             : '<p class="reader-muted">此題目前沒有可朗讀的選項。</p>';
 
+        const wizardBanner = this.state.calibrationWizard.active
+            ? `
+                <div class="reader-calibration-hint">
+                    <strong>校正精靈 ${this.getCalibrationWizardProgressText()}</strong>
+                    <div style="margin-top: 6px;">目前目標: ${this.escapeHtml(this.renderCalibrationTargetLabel(question))}</div>
+                    <div style="margin-top: 6px;">請在左側試卷上點兩下，依序框出左上角與右下角。</div>
+                    <div class="reader-detail-actions" style="margin-top: 10px;">
+                        <button id="reader-stop-calibration-wizard" class="btn btn-secondary" type="button">結束精靈</button>
+                    </div>
+                </div>
+            `
+            : '';
+
         this.detailCard.innerHTML = `
             <div class="reader-selected-question-title">
                 <div>
@@ -1351,6 +1673,8 @@ class ExamReaderApp {
                     <button id="reader-speak-options" class="btn btn-outline-primary" type="button" ${question.options.length ? '' : 'disabled'}>朗讀全部選項</button>
                 </div>
             </div>
+
+            ${wizardBanner}
 
             ${this.state.calibration.active ? `
                 <div class="reader-calibration-hint">
@@ -1437,6 +1761,7 @@ class ExamReaderApp {
         const calibrateQuestionBtn = document.getElementById('reader-calibrate-question');
         const calibratePassageBtn = document.getElementById('reader-calibrate-passage');
         const cancelCalibrationBtn = document.getElementById('reader-cancel-calibration');
+        const stopCalibrationWizardBtn = document.getElementById('reader-stop-calibration-wizard');
 
         if (speakQuestionBtn) {
             speakQuestionBtn.addEventListener('click', () => this.speakQuestion(question));
@@ -1458,6 +1783,9 @@ class ExamReaderApp {
         }
         if (cancelCalibrationBtn) {
             cancelCalibrationBtn.addEventListener('click', () => this.cancelCalibration());
+        }
+        if (stopCalibrationWizardBtn) {
+            stopCalibrationWizardBtn.addEventListener('click', () => this.stopCalibrationWizard('已結束校正精靈。'));
         }
 
         this.detailCard.querySelectorAll('[data-option-index]').forEach((button) => {
@@ -1627,7 +1955,19 @@ class ExamReaderApp {
             selectedPageNumber: 1,
             lastAnalysisTitle: '',
             lastSpokenText: '',
-            activeTemplate: 'generic'
+            activeTemplate: 'generic',
+            calibration: {
+                active: false,
+                questionId: null,
+                targetType: null,
+                optionIndex: null,
+                startPoint: null
+            },
+            calibrationWizard: {
+                active: false,
+                queue: [],
+                currentIndex: 0
+            }
         };
 
         if (this.fileInput) {
