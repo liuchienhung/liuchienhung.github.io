@@ -1735,8 +1735,8 @@
                 <span class="service-badge">Service 02</span>
             </div>
             <div class="header-copy">
-                <h1>國小國語試卷報讀</h1>
-                <p>上傳試卷、自動分析、點題朗讀、點選項朗讀</p>
+                <h1>國語試卷靜態報讀輔助工具</h1>
+                <p>上傳試卷、自動分析、保留原卷版面，點題與點選項即可朗讀</p>
             </div>
         </div>
 
@@ -1744,10 +1744,12 @@
             <section class="reader-toolbar">
                 <div class="reader-toolbar-top">
                     <div>
-                        <h3>上傳試卷並建立互動報讀畫面</h3>
+                        <h3>上傳試卷並建立靜態報讀畫面</h3>
                         <p>建議優先上傳可抽文字的 PDF。圖片檔會改走 OCR，辨識結果可能需要人工修正。</p>
                     </div>
                     <div class="reader-speech-actions">
+                        <button id="reader-enable-speech-btn" class="btn" type="button">啟用朗讀</button>
+                        <button id="reader-play-all-btn" class="btn btn-outline-primary" type="button" disabled>整卷朗讀</button>
                         <button id="reader-student-mode-btn" class="btn reader-mode-toggle active" type="button">學生模式</button>
                         <button id="reader-calibration-wizard-btn" class="btn btn-outline-primary" type="button" disabled>上傳後校正精靈</button>
                         <button id="reader-stop-speech" class="btn btn-secondary" type="button">停止朗讀</button>
@@ -1784,6 +1786,12 @@
                             <option value="ocr-force">全部走 OCR</option>
                         </select>
                     </div>
+                    <div class="reader-control-group">
+                        <label for="reader-voice-select">朗讀語音</label>
+                        <select id="reader-voice-select" class="reader-select">
+                            <option value="">自動選擇中文語音</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div id="reader-status" class="reader-status">
@@ -1795,6 +1803,7 @@
                     <div>1. 主畫面就是電子試卷，直接點題目區塊即可報讀題幹。</div>
                     <div>2. 直接點版面上的選項區塊即可報讀該選項，不需要先選題。</div>
                     <div>3. 若系統切題不準，請按「上傳後校正精靈」，依序框選題幹、題組文章與選項。</div>
+                    <div>4. 行動裝置第一次使用請先按「啟用朗讀」；若仍無聲音，請確認裝置未靜音並改用 Safari 或 Chrome。</div>
                 </div>
             </section>
 

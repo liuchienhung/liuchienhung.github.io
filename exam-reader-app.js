@@ -11,6 +11,10 @@ class ExamReaderApp {
             lastAnalysisTitle: '',
             studentMode: true,
             lastSpokenText: '',
+            speechReady: false,
+            speechSupported: false,
+            voices: [],
+            selectedVoiceURI: '',
             activeTemplate: 'generic',
             calibration: {
                 active: false,
@@ -23,6 +27,11 @@ class ExamReaderApp {
                 active: false,
                 queue: [],
                 currentIndex: 0
+            },
+            continuousReading: {
+                active: false,
+                queue: [],
+                index: 0
             }
         };
 
@@ -69,6 +78,8 @@ class ExamReaderApp {
         this.clearBtn = document.getElementById('reader-clear-btn');
         this.exportBtn = document.getElementById('reader-export-json');
         this.stopSpeechBtn = document.getElementById('reader-stop-speech');
+        this.enableSpeechBtn = document.getElementById('reader-enable-speech-btn');
+        this.playAllBtn = document.getElementById('reader-play-all-btn');
         this.studentModeBtn = document.getElementById('reader-student-mode-btn');
         this.calibrationWizardBtn = document.getElementById('reader-calibration-wizard-btn');
         this.repeatLastBtn = document.getElementById('reader-repeat-last');
@@ -78,6 +89,7 @@ class ExamReaderApp {
         this.layoutModeSelect = document.getElementById('reader-layout-mode');
         this.ocrModeSelect = document.getElementById('reader-ocr-mode');
         this.rateInput = document.getElementById('reader-rate-input');
+        this.voiceSelect = document.getElementById('reader-voice-select');
 
         this.statusBox = document.getElementById('reader-status');
         this.statusLog = document.getElementById('reader-status-log');
@@ -122,6 +134,12 @@ class ExamReaderApp {
         if (this.stopSpeechBtn) {
             this.stopSpeechBtn.addEventListener('click', () => this.stopSpeech());
         }
+        if (this.enableSpeechBtn) {
+            this.enableSpeechBtn.addEventListener('click', () => this.enableSpeechPlayback(true));
+        }
+        if (this.playAllBtn) {
+            this.playAllBtn.addEventListener('click', () => this.startContinuousReading());
+        }
         if (this.calibrationWizardBtn) {
             this.calibrationWizardBtn.addEventListener('click', () => {
                 if (this.state.calibrationWizard.active) {
@@ -149,6 +167,11 @@ class ExamReaderApp {
                 this.state.speechRate = Number(this.rateInput.value || 1);
             });
         }
+        if (this.voiceSelect) {
+            this.voiceSelect.addEventListener('change', () => {
+                this.state.selectedVoiceURI = this.voiceSelect.value || '';
+            });
+        }
         if (this.prevPageBtn) {
             this.prevPageBtn.addEventListener('click', () => this.changePage(-1));
         }
@@ -161,6 +184,7 @@ class ExamReaderApp {
         if (this.liveServiceCount) {
             this.liveServiceCount.textContent = '2';
         }
+        this.bootstrapSpeechSupport();
         this.applyStudentMode();
         this.updateStatus('尚未開始分析', '請先選擇 PDF 或圖片檔，再按下「開始分析」。');
         this.renderSummary();
@@ -184,6 +208,116 @@ class ExamReaderApp {
             this.studentModeBtn.classList.toggle('active', this.state.studentMode);
             this.studentModeBtn.textContent = this.state.studentMode ? '學生模式' : '編輯模式';
             this.studentModeBtn.title = this.state.studentMode ? '目前為學生操作版面' : '目前為編輯校正版面';
+        }
+    }
+
+    bootstrapSpeechSupport() {
+        this.state.speechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+        if (!this.state.speechSupported) {
+            this.renderSpeechControls();
+            return;
+        }
+
+        this.loadSpeechVoices();
+        if ('onvoiceschanged' in window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = () => {
+                this.loadSpeechVoices();
+            };
+        }
+
+        window.setTimeout(() => this.loadSpeechVoices(), 300);
+        window.addEventListener('pageshow', () => this.loadSpeechVoices(), { passive: true });
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                this.loadSpeechVoices();
+            }
+        });
+    }
+
+    loadSpeechVoices() {
+        if (!this.state.speechSupported) {
+            return;
+        }
+
+        const voices = window.speechSynthesis.getVoices() || [];
+        this.state.voices = voices;
+
+        if (!this.state.selectedVoiceURI) {
+            const preferredVoice = this.pickPreferredVoice(voices);
+            this.state.selectedVoiceURI = preferredVoice?.voiceURI || '';
+        } else if (!voices.some((voice) => voice.voiceURI === this.state.selectedVoiceURI)) {
+            const fallbackVoice = this.pickPreferredVoice(voices);
+            this.state.selectedVoiceURI = fallbackVoice?.voiceURI || '';
+        }
+
+        this.renderSpeechControls();
+    }
+
+    pickPreferredVoice(voices) {
+        if (!voices?.length) {
+            return null;
+        }
+
+        return (
+            voices.find((voice) => /zh[-_]TW/i.test(voice.lang)) ||
+            voices.find((voice) => /zh[-_]HK/i.test(voice.lang)) ||
+            voices.find((voice) => /zh[-_](CN|SG)/i.test(voice.lang)) ||
+            voices.find((voice) => /^zh/i.test(voice.lang)) ||
+            voices[0]
+        );
+    }
+
+    renderSpeechControls() {
+        if (this.voiceSelect) {
+            const selectedValue = this.state.selectedVoiceURI || '';
+            const options = ['<option value="">自動選擇中文語音</option>']
+                .concat(
+                    (this.state.voices || []).map(
+                        (voice) =>
+                            `<option value="${this.escapeHtml(voice.voiceURI)}" ${voice.voiceURI === selectedValue ? 'selected' : ''}>${this.escapeHtml(voice.name)} (${this.escapeHtml(voice.lang)})</option>`
+                    )
+                )
+                .join('');
+            this.voiceSelect.innerHTML = options;
+            this.voiceSelect.disabled = !this.state.speechSupported;
+        }
+
+        if (this.enableSpeechBtn) {
+            if (!this.state.speechSupported) {
+                this.enableSpeechBtn.disabled = true;
+                this.enableSpeechBtn.textContent = '裝置不支援朗讀';
+            } else {
+                this.enableSpeechBtn.disabled = false;
+                this.enableSpeechBtn.textContent = this.state.speechReady ? '重新啟用朗讀' : '啟用朗讀';
+            }
+        }
+
+        if (this.playAllBtn) {
+            this.playAllBtn.disabled = !this.state.speechSupported || !this.state.questions.length;
+            this.playAllBtn.textContent = this.state.continuousReading.active ? '整卷朗讀中' : '整卷朗讀';
+        }
+    }
+
+    resolveSpeechVoice() {
+        const voices = this.state.voices || [];
+        return voices.find((voice) => voice.voiceURI === this.state.selectedVoiceURI) || this.pickPreferredVoice(voices) || null;
+    }
+
+    enableSpeechPlayback(announce = true) {
+        if (!this.state.speechSupported) {
+            this.updateStatus('無法朗讀', '目前瀏覽器不支援 Speech Synthesis API。');
+            return;
+        }
+
+        this.loadSpeechVoices();
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+        this.state.speechReady = true;
+        this.renderSpeechControls();
+        if (announce) {
+            this.performSpeech('朗讀已啟用，現在可以點題目或選項進行報讀。', {
+                skipStore: true
+            });
         }
     }
 
@@ -1863,7 +1997,8 @@ class ExamReaderApp {
                 return {
                     key: (key || '').trim(),
                     text: rest.join('|').trim(),
-                    bbox: previous[index]?.bbox || null
+                    bbox: previous[index]?.bbox || null,
+                    segments: previous[index]?.segments || []
                 };
             })
             .filter((option) => option.key && option.text);
@@ -1899,28 +2034,184 @@ class ExamReaderApp {
         this.speakText(`${question.number ? `第 ${question.number} 題。` : ''}${text}`);
     }
 
-    speakText(text) {
-        if (!('speechSynthesis' in window)) {
+    buildContinuousReadingQueue() {
+        const questions = [...this.state.questions].sort((left, right) => {
+            if (left.pageNumber !== right.pageNumber) {
+                return left.pageNumber - right.pageNumber;
+            }
+            return Number(left.number || 0) - Number(right.number || 0);
+        });
+
+        const queue = [];
+        const passageKeys = new Set();
+
+        questions.forEach((question) => {
+            if (question.passage) {
+                const passageKey = `${question.pageNumber}|${question.sectionTitle}|${question.passage}`;
+                if (!passageKeys.has(passageKey)) {
+                    passageKeys.add(passageKey);
+                    queue.push(`題組文章。 ${question.passage}`);
+                }
+            }
+
+            const promptParts = [];
+            promptParts.push(`${question.sectionTitle}。`);
+            if (question.number) {
+                promptParts.push(`第 ${question.number} 題。`);
+            }
+            promptParts.push(question.prompt);
+            queue.push(promptParts.join(' '));
+
+            if (question.options?.length) {
+                queue.push(question.options.map((option) => `${option.key}。${option.text}`).join('。 '));
+            }
+        });
+
+        return queue.filter(Boolean);
+    }
+
+    startContinuousReading() {
+        if (!this.state.questions.length) {
+            this.updateStatus('尚無可朗讀內容', '請先完成試卷分析。');
+            return;
+        }
+
+        if (!this.state.speechSupported) {
             this.updateStatus('無法朗讀', '目前瀏覽器不支援 Speech Synthesis API。');
             return;
         }
 
-        this.stopSpeech();
-        this.state.lastSpokenText = text;
-        if (this.studentText) {
+        if (!this.state.speechReady) {
+            this.enableSpeechPlayback(false);
+        }
+
+        const queue = this.buildContinuousReadingQueue();
+        if (!queue.length) {
+            this.updateStatus('尚無可朗讀內容', '目前沒有可供整卷朗讀的題目內容。');
+            return;
+        }
+
+        this.state.continuousReading = {
+            active: true,
+            queue,
+            index: 0
+        };
+        this.renderSpeechControls();
+        this.speakContinuousReadingStep();
+    }
+
+    speakContinuousReadingStep() {
+        const reading = this.state.continuousReading;
+        if (!reading.active) {
+            return;
+        }
+
+        const text = reading.queue[reading.index];
+        if (!text) {
+            this.finishContinuousReading('整卷朗讀完成。');
+            return;
+        }
+
+        this.performSpeech(text, {
+            onend: () => {
+                if (!this.state.continuousReading.active) {
+                    return;
+                }
+                this.state.continuousReading.index += 1;
+                if (this.state.continuousReading.index >= this.state.continuousReading.queue.length) {
+                    this.finishContinuousReading('整卷朗讀完成。');
+                    return;
+                }
+                this.speakContinuousReadingStep();
+            },
+            onerror: () => {
+                this.finishContinuousReading('整卷朗讀中斷，請重新按一次「整卷朗讀」。');
+            }
+        });
+    }
+
+    finishContinuousReading(message) {
+        this.state.continuousReading = {
+            active: false,
+            queue: [],
+            index: 0
+        };
+        this.renderSpeechControls();
+        if (message) {
+            this.updateStatus('整卷朗讀', message);
+        }
+    }
+
+    speakText(text) {
+        if (!this.state.speechSupported) {
+            this.updateStatus('無法朗讀', '目前瀏覽器不支援 Speech Synthesis API。');
+            return;
+        }
+
+        if (!this.state.speechReady) {
+            this.enableSpeechPlayback(false);
+        }
+        this.finishContinuousReading('');
+        this.performSpeech(text);
+    }
+
+    performSpeech(text, options = {}) {
+        const { onstart, onend, onerror, skipStore = false } = options;
+
+        this.stopSpeech({ keepQueue: true });
+        this.loadSpeechVoices();
+        if (!skipStore) {
+            this.state.lastSpokenText = text;
+        }
+        if (!skipStore && this.studentText) {
             this.studentText.textContent = text;
         }
+
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'zh-TW';
         utterance.rate = this.state.speechRate;
-        utterance.onstart = () => this.updateStatus('朗讀中', text);
-        utterance.onend = () => this.updateStatus('朗讀完成', text);
+        utterance.volume = 1;
+        utterance.pitch = 1;
+        const voice = this.resolveSpeechVoice();
+        if (voice) {
+            utterance.voice = voice;
+        }
+        utterance.onstart = () => {
+            this.state.speechReady = true;
+            this.renderSpeechControls();
+            this.updateStatus('朗讀中', text);
+            if (typeof onstart === 'function') {
+                onstart();
+            }
+        };
+        utterance.onend = () => {
+            this.updateStatus('朗讀完成', text);
+            if (typeof onend === 'function') {
+                onend();
+            }
+        };
+        utterance.onerror = (event) => {
+            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                this.state.speechReady = false;
+                this.renderSpeechControls();
+            }
+            this.updateStatus('朗讀失敗', `語音播放失敗: ${event.error || 'unknown'}。請先按「啟用朗讀」，並確認裝置未靜音。`);
+            if (typeof onerror === 'function') {
+                onerror(event);
+            }
+        };
+        window.speechSynthesis.resume();
         window.speechSynthesis.speak(utterance);
     }
 
-    stopSpeech() {
+    stopSpeech(options = {}) {
+        const { keepQueue = false } = options;
+
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
+        }
+        if (!keepQueue) {
+            this.finishContinuousReading('');
         }
     }
 
@@ -1967,6 +2258,11 @@ class ExamReaderApp {
                 active: false,
                 queue: [],
                 currentIndex: 0
+            },
+            continuousReading: {
+                active: false,
+                queue: [],
+                index: 0
             }
         };
 
