@@ -566,12 +566,15 @@ class ExamReaderApp {
             question.bbox = bbox;
             question.promptBox = bbox;
             question.segments = [bbox];
+            question.promptItemIndexes = [];
         } else if (calibration.targetType === 'passage') {
             question.passageBox = bbox;
             question.passageSegments = [bbox];
+            question.passageItemIndexes = [];
         } else if (calibration.targetType === 'option' && calibration.optionIndex != null && question.options[calibration.optionIndex]) {
             question.options[calibration.optionIndex].bbox = bbox;
             question.options[calibration.optionIndex].segments = [bbox];
+            question.options[calibration.optionIndex].itemIndexes = [];
         }
 
         question.confidence = Math.max(question.confidence || 0, 0.98);
@@ -1073,6 +1076,7 @@ class ExamReaderApp {
         const passageText = sectionTitle === '閱讀測驗' ? this.toDisplayText(introBlock) : '';
         const passageBox = passageText ? this.computeBoundsFromRange(bundle, bodyStart, bodyStart + firstQuestionIndex) : null;
         const passageSegments = passageText ? this.computeSegmentsFromRange(bundle, bodyStart, bodyStart + firstQuestionIndex) : [];
+        const passageItemIndexes = passageText ? this.getItemIndexesFromRange(bundle, bodyStart, bodyStart + firstQuestionIndex) : [];
 
         return questionMatches
             .map((match) => {
@@ -1090,12 +1094,14 @@ class ExamReaderApp {
                 const promptRangeEnd = split.options.length ? contentStart + split.options[0].start : matchEnd;
                 const promptBox = this.computeBoundsFromRange(bundle, contentStart, promptRangeEnd);
                 const promptSegments = this.computeSegmentsFromRange(bundle, contentStart, promptRangeEnd);
+                const promptItemIndexes = this.getItemIndexesFromRange(bundle, contentStart, promptRangeEnd);
                 const contentBox = this.computeBoundsFromRange(bundle, contentStart, matchEnd);
                 const options = split.options.map((option) => ({
                     key: option.key,
                     text: this.toDisplayText(option.text),
                     bbox: this.computeBoundsFromRange(bundle, contentStart + option.start, contentStart + option.end),
-                    segments: this.computeSegmentsFromRange(bundle, contentStart + option.start, contentStart + option.end)
+                    segments: this.computeSegmentsFromRange(bundle, contentStart + option.start, contentStart + option.end),
+                    itemIndexes: this.getItemIndexesFromRange(bundle, contentStart + option.start, contentStart + option.end)
                 }));
 
                 return {
@@ -1111,10 +1117,12 @@ class ExamReaderApp {
                     passage: passageText,
                     bbox: promptBox || contentBox,
                     segments: promptSegments,
+                    promptItemIndexes,
                     promptBox,
                     contentBox,
                     passageBox,
-                    passageSegments
+                    passageSegments,
+                    passageItemIndexes
                 };
             })
             .filter((question) => question.prompt);
@@ -1136,7 +1144,8 @@ class ExamReaderApp {
                     rawText: this.toDisplayText(bodyBlock),
                     sourceLabel: 'auto',
                     bbox: this.computeBoundsFromRange(bundle, blockStart + headerLength, blockStart + sectionBlock.length),
-                    segments: this.computeSegmentsFromRange(bundle, blockStart + headerLength, blockStart + sectionBlock.length)
+                    segments: this.computeSegmentsFromRange(bundle, blockStart + headerLength, blockStart + sectionBlock.length),
+                    promptItemIndexes: this.getItemIndexesFromRange(bundle, blockStart + headerLength, blockStart + sectionBlock.length)
                 }
             ];
         }
@@ -1167,10 +1176,24 @@ class ExamReaderApp {
                     rawText: this.toDisplayText(content),
                     sourceLabel: 'auto',
                     bbox: this.computeBoundsFromRange(bundle, matchStart + prefixLength, matchEnd),
-                    segments: this.computeSegmentsFromRange(bundle, matchStart + prefixLength, matchEnd)
+                    segments: this.computeSegmentsFromRange(bundle, matchStart + prefixLength, matchEnd),
+                    promptItemIndexes: this.getItemIndexesFromRange(bundle, matchStart + prefixLength, matchEnd)
                 };
             })
             .filter((question) => question.prompt);
+    }
+
+    getItemIndexesFromRange(bundle, start, end) {
+        if (!bundle || !bundle.itemRanges?.length || end <= start) {
+            return [];
+        }
+
+        return [...new Set(
+            bundle.itemRanges
+                .filter((range) => range.end > start && range.start < end)
+                .map((range) => range.itemIndex)
+                .filter((itemIndex) => Number.isInteger(itemIndex))
+        )];
     }
 
     computeSegmentsFromRange(bundle, start, end) {
@@ -1460,6 +1483,95 @@ class ExamReaderApp {
         return question.passageSegments?.length ? question.passageSegments : question.passageBox ? [question.passageBox] : [];
     }
 
+    hasPreciseTextLayer(page) {
+        return Boolean(page?.textBundle?.orderedItems?.length) && page.extractionMethod !== 'ocr';
+    }
+
+    buildTextItemActionMap(pageQuestions, bundle) {
+        const actionMap = new Map();
+        const assign = (itemIndexes, action) => {
+            (itemIndexes || []).forEach((itemIndex) => {
+                if (!Number.isInteger(itemIndex)) {
+                    return;
+                }
+
+                const existing = actionMap.get(itemIndex);
+                if (!existing || existing.priority <= action.priority) {
+                    actionMap.set(itemIndex, action);
+                }
+            });
+        };
+
+        const passageKeys = new Set();
+        pageQuestions.forEach((question) => {
+            const passageKey = `${question.pageNumber}|${question.sectionTitle}|${question.passage || ''}`;
+            if (question.passage && question.passageItemIndexes?.length && !passageKeys.has(passageKey)) {
+                passageKeys.add(passageKey);
+                assign(question.passageItemIndexes, {
+                    priority: 1,
+                    kind: 'passage',
+                    questionId: question.id
+                });
+            }
+
+            if (question.promptItemIndexes?.length) {
+                assign(question.promptItemIndexes, {
+                    priority: 2,
+                    kind: 'question',
+                    questionId: question.id
+                });
+            }
+
+            (question.options || []).forEach((option, optionIndex) => {
+                if (option.itemIndexes?.length) {
+                    assign(option.itemIndexes, {
+                        priority: 3,
+                        kind: 'option',
+                        questionId: question.id,
+                        optionIndex
+                    });
+                }
+            });
+        });
+
+        return (bundle?.orderedItems || [])
+            .map((item, itemIndex) => ({ item, itemIndex, action: actionMap.get(itemIndex) || null }))
+            .filter(({ action }) => Boolean(action));
+    }
+
+    renderTextLayerHotspots(pageQuestions, page) {
+        if (!this.hasPreciseTextLayer(page)) {
+            return '';
+        }
+
+        const mappedItems = this.buildTextItemActionMap(pageQuestions, page.textBundle);
+        return mappedItems
+            .map(({ item, itemIndex, action }) => {
+                const actionClass =
+                    action.kind === 'option'
+                        ? 'reader-text-item-hotspot option'
+                        : action.kind === 'passage'
+                            ? 'reader-text-item-hotspot passage'
+                            : 'reader-text-item-hotspot question';
+
+                return `
+                    <button
+                        class="${actionClass}"
+                        type="button"
+                        data-text-item-kind="${action.kind}"
+                        data-text-item-index="${itemIndex}"
+                        data-hotspot-question-ref="${action.questionId}"
+                        ${action.kind === 'option' ? `data-hotspot-option="${action.optionIndex}"` : ''}
+                        ${action.kind === 'passage' ? 'data-hotspot-passage="1"' : ''}
+                        ${action.kind === 'question' ? `data-hotspot-question="${action.questionId}"` : ''}
+                        style="left:${(item.left / page.textBundle.width) * 100}%;top:${(item.top / page.textBundle.height) * 100}%;width:${(item.width / page.textBundle.width) * 100}%;height:${(item.height / page.textBundle.height) * 100}%;"
+                        title="${this.escapeHtml(item.text)}">
+                    </button>
+                `;
+            })
+            .join('');
+    }
+
     renderPageList() {
         if (!this.pageList) {
             return;
@@ -1516,82 +1628,92 @@ class ExamReaderApp {
         const pageMarkup = this.state.pages
             .map((page) => {
                 const pageQuestions = this.state.questions.filter((question) => question.pageNumber === page.pageNumber);
-                const pageHotspots = pageQuestions
-                    .flatMap((question) =>
-                        this.getQuestionRegions(question).map((region, regionIndex) => ({ question, region, regionIndex }))
-                    )
-                    .map(({ question, region, regionIndex }) => {
-                        const classes = [
-                            'reader-hotspot',
-                            question.id === this.state.selectedQuestionId ? 'active' : '',
-                            question.confidence < 0.7 ? 'warning' : ''
-                        ]
-                            .filter(Boolean)
-                            .join(' ');
-                        return `
-                            <button
-                                class="${classes}"
-                                type="button"
-                                data-hotspot-question="${question.id}"
-                                data-hotspot-region="${regionIndex}"
-                                style="left:${region.leftPct}%;top:${region.topPct}%;width:${region.widthPct}%;height:${region.heightPct}%;"
-                                title="${this.escapeHtml(question.sectionTitle)}${question.number ? ` 第 ${this.escapeHtml(question.number)} 題` : ''}">
-                                <span class="reader-hotspot-label">${this.escapeHtml(question.sectionTitle)}${question.number ? `-${this.escapeHtml(question.number)}` : ''}</span>
-                            </button>
-                        `;
-                    })
-                    .join('');
+                const usePreciseTextLayer = this.hasPreciseTextLayer(page);
+                const preciseTextHotspots = usePreciseTextLayer ? this.renderTextLayerHotspots(pageQuestions, page) : '';
+                const pageHotspots = usePreciseTextLayer
+                    ? ''
+                    : pageQuestions
+                        .flatMap((question) =>
+                            this.getQuestionRegions(question).map((region, regionIndex) => ({ question, region, regionIndex }))
+                        )
+                        .map(({ question, region, regionIndex }) => {
+                            const classes = [
+                                'reader-hotspot',
+                                question.id === this.state.selectedQuestionId ? 'active' : '',
+                                question.confidence < 0.7 ? 'warning' : ''
+                            ]
+                                .filter(Boolean)
+                                .join(' ');
+                            return `
+                                <button
+                                    class="${classes}"
+                                    type="button"
+                                    data-hotspot-question="${question.id}"
+                                    data-hotspot-region="${regionIndex}"
+                                    style="left:${region.leftPct}%;top:${region.topPct}%;width:${region.widthPct}%;height:${region.heightPct}%;"
+                                    title="${this.escapeHtml(question.sectionTitle)}${question.number ? ` 第 ${this.escapeHtml(question.number)} 題` : ''}">
+                                    <span class="reader-hotspot-label">${this.escapeHtml(question.sectionTitle)}${question.number ? `-${this.escapeHtml(question.number)}` : ''}</span>
+                                </button>
+                            `;
+                        })
+                        .join('');
 
-                const optionHotspots = pageQuestions
-                    .flatMap((question) =>
-                        (question.options || [])
-                            .map((option, index) => ({ question, option, index }))
-                            .flatMap(({ question, option, index }) =>
-                                this.getOptionRegions(option).map((region, regionIndex) => ({ question, option, index, region, regionIndex }))
+                const optionHotspots = usePreciseTextLayer
+                    ? ''
+                    : pageQuestions
+                        .flatMap((question) =>
+                            (question.options || [])
+                                .map((option, index) => ({ question, option, index }))
+                                .flatMap(({ question, option, index }) =>
+                                    this.getOptionRegions(option).map((region, regionIndex) => ({ question, option, index, region, regionIndex }))
+                                )
+                        )
+                        .map(
+                            ({ question, option, index, region, regionIndex }) => `
+                                <button
+                                    class="reader-option-hotspot ${question.id === this.state.selectedQuestionId ? 'active' : ''}"
+                                    type="button"
+                                    data-hotspot-option="${index}"
+                                    data-hotspot-question-ref="${question.id}"
+                                    data-hotspot-region="${regionIndex}"
+                                    style="left:${region.leftPct}%;top:${region.topPct}%;width:${region.widthPct}%;height:${region.heightPct}%;"
+                                    title="${this.escapeHtml(option.key)} ${this.escapeHtml(option.text)}">
+                                    <span class="reader-hotspot-label">${this.escapeHtml(option.key)}</span>
+                                </button>
+                            `
+                        )
+                        .join('');
+
+                const passageHotspot = usePreciseTextLayer
+                    ? ''
+                    : (() => {
+                        const passageKeys = new Set();
+                        return pageQuestions
+                            .filter((question) => question.passage && this.getPassageRegions(question).length)
+                            .flatMap((question) => {
+                                const key = `${question.pageNumber}|${question.sectionTitle}|${question.passage}`;
+                                if (passageKeys.has(key)) {
+                                    return [];
+                                }
+                                passageKeys.add(key);
+                                return this.getPassageRegions(question).map((region, regionIndex) => ({ question, region, regionIndex }));
+                            })
+                            .map(
+                                ({ question, region, regionIndex }) => `
+                                    <button
+                                        class="reader-passage-hotspot ${question.id === this.state.selectedQuestionId ? 'active' : ''}"
+                                        type="button"
+                                        data-hotspot-passage="1"
+                                        data-hotspot-question-ref="${question.id}"
+                                        data-hotspot-region="${regionIndex}"
+                                        style="left:${region.leftPct}%;top:${region.topPct}%;width:${region.widthPct}%;height:${region.heightPct}%;"
+                                        title="題組文章">
+                                        <span class="reader-hotspot-label">題組文章</span>
+                                    </button>
+                                `
                             )
-                    )
-                    .map(
-                        ({ question, option, index, region, regionIndex }) => `
-                            <button
-                                class="reader-option-hotspot ${question.id === this.state.selectedQuestionId ? 'active' : ''}"
-                                type="button"
-                                data-hotspot-option="${index}"
-                                data-hotspot-question-ref="${question.id}"
-                                data-hotspot-region="${regionIndex}"
-                                style="left:${region.leftPct}%;top:${region.topPct}%;width:${region.widthPct}%;height:${region.heightPct}%;"
-                                title="${this.escapeHtml(option.key)} ${this.escapeHtml(option.text)}">
-                                <span class="reader-hotspot-label">${this.escapeHtml(option.key)}</span>
-                            </button>
-                        `
-                    )
-                    .join('');
-
-                const passageKeys = new Set();
-                const passageHotspot = pageQuestions
-                    .filter((question) => question.passage && this.getPassageRegions(question).length)
-                    .flatMap((question) => {
-                        const key = `${question.pageNumber}|${question.sectionTitle}|${question.passage}`;
-                        if (passageKeys.has(key)) {
-                            return [];
-                        }
-                        passageKeys.add(key);
-                        return this.getPassageRegions(question).map((region, regionIndex) => ({ question, region, regionIndex }));
-                    })
-                    .map(
-                        ({ question, region, regionIndex }) => `
-                            <button
-                                class="reader-passage-hotspot ${question.id === this.state.selectedQuestionId ? 'active' : ''}"
-                                type="button"
-                                data-hotspot-passage="1"
-                                data-hotspot-question-ref="${question.id}"
-                                data-hotspot-region="${regionIndex}"
-                                style="left:${region.leftPct}%;top:${region.topPct}%;width:${region.widthPct}%;height:${region.heightPct}%;"
-                                title="題組文章">
-                                <span class="reader-hotspot-label">題組文章</span>
-                            </button>
-                        `
-                    )
-                    .join('');
+                            .join('');
+                    })();
 
                 const pageActiveClass = page.pageNumber === this.state.selectedPageNumber ? 'active' : '';
                 const calibrationBox =
@@ -1612,6 +1734,7 @@ class ExamReaderApp {
                         <div class="reader-page-stage">
                             <img src="${page.imageSrc}" alt="第 ${page.pageNumber} 頁預覽">
                             <div class="reader-overlay-layer">
+                                ${preciseTextHotspots}
                                 ${pageHotspots}
                                 ${passageHotspot}
                                 ${optionHotspots}
@@ -1623,7 +1746,10 @@ class ExamReaderApp {
             })
             .join('');
 
-        this.previewMeta.textContent = `共 ${this.state.pages.length} 頁，保留原始 PDF 版面，點頁面上的題目或選項即可朗讀。`;
+        const precisePageCount = this.state.pages.filter((page) => this.hasPreciseTextLayer(page)).length;
+        this.previewMeta.textContent = precisePageCount
+            ? `共 ${this.state.pages.length} 頁，其中 ${precisePageCount} 頁使用 PDF 文字層精準點讀。`
+            : `共 ${this.state.pages.length} 頁，保留原始 PDF 版面，點頁面上的題目或選項即可朗讀。`;
         this.pageCanvasWrap.innerHTML = `<div class="reader-document-stack">${pageMarkup}</div>`;
 
         this.pageCanvasWrap.querySelectorAll('[data-hotspot-question]').forEach((button) => {
