@@ -1,0 +1,218 @@
+<!doctype html>
+<html>
+	<head>
+		<title></title>
+
+<!-- meta -->
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+		<meta name="msapplication-config" content="none">
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- css -->
+		<link href="css/bootstrap3.css" type="text/css" rel="stylesheet">
+		<link href="css/font-awesome.min.css" type="text/css" rel="stylesheet">
+		<link href="css/themify-icons.css" type="text/css" rel="stylesheet">
+		<link href="css/fsfont.css" type="text/css" rel="stylesheet">
+		<link href="css/shCore.css" type="text/css" rel="stylesheet">
+		<link href="css/shCoreDefault.css" type="text/css" rel="stylesheet">
+		<link href="css/player.css" type="text/css" rel="stylesheet">
+		<link href="css/quiz.css" type="text/css" rel="stylesheet">
+		<link href="css/index.css" type="text/css" rel="stylesheet">
+		<link href="css/style_rwd.css" type="text/css" rel="stylesheet">
+		<link href="css/kmmedia.css" type="text/css" rel="stylesheet">
+		<link href="css/kmvideo.css" type="text/css" rel="stylesheet">
+
+    </head>
+
+	<body>
+		<div id="page">
+			<div id="page-kmvideo-root">
+				<div id="page-main">
+
+					<!-- 灰色底的區域 -->
+					<div id="playerFrame" class="clearfix">
+						<div id="player-container" class="container box-centered clearfix">
+							<div class="row">
+
+								<!-- side frame -->
+								<div id="sideFrame" class="pull-right hide clearfix">
+									<div id="side-container" class="clearfix">
+										<div id="indexBox" class="side-box" role="index">
+											<div id="indexBox-front" class="clearfix" role="placeable">
+											</div>
+											<div id="indexBox-inline" class="clearfix">
+												<div class="module mod_tabs mod_tabs-show ">
+													<div class="fs-tab">
+														<div id="" class="fs-nav">
+															<ul class="nav nav-pills ">
+																<li class="  ">
+																	<a href="#index-tabs-index" data-toggle="tab">
+																		<span class="text ">索引</span>
+																	</a>
+																</li>
+															</ul>
+														</div>
+														<div class="tab-content">
+															<div id="index-tabs-index" class="tab-pane ">
+																<div id="" class="module mod_media mod_media-index">
+																	<div class="indexBox">
+																		<ul></ul>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+											<div id="indexBox-rear" class="clearfix" role="placeable">
+											</div>
+										</div>
+										<div class="side-close">
+											<div class="side-close-container">
+												<i class="line-1"></i>
+												<i class="line-2"></i>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<div id="videoFrame" class="col-md-8 clearfix"> 
+									<div id="video-container"> 
+										<!-- put videoBox here -->
+										<div id="videoBox-front" class="clearfix" role="placeable">
+										</div>
+										<div id="videoBox-inline" class="clearfix">
+											<div class="module mod_media mod_media-player ">
+
+												<div id="videoBox" class="box-centered">
+													<div id="mediaBox">
+														<div id="fsPlayer" class="fs-player" tabindex="1">
+														</div>
+													</div>
+												</div>
+											</div>
+											<div class="module mod_exam mod_exam-quiz ">
+											</div>
+										</div>
+										<div id="videoBox-rear" class="clearfix" role="placeable">
+										</div>
+									</div>
+								</div>
+
+								<div id="infoindexFrame" class="col-md-4 clearfix">
+									<div id="infoindex-container" class="clearfix">
+										<div id="infoindexBox-front" class="clearfix" role="placeable">
+										</div>
+										<div id="infoindexBox-inline" class="clearfix">
+											<div id="authorBox" class="clearfix">
+												<img src="" alt="author image" class="author-img">
+											</div>
+											<div class="module mod_media mod_media-index ">
+												<div class="indexBox ">
+													<ul></ul>
+												</div>
+											</div>
+										</div>
+										<div id="infoindexBox-rear" class="clearfix" role="placeable">
+										</div>
+									</div>
+								</div>
+
+							</div>
+						</div>
+					</div>
+
+					<!-- control bar -->
+					<div id="ctrlFrame">
+						<div id="ctrl-container" class="container box-centered clearfix">
+							<div id="controlBox-front" class="clearfix" role="placeable">
+							</div>
+							<div id="controlBox-inline" class="clearfix">
+								<div class="module mod_media mod_media-mediaControl ">
+									<div id="controlPanel">
+										<ul class="btn-list">
+											<li role="index" class="control-btn side-control noselect">Index</li>
+											<li role="fullscreen" class="control-btn noselect">Fullscreen</li>
+										</ul>
+									</div>
+								</div>
+								<div class="module mod_media mod_media-title ">
+									<div id="titlePanel">
+										<div class="title text-overflow"></div>
+										<div class="fs-hint"></div>
+									</div>
+								</div>
+							</div>
+							<div id="controlBox-rear" class="clearfix" role="placeable">
+							</div>
+						</div>
+					</div>
+
+				</div>
+				<div id="page-footer">
+					<div class="container">
+						<div class="row">
+							<div class="col-xs-12">
+								<div class="fs-html fs-hint">
+									<div class="">
+										<div style="text-align:center;">
+											<div>© Copyright since 2003 by FormosaSoft Corporation.</div>
+											<div>All rights reserved.</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+
+
+
+<!-- js dependency -->
+		<script src="js/jquery.js" type="text/javascript"> </script>
+		<script src="js/bootstrap3.js" type="text/javascript"> </script>
+		<script src="js/bootbox4.js" type="text/javascript"> </script>
+		<script src="js/lib_rwd.js" type="text/javascript"> </script>
+		<script src="js/md5.js" type="text/javascript"> </script>
+		<script src="js/jquery-ui.js" type="text/javascript"> </script>
+		<script src="js/UAParser.js" type="text/javascript"> </script>
+		<script src="js/jquery.tmpl.min.js" type="text/javascript"> </script>
+		<script src="js/syntaxhighlight/xregexp-min.js" type="text/javascript"> </script>
+		<script src="js/syntaxhighlight/shCore.js" type="text/javascript"> </script>
+		<script src="js/syntaxhighlight/shAutoloader.js" type="text/javascript"> </script>
+		<script src="js/page-inline.js" type="text/javascript"> </script>
+		<script src="js/flash_detect.js" type="text/javascript"> </script>
+		<script src="js/lib.video.js" type="text/javascript"> </script>
+		<script src="js/seeker.js" type="text/javascript"> </script>
+		<script src="js/jquery.jqplayer.js" type="text/javascript"> </script>
+		<script src="js/excanvas.compiled.js" type="text/javascript"> </script>
+		<script src="js/Fabric.js" type="text/javascript"> </script>
+		<script src="js/player.min.js" type="text/javascript"> </script>
+		<script src="js/kmvideo.js" type="text/javascript"> </script>
+		<script src="js/index.js" type="text/javascript"> </script>
+		<script src="js/ques.js" type="text/javascript"> </script>
+		<script src="js/ques_selection.js" type="text/javascript"> </script>
+		<!--[if lt IE 9]>
+			<script src="/sys/js/html5shiv.js"> </script>
+			<script src="/sys/js/es5-shim.min.js"> </script>
+			<script src="/sys/js/es5-sham.min.js"> </script>
+			<script src="/sys/js/json2.js"> </script>
+	    	<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"> </script>
+		<![endif]-->
+
+<!-- data -->
+		<script src="config.js" type="text/javascript"> </script>
+		<script src="config_quiz.js" type="text/javascript"> </script>
+
+
+<!-- init js -->
+		<script src="js/init.js" type="text/javascript"> </script>
+	</body>
+</html>
+<!-- EverCam 9.0.230807 --!>

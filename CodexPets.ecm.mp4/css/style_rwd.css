@@ -1,0 +1,1849 @@
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif, "Microsoft JhengHei"
+}
+
+
+/* override bootstrap a:hover underline，為了解決 #66290 */
+a:hover, a:focus {
+    color: #009;
+    text-decoration: none;
+}
+
+.navbar {
+    margin-bottom: 0px;  /* override bootstrap css，為了解決 margin-top: -20px 的可能的副作用，如動畫 */
+}
+
+.thumbnail {
+    padding: 0px;
+    border-radius: 0px;
+}
+
+/* #68662: 上傳檔案 ~ 上傳媒體後點擊「放大」，媒體資訊跑版 */
+.modal-uploader .info {
+    margin-top: 0;
+    margin-bottom: 10px;
+    padding: 0;
+}
+
+/* 避免 form label 和 control 之間的間距太大 */
+.form-group       { margin-bottom: 20px; }  /* bootstrap 15px */
+.radio, .checkbox { margin-top: 0px; }
+
+
+
+
+img { /* 修正手機圖片超出的問題 #66455 */
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+
+/* 讓 hover 更明顯 */
+.dropdown-menu > li > a:hover {
+    color: #000;
+    background-color: #ffc;
+}
+
+/* 區隔 upload 和 submit #70117 */
+.fs-btn-default {
+    background-color: #ddd;
+    border: 1px solid #aaa;
+}
+
+
+.text-overflow {overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+
+.fs-normal  {font-size:14px;}
+.fs-small   {font-size:12px;}
+.fs-hint    {font-size:12px; font-weight:normal; color:#888; word-break: break-all;}
+.btn-primary .fs-hint {color: #ccc;}
+
+
+.fs-border-dashed { border:1px dashed #ccc; }
+.fs-border        {border:1px solid #ccc;}
+.fs-border-none   {border:0px !important}
+.fs-border-shadow {
+    border:1px solid #ccc;
+    box-shadow: 0 0 4px rgba(0, 120, 255, .5);
+    margin-top: 4px;    /* space for the shadow from the top element */
+    margin-right: 4px;  /* avoid box shadow being hidden by overflow-hidden */
+    margin-left: 4px;   /* avoid box shadow being hidden by left alignment */
+}
+
+@media (min-width:768px) {
+    .fs-width-xs {width:200px;}
+    .fs-width-sm {width:300px;}
+    .fs-width-md {width:500px;}
+}
+
+
+.inline-block {display: inline-block;}
+
+.fs-text-center {text-align:center;}
+.fs-text-nowrap {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.fs-text-bold { font-weight: bold; }
+
+
+/* 避免放在 <a> 中顏色改變(#66958) */
+.fs-iconfont {color:#555;}
+
+.fs-starSign {color: #ffa71c;}
+
+.fs-marker   {color:#f00; background:rgb(255,255,150)}
+
+
+@media (max-width:991px) {
+    .desktop-only {
+        display: none !important;
+    }
+}
+@media (min-width:992px) {
+    .mobile-only {
+        display: none !important;
+    }
+}
+
+
+
+/* === fmc start === */
+
+.fmc-color input {
+    width: 6em !important;
+}
+.fmc-color .preview {
+    display: inline-block;
+    vertical-align: middle;
+    width:20px; height:20px;
+    margin-left: 5px;
+}
+
+
+/* bootstrap 只有在 fonm-inline 且 <768px 才會這樣設定，但因為我們有 prefix / suffix / aux，所以一律 override */
+.form-control {display: inline-block;}
+
+
+.fs-form-hidden {margin-bottom:0px}
+
+.fs-form-control .fs-hint {margin-top: 5px;}
+.form-control.horizontal-control {width:90%;}
+.input-group.horizontal-control {width:90%;}
+
+/* date-range & time-range*/
+.fs-form-control .fs-required {margin:0 5px; color:#f00; font-size:12px; font-weight:normal}
+.fs-form-control .fs-tilde {margin: 0 0;}
+
+/* date-time */
+.fs-form-date-time {width:225px;}
+.fs-form-date-time .fs-date {text-align: center;}
+.fs-form-date-time .fs-time {width:72px; text-align: center;}
+
+/* form buttons */
+.fs-form-buttons {margin-top:30px;}
+
+/* form checkboxes */
+.fs-form-checkbox {margin-right:10px;}
+
+/* fieldset */
+.fs-form-fieldset-title {cursor:pointer; padding: 5px; margin-bottom:15px; color:#06f; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.fs-form-fieldset-title-icon{margin-right:5px; color:black;}
+
+.fs-form-fieldset-collapse > .fs-form-fieldset-title {border-bottom: 1px dashed #ccc;}
+.fs-form-fieldset-collapse > .fs-form-fieldset-title:hover {background: #eee;}
+.fs-form-fieldset-collapse > .fs-form-fieldset-title:before {font: normal normal normal 14px/1 FontAwesome; content: "\f0d7"; color: black; margin-right: 5px;}
+.fs-form-fieldset-collapse > .fs-form-fieldset-title > .fs-hint {display: inline; margin-left:5px;}
+.fs-form-fieldset-collapse > .fs-form-fieldset-content {display: none;}
+
+.fs-form-fieldset-collapse.expand > .fs-form-fieldset-title {border-bottom: 1px solid #ccc;}
+.fs-form-fieldset-collapse.expand > .fs-form-fieldset-title:hover {background: #eee;}
+.fs-form-fieldset-collapse.expand > .fs-form-fieldset-title:before {font: normal normal normal 14px/1 FontAwesome; content: "\f0d8"; color: black; margin-right: 5px;}
+.fs-form-fieldset-collapse.expand > .fs-form-fieldset-title > .fs-hint {display: none;}
+.fs-form-fieldset-collapse.expand > .fs-form-fieldset-content {display: block;}
+
+/*form input underline*/
+.form-control.underline {
+	border: 0;
+	box-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+	border-radius: 0px;
+	border-bottom: 3px solid #ccc;
+	transition: all .15s ease-in-out;
+}
+
+.form-control.underline:focus {
+	box-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+	border-bottom: 3px solid #66AFE9;
+}
+
+.has-error .form-control.underline {
+	border: 0;
+	border-bottom: 3px solid #a94442;
+	box-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+}
+
+.has-error .form-control.underline:focus {
+	box-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+}
+
+.fs-form-message {
+    background-color: #ffe7e7;
+    padding:10px 0px;
+    margin-bottom:10px;
+    text-align: center;
+    color: #f00;
+}
+
+
+/*fmc::RADIO */
+.radio .fs-html {
+	display: inline-block;
+}
+
+/*fmc::FILE style=>image*/
+.fs-form-image {
+    position: relative;
+    overflow: hidden;
+    max-height: 100%;
+    max-width: 100%;
+}
+.fs-form-image .js-file-file {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    bottom: 0;
+    opacity: 0;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+    cursor: pointer;
+    height: 100%;
+}
+.fs-form-image .delete {
+    position: absolute;
+    cursor:pointer;
+    right: 5px;
+    top: 5px;
+    z-index: 5;
+}
+
+/* form captcha */
+.fs-form-captcha .fs-form-captcha-field { width: 100px;  display: inline;}
+
+/* === fmc end === */
+
+
+
+/* ==== uic start === */
+
+/* template */
+.page-margin-top {margin-top: 20px;}
+
+.colorpicker {
+    z-index: 1100; /* must be higher than modal */
+}
+/* 從頁面的上到下，左到右排列 */
+
+
+
+/* uic::mobile_navbar() */
+.navbar-toggle {
+    margin-right: 0px;
+}
+
+.fs-mobile-sysmenu {
+    background: #fff;
+}
+.navbar-inverse .navbar-toggle .icon-dot {
+    background-color: #ffffff;
+}
+.navbar-toggle .icon-dot + .icon-dot {
+    margin-top: 2px;
+}
+.navbar-toggle .icon-dot {
+    display: block;
+    width: 3px;
+    height: 3px;
+    border-radius: 1px;
+}
+
+.fs-navbar-title {
+    float: none;
+}
+.fs-navbar-title a {
+    color: #dddddd;
+}
+/* mobile_navbar collapsed ext info */
+#navbar_ext .well {
+    background-color: #fff;
+    border: none;
+    border-bottom: 1px solid #bbb;
+    border-radius: 0px;
+
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+}
+
+#navbar_ext .breadcrumb {
+    margin-bottom: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    display:block !important;
+}
+
+#nav-collapse-title {
+    font-weight: bold;
+}
+
+
+
+
+/* vw::banner() */
+.fs-banner {
+    background: #177;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+
+/* vw::sitebar() */
+.fs-sitebar {
+    background-color: #f8f8f8;
+    border-bottom: 1px solid #e7e7e7;
+}
+
+.fs-sitebar .fs-nav {margin-bottom: 0px;}
+.fs-sitebar .navbar-toggle {border:0px;}  /* remove bootstrap border */
+
+#page-main {margin-top: 20px;}
+
+/* #68987：試圖解決 dropdown 放在 sly 裡面會被截掉的問題，讓 dropdown 能在 sly 中使用 */
+#page-sly { /* 先用換名的方式保留設定 */
+    overflow-x: hidden;     /* cut overflowed part of sly (originally made by sly-frame) */
+    padding-bottom: 100px;  /* 在 page 的最底下加 padding，預防在頁面最下方的 dropdown 或其他 absolute-positio 物件超出 page */
+    overflow-y: auto;       /* 若有物件不小心超過 page 的邊界 (包含上述的 apdding-bottom)，讓 page 出現垂直卷軸 */
+}
+
+.fs-sitebar .fs-nav.sly-frame {
+    /* 拿掉 sly-frame overflow-hidden rule */
+    overflow: initial !important;
+}
+#page-banner {
+    /* #page-banner z-index should be higher than #page-main so that sitebar's dropdown won't be overlapped by #page-main */
+    position: relative;
+    z-index: 1;
+}
+/* end of solution to sly-dropdown problem */
+
+/* uic::nav()，水平選單的基礎 */
+.fs-nav {
+    margin-bottom: 20px;
+}
+
+/* only apply the first level link */
+.fs-nav > ul > li > a {
+    border-bottom:3px solid #f8f8f8;
+    border-radius: 0px;
+    transition: all .2s ease-in-out;
+}
+
+.fs-nav > ul > li:hover > a {border-color:#0ac;}
+.fs-nav > ul > li.active > a,
+.fs-nav > ul > li.active > a:focus {border-color:#f66; background-color: transparent; color: #555;}
+.fs-nav > ul > li.active:hover > a {background-color: #eeeeee; color: #555;}
+
+/* dropdown 的次選單展開樣式，套用 bootstrap 原本的 dropdown-menu */
+.fs-nav .dropdown-menu li a {
+    display: block;
+    padding: 3px 20px;
+    clear: both;
+    font-weight: normal;
+    line-height: 1.42857143;
+    color: #333333;
+    white-space: nowrap;
+}
+
+.fs-nav.tab-style {
+    border-bottom: 1px solid #EEE;
+}
+
+/* sly nav */
+.fs-nav.sly-frame {
+    overflow: hidden;
+    width: 100%;
+    padding: 0px;
+}
+
+.fs-nav.sly-frame .slidee {
+    margin: 0px;
+    width: 9999px; /* avoid jumping layout during initiating sly */
+}
+
+
+/* uic::tab() */
+.fs-tab {
+
+}
+.fs-tab > .fs-nav {
+    margin-bottom: 0px; /* remove fs-nav margin bottom */
+}
+.fs-tab .tab-content {
+    padding: 10px 0px;
+    border-top: 1px solid #EEE;
+}
+
+
+/* align banner text middle */
+.fs-banner-wrap {
+    height: 90px;
+    display: table;
+}
+.fs-banner-title {
+    font-size:30px;  /* boostrap <h2> size */
+    color: #fff;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.fs-banner-title a {
+    color: inherit;
+}
+
+
+/* sidebar, main */
+.fs-sidebar, .fs-content {
+    background: #fff;
+    margin-bottom:20px;
+}
+.fs-sidebar { padding: 10px; }
+
+
+@media (min-width: 992px) {
+    .fs-sidebar, .fs-content {
+        border: 1px solid #ddd;
+    }
+
+    .fs-content { padding: 10px 20px; }
+}
+
+
+
+/* breadcrumb */
+.breadcrumb {background-color: transparent;}
+
+
+/* uic::pageHeader() */
+.fs-page-header {
+    margin-bottom: 20px;
+}
+.fs-page-header > h2 {
+    margin-top: 0;  /* 預設每個元件會有 margin-bottom*/
+    padding-bottom: 10px;
+    border-bottom: 1px solid #bbb;
+}
+.fs-page-header > h2 .title     { padding-right: 10px; }    /* space between ext */
+.fs-page-header > h2 .ext       { padding-top: 15px; }      /* alignment to title */
+.fs-page-header > h2 .ext .info { padding-right: 10px; }    /* space between tools */
+
+.fs-page-header-mobile > h2 {
+    margin-top: 0;  /* 預設每個元件會有 margin-bottom*/
+}
+
+
+/* uic::block() */
+.fs-block {margin-bottom:20px;}
+.fs-block .block-title {
+    font-size: 20px;
+}
+.fs-sidebar .fs-block .block-title { font-size:14px; }  /* smaller font in sidebar block header */
+.fs-block-header {
+    border-bottom: 1px dashed #ccc;
+    margin-bottom: 10px;
+}
+.fs-block-header-ext {
+    margin-top: 6px;  /* bootstrap <h3> margin-top + font-size (24px) */
+}
+
+
+/* uic::html() */
+.fs-html {margin-bottom: 20px;}
+
+
+/* uic::p() */
+.fs-p {margin-bottom: 20px;}
+
+
+/* uic::tools() */
+.fs-tools {}
+.fs-tools.header-tools {
+    display: block;
+    margin-bottom: 20px;
+}
+.fs-tools .dropdown-toggle {
+    cursor:pointer;
+    padding: 5px
+}
+.fs-tools > ul {
+    list-style-type: none;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+}
+
+.fs-tools > ul > li {
+    display: inline-block;
+    margin-right: 2px;  /* orverrided at kmvideo.css 影片的 #toolsPanel */
+}
+
+.fs-tools .text {
+    margin-right: 2px;
+}
+
+.fs-tools .delimiter {
+    margin-right:3px;
+}
+
+
+
+/* uic::abstractList() */
+.fs-abstractList .item  {
+    margin-bottom:30px;
+}
+.fs-abstractList .title {font-size: 16px;}
+.fs-abstractList .ext   {margin-bottom: 2px;}
+
+@media (max-width: 767px) {
+    .fs-abstractList .item {
+        padding:8px;
+        background-color: #f8f8f8;
+        border: 1px solid #ddd;
+    }
+}
+
+/* uic::attrList() */
+.fs-attrList > span {margin-right:15px;}
+.fs-attrList > div  {margin-bottom: 5px;}
+
+/* the same as bootstrap dl-horizontal */
+.fs-attrList > div .attr {
+    float: left;
+    width: 160px;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: bold;
+}
+
+.fs-attrList > div .value {
+    margin-left: 170px;
+}
+
+
+
+
+/* uic::description */
+.fs-description dd {
+    margin-bottom: 15px;
+}
+
+.fs-description .legend {
+    color: #777;
+    margin: 20px 0px 10px 0px;
+    border-bottom: 1px dashed #ccc;
+}
+
+@media (min-width: 992px) {
+    .fs-description .label-width-sm dt { width: 80px; }
+    .fs-description .label-width-sm dd { margin-left: 100px; }
+
+    .fs-description .label-width-md dt { width: 120px; }
+    .fs-description .label-width-md dd { margin-left: 140px; }
+}
+
+
+/* uic::menu() */
+/*.fs-menu > ul > li > a { border-left:3px solid #f8f8f8; border-radius: 0px; transition: all .2s ease-in-out; }
+.fs-menu > ul > li:hover > a {border-color:#0ac;}
+.fs-menu > ul > li.active > a {border-color:#f66; background-color: transparent; color: #555;}
+.fs-menu > ul > li.active:hover > a {background-color: #eeeeee; color: #555;}*/
+.fs-menu .nav > li > ul  { margin-left: 20px; }
+.nav li a       { color: #555; }
+.fs-menu-divider {margin:10px; border-bottom:1px dashed #ccc;}
+
+
+
+
+/* uic::dropdown() */
+.fs-dropdown .dropdown-toggle {
+    cursor:pointer;
+}
+.fs-dropdown .dropdown-toggle.btn-link {
+    text-decoration: none;
+}
+.dropdown-menu > li > ul  { margin-left: 20px}
+
+
+/* uic::divider() */
+.fs-divider {
+    margin:20px 0px;
+    border-bottom:1px solid #ccc;
+}
+.fs-text-divider {
+    color: #000;
+    margin:20px 0px;
+    padding: 5px;
+    text-align: center;
+    background-color: #eee;
+    border: none;
+}
+
+.fs-lineText-divider {
+    margin:20px 0px;
+    border-bottom:1px solid #ccc;
+}
+
+.fs-lineText-content {
+    text-align: center;
+    margin-bottom: -0.8em;
+}
+
+.fs-lineText-contentText {
+    padding-left: 10px;
+    padding-right: 10px;
+    background-color: #fff;
+}
+
+
+
+
+/* uic::thumbnails() */
+.fs-thumbnail                         { margin-bottom: 20px; }
+.fs-thumbnail .fs-imageEx img         { width: 100%; }
+.fs-thumbnail .display-on-hover       { visibility: hidden; }
+.fs-thumbnail:hover .display-on-hover { visibility: visible; }
+
+
+/* uic::thumblist() */
+.fs-thumblist ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.fs-thumblist ul li {
+    padding: 4px;
+    margin-top: 2px;
+    margin-bottom: 10px;
+}
+
+.fs-thumblist ul li:hover {
+    background-color: #eee;
+}
+
+.fs-thumblist .curr {
+    background-color: #fff8e8;
+}
+
+.fs-thumblist .img-container, .fs-thumblist img {
+    border: 1px solid #eee;
+}
+
+.fs-thumlist .fs-imageEx img {
+    width: 100%;
+}
+
+.fs-thumblist .chapter {
+    margin-top: 30px;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+}
+
+/* ie8 compatible, .chapter:first-of-type */
+.fs-thumblist .first {
+    margin-top: 0px;
+}
+
+
+/* uic::image() */
+.fs-image img {}
+.fs-image .stretch {width:100%;}
+.fs-image-inline {display: inline-block;}
+.fs-image-inline img {display: inline-block;}
+
+
+/* uic::imageEx() */
+.fs-imageEx img {
+    /* bootstrap thumb's style */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.fs-imageEx .stretch {width:100%;}
+
+.fs-imageEx .fs-caption {
+    margin-top: -15px;
+    height: 56px;
+}
+
+.fs-imageEx .inline .thumbnail {
+    border:  0px;
+    padding: 0px;
+    margin-bottom: 0px;
+}
+
+.fs-imageEx .inline .fs-caption {
+    margin-top: 0px;
+    margin-left:10px;
+    height: auto;
+}
+
+.fs-caption .fs-label {
+    max-height: 42px;
+    overflow-y: hidden;
+}
+
+.fs-caption .fs-tools {
+    margin:3px 0px 0px 5px;
+    display: inline-block;
+}
+
+.img-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 */
+    background-size: 100% 100%; /* stretch */
+}
+
+.img-block {
+    position:absolute;
+    width:100%;
+    height:100%;
+    background-position:center;
+    background-repeat:no-repeat;
+    background-size: contain;
+}
+
+.image-info {
+    position: absolute;
+    z-index: 3;
+    padding: 8px;
+    font-size: 12px;
+}
+
+.image-info-default {
+    color:#fff;
+    text-shadow: 0px 0px 1px #000;
+}
+
+.image-info-default-reverse {
+    color:#555;
+    text-shadow: 0px 0px 1px #fff;
+}
+
+.image-info-default .dropdown-menu {
+    color:#333;
+    text-shadow: none;
+}
+
+.image-info-text {
+    background: #000;
+    padding: 0px 5px;
+    margin: 8px;
+    color: #fff;
+    opacity: 0.7;
+    filter: alpha(opacity=0.7);
+}
+.upper-left  {top:0;    left:0; }
+.upper-right {top:0;    right:0;}
+.lower-left  {bottom:0; left:0; }
+.lower-right {bottom:0; right:0;}
+
+
+/* remove imageEx fs-hint margin when imageEx is placed in xtree header */
+.fs-xtree .header .fs-imageEx .fs-hint {
+    margin: 0px;
+}
+
+
+/* uic::fancybox */
+.fs-fancybox{}
+
+.fs-fancybox.has-border .fs-imageEx {
+    /* add padding to bordered fancybox */
+    padding: 5px;
+}
+
+
+/* uic::modal(); */
+.fs-modal-sm {width:360px !important; max-width:95%;}
+
+@media (min-width: 400px) {
+    .fs-modal-sm { width: 400px !important; }
+}
+@media (min-width: 768px) {
+    .fs-modal-md {width: 720px !important;}
+    .fs-modal-lg {width: 760px !important;}
+}
+@media (min-width: 992px) {
+    .fs-modal-lg {width: 824px !important;}
+}
+
+.fs-modal-iframe {
+    width: 100%;
+    display: none;
+}
+
+/* uic::appList() */
+.app {
+    width: 84px;
+    text-align:center;
+    margin-bottom:20px;
+    display:inline-block;
+}
+
+.app a:hover {
+    color: #008;
+    text-decoration: none;
+}
+
+.app-icon {
+    font-size:28px;
+    color:#bbb;
+    margin-bottom:5px;
+}
+
+
+/* appModal() */
+.fs-appModal-backdrop {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1050; /* Sit on top */
+    left: 0;
+    top: 0;
+    right: 0; /* Full width */
+    height: 100%; /* Full height */
+    overflow: hidden;
+    background-color: rgb(0,0,0); /* Fallback color */
+    filter:alpha(opacity=30);
+    background-color: rgba(0,0,0,0.3); /* Black w/ opacity */
+}
+
+.fs-appModal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1055; /* Sit on top */
+    left: 0;
+    top: 0;
+    right: 0; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+}
+
+/* mobile */
+.app-dialog {
+    position: relative;
+    width: auto;
+    margin: 10px; /* 10px from the top and centered */
+}
+
+.app-content {
+    position:relative;
+    background-color: #fff;
+    border: 1px solid #999;
+    border-radius: 6px;
+    box-shadow: 0 3px 9px rgba(0,0,0,.5);
+}
+
+/* desktop */
+@media (min-width: 768px) {
+    .app-dialog {
+        width: 600px;
+        margin: 30px auto;
+        box-shadow: 0 5px 15px rgba(0,0,0,.5);
+    }
+}
+
+.fs-appModal .header {
+    padding: 15px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.fs-appModal .body {
+    padding: 15px;
+    text-align: center;
+}
+
+.fs-appModal .title {
+    margin:0px;
+    text-align: center;
+}
+
+/* The Close Button */
+.fs-appModal .close {
+    color: #555;
+    float: right;
+    font-weight: bold;
+}
+
+.fs-appModal .close:hover,
+.fs-appModal .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+
+
+
+/* uic::boxes() */
+.fs-boxes .box  {
+    margin-bottom: 20px;
+    padding: 0px 5px;
+    border: 1px solid #ccc;
+    text-align: center;
+}
+
+.fs-boxes .text {}
+.fs-boxes .ext  {}
+
+
+
+
+
+
+
+
+/* uic::qrcode() */
+.fs-qrcode {width: 120px; height: 120px; display: inline-block; border: 1px solid #555}
+
+
+/* report */
+.report {margin-bottom:20px; padding-top:5px; border:1px solid #ccc; border-left:4px solid #4bb; text-align:center}
+.report .number {font-size:2em;}
+
+/* filter */
+.filter {padding:5px 5px; background:#f6fffc; border-bottom:1px solid #cc8;}
+.filter-box {width:480px; padding:10px;}
+.filter-box-collapse {margin-top:10px; maring-bottom:10px;}
+
+/* searchBar */
+.fs-search-bar {margin-bottom:20px;}
+.fs-search-bar button {color:#0ac; border-left: none;}
+.fs-search-bar button:hover {color:#0ac; background-color: white; border-color: #cccccc;}
+
+.fs-search {
+    max-width: 600px;
+}
+
+/* button */
+.fs-icon-btn .btn-text {display:none;}
+@media (min-width:768px) {
+    .fs-icon-btn .btn-text {display:inline-block;}
+}
+.fs-dashed-btn {padding: 10px 20px; border: 1px dashed #ccc;}
+
+/* userInfo */
+.user-info {border: 1px solid #ccc; padding: 5px; margin-bottom:10px;}
+.user-info dt {
+    float: left;
+    width: 60px;
+    overflow: hidden;
+    clear: left;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.user-info dd {margin-left: 80px;}
+
+/* uic::table() */
+.fs-table-responsive {
+    width:100%;
+    margin-bottom:20px;     /* tcsu: 修正 table 設定 min-width 後，原來 table 的 margin-bottom:20px 的問題 */
+    overflow-x: auto;
+}
+.fs-table-responsive table {
+    margin-bottom: 0px;
+}
+.fs-table-max2Line {
+    max-height: 38px;
+    overflow: hidden;
+}
+
+
+.fs-table-responsive-min-width { min-width: 650px; }  /* 放在側欄的寬度，避免 scrollbar */
+.table {margin-bottom: 0; table-layout:fixed; border-collapse:separate; border-top:2px solid #4bb; border-bottom:1px solid #4bb;}
+.table > thead > tr > th {border-bottom: 1px solid #ddd;}
+.table .fs-th {background: #f6fffc}
+@media (min-width:992px) {
+    .fs-table-repoinsive-min-width {width: 100%;}
+    .table {margin-bottom: 20px;}
+}
+
+.table-hover .collapse-tr:hover {background: none}
+
+
+.col-control  {width: 2em;}
+
+.col-id         {width: 4em;}
+.col-no         {width: 4em;}
+.col-hour       {width: 4em;}
+.col-date       {width: 7em;}
+
+.col-time {width: 6em;}
+.col-time2 {width: 6em;}
+.col-datetime  {width: 8em;}
+
+.col-icon {width: 3em;}
+.col-icon2 {width: 4em;}
+.col-icon3 {width: 6em;}
+.col-icon4 {width: 7em;}
+
+.col-num {width: 4em;}
+.col-percent {width: 5em;}
+.col-division  {width: 10em;}
+.col-name {width: 6.5em;}
+.col-account  {width: 7em;}
+.col-title    {width: 20em;}
+.col-jobTitle  {width: 8em;}
+.col-email  {width: 16em;}
+.col-category {width: 8em;}
+.col-property  {width: 4em;}
+.col-phone {width: 7em;}
+.col-role {width: 8em;}
+.col-site {width: 12em;}
+.col-toolXL {width: 8em;}
+
+.col-char2 {width: 4em;}
+.col-char3 {width: 5em;}
+.col-char4 {width: 6em;}
+.col-char5 {width: 7em;}
+.col-char7 {width: 9em;}
+.col-char10 {width: 12em;}
+
+
+/* uic::comment() */
+.fs-comment .post {
+    padding: 0px 0px 10px 0px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ccc;
+}
+
+.fs-comment .comment-src {margin-bottom: 10px;}
+.fs-comment .thread .name {color:#000; font-weight: bold}
+.fs-comment .thread .post {border-bottom:2px solid #ccc;}
+.fs-comment .header { margin-bottom: 5px; }
+.fs-comment .info {}
+.fs-comment .anchor { float: right; }
+
+.fs-comment .photo {
+    float: left;
+    margin-right: 4px;
+    vertical-align: middle;
+
+}
+
+.fs-comment .photo img   {
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+}
+
+.fs-comment .info .tools { margin-left: 10px; }
+
+.reply-ext .ctrl {
+    margin-bottom:15px;
+}
+.reply.indent {
+    padding-left: 40px;
+    font-size: 12px;
+}
+
+.reply.indent .photo img {
+    width: 30px;
+    height: 30px;
+}
+
+
+
+
+
+/* uic::mediaXtree(), for mobile */
+@media (max-width:767px) {
+    /* 第一層「分類 (非節點)」灰色底 */
+    .fs-mediaXtree .xtree-node.type-group > .header,
+    .fs-faqXtree   .xtree-node.type-group > .header {
+        background-color: #eee;
+        margin-bottom: 2px;
+        padding-left: 5px;  /* avoid no padding background-color in the left */
+    }
+
+    /* 第二層不內縮，手機空間不足 */
+    .fs-mediaXtree .fs-xtree ol .xtree-list,
+    .fs-faqXtree   .fs-xtree ol .xtree-list {
+        padding-left: 5px;
+    }
+    .fs-step .sn {
+        font-size: 1.5em !important;
+    }
+}
+
+/* mod_step */
+.fs-step .xtree-list {
+    padding-left: 0px !important;
+}
+
+
+
+/* uic::xtree() */
+.fs-xtree {
+}
+
+/* 第二層的縮排，override 預設的 ol 內縮 40px */
+.fs-xtree .xtree-node .xtree-list {
+    padding-left: 20px;
+}
+
+/* table of content */
+.fs-xtree .toc {
+    padding: 10px;
+    border: 1px solid #DDD;
+    background: #f8f9fa;  /* wikipedia style */
+    display: inline-block;
+    list-style-type: none;
+}
+
+.fs-xtree .toc a {
+    display: block;
+    padding: 5px 2px;
+}
+
+/* list header */
+.fs-xtree .list-header {
+    background-color: #f4f4f4;
+    color: #888;
+    border-bottom: 1px solid #ccc;
+}
+
+
+/* tree */
+.fs-xtree .xtree-list {
+    list-style-type: none;
+}
+
+/* 第一層不縮排 */
+.fs-xtree > .xtree-list {
+    padding-left: 0px;
+    margin-bottom: 0px;
+}
+
+/* node header */
+.fs-xtree .header {
+    position: relative;
+}
+
+.fs-xtree .hover:hover {
+    background-color: #eee;
+}
+
+.fs-xtree .list-header,
+.fs-xtree .header > * {
+    display: block;
+    /* set padding to change title height */
+    padding: 8px 0px;
+}
+
+.fs-xtree .fs-tools {
+    float: right;
+}
+
+.fs-xtree .header .center-part {
+    overflow: hidden;
+}
+
+.fs-xtree .header .xtree-node-label {
+    overflow: hidden;
+    display: block;
+}
+
+.fs-xtree .header .xtree-node-label .description {
+    padding-top: 5px;
+    font-size: 12px;
+    color: #666;
+}
+
+
+.fs-xtree .sn {
+    display: block;
+    /* min-width: 20px; align two digit number，會無法對齊左邊 */
+    margin-right: 6px;
+    text-align: right;
+}
+
+.fs-xtree .icon {
+    margin-right: 4px;
+    margin-left: 4px;   /* 手機目錄灰色底，+, - 的左邊空間 */
+}
+
+.fs-xtree .header .hint {
+    margin: 2px 8px 0px 8px;
+}
+
+.fs-xtree .text {
+    overflow: hidden;
+}
+
+.fs-xtree .ext-col {
+    display: inline-block;
+}
+
+@media (min-width: 768px) {
+    .fs-xtree .ext-col-responsive {
+        float: left;
+    }
+}
+
+.fs-xtree .ext-col-responsive {
+}
+
+.fs-xtree .mobile-ext {
+    margin-top: 4px;
+}
+
+/* group node */
+.fs-xtree .xtree-node[data-type="group"] {
+}
+
+.fs-xtree .xtree-node[data-type="group"] > .header .xtree-node-label {
+    /*font-weight: bold;*/
+    /*font-size: 1.28571429em;*/
+}
+
+/* grid mode */
+.fs-xtree.grid .xtree-list {
+
+}
+.fs-xtree.grid .xtree-list > div {
+    margin-bottom: 20px;
+}
+
+/* grid group node */
+.fs-xtree.grid .xtree-node[data-type="group"] > .header {
+    border-bottom: 1px solid #DDD;
+    margin-bottom:6px;
+}
+
+/* group collapsible */
+.fs-xtree .collapse-toggle {
+    cursor: pointer;
+}
+
+/* collapse icon */
+
+.fs-xtree .collapse-toggle .collapse-icon {
+    line-height: 1.42857143; /* bootstrap line height */
+}
+
+
+.fs-xtree .collapse-toggle.collapsed .fa-plus-square-o,
+.fs-xtree .collapse-toggle.empty .fa-square-o {
+    display: initial;
+}
+
+.fs-xtree .collapse-toggle .fa-plus-square-o,
+.fs-xtree .collapse-toggle.empty .fa-plus-square-o,
+.fs-xtree .collapse-toggle.empty .fa-minus-square-o,
+.fs-xtree .collapse-toggle.collapsed .fa-minus-square-o,
+.fs-xtree .collapse-toggle .fa-square-o {
+    display: none;
+}
+
+
+/* xtree sortable style */
+.fs-xtree .xtree-list.ui-sortable {
+    /* space for dropping at the end of list */
+    padding-bottom: 10px;
+
+    /* space for absolute-positioned grab */
+    /* padding-left: 20px; 左側對齊內容 */
+}
+.fs-xtree.grid .xtree-list.ui-sortable {
+    /* remove left pdding in grid mode */
+    padding-left: 0px;
+}
+
+.fs-xtree .grab {
+    cursor: cursor: move; cursor: grab; cursor: -ms-grab; cursor: -moz-grab; cursor: -webkit-grab;
+    visibility: hidden;
+}
+.fs-xtree .header .grab {
+    position: absolute;
+    top: 0px;
+    left: -20px;
+    width: 20px;
+    height: 36px;
+    background:url(/sys/res/icon/grab.png) no-repeat center;
+}
+
+/* for mobile, enlarge the grab area, overlap on expand icon */
+@media (max-width: 768px) {
+    .fs-xtree .header .grab {
+        left: -35px;
+        width: 50px;
+    }
+}
+
+
+/* show hidden grab by hovering header */
+.fs-xtree .header:hover .grab,
+.fs-xtree .fs-thumbnail:hover .grab {
+    visibility: visible;
+}
+
+/* show grab when sorting */
+.fs-xtree .ui-sortable-helper .grab {
+    visibility: visible;
+}
+
+/* show all hidden grabs by adding 'show-grab' class to fs-xtree */
+.fs-xtree.show-grab .grab {
+    visibility: visible;
+}
+
+/* helper grab background color */
+.fs-xtree .ui-sortable-helper .header .grab {
+    background-color: #FFF;
+}
+
+/*  show hidden thumbnail image info when 'show-grab' active */
+.fs-xtree.show-grab .fs-thumbnail .image-info.upper-left,
+.fs-xtree.show-grab .fs-thumbnail .image-info.upper-right {
+    visibility: visible;
+}
+
+.fs-thumbnail.show-touch-icon .image-info.upper-right,
+.fs-thumbnail.show-touch-icon .image-info.upper-left,
+.fs-thumbnail.show-touch-icon .image-info.lower-right,
+.fs-thumbnail.show-touch-icon .image-info.lower-left {
+    visibility: visible;
+}
+
+.fs-xtree.grid .fs-thumbnail .grab {
+    display: inline;
+    padding: 6px;
+}
+
+/* grab cursor */
+.fs-xtree .grab:active,
+.fs-xtree .ui-sortable-helper {cursor: move; cursor: grabbing; cursor: -ms-grabbing; cursor: -moz-grabbing; cursor: -webkit-grabbing;}
+
+.fs-xtree .placeholder {
+    position: relative;
+}
+
+.fs-xtree .placeholder:before,
+.fs-xtree .placeholder:after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    transform-origin: right bottom;
+    animation-name: bounce;
+    animation-duration: .4s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+@keyframes bounce {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-5px); }
+}
+
+.fs-xtree .placeholder:before {
+
+    box-sizing: content-box;
+    width: 0px;
+    height: 2px;
+    border-left: #98d4f5 6px solid;
+    border-top: transparent 6px solid;
+    border-bottom: transparent 6px solid;
+    left: 0px;
+    top: -6px;
+
+}
+.fs-xtree .placeholder:after {
+    width: 100%;
+    height: 2px;
+    background: #98d4f5;
+    left: 0px;
+    top: 0px;
+}
+
+.fs-xtree.grid .placeholder {
+    background-color: rgba(102,175,233, 0.1);
+    box-shadow: 0px 0px 0px 3px rgba(102,175,233, 0.1) inset;
+}
+.fs-xtree.grid .placeholder:before,
+.fs-xtree.grid .placeholder:after {
+    display: none;
+}
+
+.fs-xtree .original-placeholder {
+    background-color: #FAFAFA;
+    box-shadow: 0px 0px 0px 3px #F0F0F0 inset;
+}
+
+/* sortable helper */
+.fs-xtree .ui-sortable-helper {
+    background-color: #FFF;
+    box-shadow: 0px 3px 12px 0px rgba(0, 0, 0, 0.2);
+    transform-origin: top left;
+    transform: scale(0.8) rotate(3deg);
+}
+
+.fs-xtree .has-placeholder {
+    outline: 2px solid rgba(102,175,233,.3);
+}
+
+
+
+/* uic::tips() */
+.fs-tips {
+    border: 1px solid #dd9;
+    border-radius: 6px;
+    padding: 10px;
+    background-color: #ffd;
+    margin-bottom: 20px;
+}
+.fs-tips .font-icon {color:#aa4; }
+.fs-tips .header    {padding-bottom:10px; text-align: center;}
+.fs-tips .body      {font-size:12px;}
+
+
+/* uic::infocol() */
+.fs-infocol > div {
+    padding: 0px 8px;   /* bootstrap td's padding (left, right) */
+    display: inline;
+}
+
+/* uic::infobox() */
+.fs-infobox { margin: 0px auto 20px auto; text-align: left; width:  450px; }
+.fs-infobox-panel {
+    min-height: 100px;
+    background-color: white;
+    border: 1px #eee solid;
+    box-shadow: 0px 0px 5px #777;
+    padding : 20px 40px 20px 40px;
+}
+
+.fs-infobox-header   {margin-bottom:25px;}
+
+.fs-infobox-logo     {margin-bottom:5px; text-align:center;}
+.fs-infobox-logo img {max-height:40px;}
+.fs-infobox-title    {font-size: 1.8em; text-align:center;}
+
+.fs-infobox-footer   {padding:10px 0px}
+.fs-infobox-footer-hint {margin-top: 40px; color: #888; font-size: 0.9em;}
+@media (max-width:600px) {
+    .fs-infobox { width: 100% !important; }
+    .fs-infobox-panel { border: none; box-shadow: none; }
+    .fs-infobox-footer { padding: 10px 40px 0px 40px; border-top: 1px #eee solid;}
+}
+
+
+/* uic::collapse(); */
+.collapse .well {
+    /* background-color: #fff; 採個別設定，例如 #navbar_ext .well*/
+    box-shadow: none;
+}
+
+#folderInfo .well {
+    border: 0px;
+    border-top: 1px solid #ddd;
+    border-radius: 0px;
+    margin-top: 10px;
+    margin-bottom: 0px;
+    background: #fff;
+}
+
+
+/*uic::list*/
+
+.fs-list {}
+    .fs-list .listItems { line-height: 1.8; }
+    .fs-list .listItems.fs-border { padding:5px; }
+    .fs-list ol.listItems.fs-border { padding-left:40px; }
+    .fs-list ul { list-style:none; }
+
+        .fs-list ol > li:before { content:''; display:block; height:1px; }
+        .fs-list ol > li > div { margin-top:-1px; }
+        .fs-list .listItems .content { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+        .fs-list .listItems li.underLine:not(:last-child){ border-bottom:1px solid #CCC; }
+
+/* uic::filelist() */
+.fs-filelist {margin-bottom: 20px}
+.fs-filelist .caption {
+    font-weight: bold;
+}
+
+.fs-filelist ul {
+    list-style: none;
+    padding: 0;
+}
+
+/* uic::remark() */
+.fs-remark {margin-bottom: 20px;}
+.fs-remark .caption {padding-bottom: 5px;}
+.fs-remark ol {padding-left: 15px;}
+
+
+
+/* uic::iframe() */
+.fs-iframe iframe {
+    width: 100%;
+    padding:4px;
+    border:1px solid #ccc;
+    height: 600px;  /* max-width:800px; */
+}
+.ios-iframe-wrapper {overflow:scroll;-webkit-overflow-scrolling:touch;}
+
+
+
+/* uic::carousel() */
+.carousel .image-container {
+    position: relative;
+}
+
+.carousel .image-container .img {
+    height: 260px;
+                            /* background-url is defined in uic::carousel; */
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.carousel-control .ctrl {
+    position: absolute;
+
+    top: 50%;
+    margin-top: -20px;
+    height: 40px;
+    width:20px;
+
+    z-index: 5;
+    display: inline-block;
+    background-repeat: no-repeat;
+}
+
+.carousel-control.left .ctrl {
+    left: 10px;
+    background-image: url(/sys/res/icon/prev.png);
+}
+
+.carousel-control.right .ctrl {
+    right: 10px;
+    background-image: url(/sys/res/icon/next.png);
+}
+
+.carousel-caption {
+    padding-bottom: 10px;
+    left: 10px;
+    right: 10px;
+}
+
+.carousel-indicators {
+    bottom: 0px;
+}
+
+.carousel-indicators li {
+    -webkit-box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.9);
+    -moz-box-shadow:    0px 0px 2px 0px rgba(0, 0, 0, 0.9);
+    box-shadow:         0px 0px 2px 0px rgba(0, 0, 0, 0.9);
+}
+
+
+/* uic::audio */
+.fs-audio-wrapper {position: relative; background-position: center center; background-repeat: no-repeat; background-size: contain; background-color: #000; text-align: center; box-shadow: 0 0 4px #777; padding: 2px;
+    margin-bottom:20px;}
+.fs-audio-wrapper audio {position: absolute; left:0; bottom: 10px; width: 100%; padding: 0 10px;}
+
+/* === uic end === */
+
+
+
+
+
+
+
+
+
+/* === lib_rwd.js start === */
+.fs-loading {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    background-color: rgba(0, 0, 0, 0);
+    z-index:10002
+}
+
+.fs-loading-msg {
+    width: 120px;
+    margin: 0 auto;
+    margin-top: 2px;
+    padding: 2px 20px;
+    background-color: #fed;
+    text-align: center;
+    color: #940;
+    border:1px solid #db9;
+}
+
+.fs-custom-loading {
+    color:#f00;
+    background: url(/sys/res/icon/wait.gif) no-repeat 10px center #fff;
+    border:1px solid #f00;
+    padding:10px 10px 10px 35px;
+    position:fixed;
+    font-weight: bold;
+    z-index:10002
+}
+
+/* === lib_rwd.js end === */
+
+
+
+/* others */
+.fs-user-info-photo {width:100px;}
+.fs-faq-answer {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.fs-faq-link {
+    display: inline-block;
+    margin-top: 15px;
+    border-top: 1px dashed #ccc;
+    padding-top: 5px;
+}
+
+
+
+
+/*bootstrap 3 modal*/
+.modal-dialog .bootbox-body{
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.modal[data-role='uploader'] {
+    z-index: 10000;
+}
+
+.thumbnail .caption-fs {
+    border-top:1px solid #eee;
+    margin-top:4px;
+}
+
+.caption-fs .title {
+    padding-left: 5px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.caption-fs .fs-icon {
+    margin-top: 2px;
+    width: 16px;
+    height: 16px;
+}
+
+
+.playtype-video {background-image: url(http://p.formosasoft.com/sys/res/icon/playtype/fs.png);}
+.playtype-doc   {background-image: url(http://p.formosasoft.com/sys/res/icon/playtype/doc.png);}
+
+
+
+/* carets */
+.fs-caret-reversed {
+    border-top-width: 0;
+    border-bottom: 4px solid;
+}
+
+/* required */
+.form-group.required .control-label:after {
+    content: "*";
+    color: #f00;
+    margin: 0 5px;
+    font-size: 12px;
+    font-weight: normal;
+}
+/* 另外定義 .control-label:after 會更清楚、明確，因為只針對需要的地方 */
+.form-horizontal .form-group {position:relative;}
+.form-horizontal .form-group.required .control-label:after {
+    display: inline;
+    position: absolute;
+    right: 0;
+}
+
+.fs-navbar-btns {
+    float: right;
+    padding: 15px 15px;
+    font-size: 18px;
+    line-height: 20px;
+    height: 50px;
+}
+
+.fs-navbar-btns a {
+    color: #dddddd;
+}
+
+.fs-sysbar .fs-collapse > ul > li > a {
+    padding: 3px 20px;
+}
+
+.fs-sitebar .fs-collapse > ul > li > a {
+    padding: 3px 20px;
+}
+
+/* input file */
+.fs-btn-file {
+    position: relative;
+    overflow: hidden;
+}
+
+.fs-btn-file input[type='file'] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    text-align: right;
+    opacity: 0;
+    background: none;
+    cursor: inherit;
+    display: block;
+}
+
+/* input uploader */
+.form-horizontal .formUpload {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 7px;
+}
+
+/* sysbar */
+.navbar-brand img {
+    display: inline;
+    padding-right: 5px;
+}
+
+.fs-logo {
+    height: 20px;
+}
+
+/*folder share*/
+.share-enable [role="source"]   {display:block}
+.share-enable [role="url"]   	{display:inline-block; margin-right: 5px;}
+.share-enable .shareLabel   {display:inline-block;}
+.share-enable [role="hint"]     {display:none}
+
+.share-enable [role="enhdl"]    {display:block}
+.share-enable [role="dishdl"]   {display:none}
+
+.share-disable [role="source"]  {display:none}
+.share-disable [role="hint"]    {display:block}
+
+.share-disable [role="enhdl"]   {display:none}
+.share-disable [role="dishdl"]  {display:block}
+
+/* login */
+.socialLoginBlock { text-align: center; }
+.socialLoginBlock .socialLoginBtn { display: inline-block; width: 80px; margin: 10px 30px;}
+.socialLoginBtn .fs-image { margin-bottom: 10px; }
+
+/* syntaxhighlighter */
+.syntaxhighlighter {overflow-y: hidden !important}
+.syntaxhighlighter .gutter {width:50px !important}
+
+/* time-range */
+.fs-time {text-align: center;}
+
+/* timepicker */
+.fs-form-timepicker {width:72px;}
+
+
+/* dimension */
+.fs-form-dimension {width:200px;}
+.fs-dimension {text-align: center;}
+
+
+/* seeker */
+.seeker         {color:#06f; cursor:pointer}
+.seeker:hover   {text-decoration:none; background-color:#dad9d7; border-radius:2px;}
+.seeker.disabled {color:#AAA;}
+.seeker.disabled:hover {background-color: inherit; cursor: default;}
+
+
+
+.module-settings {
+    position: absolute;
+    top: 0; /* upper-right */
+    right: 0;
+    display: none;
+    background: #fff;
+    z-index: 1;
+}
+
+.module-settings .fs-tools > ul > li { margin: 0px; }
+.module-settings a, .module-settings .dropdown-toggle { display: inline-block; padding: 4px 7px; /* make 'more' button square  */ }
+.module-settings .dropdown-menu {
+    margin-top: 0px;
+}
+/* show module tools on hover */
+.module:hover .module-settings {
+    display: block;
+}
+
+/* mod_html */
+.cpage-module-background {
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* converting box */
+.convertingBox {background:#fff; box-shadow:0 0 3px #777; border:1px solid transparent;}
+.convertingBox {height:300px}
+.convertingBox .wrapper {padding-left:50px;}
+.convertingBox .descList .dl-horizontal dd, .convertingBox .descList .dl-horizontal dt  {padding-top:0; padding-bottom:2px}
+.convertingBox .title { font-weight: bold; margin-bottom: 10px; }
+.converting {margin:100px auto}
+.converting .formCenter {text-align: center;}
+.converting .formLeft {text-align: right;}
+.converting .formRight {text-align: left;}
+
+
+/* highest priority */
+.fs-margin-default {margin:0px 0px 20px 0px}
+.fs-margin-large   {margin:0px 0px 40px 0px}
+
+
+/* date */
+.fs-form-date {width:104px;}
+
+
+/* #69188 */
+.socialIcon {display: inline-block; vertical-align: middle; width:32px; height:32px; background: url('/sys/res/icon/social-login/social2.png'); border: 1px solid #ccc; margin: 0 3px;}
+.socialIcon.facebook {}
+.socialIcon.facebook.off {background-position: 0 -32px}
+.socialIcon.google {background-position: -32px 0}
+.socialIcon.google.off {background-position:-32px -32px}
+
+
+
+/* #69556 */
+.mod_album .thumbnail {
+    padding: 0px;
+    border: 0px;
+}

@@ -1,0 +1,199 @@
+#page-main {margin-top: 0px;}
+#playerFrame {background:#EEE; transition: background .4s ease;}
+#playerFrame.play-layout {background:#000;}
+    #player-container {padding-top:15px; padding-bottom:15px;}
+    #player-container.play-layout {padding: 0; width:100%;}
+    #player-container > .row {height: 100%;}
+    #player-container.play-layout > .row {margin: 0px;}
+
+        /* infoindex */
+        #infoindexFrame {float:right; overflow-y: auto; height:100%;}
+            #infoindex-container {}
+            #infoindexFrame .indexBox .title, #infoindexFrame .indexBox .sn  {font-size: 15px;}
+            #infoindexFrame .indexBox .indent .title, #infoindexFrame .indexBox .indent .sn {font-size: 13px;}
+            #infoindexFrame .indexBox .time  {margin-top: 3px;}
+            #infoindexFrame .indexBox .indent .time  {margin-top: 1px;}
+
+        /* tab */
+        #sideFrame {float:right; overflow: hidden; width:0px; height:100%; box-sizing: border-box; padding: 5px 0px 5px 0px; background: #000; /*transition: width .4s ease;*/}
+        #playerFrame.tab-open #sideFrame {width:500px;}
+        #playerFrame.tab-open #sideFrame.narrow-page {padding-left: 5px;}
+            #side-container  {position: relative; background:#FFF; height:100%; width: 500px; padding:0px 10px; box-sizing: border-box; overflow-y: auto; overflow-x: hidden; }
+            #side-container .side-box {display: none;}
+
+            /* side mod_tab */
+            #sideFrame .indexBox .idx {padding: 7px 10px;}
+            #sideFrame .indexBox .idx.indent {padding-left: 20px;}
+
+            #noteBox .mod_note .flot {
+                width: 460px;
+            }
+
+
+        /* video */
+        #videoFrame { position: relative; height: 100%; /*transition: margin-right .4s ease, width .4s ease;*/}
+        #playerFrame.tab-open #videoFrame {margin-right: 500px}
+            #video-container  {}
+                #video-container.play-layout  {padding: 10px;}
+                #video-container.play-layout.narrow-page  {padding: 0px;}
+                #videoBox {}
+                #mediaBox {position: relative; height: 100%; width: 100%; overflow:hidden; }
+                #mediaBox.loadFail {}
+                #mediaBox.loadFail > * { display: block; position: absolute; margin: auto; top: 0; bottom: 0; left: 0; right: 0; height: 10%; text-align: center; }
+
+/*****/ #video-container > .clearfix:after,#video-container > .clearfix:before  {display:none;}
+
+        /* canvas */
+        .canvas-container {transform-origin: left top;}
+        .fs-player .canvas-container  {
+            bottom: initial;
+            right: initial;
+            margin: initial;
+        }
+
+#mediaBox.loadFail {background:#fff; box-shadow:0 0 3px #777; border:1px solid transparent;}
+
+
+#authorBox { padding-bottom: 12px; border-bottom: 1px solid #DDD; margin-bottom: 15px; font-size: 13px;}
+    #authorBox>.authorInfo { padding-top: 10px;}
+    #authorBox>.authorInfoWithoutPhoto {border-left: 2px solid #00BCD4; padding-left: 10px; padding-top: 0px};
+    #authorBox [role="publishTime"] {color: #BBB;}
+    #authorBox [role="viewCnt"] {color: #999;}
+    #authorBox .author-img {display:block; margin:auto; border: 1px solid #FFF;}
+
+
+
+#ctrlFrame {height: 52px; background: #FFF; border-top: 1px solid #DDD; border-bottom: 1px solid #DDD; margin-bottom: 30px; line-height: 1.5;}
+
+#toolsPanel {
+    float:left;
+    border-left: 1px solid #DDD;
+    padding: 5px 5px;   /* .fs-tools > ul > li */
+}
+#toolsPanel .fs-tools,
+#toolsPanel .fs-tools > ul,
+#toolsPanel .fs-tools > ul > li  {
+    display: block;
+    margin: 0px 2px;
+}
+#toolsPanel .fs-tools > ul:before, #toolsPanel .fs-tools > ul:after {
+    content: "";
+    display: table;
+}
+#toolsPanel .fs-tools > ul > li {
+    float: left;
+}
+
+#toolsPanel .dropdown-toggle {
+    display: block;
+    font-size: 20px;
+    line-height: 1;
+    color: #777;
+    background-color: #E9E9E9;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    padding-top: 10px;
+    opacity: 0.9;
+}
+
+#toolsPanel .dropdown-toggle:hover, #toolsPanel .dropdown.open .dropdown-toggle, #toolsPanel .dropup.open .dropdown-toggle {opacity:1;}
+#toolsPanel .dropdown-toggle:active {transform: scale(0.95); transform-origin: center;}
+#toolsPanel .dropdown-toggle > a {
+    display: none;
+}
+
+#controlPanel {border-right: 1px solid #DDD; }
+
+#titlePanel {border-left: 1px solid #DDD; border-right: 1px solid #DDD; }
+#titlePanel .title {font-size: 20px;}
+#titlePanel .fs-hint {margin-bottom: 2px;}
+
+#info-container {border:1px solid #DDD; padding:14px}
+
+
+/* side close X button */
+.side-close { position: absolute; top: 10px; right: 12px; width: 24px; height: 24px; cursor: pointer;}
+.side-close .side-close-container { position: relative; }
+.side-close i { display: block; position: relative; width: 13px; height: 0px; border-style: solid; border-color: #BBB; background-color: #BBB; border-width: 1px; border-radius: 2px; }
+.side-close .line-1 { top: 12px; left: 4px; transform: rotate(45deg); }
+.side-close .line-2 { top: 10px; left: 4px; transform: rotate(-45deg); }
+
+
+/* tablet layout */
+@media (max-width: 991px) { /* < 992 */
+    #player-container {
+        padding: 0px;
+    }
+    #player-container > .row {
+        margin: 0px;
+    }
+    #videoFrame {
+        padding: 0px;
+    }
+
+    #infoindexFrame {
+        display: none;
+    }
+}
+
+/* mobile landscape layout */
+@media (max-width: 767px) { /* < 768 */
+    #playerFrame.tab-open #sideFrame {
+        width: 400px;
+    }
+    #playerFrame.tab-open #videoFrame {
+        margin-right: 400px;
+    }
+    #side-container  {
+        width: 400px;
+    }
+    
+}
+
+/* mobile portrait portrait  */
+@media (max-width: 639px) { /* < 640 */
+    #sideFrame,
+    #side-container {
+        display: none;
+    }
+
+    #playerFrame.tab-open #videoFrame {
+        margin-right: 0px;
+    }
+
+    #controlPanel {
+        display: none;
+    }
+
+    #ctrlFrame {
+        position: relative;
+        height: 92px;
+    }
+
+    #ctrl-container {
+        padding: 0px;
+        width: 100%;
+    }
+
+    #toolsPanel {
+        position: relative;
+        top: 42px;
+        border-left: none;
+    }
+
+    #titlePanel {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        border-bottom: 1px solid #DDD;
+        border-left: none;
+        border-right: none;
+    }
+
+    #titlePanel .title {
+        font-size: 15px;
+    }
+}

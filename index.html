@@ -805,6 +805,7 @@
             color: #082f49;
             background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
             box-shadow: 0 10px 24px rgba(245, 158, 11, 0.24);
+            text-decoration: none;
         }
 
         .service-launch-btn:hover,
@@ -816,6 +817,25 @@
             color: rgba(226, 232, 240, 0.7);
             background: rgba(51, 65, 85, 0.7);
             cursor: default;
+        }
+
+        .service-video {
+            width: 100%;
+            aspect-ratio: 544 / 452;
+            border-radius: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: #020617;
+            object-fit: contain;
+            position: relative;
+            z-index: 1;
+        }
+
+        .service-card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
         }
 
         .roadmap-note {
@@ -1415,12 +1435,13 @@
                     <span class="hero-eyebrow">Multi-Service Portal</span>
                     <h1>一個首頁，集中展示持續增加中的服務。</h1>
                     <p>
-                        這個入口頁會先列出目前已經上線的服務，並保留後續擴充空間。目前已提供題庫測驗與試卷報讀兩項服務，
+                        這個入口頁會先列出目前已經上線的服務，並保留後續擴充空間。目前已提供題庫測驗、試卷報讀與 Codex Pets Demo 影片，
                         之後可陸續加入成績查詢、學習儀表板、教材中心或其他工具，不需要重做整個首頁架構。
                     </p>
                     <div class="hero-actions">
                         <button id="open-quiz-service" class="service-launch-btn">進入目前服務</button>
                         <button id="open-reader-service" class="service-launch-btn">試用報讀服務</button>
+                        <a class="service-launch-btn" href="#codex-pets-demo">觀看 Codex Pets Demo</a>
                         <a class="hero-link" href="#service-list">查看服務清單</a>
                     </div>
                 </div>
@@ -1428,7 +1449,7 @@
                     <h2>服務概況</h2>
                     <div class="summary-metrics">
                         <div class="metric-card">
-                            <span id="live-service-count" class="metric-value">2</span>
+                            <span id="live-service-count" class="metric-value">3</span>
                             <span class="metric-label">已上線服務</span>
                         </div>
                         <div class="metric-card">
@@ -1450,7 +1471,7 @@
                             <span class="section-eyebrow">Live Services</span>
                             <h2>目前已上線</h2>
                         </div>
-                        <p>使用者進到首頁時會先看到可用服務。現在已經有兩個可用服務，後續也可持續擴充成更多入口。</p>
+                        <p>使用者進到首頁時會先看到可用服務。現在已經有三個可用項目，後續也可持續擴充成更多入口。</p>
                     </div>
                     <div class="services-grid">
                         <article class="service-card active-service">
@@ -1503,6 +1524,24 @@
                                 </div>
                             </div>
                             <button id="open-reader-service-secondary" class="service-launch-btn">開始使用</button>
+                        </article>
+
+                        <article id="codex-pets-demo" class="service-card active-service">
+                            <div class="service-card-top">
+                                <div class="service-icon">▶</div>
+                                <span class="status-pill">Demo</span>
+                            </div>
+                            <div>
+                                <h3>Demo Codex Pets</h3>
+                                <p>展示 Codex Pets 的操作畫面，可直接在首頁播放，也可開啟完整播放器頁面。</p>
+                            </div>
+                            <video class="service-video" controls preload="metadata" poster="CodexPets.ecm.mp4/cover.jpg">
+                                <source src="CodexPets.ecm.mp4/media.mp4" type="video/mp4">
+                                您的瀏覽器不支援影片播放。
+                            </video>
+                            <div class="service-card-actions">
+                                <a class="service-launch-btn" href="CodexPets.ecm.mp4/index.html">開啟完整播放器</a>
+                            </div>
                         </article>
                     </div>
                 </section>

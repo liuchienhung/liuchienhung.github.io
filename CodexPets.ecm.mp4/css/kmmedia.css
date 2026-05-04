@@ -1,0 +1,105 @@
+/**  kmmedia css  **/
+        
+.page-width {width:1064px}
+.info-width {width:826px}
+.side-width {width:300px}
+.init-height {height:422px;}
+.width-expand {width:100%;}
+
+.box-centered {margin:0 auto}
+.box-center-center {position: absolute; top:0; bottom: 0; left: 0; right:0; margin: auto;}
+
+
+.show {display: block}
+.hide {display: none}
+.hideModal {display: none}
+
+.transitionOn {transition: all .4s ease;}
+
+.loading {background: url("/sys/res/icon/loading2.gif") center no-repeat; position: absolute; top: 0; bottom: 0; left: 0; right: 0; margin: auto; z-index: 0; }
+
+#titlePanel {padding: 0px 10px; position: relative; overflow: hidden;}
+    #titlePanel .title { width: 100%;}
+
+#controlPanel {float: right; padding: 2px 2px;}
+    #controlPanel ul.btn-list {padding: 0; margin: 0; list-style: none;}
+    #controlPanel ul.btn-list>div, #controlPanel ul.btn-list>li {display: inline-block; vertical-align: top;}
+    #controlPanel .control-btn { position: relative; color: #535353; width: 56px; text-align: center; font-size: 12px; padding-top: 28px; cursor: pointer; opacity: 0.7; transition: opacity 0.1s linear; }
+    #controlPanel .control-btn:before { content: ""; display: inline-block; background-repeat: no-repeat; background-image: url(../icon/media_control.png); width: 28px; height: 28px; position: absolute; top: 2px; right: 0; left: 0; margin: auto; }
+    #controlPanel .control-btn[role="settings"]:before      {background-position: -28px 0px;}
+    #controlPanel .control-btn[role="index"]:before       {background-position: -28px -28px;}
+    #controlPanel .control-btn[role="note"]:before          {background-position: -28px -56px;}
+    #controlPanel .control-btn[role="discuss"]:before       {background-position: -28px -84px;}
+    #controlPanel .control-btn[role="fullscreen"]:before    {background-position: -28px -112px;}
+    #controlPanel .control-btn[role="quizEdit"]:before    {background-image: url(/sys/res/icon/videoQuiz.png); background-position: 0px 0px;}
+    #controlPanel .control-btn:hover {opacity: 1;}
+    #controlPanel .control-btn:active:before {transform: scale(0.94); transform-origin: center;}
+
+    /*active*/
+    #controlPanel .control-btn.active, #controlPanel .open>.control-btn[role="settings"] {opacity: 1 ; color: #6698f3;}
+    #controlPanel .open>.control-btn[role="settings"]:before    {background-position: -56px 0px;}
+    #controlPanel .control-btn.active[role="index"]:before    {background-position: -56px -28px;}
+    #controlPanel .control-btn.active[role="note"]:before       {background-position: -56px -56px;}
+    #controlPanel .control-btn.active[role="discuss"]:before    {background-position: -56px -84px;}
+    #controlPanel .control-btn.active[role="fullscreen"]:before {background-position: -56px -112px;}
+    #controlPanel .control-btn.active[role="quizEdit"]:before    {background-position: 0px -28px;}
+
+    /* setting dropdown triangle position */
+    #controlPanel .dropdown-menu:before {left: 20px;}
+    #controlPanel .dropdown-menu:after  {left: 21px;}
+    #controlPanel .pull-right > .dropdown-menu:before {left: initial; right: 20px;}
+    #controlPanel .pull-right > .dropdown-menu:after  {left: initial; right: 21px;}
+
+.clearfix:before, .clearfix:after {content: ""; display: table;}  /* ignore the coding style to minimize the space */
+.clearfix:after {clear: both;}
+.clearfix {*zoom: 1; /*For IE 6&7 only*/}
+
+
+@media (max-width: 1199px) {
+
+    .info-width {
+        width:626px;
+    }
+}
+
+@media (max-width: 991px) {
+
+    .info-width {
+        width:100%;
+    }
+
+    .side-width {
+        width: 100%;
+    }
+    
+    /* hide editor tools when window is narrow */
+    .addModuleArea, .fs-index-editor-toolbar, .tool,
+    .step .item:hover .step-menu,
+    .step.is-admin .item:hover .grab,
+    .faqBox .grab {
+        display: none;
+    }
+
+    #ctrl-container {
+        padding: 0;
+    }
+}
+
+
+@media screen and (-webkit-min-device-pixel-ratio: 1.5) {
+    .logo {
+        background-image: url('/sys/res/icon/logo/sysbar_logo_3x.png');
+    }
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 2) {
+    .logo {
+        background-image: url('/sys/res/icon/logo/sysbar_logo_3x.png');
+    }
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 3) {
+    .logo {
+        background-image: url('/sys/res/icon/logo/sysbar_logo_3x.png');
+    }
+}

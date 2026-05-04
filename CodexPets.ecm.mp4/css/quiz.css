@@ -1,0 +1,259 @@
+.quiz.minimize	{display:none; transition:display transform .5s}
+.quiz-mask		{position:absolute; top:0; left:0; width:100%; height:100%; z-index:99; background-color:rgba(0,0,0,.3)}
+
+.quiz {
+	box-sizing:border-box;
+	position:absolute;
+	margin:0 auto;
+	padding:10px;
+	overflow:auto;
+	text-align:left;
+	background-color:#fff;
+	box-shadow:0 0 4px #000;
+    border-radius: 5px;
+}
+
+.quiz.default-position {
+	top: 5%;
+    left: 0;
+    right: 0;
+    width: 640px;
+    max-width: 95%;
+    max-height: 90%;
+	z-index:102;
+}
+.quiz.cust-position {
+	max-width: 400px;
+	z-index:100;
+}
+
+
+	.quiz .subject	{padding:5px 10px; border:1px solid #ccc; border-radius:4px; box-shadow:0 0 4px #ccc}
+	.quiz .answer	{margin-top:5px}
+
+	.quiz .explain	{display:none; margin-top:5px}
+	.quiz .explain img	{height:auto !important; width:auto !important}
+
+		.quiz .response {font-weight:bold; margin-bottom: 5px}
+			.quiz .rightAnswer .response {color:#5cb85c}
+			.quiz .wrongDetail .response,
+			.quiz .wrongAnswer .response {color:#d9534f}
+
+	.quiz ul	{padding:0; margin:0}
+	.quiz ul li	{list-style-type:none}
+
+	.quiz.selection .answer  .item input	{float:left; margin:4px 5px 0 0}
+	.quiz.selection .answer  .item .q		{overflow:hidden}
+
+		.quiz ul li label		{padding:3px; font-size:inherit}
+			.quiz ul li input	{margin:0}
+
+	.quiz .panel		{    
+	    margin-top: 10px;
+	    margin-bottom: 010px;
+		border: none;
+		box-shadow: none;
+	}
+	.quiz .panel button {margin-left:10px}
+
+
+	.quiz .panel .response {font-weight:bold}
+
+.maxbtn {opacity:.8; position:absolute; top:5px; left:5px; z-index:999}
+
+
+.single-line li		{display:inline-block; vertical-align:top; margin-right:20px}
+.single-line li .q	{white-space:nowrap}
+
+
+.position-marker {
+	position: absolute;
+    z-index: 101;
+}
+
+
+/* triangle */
+.position-marker > .triangle:before,
+.position-marker > .triangle:after {
+	content: '';
+	position: absolute;
+	box-sizing: content-box;
+    border-width: 15px;
+    border-style: solid;
+    border-color: transparent;
+}
+.position-marker > .triangle:before {
+	z-index: 101;
+
+}
+.position-marker > .triangle:after {
+	z-index: 99;
+}
+
+/*
+	0 1 2
+	7	3
+	6 5 4
+*/
+
+/* triangle */
+.position-marker[direction="0"] > .triangle:before {
+	bottom: 0px;
+    left: -15px;
+    border-left-color: #FFF;
+    border-bottom-width: 0px;
+}
+.position-marker[direction="2"] > .triangle:before {	
+	bottom: 0px;
+    right: -15px;
+    border-right-color: #FFF;
+    border-bottom-width: 0px;
+}
+.position-marker[direction="4"] > .triangle:before {	
+	top: 0px;
+    right: -15px;
+    border-right-color: #FFF;
+    border-top-width: 0px;
+}
+.position-marker[direction="6"] > .triangle:before {	
+	top: 0px;
+    left: -15px;
+    border-left-color: #FFF;
+    border-top-width: 0px;
+}
+
+
+
+/* bubble (narrow marker, edit draggable)*/
+.position-marker > .bubble {
+	position: absolute;
+    width: 50px;
+    height: 40px;
+    padding: 7px 0px;
+    background-color: #FFF;
+    box-shadow: 0px 2px 2px 0px rgba(0, 0, 0, 0.3);
+    border: 3px solid #6698f3;
+    border-radius: 50%;
+    font-size: 20px;
+    line-height: 1;
+    text-align: center;
+    font-weight: bold;
+    color: #6698f3;
+    z-index: 100;
+}
+
+.position-marker[direction="0"] > .bubble {
+	bottom: -6px;
+    right: 3px;
+}
+
+.position-marker[direction="2"] > .bubble {
+	bottom: -6px;
+    left: 3px;
+}
+
+.position-marker[direction="4"] > .bubble {
+	top: -6px;
+    left: 3px;
+}
+
+.position-marker[direction="6"] > .bubble {
+	top: -6px;
+    right: 3px;
+}
+
+/* bubble triangle border */
+.position-marker[direction="0"] > .bubble + .triangle:after {	
+    bottom: -2px;
+    left: -19px;
+    border-left-color: #6698f3;
+    border-left-width: 22px;
+    border-bottom-width: 0px;
+    border-top-width: 30px;
+}
+.position-marker[direction="2"] > .bubble + .triangle:after {	
+    bottom: -2px;
+    right: -19px;
+    border-right-color: #6698f3;
+    border-right-width: 22px;
+    border-bottom-width: 0px;
+    border-top-width: 30px;
+}
+.position-marker[direction="4"] > .bubble + .triangle:after {	
+    top: -2px;
+    right: -19px;
+    border-right-color: #6698f3;
+    border-right-width: 22px;
+    border-top-width: 0px;
+    border-bottom-width: 30px;
+}
+.position-marker[direction="6"] > .bubble + .triangle:after {	
+    top: -2px;
+    left: -19px;
+    border-left-color: #6698f3;
+    border-left-width: 22px;
+    border-top-width: 0px;
+    border-bottom-width: 30px;
+}
+
+
+
+/* wide player marker */
+.position-marker.wide-marker + .quiz {
+	position: absolute;
+	background: #FFF;
+}
+.position-marker.wide-marker[direction="0"] + .quiz {
+	margin-bottom: -5px; /* a little bit lower than arrow */
+    margin-right: 15px; /* connect to arrow */
+}
+.position-marker.wide-marker[direction="2"] + .quiz {
+	margin-bottom: -5px; /* a little bit lower than arrow */
+    margin-left: 15px;  /* connect to arrow */
+}
+.position-marker.wide-marker[direction="4"] + .quiz {
+	margin-top: -5px; /* a little bit lower than arrow */
+    margin-left: 15px;  /* connect to arrow */
+}
+.position-marker.wide-marker[direction="6"] + .quiz {
+	margin-top: -5px; /* a little bit lower than arrow */
+    margin-right: 15px;  /* connect to arrow */
+}
+
+/* narrow player marker */
+.position-marker.narrow-marker {
+    cursor: pointer;
+    animation-name: zoomin;
+    animation-iteration-count: 1;
+    animation-duration: .5s
+}
+
+.position-marker.narrow-marker > .bubble {
+    animation-name: bubble;
+    animation-direction: alternate;
+    animation-iteration-count: infinite;
+    animation-duration: .4s
+}
+
+@keyframes zoomin {
+	0% { transform: scale(0); }
+    60% { transform: scale(1.5); }
+    100% { transform: scale(1); }
+}
+
+@keyframes bubble {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.1); }
+}
+
+
+/* cue point */
+.cue-point {
+    position: absolute;
+    top: 0px;
+    width: 2px;
+    height: 100%;
+    background-color: #FF0;
+    margin-left: -2px;
+    z-index: 2;
+}

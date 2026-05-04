@@ -1,0 +1,1 @@
+var config = {"title":"CodexPets","poster":"cover.jpg","author":{"name":"","photo":"photo.gif"},"date":"","width":"544","height":"452","hideSN":0,"duration":19,"src":[{"src":"media.mp4","size":{"width":"544","height":"452"}}],"index":[{"id":"1","time":"0","title":"index 1","indent":"0","sn":"1"}]}

@@ -1,0 +1,36 @@
+
+.indexNoSetting{position:absolute; right:0px; top:25px; z-index:9999; display:none; background-color:#fff; padding:5px; border:#CCC 1px solid; border-radius: 6px; box-shadow:0px 1px 1px rgba(20%,20%,40%,0.5);}
+.indexNoSetting iframe{overflow:hidden; border:0;}
+.indexNoSetting span{font-size:20px;}
+.indexNoSetting .close{cursor:pointer;}
+
+
+.indexBox	{}
+.indexBox ul {margin:0; padding:0; list-style:none}
+
+.indexBox .idx		{padding-left:5px; padding-right:5px; line-height:1.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-radius:4px; cursor:pointer}
+.indexBox .indent	{padding-left:20px; color:#888}
+
+.indexBox .duration {float:right; vertical-align:middle; margin:0 5px; font-size:12px; color:#aaa}
+
+.indexBox .idx	{background:none}
+.indexBox .idx:hover  {background:rgba(255, 255, 153, 0.4)}
+.indexBox .idx.curr	{background:#ff9}
+
+.indexBox.edit ul					{position: relative; margin-bottom:10px; padding-bottom:20px; border-bottom:1px solid #eee}
+.indexBox.edit .idx.editing		{color:#08c}
+.indexBox .idx .sn			{float:left; margin-right: 3px}
+.indexBox .idx .time		{float:right}
+.indexBox .idx .cross		{float:right; width:16px; height:16px; margin-left:5px; margin-top:-1px}
+.indexBox .idx .title		{text-overflow:ellipsis; overflow:hidden; white-space:nowrap}
+
+.indexBox.edit .idx .tool			{margin:-3px 0 0 10px; float:right; visibility:hidden}
+.indexBox.edit .idx:hover .tool		{visibility:visible}
+
+.js-index-item.editing:hover .tool	{visibility:hidden !important}
+
+.indexBox.edit .idx:first-child .tool .js-remove {visibility:hidden}
+
+.indexBox.edit .idx-draft			{color:#888}
+.indexBox.edit .idx-draft .title	{font-style:italic}
+a[data-role='indexNoSetting'] {cursor:pointer;}

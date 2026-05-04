@@ -248,7 +248,7 @@ class QuizApp {
         );
         const totalQuestions = singleCount + multiCount;
 
-        if (this.liveServiceCount) this.liveServiceCount.textContent = '2';
+        if (this.liveServiceCount) this.liveServiceCount.textContent = '3';
         if (this.subjectTotalCount) this.subjectTotalCount.textContent = subjectCount.toString();
         if (this.questionTotalCount) this.questionTotalCount.textContent = totalQuestions.toString();
         if (this.cardSubjectCount) this.cardSubjectCount.textContent = subjectCount.toString();
