@@ -1373,9 +1373,18 @@ class QuizApp {
 
     loadFromStorage() {
         try {
+            const bundledSubjects = Array.isArray(subjects) ? JSON.parse(JSON.stringify(subjects)) : [];
             const data = localStorage.getItem('quizSubjects');
             if (data) {
-                subjects = JSON.parse(data);
+                const storedSubjects = JSON.parse(data);
+                bundledSubjects.forEach((bundledSubject) => {
+                    const exists = storedSubjects.some((subject) => subject.subject === bundledSubject.subject);
+                    if (!exists) {
+                        storedSubjects.push(bundledSubject);
+                    }
+                });
+                subjects = storedSubjects;
+                localStorage.setItem('quizSubjects', JSON.stringify(subjects));
             }
         } catch (e) {
             console.error('load storage failed', e);
