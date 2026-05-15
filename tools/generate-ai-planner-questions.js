@@ -665,6 +665,24 @@ function labelOptions(items) {
   return ['A', 'B', 'C', 'D'].map((label, index) => `${label}) ${items[index]}`);
 }
 
+function pickUnitDistractors(unit, concept, index, globalIndex, styleOffset, qualifierOffset) {
+  const pool = unit.concepts.filter((candidate) => candidate[0] !== concept[0]);
+  const picked = [];
+  let cursor = (index * 5 + globalIndex) % pool.length;
+  while (picked.length < 3) {
+    const candidate = pool[cursor % pool.length];
+    if (!picked.some((item) => item[0] === candidate[0])) {
+      picked.push(candidate);
+    }
+    cursor += 7;
+  }
+  return picked.map((candidate, pickedIndex) => {
+    const style = answerStyles[(styleOffset + 3 + pickedIndex * 3) % answerStyles.length];
+    const qualifier = optionQualifiers[(qualifierOffset + 5 + pickedIndex * 5) % optionQualifiers.length];
+    return `${style(candidate[1])}${qualifier}`;
+  });
+}
+
 function buildQuestion(unit, index, globalIndex) {
   const concept = unit.concepts[index % unit.concepts.length];
   const localRound = Math.floor(index / unit.concepts.length);
@@ -676,11 +694,10 @@ function buildQuestion(unit, index, globalIndex) {
   const correctSlot = (index + globalIndex) % 4;
   const styleOffset = (localRound * 4 + index + globalIndex) % answerStyles.length;
   const qualifierOffset = (localRound * 7 + index + globalIndex) % optionQualifiers.length;
+  const distractors = pickUnitDistractors(unit, concept, index, globalIndex, styleOffset, qualifierOffset);
   const choices = [
     `${answerStyles[styleOffset](concept[1])}${optionQualifiers[qualifierOffset]}`,
-    `${answerStyles[(styleOffset + 3) % answerStyles.length](concept[2])}${optionQualifiers[(qualifierOffset + 5) % optionQualifiers.length]}`,
-    `${answerStyles[(styleOffset + 6) % answerStyles.length](concept[3])}${optionQualifiers[(qualifierOffset + 10) % optionQualifiers.length]}`,
-    `${answerStyles[(styleOffset + 9) % answerStyles.length](concept[4])}${optionQualifiers[(qualifierOffset + 15) % optionQualifiers.length]}`
+    ...distractors
   ];
   const ordered = new Array(4);
   ordered[correctSlot] = choices[0];
