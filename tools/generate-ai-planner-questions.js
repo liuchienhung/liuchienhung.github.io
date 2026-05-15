@@ -335,16 +335,119 @@ const scenarioTemplates = [
   '某{ctx}將 AI 技術導入產品生命週期，面對「{concept}」時，下列哪一項最能降低誤判？'
 ];
 
+const caseDetails = [
+  '客服流程改善案', '跨部門資料整合專案', '模型上線前審查會議', '概念驗證 POC',
+  '營運儀表板改版', '異常事件監控情境', '資料治理盤點', '供應商評選會議',
+  '模型效能複核', '高風險決策輔助流程', '生成式 AI 知識庫建置', '資料前處理工作坊',
+  '雲端部署規劃', '使用者回饋分析', '稽核抽查', '正式上線後維運'
+];
+
+const evidenceSignals = [
+  '資料品質不一且來源定義不同',
+  '主管希望能以可量化指標驗收成果',
+  '使用者回饋指出模型偶爾給出不合理結果',
+  '測試集表現與正式環境表現出現落差',
+  '團隊需要在成本、風險與效益之間取捨',
+  '法遵單位要求說明資料來源與使用限制',
+  '業務單位要求降低人工處理時間',
+  '系統需要與既有流程及權限控管串接',
+  '資料分佈隨季節或活動檔期改變',
+  '管理層希望先小範圍驗證再擴大導入',
+  '模型輸出需要能被非技術人員理解',
+  '專案團隊需判斷應採用哪一類技術'
+];
+
+const decisionPressures = [
+  '避免只背名詞而忽略適用條件',
+  '釐清最可能的原因與改善方向',
+  '選出最符合實務導入風險的做法',
+  '判斷哪一項描述最接近核心定義',
+  '區分相近技術或指標的差異',
+  '選擇較能支援後續維運的方案',
+  '避免把資料處理、模型訓練與部署概念混淆',
+  '確認是否符合資料安全與治理要求',
+  '把技術能力轉換成可驗收的業務價值',
+  '找出最適合中級能力鑑定的判斷依據'
+];
+
+const questionAngles = [
+  '在{ctx}的{detail}中，團隊觀察到{signal}。若考點是「{concept}」，下列哪一項最符合正確判斷，且能{pressure}？',
+  '{ctx}規劃{detail}時，專案成員對「{concept}」的理解不同。若要回到學習指引的重點，下列何者最適當？',
+  '{ctx}執行{detail}後發現{signal}。針對「{concept}」，下列哪一項說明最能作為後續決策依據？',
+  '在{ctx}的{detail}審查中，委員要求說明「{concept}」的核心意義。下列回答何者最不容易造成誤解？',
+  '{ctx}希望用題庫訓練新人判斷「{concept}」的實務用途。下列哪一項最符合情境式單選題的答案方向？',
+  '{ctx}面對{signal}的狀況時，主管要求團隊不要只記名詞。關於「{concept}」，下列哪一項最能{pressure}？',
+  '在{ctx}的{detail}會議中，若要判斷「{concept}」是否被正確應用，下列哪一項檢核重點最合理？',
+  '{ctx}設計模擬試題時，想考出「{concept}」與相近概念的差異。下列哪一個選項最接近標準答案？',
+  '{ctx}正在把 AI 或大數據能力導入日常流程，且出現{signal}。若題目聚焦「{concept}」，最佳判斷為何？',
+  '在{ctx}的{detail}中，團隊需要向非技術主管解釋「{concept}」。下列哪一項說法最適合作為簡明結論？',
+  '{ctx}進行上線前風險檢查時，將「{concept}」列為考核重點。下列何者最能反映該重點的實務價值？',
+  '{ctx}準備改善{detail}，但團隊對{signal}的解讀不同。若以「{concept}」作為判斷核心，何者正確？',
+  '某中級能力鑑定模擬題以{ctx}的{detail}為背景，並要求考生理解「{concept}」。下列哪一項最符合出題方向？',
+  '{ctx}在建立內部作業準則時，需要把「{concept}」寫成可執行原則。下列哪一項最適合放入準則？',
+  '若{ctx}在{detail}中遭遇{signal}，並希望{pressure}，關於「{concept}」的正確理解為何？',
+  '{ctx}檢討專案失敗原因時，發現團隊可能誤用「{concept}」。下列哪一項可作為較正確的修正方向？'
+];
+
+const answerStyles = [
+  (text) => text,
+  (text) => `核心在於${text}`,
+  (text) => `應優先確認是否能${text}`,
+  (text) => `較合理的做法是${text}`,
+  (text) => `判斷重點應放在${text}`,
+  (text) => `實務上應以${text}作為主要依據`,
+  (text) => `此概念主要用來${text}`,
+  (text) => `若要降低誤判，應掌握${text}`,
+  (text) => `在導入情境中，重點是${text}`,
+  (text) => `最符合題意的是${text}`,
+  (text) => `可將其理解為${text}`,
+  (text) => `較能支援驗收的是${text}`
+];
+
+const optionQualifiers = [
+  '，並搭配可量化指標檢查',
+  '，同時確認資料來源與使用限制',
+  '，再依實際流程設計驗收方式',
+  '，避免只依工具名稱做判斷',
+  '，並保留後續監控或覆核機制',
+  '，以降低正式上線後的維運風險',
+  '，且需與業務情境連結',
+  '，再檢查是否符合治理要求',
+  '，並評估對使用者流程的影響',
+  '，才符合情境式試題的考法',
+  '，並與既有基準線比較',
+  '，同時注意資料品質是否足夠',
+  '，再決定是否擴大導入',
+  '，並確認責任分工清楚',
+  '，以避免把相近概念混為一談',
+  '，且不應忽略法遵與資安條件',
+  '，並用實際案例驗證理解',
+  '，以便後續稽核與追蹤',
+  '，再依風險等級調整控制措施',
+  '，並確認是否能在正式環境重現'
+];
+
 function labelOptions(items) {
   return ['A', 'B', 'C', 'D'].map((label, index) => `${label}) ${items[index]}`);
 }
 
 function buildQuestion(unit, index, globalIndex) {
   const concept = unit.concepts[index % unit.concepts.length];
-  const template = scenarioTemplates[(index + globalIndex) % scenarioTemplates.length];
+  const localRound = Math.floor(index / unit.concepts.length);
+  const template = questionAngles[(index + localRound + globalIndex) % questionAngles.length];
   const ctx = contexts[(index * 3 + globalIndex) % contexts.length];
+  const detail = caseDetails[(index + localRound * 5 + globalIndex) % caseDetails.length];
+  const signal = evidenceSignals[(index * 2 + localRound + globalIndex) % evidenceSignals.length];
+  const pressure = decisionPressures[(index + localRound * 3) % decisionPressures.length];
   const correctSlot = (index + globalIndex) % 4;
-  const choices = [concept[1], concept[2], concept[3], concept[4]];
+  const styleOffset = (localRound * 4 + index + globalIndex) % answerStyles.length;
+  const qualifierOffset = (localRound * 7 + index + globalIndex) % optionQualifiers.length;
+  const choices = [
+    `${answerStyles[styleOffset](concept[1])}${optionQualifiers[qualifierOffset]}`,
+    `${answerStyles[(styleOffset + 3) % answerStyles.length](concept[2])}${optionQualifiers[(qualifierOffset + 5) % optionQualifiers.length]}`,
+    `${answerStyles[(styleOffset + 6) % answerStyles.length](concept[3])}${optionQualifiers[(qualifierOffset + 10) % optionQualifiers.length]}`,
+    `${answerStyles[(styleOffset + 9) % answerStyles.length](concept[4])}${optionQualifiers[(qualifierOffset + 15) % optionQualifiers.length]}`
+  ];
   const ordered = new Array(4);
   ordered[correctSlot] = choices[0];
   let wrong = 1;
@@ -354,8 +457,14 @@ function buildQuestion(unit, index, globalIndex) {
       wrong += 1;
     }
   }
+  const question = template
+    .replace('{ctx}', ctx)
+    .replace('{detail}', detail)
+    .replace('{signal}', signal)
+    .replace('{pressure}', pressure)
+    .replace('{concept}', concept[0]);
   return {
-    question: `${template.replace('{ctx}', ctx).replace('{concept}', concept[0])}（第 ${globalIndex} 題）`,
+    question,
     options: labelOptions(ordered),
     answer: ['A', 'B', 'C', 'D'][correctSlot]
   };
