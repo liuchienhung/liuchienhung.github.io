@@ -665,6 +665,11 @@ function labelOptions(items) {
   return ['A', 'B', 'C', 'D'].map((label, index) => `${label}) ${items[index]}`);
 }
 
+function buildExplanation(concept) {
+  const explanation = `解析：${concept[0]}重點是${concept[1]}，應依題目情境判斷其用途，避免與同章相近概念混淆。`;
+  return explanation.length > 100 ? `${explanation.slice(0, 99)}。` : explanation;
+}
+
 function pickUnitDistractors(unit, concept, index, globalIndex, styleOffset, qualifierOffset) {
   const pool = unit.concepts.filter((candidate) => candidate[0] !== concept[0]);
   const picked = [];
@@ -717,7 +722,8 @@ function buildQuestion(unit, index, globalIndex) {
   return {
     question,
     options: labelOptions(ordered),
-    answer: ['A', 'B', 'C', 'D'][correctSlot]
+    answer: ['A', 'B', 'C', 'D'][correctSlot],
+    explanation: buildExplanation(concept)
   };
 }
 

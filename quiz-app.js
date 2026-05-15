@@ -657,6 +657,7 @@ class QuizApp {
             }
 
             const starred = this.starredQuestions.has(globalIndex) ? 'starred' : '';
+            const explanationHtml = this.getExplanationHtml(question, globalIndex);
             questionDiv.innerHTML = `
                 ${unitInfo}
                 <div class="question-header">
@@ -671,6 +672,7 @@ class QuizApp {
                         </div>
                     `).join('')}
                 </div>
+                ${explanationHtml}
             `;
 
             this.questionContainer.appendChild(questionDiv);
@@ -758,18 +760,7 @@ class QuizApp {
             let mark = null;
             if (this.showingResults) {
                 const userAnswer = this.userAnswers[i];
-                let isCorrect = false;
-                if (Array.isArray(q.answers)) {
-                    const ans = Array.isArray(userAnswer) ? userAnswer.slice().sort() : [];
-                    const correct = (q.answers || []).slice().sort();
-                    if (ans.length === correct.length && ans.every((v,idx)=>v===correct[idx])) {
-                        isCorrect = true;
-                    }
-                } else {
-                    if (userAnswer === q.answer) {
-                        isCorrect = true;
-                    }
-                }
+                const isCorrect = this.isQuestionCorrect(q, userAnswer);
                 item.className = 'status-item ' + (isCorrect ? 'correct' : 'incorrect');
                 mark = document.createElement('span');
                 mark.className = 'status-mark ' + (isCorrect ? 'correct' : 'incorrect');
@@ -1480,6 +1471,25 @@ class QuizApp {
             console.error('load storage failed', e);
             return Array.isArray(defaultSubjects) ? JSON.parse(JSON.stringify(defaultSubjects)) : [];
         }
+    }
+
+    isQuestionCorrect(question, userAnswer) {
+        if (Array.isArray(question.answers)) {
+            const ans = Array.isArray(userAnswer) ? userAnswer.slice().sort() : [];
+            const correct = (question.answers || []).slice().sort();
+            return ans.length === correct.length && ans.every((v, idx) => v === correct[idx]);
+        }
+        return userAnswer === question.answer;
+    }
+
+    getExplanationHtml(question, questionIndex) {
+        if (!this.showingResults || !question.explanation) return '';
+        const userAnswer = this.userAnswers[questionIndex];
+        if (this.isQuestionCorrect(question, userAnswer)) return '';
+        const explanation = question.explanation.length > 100
+            ? `${question.explanation.slice(0, 99)}。`
+            : question.explanation;
+        return `<div class="question-explanation"><strong>解析：</strong>${explanation.replace(/^解析：/, '')}</div>`;
     }
 
     saveToStorage() {
