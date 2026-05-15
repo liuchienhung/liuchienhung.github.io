@@ -20,8 +20,12 @@ class QuizApp {
         this.starredQuestions = new Set();
         this.selectionCallback = null;
         this.toastTimer = null;
+        this.serviceMode = 'security';
+        this.storageKey = 'quizSubjects';
+        this.defaultSubjects = subjects;
+        this.subjects = this.loadFromStorage(this.defaultSubjects, this.storageKey);
+        subjects = this.subjects;
 
-        this.loadFromStorage();
         this.initializeElements();
         this.initializeEventListeners();
         this.renderSubjectSelector();
@@ -34,6 +38,8 @@ class QuizApp {
         this.quizServiceApp = document.getElementById('quiz-service-app');
         this.openQuizServiceBtn = document.getElementById('open-quiz-service');
         this.openQuizServiceSecondaryBtn = document.getElementById('open-quiz-service-secondary');
+        this.openAiPlannerServiceBtn = document.getElementById('open-ai-planner-service');
+        this.openAiPlannerServiceSecondaryBtn = document.getElementById('open-ai-planner-service-secondary');
         this.backToHomeBtn = document.getElementById('back-to-home');
         this.homeFromSubjectsBtn = document.getElementById('home-from-subjects');
         this.liveServiceCount = document.getElementById('live-service-count');
@@ -42,6 +48,12 @@ class QuizApp {
         this.cardSubjectCount = document.getElementById('card-subject-count');
         this.cardSingleCount = document.getElementById('card-single-count');
         this.cardMultiCount = document.getElementById('card-multi-count');
+        this.aiSubjectCount = document.getElementById('ai-card-subject-count');
+        this.aiQuestionCount = document.getElementById('ai-card-question-count');
+        this.aiMultiCount = document.getElementById('ai-card-multi-count');
+        this.quizServiceBadge = document.getElementById('quiz-service-badge');
+        this.quizServiceTitle = document.getElementById('quiz-service-title');
+        this.quizServiceSubtitle = document.getElementById('quiz-service-subtitle');
 
         this.subjectSelector = document.getElementById('subject-selector');
         this.subjectButtons = document.getElementById('subject-buttons');
@@ -121,6 +133,12 @@ class QuizApp {
         }
         if (this.openQuizServiceSecondaryBtn) {
             this.openQuizServiceSecondaryBtn.addEventListener('click', () => this.enterQuizService());
+        }
+        if (this.openAiPlannerServiceBtn) {
+            this.openAiPlannerServiceBtn.addEventListener('click', () => this.enterAiPlannerService());
+        }
+        if (this.openAiPlannerServiceSecondaryBtn) {
+            this.openAiPlannerServiceSecondaryBtn.addEventListener('click', () => this.enterAiPlannerService());
         }
         if (this.backToHomeBtn) {
             this.backToHomeBtn.addEventListener('click', () => this.returnToServiceHome());
@@ -237,23 +255,36 @@ class QuizApp {
     }
 
     renderServiceHome() {
-        const subjectCount = subjects.length;
-        const singleCount = subjects.reduce(
+        const securitySubjects = subjects;
+        const aiSubjects = typeof aiPlannerSubjects !== 'undefined' ? aiPlannerSubjects : [];
+        const subjectCount = securitySubjects.length;
+        const singleCount = securitySubjects.reduce(
             (sum, subject) => sum + (subject.units || []).reduce((unitSum, unit) => unitSum + unit.questions.length, 0),
             0
         );
-        const multiCount = subjects.reduce(
+        const multiCount = securitySubjects.reduce(
             (sum, subject) => sum + (subject.multiUnits || []).reduce((unitSum, unit) => unitSum + unit.questions.length, 0),
             0
         );
-        const totalQuestions = singleCount + multiCount;
+        const aiSingleCount = aiSubjects.reduce(
+            (sum, subject) => sum + (subject.units || []).reduce((unitSum, unit) => unitSum + unit.questions.length, 0),
+            0
+        );
+        const aiMultiCount = aiSubjects.reduce(
+            (sum, subject) => sum + (subject.multiUnits || []).reduce((unitSum, unit) => unitSum + unit.questions.length, 0),
+            0
+        );
+        const totalQuestions = singleCount + multiCount + aiSingleCount + aiMultiCount;
 
-        if (this.liveServiceCount) this.liveServiceCount.textContent = '3';
+        if (this.liveServiceCount) this.liveServiceCount.textContent = '4';
         if (this.subjectTotalCount) this.subjectTotalCount.textContent = subjectCount.toString();
         if (this.questionTotalCount) this.questionTotalCount.textContent = totalQuestions.toString();
         if (this.cardSubjectCount) this.cardSubjectCount.textContent = subjectCount.toString();
         if (this.cardSingleCount) this.cardSingleCount.textContent = singleCount.toString();
         if (this.cardMultiCount) this.cardMultiCount.textContent = multiCount.toString();
+        if (this.aiSubjectCount) this.aiSubjectCount.textContent = aiSubjects.length.toString();
+        if (this.aiQuestionCount) this.aiQuestionCount.textContent = aiSingleCount.toString();
+        if (this.aiMultiCount) this.aiMultiCount.textContent = aiMultiCount.toString();
     }
 
     showServiceHome() {
@@ -264,10 +295,65 @@ class QuizApp {
     }
 
     enterQuizService() {
+        this.switchQuizService({
+            mode: 'security',
+            storageKey: 'quizSubjects',
+            defaultSubjects: subjects,
+            badge: 'Service 01',
+            title: '資通安全題庫線上測驗',
+            subtitle: '專業能力評估系統'
+        });
         this.renderServiceHome();
         this.renderSubjectSelector();
         if (this.serviceHome) this.serviceHome.style.display = 'none';
         if (this.quizServiceApp) this.quizServiceApp.style.display = 'block';
+    }
+
+    enterAiPlannerService() {
+        this.switchQuizService({
+            mode: 'ai-planner',
+            storageKey: 'aiPlannerQuizSubjects',
+            defaultSubjects: typeof aiPlannerSubjects !== 'undefined' ? aiPlannerSubjects : [],
+            badge: 'Service 03',
+            title: 'AI應用規劃師(中級)題庫模擬測驗',
+            subtitle: '科目一與科目二單選題模擬測驗服務'
+        });
+        this.renderServiceHome();
+        this.renderSubjectSelector();
+        if (this.serviceHome) this.serviceHome.style.display = 'none';
+        if (this.quizServiceApp) this.quizServiceApp.style.display = 'block';
+    }
+
+    switchQuizService(config) {
+        this.serviceMode = config.mode;
+        this.storageKey = config.storageKey;
+        this.defaultSubjects = config.defaultSubjects;
+        this.subjects = this.loadFromStorage(this.defaultSubjects, this.storageKey);
+        if (this.serviceMode === 'security') {
+            subjects = this.subjects;
+        } else if (this.serviceMode === 'ai-planner' && typeof aiPlannerSubjects !== 'undefined') {
+            aiPlannerSubjects = this.subjects;
+        }
+        this.currentSubject = null;
+        this.currentSubjectData = [];
+        this.currentUnit = null;
+        this.currentSingleUnits = [];
+        this.currentMultiUnits = [];
+        this.currentUnitType = 'single';
+        this.resetQuiz();
+        if (this.quizServiceBadge) this.quizServiceBadge.textContent = config.badge;
+        if (this.quizServiceTitle) this.quizServiceTitle.textContent = config.title;
+        if (this.quizServiceSubtitle) this.quizServiceSubtitle.textContent = config.subtitle;
+        this.updateServiceSpecificUi();
+    }
+
+    updateServiceSpecificUi() {
+        const isAiPlanner = this.serviceMode === 'ai-planner';
+        if (this.addSubjectBtn) this.addSubjectBtn.style.display = isAiPlanner ? 'none' : '';
+        if (this.removeSubjectBtn) this.removeSubjectBtn.style.display = isAiPlanner ? 'none' : '';
+        if (this.importFileMulti) this.importFileMulti.closest('fieldset').style.display = isAiPlanner ? 'none' : '';
+        if (this.multiUnitButtons) this.multiUnitButtons.closest('fieldset').style.display = isAiPlanner ? 'none' : '';
+        if (this.mixedUnitButtons) this.mixedUnitButtons.closest('fieldset').style.display = isAiPlanner ? 'none' : '';
     }
 
     returnToServiceHome() {
@@ -294,7 +380,7 @@ class QuizApp {
 
     renderSubjectSelector() {
         this.subjectButtons.innerHTML = '';
-        subjects.forEach((subj, index) => {
+        this.subjects.forEach((subj, index) => {
             const button = document.createElement('button');
             button.className = 'unit-btn';
             const singleCount = subj.units.reduce((s, u) => s + u.questions.length, 0);
@@ -315,8 +401,8 @@ class QuizApp {
 
     selectSubject(index) {
         this.currentSubject = index;
-        this.currentSingleUnits = subjects[index].units;
-        this.currentMultiUnits = subjects[index].multiUnits || [];
+        this.currentSingleUnits = this.subjects[index].units;
+        this.currentMultiUnits = this.subjects[index].multiUnits || [];
         this.currentSubjectData = this.currentSingleUnits;
         this.renderUnitSelector();
         this.subjectSelector.style.display = 'none';
@@ -1003,7 +1089,7 @@ class QuizApp {
                 const questions = Array.isArray(data) ? data : data.questions;
                 if (!Array.isArray(questions)) throw new Error('格式錯誤');
                 this.currentMultiUnits[unitIndex].questions.push(...questions);
-                subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
+                this.subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
                 this.saveToStorage();
                 this.showToast('匯入成功');
                 this.renderUnitSelector();
@@ -1021,7 +1107,7 @@ class QuizApp {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${subjects[this.currentSubject].subject}.json`;
+        a.download = `${this.subjects[this.currentSubject].subject}.json`;
         a.click();
         URL.revokeObjectURL(url);
     }
@@ -1069,7 +1155,7 @@ class QuizApp {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${subjects[this.currentSubject].subject}-multi.json`;
+        a.download = `${this.subjects[this.currentSubject].subject}-multi.json`;
         a.click();
         URL.revokeObjectURL(url);
     }
@@ -1101,7 +1187,7 @@ class QuizApp {
                 const units = Array.isArray(data) ? data : data.units;
                 if (!Array.isArray(units)) throw new Error('格式錯誤');
                 this.currentSubjectData = units;
-                subjects[this.currentSubject].units = units;
+                this.subjects[this.currentSubject].units = units;
                 this.saveToStorage();
                 this.showToast('匯入成功');
                 this.renderUnitSelector();
@@ -1125,7 +1211,7 @@ class QuizApp {
                 const units = Array.isArray(data) ? data : data.units;
                 if (!Array.isArray(units)) throw new Error('格式錯誤');
                 this.currentMultiUnits = units;
-                subjects[this.currentSubject].multiUnits = units;
+                this.subjects[this.currentSubject].multiUnits = units;
                 this.saveToStorage();
                 this.showToast('匯入成功');
                 this.renderUnitSelector();
@@ -1139,7 +1225,7 @@ class QuizApp {
     addSubject() {
         const name = prompt('請輸入科目名稱');
         if (!name) return;
-        subjects.push({ subject: name, units: [] });
+        this.subjects.push({ subject: name, units: [] });
         this.saveToStorage();
         this.renderSubjectSelector();
     }
@@ -1149,18 +1235,18 @@ class QuizApp {
         const name = prompt('請輸入單元名稱');
         if (!name) return;
         this.currentSubjectData.push({ unit: name, questions: [] });
-        subjects[this.currentSubject].units = this.currentSubjectData;
+        this.subjects[this.currentSubject].units = this.currentSubjectData;
         this.saveToStorage();
         this.renderUnitSelector();
     }
 
     removeSubject() {
-        if (!subjects.length) return;
-        const items = subjects.map((s, i) => ({ label: s.subject, value: i }));
+        if (!this.subjects.length) return;
+        const items = this.subjects.map((s, i) => ({ label: s.subject, value: i }));
         this.showSelection('選擇要刪除的科目', items, (selected) => {
             if (!selected.length) return;
             if (!confirm('確定刪除選取的科目？')) return;
-            selected.sort((a,b) => b - a).forEach(idx => subjects.splice(idx, 1));
+            selected.sort((a,b) => b - a).forEach(idx => this.subjects.splice(idx, 1));
             this.saveToStorage();
             this.renderSubjectSelector();
         });
@@ -1176,7 +1262,7 @@ class QuizApp {
             selected.sort((a,b) => b - a).forEach(idx => {
                 this.currentSubjectData.splice(idx, 1);
             });
-            subjects[this.currentSubject].units = this.currentSubjectData;
+            this.subjects[this.currentSubject].units = this.currentSubjectData;
             this.saveToStorage();
             this.renderUnitSelector();
         });
@@ -1186,10 +1272,10 @@ class QuizApp {
         if (this.currentSubject == null) return;
         const name = prompt('請輸入單元名稱');
         if (!name) return;
-        if (!Array.isArray(subjects[this.currentSubject].multiUnits)) {
-            subjects[this.currentSubject].multiUnits = [];
+        if (!Array.isArray(this.subjects[this.currentSubject].multiUnits)) {
+            this.subjects[this.currentSubject].multiUnits = [];
         }
-        this.currentMultiUnits = subjects[this.currentSubject].multiUnits;
+        this.currentMultiUnits = this.subjects[this.currentSubject].multiUnits;
         this.currentMultiUnits.push({ unit: name, questions: [] });
         this.saveToStorage();
         this.renderUnitSelector();
@@ -1197,7 +1283,7 @@ class QuizApp {
 
     removeUnitMulti() {
         if (this.currentSubject == null) return;
-        this.currentMultiUnits = subjects[this.currentSubject].multiUnits || [];
+        this.currentMultiUnits = this.subjects[this.currentSubject].multiUnits || [];
         if (!this.currentMultiUnits.length) return;
         const items = this.currentMultiUnits.map((u, i) => ({ label: u.unit, value: i }));
         this.showSelection('選擇要刪除的單元', items, (selected) => {
@@ -1206,7 +1292,7 @@ class QuizApp {
             selected.sort((a,b) => b - a).forEach(idx => {
                 this.currentMultiUnits.splice(idx, 1);
             });
-            subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
+            this.subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
             this.saveToStorage();
             this.renderUnitSelector();
         });
@@ -1218,7 +1304,7 @@ class QuizApp {
         if (!confirm('確定要同步單選題庫單元至多選題庫？(僅同步下拉選單，不會同步題目)')) return;
         const units = this.currentSingleUnits.map(u => ({ unit: u.unit, questions: [] }));
         this.currentMultiUnits = units;
-        subjects[this.currentSubject].multiUnits = units;
+        this.subjects[this.currentSubject].multiUnits = units;
         this.saveToStorage();
         this.renderUnitSelector();
         this.showToast('多選題庫下拉選單已同步');
@@ -1231,7 +1317,7 @@ class QuizApp {
         const units = this.currentMultiUnits.map(u => ({ unit: u.unit, questions: [] }));
         this.currentSingleUnits = units;
         this.currentSubjectData = units;
-        subjects[this.currentSubject].units = units;
+        this.subjects[this.currentSubject].units = units;
         this.saveToStorage();
         this.renderUnitSelector();
         this.showToast('單選題庫下拉選單已同步');
@@ -1259,7 +1345,7 @@ class QuizApp {
             selected.sort((a,b) => b - a).forEach(idx => unit.questions.splice(idx, 1));
             if (unit.questions.length === 0) {
                 this.currentSubjectData.splice(unitIndex, 1);
-                subjects[this.currentSubject].units = this.currentSubjectData;
+                this.subjects[this.currentSubject].units = this.currentSubjectData;
             }
             this.saveToStorage();
             this.renderUnitSelector();
@@ -1290,7 +1376,7 @@ class QuizApp {
             if (unit.questions.length === 0) {
                 this.currentMultiUnits.splice(unitIndex, 1);
             }
-            subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
+            this.subjects[this.currentSubject].multiUnits = this.currentMultiUnits;
             this.saveToStorage();
             this.renderUnitSelector();
             alert('已刪除題目');
@@ -1304,7 +1390,7 @@ class QuizApp {
         }
         const { jsPDF } = window.jspdf;
 
-        const subjectName = subjects[this.currentSubject].subject;
+        const subjectName = this.subjects[this.currentSubject].subject;
         const unitName = this.currentUnit === -1 ? '全部單元' : this.currentSubjectData[this.currentUnit].unit;
 
         const container = document.createElement('div');
@@ -1371,29 +1457,34 @@ class QuizApp {
         this.toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    loadFromStorage() {
+    loadFromStorage(defaultSubjects = [], storageKey = 'quizSubjects') {
         try {
-            const bundledSubjects = Array.isArray(subjects) ? JSON.parse(JSON.stringify(subjects)) : [];
-            const data = localStorage.getItem('quizSubjects');
+            const bundledSubjects = Array.isArray(defaultSubjects) ? JSON.parse(JSON.stringify(defaultSubjects)) : [];
+            const data = localStorage.getItem(storageKey);
             if (data) {
-                const storedSubjects = JSON.parse(data);
+                let storedSubjects = JSON.parse(data);
+                if (storageKey === 'quizSubjects') {
+                    storedSubjects = storedSubjects.filter((subject) => subject.subject !== 'AI應用規劃師(中級)');
+                }
                 bundledSubjects.forEach((bundledSubject) => {
                     const exists = storedSubjects.some((subject) => subject.subject === bundledSubject.subject);
                     if (!exists) {
                         storedSubjects.push(bundledSubject);
                     }
                 });
-                subjects = storedSubjects;
-                localStorage.setItem('quizSubjects', JSON.stringify(subjects));
+                localStorage.setItem(storageKey, JSON.stringify(storedSubjects));
+                return storedSubjects;
             }
+            return bundledSubjects;
         } catch (e) {
             console.error('load storage failed', e);
+            return Array.isArray(defaultSubjects) ? JSON.parse(JSON.stringify(defaultSubjects)) : [];
         }
     }
 
     saveToStorage() {
         try {
-            localStorage.setItem('quizSubjects', JSON.stringify(subjects));
+            localStorage.setItem(this.storageKey, JSON.stringify(this.subjects));
         } catch (e) {
             console.error('save storage failed', e);
         }

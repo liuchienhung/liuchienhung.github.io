@@ -1435,11 +1435,12 @@
                     <span class="hero-eyebrow">Multi-Service Portal</span>
                     <h1>一個首頁，集中展示持續增加中的服務。</h1>
                     <p>
-                        這個入口頁會先列出目前已經上線的服務，並保留後續擴充空間。目前已提供題庫測驗、試卷報讀與 Codex Pets Demo 影片，
+                        這個入口頁會先列出目前已經上線的服務，並保留後續擴充空間。目前已提供資通安全題庫測驗、AI 應用規劃師模擬測驗、試卷報讀與 Codex Pets Demo 影片，
                         之後可陸續加入成績查詢、學習儀表板、教材中心或其他工具，不需要重做整個首頁架構。
                     </p>
                     <div class="hero-actions">
                         <button id="open-quiz-service" class="service-launch-btn">進入目前服務</button>
+                        <button id="open-ai-planner-service" class="service-launch-btn">AI應用規劃師測驗</button>
                         <button id="open-reader-service" class="service-launch-btn">試用報讀服務</button>
                         <a class="service-launch-btn" href="#codex-pets-demo">觀看 Codex Pets Demo</a>
                         <a class="hero-link" href="#service-list">查看服務清單</a>
@@ -1449,7 +1450,7 @@
                     <h2>服務概況</h2>
                     <div class="summary-metrics">
                         <div class="metric-card">
-                            <span id="live-service-count" class="metric-value">3</span>
+                            <span id="live-service-count" class="metric-value">4</span>
                             <span class="metric-label">已上線服務</span>
                         </div>
                         <div class="metric-card">
@@ -1471,7 +1472,7 @@
                             <span class="section-eyebrow">Live Services</span>
                             <h2>目前已上線</h2>
                         </div>
-                        <p>使用者進到首頁時會先看到可用服務。現在已經有三個可用項目，後續也可持續擴充成更多入口。</p>
+                        <p>使用者進到首頁時會先看到可用服務。現在已經有四個可用項目，後續也可持續擴充成更多入口。</p>
                     </div>
                     <div class="services-grid">
                         <article class="service-card active-service">
@@ -1498,6 +1499,32 @@
                                 </div>
                             </div>
                             <button id="open-quiz-service-secondary" class="service-launch-btn">開始使用</button>
+                        </article>
+
+                        <article class="service-card active-service">
+                            <div class="service-card-top">
+                                <div class="service-icon">AI</div>
+                                <span class="status-pill">已上線</span>
+                            </div>
+                            <div>
+                                <h3>AI應用規劃師(中級)題庫模擬測驗</h3>
+                                <p>獨立提供科目一與科目二單選模擬測驗，每科各 1000 題，依學習指引章節與公告試題趨勢設計。</p>
+                            </div>
+                            <div class="service-meta">
+                                <div class="service-meta-item">
+                                    <span id="ai-card-subject-count" class="service-meta-value">2</span>
+                                    <span class="service-meta-label">科目</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span id="ai-card-question-count" class="service-meta-value">2000</span>
+                                    <span class="service-meta-label">單選題</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span id="ai-card-multi-count" class="service-meta-value">0</span>
+                                    <span class="service-meta-label">多選題</span>
+                                </div>
+                            </div>
+                            <button id="open-ai-planner-service-secondary" class="service-launch-btn">開始使用</button>
                         </article>
 
                         <article class="service-card active-service">
@@ -1608,11 +1635,11 @@
         <div class="header">
             <div class="header-topbar">
                 <button id="back-to-home" class="ghost-home-btn" type="button">← 返回服務首頁</button>
-                <span class="service-badge">Service 01</span>
+                <span id="quiz-service-badge" class="service-badge">Service 01</span>
             </div>
             <div class="header-copy">
-                <h1>資通安全題庫線上測驗</h1>
-                <p>專業能力評估系統</p>
+                <h1 id="quiz-service-title">資通安全題庫線上測驗</h1>
+                <p id="quiz-service-subtitle">專業能力評估系統</p>
             </div>
         </div>
 
