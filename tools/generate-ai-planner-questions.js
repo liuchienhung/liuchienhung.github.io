@@ -504,7 +504,7 @@ const guideConceptExtensions = {
     ['序列模式', '找出事件或購買行為在時間順序上的常見模式', '忽略事件順序', '只看總次數', '等同靜態分類'],
     ['降維', '將高維資料轉為較低維表示以利視覺化或建模', '必定提高所有模型準確率', '不會損失資訊', '只用於資料庫備份'],
     ['集成方法', '結合多個模型以提升穩定性或預測能力', '只使用單一規則', '不需驗證', '等同欄位刪除'],
-    ['模型分數校準', '讓預測機率更接近真實發生比例以支援決策', '分數高低與機率無關', '不需檢查', '只改圖表比例']
+    ['知識圖譜 RDF 三元組', '以主詞、謂詞、受詞表示實體關係以支援語意查詢與推理', '僅將所有內容存放於單一文字欄位', '不需定義實體關係', '只用標籤取代語意結構']
   ],
   '科目二 5.3：數據可視化工具': [
     ['圓餅圖限制', '類別過多或差異細微時不利精準比較', '類別越多越適合圓餅圖', '可取代所有圖表', '只用於模型部署'],
@@ -670,7 +670,264 @@ function buildExplanation(concept) {
   return explanation.length > 100 ? `${explanation.slice(0, 99)}。` : explanation;
 }
 
-function pickUnitDistractors(unit, concept, index, globalIndex, styleOffset, qualifierOffset) {
+const subject1Tasks = [
+  '分析顧客留言與內部文件內容',
+  '提升客服自動回覆與文字理解能力',
+  '判讀影像、語音或文字資料中的關鍵訊息',
+  '改善產品生命週期中的 AI 應用流程',
+  '建立可導入企業流程的智慧化服務',
+  '評估模型在實際業務場景中的應用價值',
+  '降低 AI 導入後的錯誤判斷與維運風險',
+  '將資料、模型與既有系統整合成可用服務'
+];
+
+const subject2Tasks = [
+  '整合大量內部資料並支援後續分析',
+  '處理高維度、多來源且品質不一的資料',
+  '建立可支援語意查詢、分群或預測的資料流程',
+  '分析顧客行為、交易紀錄與營運指標',
+  '設計可擴充的大數據儲存與處理架構',
+  '針對模型訓練資料進行清理、轉換與治理',
+  '建立能兼顧分析效率與資料安全的應用方案',
+  '從大量資料中找出趨勢、異常或關聯模式'
+];
+
+const subject1Conditions = [
+  '即時掌握使用者需求變化',
+  '提升模型判斷準確度與可用性',
+  '讓系統能理解非結構化資料',
+  '支援企業導入、部署與後續優化',
+  '降低模型誤用或輸出不可靠的風險',
+  '讓 AI 服務能符合實際業務情境',
+  '改善跨部門協作與系統整合成效',
+  '建立可驗證且可維運的 AI 應用'
+];
+
+const subject2Conditions = [
+  '具備良好的擴充性與查詢效率',
+  '降低資料偏差與前處理錯誤',
+  '支援統計推論與資料分佈判讀',
+  '提升模型訓練資料的品質與代表性',
+  '兼顧資料處理效能與治理要求',
+  '支援即時分析、批次處理或視覺化決策',
+  '保護敏感資料並符合合規要求',
+  '讓分析結果能支援後續 AI 應用'
+];
+
+const dataSources = [
+  '社群留言、客服紀錄與商品評論',
+  '交易明細、會員資料與瀏覽行為',
+  '感測器資料、維修紀錄與設備告警',
+  '研究報告、專利文件與專家知識',
+  '醫療紀錄、檢驗數據與問診摘要',
+  '物流軌跡、訂單狀態與倉儲紀錄',
+  '影像檔、標註資料與現場截圖',
+  '語音紀錄、逐字稿與客服分類標籤',
+  '營運報表、KPI 指標與歷史趨勢',
+  '法遵文件、稽核紀錄與權限清單',
+  '模型日誌、使用者回饋與錯誤案例',
+  '知識庫文件、FAQ 與內部作業規範',
+  '供應鏈資料、交期紀錄與品質檢測',
+  '學習歷程、測驗紀錄與互動行為',
+  '金融交易、風險評分與異常通報',
+  '行銷活動、廣告素材與轉換紀錄',
+  '地理位置、交通流量與事件通報',
+  '合約資料、電子郵件與專案文件',
+  '產品規格、客訴紀錄與維修圖片',
+  '公開資料、內部資料湖與即時串流'
+];
+
+const outcomeMetrics = [
+  '滿意度變化',
+  '回覆正確率',
+  '偵測召回率',
+  '處理延遲',
+  '異常誤報率',
+  '資料完整性',
+  '查詢回應時間',
+  '模型穩定度',
+  '人工覆核量',
+  '法遵風險',
+  '預測誤差',
+  '分類精確率',
+  '資料更新頻率',
+  '服務可用率',
+  '知識命中率',
+  '報表解讀效率',
+  '成本節省幅度',
+  '使用者採用率',
+  '流程自動化比例',
+  '跨部門整合成效'
+];
+
+const dataScales = [
+  '每日數萬筆',
+  '每小時即時匯入',
+  '每週批次彙整',
+  '跨三個部門同步',
+  '含五年以上歷史資料',
+  '橫跨多國語系',
+  '包含結構化與非結構化資料',
+  '需保留原始資料與處理後資料',
+  '需支援尖峰流量',
+  '資料標註成本有限',
+  '需保留完整稽核軌跡',
+  '需與既有 ERP/CRM 串接',
+  '需支援行動端查詢',
+  '需處理大量長文本',
+  '需整合圖像與文字',
+  '需在低延遲環境運作',
+  '需支援多租戶權限',
+  '需定期重訓模型',
+  '需同步更新知識庫',
+  '需支援跨系統查詢',
+  '需控管個資與機密資料',
+  '需提供主管決策報表',
+  '需保留人工覆核流程'
+];
+
+const unitSourcePools = {
+  '科目一 3.1': [
+    '社群留言、客服紀錄與商品評論',
+    '客服對話、FAQ 與電子郵件',
+    '新聞文本、產品評論與論壇貼文',
+    '多語客服逐字稿與使用者查詢',
+    '合約條文、內部文件與摘要需求',
+    '搜尋關鍵字、意圖標籤與回覆紀錄'
+  ],
+  '科目一 3.2': [
+    '監視器影像、標註框與現場截圖',
+    '產品瑕疵照片、分類標籤與檢測影像',
+    '醫療影像、病灶標註與判讀結果',
+    '道路影像、車輛框與行人標註',
+    '文件掃描圖、OCR 文字框與版面標註',
+    '姿態影像、關鍵點標註與動作類別'
+  ],
+  '科目一 3.3': [
+    '知識庫文件、FAQ 與提示紀錄',
+    '內部規範、使用者提問與生成回答',
+    '產品文件、檢索片段與引用來源',
+    '客服腳本、範例提示與人工回饋',
+    '長篇報告、摘要需求與安全規則',
+    '訓練語料、測試問題與評測紀錄'
+  ],
+  '科目一 3.4': [
+    '圖片、文字描述與語音紀錄',
+    '文件版面、表格圖像與段落文字',
+    '商品照片、評論文字與客服錄音',
+    '監控影像、事件文字與告警音訊',
+    '醫療影像、問診文字與檢驗表格',
+    '截圖、操作紀錄與使用者提問'
+  ],
+  '科目一 4': [
+    '業務需求、資料盤點表與流程紀錄',
+    'POC 結果、成本估算與利害關係人回饋',
+    '導入範圍、驗收指標與風險清單',
+    '使用者訪談、現況流程與效益評估',
+    '供應商提案、法遵要求與維運條件',
+    '模型紀錄、人工覆核結果與上線規劃'
+  ],
+  '科目一 5': [
+    '訓練資料、特徵欄位與模型版本',
+    'API 請求、推論日誌與服務監控指標',
+    '驗證資料、錯誤案例與部署紀錄',
+    '容器映像、模型檔案與依賴套件',
+    '資料標註、測試集與效能報告',
+    '系統介接規格、權限設定與回滾紀錄'
+  ],
+  '科目二 3': [
+    '銷售金額、來電次數與交易分佈',
+    '樣本觀測值、統計量與分佈圖',
+    '實驗組資料、對照組資料與檢定結果',
+    '連續數值欄位、類別欄位與摘要報表',
+    '抽樣資料、母體假設與信賴區間',
+    '時間區間事件數、等待時間與機率模型'
+  ],
+  '科目二 4': [
+    '原始資料表、缺值欄位與清理規則',
+    '交易資料、資料湖檔案與資料倉儲表',
+    '串流事件、批次作業與 ETL 管線',
+    '主鍵外鍵、索引設計與資料目錄',
+    '多來源欄位、資料型別與轉換紀錄',
+    '作業排程、錯誤佇列與資料血緣'
+  ],
+  '科目二 5': [
+    '顧客行為、商品關聯與推薦紀錄',
+    '知識圖譜、實體關係與語意查詢',
+    '時間序列、群集結果與異常分數',
+    '儀表板指標、視覺化圖表與篩選條件',
+    '抽樣資料、迴歸特徵與實驗分組',
+    '文本主題、關聯規則與分群特徵'
+  ],
+  '科目二 6': [
+    '訓練資料、特徵資料與模型監控紀錄',
+    '分類分數、混淆矩陣與決策閾值',
+    '向量資料庫、檢索片段與生成回答',
+    '個資欄位、存取紀錄與合規文件',
+    '資料漂移報告、重訓紀錄與回饋資料',
+    '匿名資料、加密資料與跨境傳輸紀錄'
+  ]
+};
+
+function getUnitSources(unit, index, globalIndex) {
+  const key = Object.keys(unitSourcePools).find((prefix) => unit.unit.startsWith(prefix));
+  const pool = key ? unitSourcePools[key] : dataSources;
+  return pool[(index * 7 + globalIndex) % pool.length];
+}
+
+function isSubjectTwo(unit) {
+  return unit.unit.startsWith('科目二');
+}
+
+function cleanOptionText(text) {
+  return text
+    .replace(/^需/, '')
+    .replace(/^可/, '')
+    .replace(/^將/, '將')
+    .replace(/，常見於/g, '，可用於')
+    .replace(/並需/g, '並須')
+    .trim();
+}
+
+const subject1OptionVariants = [
+  (text) => text,
+  (text) => `主要用於${text}`,
+  (text) => `目的在於${text}`,
+  (text) => `核心是${text}`,
+  (text) => `可用來${text}`,
+  (text) => `重點是${text}`,
+  (text) => `適合用於${text}`,
+  (text) => `通常用來${text}`,
+  (text) => `可支援${text}`,
+  (text) => `其作用是${text}`,
+  (text) => `主要功能是${text}`,
+  (text) => `技術重點為${text}`
+];
+
+const subject2OptionVariants = [
+  (name, text) => `採用${name}，${text}`,
+  (name, text) => `使用${name}進行設計，${text}`,
+  (name, text) => `以${name}作為方法，${text}`,
+  (name, text) => `導入${name}，${text}`,
+  (name, text) => `選擇${name}，${text}`,
+  (name, text) => `透過${name}處理，${text}`,
+  (name, text) => `以${name}支援分析，${text}`,
+  (name, text) => `將${name}納入流程，${text}`,
+  (name, text) => `運用${name}，${text}`,
+  (name, text) => `依${name}概念處理，${text}`,
+  (name, text) => `以${name}建立方案，${text}`,
+  (name, text) => `優先考慮${name}，${text}`
+];
+
+function formatOption(unit, candidate, variantSeed = 0) {
+  const text = cleanOptionText(candidate[1]);
+  if (isSubjectTwo(unit)) {
+    return subject2OptionVariants[variantSeed % subject2OptionVariants.length](candidate[0], text);
+  }
+  return subject1OptionVariants[variantSeed % subject1OptionVariants.length](text);
+}
+
+function pickUnitDistractors(unit, concept, index, globalIndex) {
   const pool = unit.concepts.filter((candidate) => candidate[0] !== concept[0]);
   const picked = [];
   let cursor = (index * 5 + globalIndex) % pool.length;
@@ -681,27 +938,55 @@ function pickUnitDistractors(unit, concept, index, globalIndex, styleOffset, qua
     }
     cursor += 7;
   }
-  return picked.map((candidate, pickedIndex) => {
-    const style = answerStyles[(styleOffset + 3 + pickedIndex * 3) % answerStyles.length];
-    const qualifier = optionQualifiers[(qualifierOffset + 5 + pickedIndex * 5) % optionQualifiers.length];
-    return `${style(candidate[1])}${qualifier}`;
-  });
+  return picked.map((candidate, pickedIndex) => formatOption(unit, candidate, index + globalIndex + pickedIndex * 5));
+}
+
+function buildSubjectOneQuestion(unit, concept, index, globalIndex) {
+  const ctx = contexts[(index * 3 + globalIndex) % contexts.length];
+  const task = subject1Tasks[(index + globalIndex) % subject1Tasks.length];
+  const condition = subject1Conditions[(index * 2 + globalIndex) % subject1Conditions.length];
+  const detail = caseDetails[(index + globalIndex * 2) % caseDetails.length];
+  const signal = evidenceSignals[(index * 3 + globalIndex) % evidenceSignals.length];
+  const source = getUnitSources(unit, index, globalIndex);
+  const metric = outcomeMetrics[(index * 11 + globalIndex) % outcomeMetrics.length];
+  const scale = dataScales[(index * 13 + globalIndex) % dataScales.length];
+  const templates = [
+    `某${ctx}在${detail}中，希望利用 AI 技術分析${source}，資料條件為${scale}，以掌握${metric}。若採用「${concept[0]}」，其主要目的為何？`,
+    `某${ctx}導入「${concept[0]}」處理${source}，系統條件為${scale}，並觀察到${signal}。下列何者最能說明此技術的核心作用？`,
+    `某${ctx}規劃以「${concept[0]}」改善${task}，資料來源包含${source}且${scale}。若專案目標是${condition}，最應掌握下列哪一項？`,
+    `某${ctx}在${detail}中使用「${concept[0]}」，資料條件為${scale}，期望${condition}並改善${metric}。下列何者為其主要功能？`,
+    `某${ctx}欲將「${concept[0]}」納入智慧化服務，以支援${task}；目前團隊需處理${source}、${scale}且面臨${signal}。下列敘述何者最正確？`,
+    `某${ctx}評估「${concept[0]}」於${detail}中的應用。若依其技術特性、${condition}需求、${scale}與${metric}指標判斷，下列何者最適當？`
+  ];
+  return templates[(index + Math.floor(index / unit.concepts.length)) % templates.length];
+}
+
+function buildSubjectTwoQuestion(unit, concept, index, globalIndex) {
+  const ctx = contexts[(index * 5 + globalIndex) % contexts.length];
+  const task = subject2Tasks[(index + globalIndex) % subject2Tasks.length];
+  const condition = subject2Conditions[(index * 3 + globalIndex) % subject2Conditions.length];
+  const detail = caseDetails[(index * 2 + globalIndex) % caseDetails.length];
+  const signal = evidenceSignals[(index + globalIndex * 3) % evidenceSignals.length];
+  const source = getUnitSources(unit, index, globalIndex);
+  const metric = outcomeMetrics[(index * 17 + globalIndex) % outcomeMetrics.length];
+  const scale = dataScales[(index * 19 + globalIndex) % dataScales.length];
+  const templates = [
+    `某${ctx}欲在${detail}中整合${source}，資料條件為${scale}，以${task}。若評估「${concept[0]}」相關方法並希望${condition}，下列哪一種方法最為合適？`,
+    `某${ctx}正在設計大數據應用，以${task}；目前資料呈現${signal}，且需追蹤${metric}、${scale}。若主要考量為「${concept[0]}」與${condition}，下列何者最適當？`,
+    `某${ctx}處理${source}等大量資料時，資料規模為${scale}，需要${condition}。若以「${concept[0]}」相關觀念判斷，下列哪一項設計最合理？`,
+    `某${ctx}規劃資料分析流程，目標是${task}，並用於${detail}與${metric}改善；資料條件為${scale}。下列哪一種作法最符合「${concept[0]}」的應用情境？`,
+    `某${ctx}希望改善資料處理與 AI 應用成效，並要求${condition}；團隊同時面臨${signal}、${scale}與${source}整合問題。若考點為「${concept[0]}」，下列何者最符合此需求？`,
+    `某${ctx}建構資料驅動服務時，需${task}並兼顧${condition}。若服務將用於${detail}、${scale}且以${metric}為觀察指標，下列哪一項最符合「${concept[0]}」的選擇？`
+  ];
+  return templates[(index + Math.floor(index / unit.concepts.length)) % templates.length];
 }
 
 function buildQuestion(unit, index, globalIndex) {
   const concept = unit.concepts[index % unit.concepts.length];
-  const localRound = Math.floor(index / unit.concepts.length);
-  const template = questionAngles[(index + localRound + globalIndex) % questionAngles.length];
-  const ctx = contexts[(index * 3 + globalIndex) % contexts.length];
-  const detail = caseDetails[(index + localRound * 5 + globalIndex) % caseDetails.length];
-  const signal = evidenceSignals[(index * 2 + localRound + globalIndex) % evidenceSignals.length];
-  const pressure = decisionPressures[(index + localRound * 3) % decisionPressures.length];
   const correctSlot = (index + globalIndex) % 4;
-  const styleOffset = (localRound * 4 + index + globalIndex) % answerStyles.length;
-  const qualifierOffset = (localRound * 7 + index + globalIndex) % optionQualifiers.length;
-  const distractors = pickUnitDistractors(unit, concept, index, globalIndex, styleOffset, qualifierOffset);
+  const distractors = pickUnitDistractors(unit, concept, index, globalIndex);
   const choices = [
-    `${answerStyles[styleOffset](concept[1])}${optionQualifiers[qualifierOffset]}`,
+    formatOption(unit, concept, index + globalIndex),
     ...distractors
   ];
   const ordered = new Array(4);
@@ -713,12 +998,9 @@ function buildQuestion(unit, index, globalIndex) {
       wrong += 1;
     }
   }
-  const question = template
-    .replace('{ctx}', ctx)
-    .replace('{detail}', detail)
-    .replace('{signal}', signal)
-    .replace('{pressure}', pressure)
-    .replace('{concept}', concept[0]);
+  const question = isSubjectTwo(unit)
+    ? buildSubjectTwoQuestion(unit, concept, index, globalIndex)
+    : buildSubjectOneQuestion(unit, concept, index, globalIndex);
   return {
     question,
     options: labelOptions(ordered),
