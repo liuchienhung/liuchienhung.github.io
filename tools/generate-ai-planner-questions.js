@@ -665,8 +665,21 @@ function labelOptions(items) {
   return ['A', 'B', 'C', 'D'].map((label, index) => `${label}) ${items[index]}`);
 }
 
-function buildExplanation(concept) {
-  const explanation = `解析：${concept[0]}重點是${concept[1]}，應依題目情境判斷其用途，避免與同章相近概念混淆。`;
+function shortenForExplanation(text) {
+  return text
+    .replace(/^將/, '')
+    .replace(/^以/, '')
+    .replace(/^需/, '')
+    .replace(/^可/, '')
+    .replace(/以支援.+$/, '')
+    .replace(/並.+$/, '')
+    .replace(/，.+$/, '')
+    .trim();
+}
+
+function buildExplanation(concept, contrastConcept) {
+  const contrast = contrastConcept || concept;
+  const explanation = `解析：${concept[0]}重點是${shortenForExplanation(concept[1])}；易與${contrast[0]}混淆，${contrast[0]}是${shortenForExplanation(contrast[1])}。`;
   return explanation.length > 100 ? `${explanation.slice(0, 99)}。` : explanation;
 }
 
@@ -938,7 +951,10 @@ function pickUnitDistractors(unit, concept, index, globalIndex) {
     }
     cursor += 7;
   }
-  return picked.map((candidate, pickedIndex) => formatOption(unit, candidate, index + globalIndex + pickedIndex * 5));
+  return {
+    concepts: picked,
+    options: picked.map((candidate, pickedIndex) => formatOption(unit, candidate, index + globalIndex + pickedIndex * 5))
+  };
 }
 
 function buildSubjectOneQuestion(unit, concept, index, globalIndex) {
@@ -987,7 +1003,7 @@ function buildQuestion(unit, index, globalIndex) {
   const distractors = pickUnitDistractors(unit, concept, index, globalIndex);
   const choices = [
     formatOption(unit, concept, index + globalIndex),
-    ...distractors
+    ...distractors.options
   ];
   const ordered = new Array(4);
   ordered[correctSlot] = choices[0];
@@ -1005,7 +1021,7 @@ function buildQuestion(unit, index, globalIndex) {
     question,
     options: labelOptions(ordered),
     answer: ['A', 'B', 'C', 'D'][correctSlot],
-    explanation: buildExplanation(concept)
+    explanation: buildExplanation(concept, distractors.concepts[0])
   };
 }
 
