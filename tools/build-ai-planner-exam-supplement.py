@@ -13,10 +13,69 @@ DATA_FILE = ROOT / "ai-planner-data.js"
 EXAM_DIR = ROOT / "docs" / "114年第二梯次考古題"
 SUPPLEMENT_MARKER = "（考古題與高擬真補強）"
 ANSWER_MAP = str.maketrans("ＡＢＣＤ", "ABCD")
+PDF_ARTIFACT_RE = re.compile(
+    r"114\s*年第二次AI\s*應用規劃師-中級能力鑑定【公告試題】.*?答\s*案\s*題目",
+    re.S,
+)
+OPTION_TRAILING_CONTEXT_MARKERS = (
+    "一間遊戲市場研究公司",
+    "使用銷售資料集(marketing.csv)",
+    "資料的欄位概觀如下",
+    "Name：遊戲名稱",
+    "下圖顯示資料集",
+)
 
 
 def label_options(options: list[str]) -> list[str]:
     return [f"{chr(65 + index)}) {option.strip(' ；;')}" for index, option in enumerate(options)]
+
+
+def clean_pdf_artifacts(text: str, *, option: bool = False) -> str:
+    cleaned = PDF_ARTIFACT_RE.sub(" ", text)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" ；;")
+    if option:
+        for marker in OPTION_TRAILING_CONTEXT_MARKERS:
+            cleaned = cleaned.split(marker, maxsplit=1)[0].strip(" ；;")
+    return cleaned
+
+
+def exam_style_explanation(explanation: str, answer: str | None = None) -> str:
+    core = explanation.removeprefix("解析：").strip()
+    is_code_or_calculation = any(
+        token in core
+        for token in (
+            "Z=",
+            "p 值",
+            "p-value",
+            "describe()",
+            "groupby",
+            "astype",
+            "Int64",
+            "fit",
+            "Gini",
+            "Accuracy",
+            "nlargest",
+            "ANOVA",
+            "CDF",
+            "PDF",
+            "pandas",
+            "sklearn",
+        )
+    )
+    decision_hint = (
+        "本題判斷時，應先抓出題幹給定的數值、語法或資料條件，再對照公式、API 行為或統計意義；"
+        "只背名詞但忽略條件的選項通常是干擾。"
+        if is_code_or_calculation
+        else "本題判斷時，應先確認題幹目標、適用情境與限制，再選擇能回應業務需求、資料條件與風險控管的作法；"
+        "只強調工具、算力或完全自動化的選項通常是干擾。"
+    )
+    answer_hint = f"本題正確答案為 {answer}。" if answer else ""
+    elimination_hint = (
+        "因此作答時要看選項是否精準對應考點；若選項混淆相近概念、偏離題幹目的或忽略驗證治理，即使用語看似專業也不宜選。"
+    )
+    if len(core) >= 120 and any(word in core for word in ("判斷", "干擾", "考點", "因此")):
+        return f"解析：{core}"
+    return f"解析：{answer_hint}{core} {decision_hint}{elimination_hint}"
 
 
 def read_subjects() -> list[dict]:
@@ -46,9 +105,10 @@ def parse_exam_questions(text: str) -> list[dict]:
     )
     questions = []
     for match in pattern.finditer(normalized):
-        body = re.sub(r"\s+", " ", match.group("body")).strip()
+        body = clean_pdf_artifacts(re.sub(r"\s+", " ", match.group("body")).strip())
         options = re.findall(r"\([A-D]\)(.*?)(?=\([A-D]\)|$)", body)
-        stem = re.split(r"\(A\)", body, maxsplit=1)[0].strip()
+        options = [clean_pdf_artifacts(option, option=True) for option in options]
+        stem = clean_pdf_artifacts(re.split(r"\(A\)", body, maxsplit=1)[0].strip())
         if len(options) != 4 or not stem:
             continue
         answer = match.group("answer").translate(ANSWER_MAP)
@@ -57,7 +117,10 @@ def parse_exam_questions(text: str) -> list[dict]:
                 "question": stem,
                 "options": label_options(options),
                 "answer": answer,
-                "explanation": f"114年第二梯次公告試題，答案為 {answer}。此題保留原考古題作為正式考試題型參考。",
+                "explanation": exam_style_explanation(
+                    "此題取自 114 年第二梯次公告試題，保留原考古題作為正式考試題型參考。",
+                    answer,
+                ),
             }
         )
     return questions
@@ -83,7 +146,7 @@ def q(question: str, options: list[str], answer: str, explanation: str) -> dict:
         "question": question,
         "options": label_options(options),
         "answer": answer,
-        "explanation": f"解析：{explanation}",
+        "explanation": exam_style_explanation(explanation, answer),
     }
 
 

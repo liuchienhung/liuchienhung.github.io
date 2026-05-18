@@ -69,6 +69,8 @@ AI 應用規劃師(中級)題庫已拆成兩科，各 1000 題單選題。題數
 - 選項干擾項：錯誤選項以同章相近概念、相近語法或相近統計判讀為主。高擬真題允許部分選項組合重複，因正式考古題常反覆使用類似語法、數值與方法選項。
 - 題型語氣：科目一採「企業情境 + 指定 AI 技術/模型 + 問主要目的、核心作用或功能」；科目二採「資料整合/分析/治理情境 + 條件約束 + 問最合適方法或設計」。
 - 情境資料：資料來源會依章節挑選，例如 NLP 題使用客服、文本、評論或文件資料；電腦視覺題使用影像、標註框、OCR 或關鍵點資料；大數據題使用統計量、資料管線、知識圖譜、儀表板、隱私紀錄等對應資料。
+- 高擬真解析：每題解析會補充考點、題幹判斷順序與干擾選項排除邏輯；前端結果頁會顯示完整解析，不再截斷。
+- 正解一致性：新增 `tools/audit-ai-planner-answer-consistency.js`，檢查 2220 題答案欄位、選項標籤、同題重複選項、PDF 匯入雜訊，並對可機械驗證的計算與程式題確認正解。
 
 例如自然語言處理題會以 BERT、Transformer、TF-IDF、斷詞、語意相似度等同章概念互為干擾；電腦視覺題會以 IoU、mAP、CNN、NMS、OCR、遷移學習等同章概念互為干擾；不會再用資料庫交易或機械手臂這類跨章概念作為主要干擾項。
 
@@ -77,6 +79,7 @@ AI 應用規劃師(中級)題庫已拆成兩科，各 1000 題單選題。題數
 ```bash
 node tools/generate-ai-planner-questions.js
 python tools/build-ai-planner-exam-supplement.py
+node tools/audit-ai-planner-answer-consistency.js
 node tools/audit-ai-planner-coverage.js
 python tools/audit-ai-planner-guide-alignment.py
 ```
@@ -89,6 +92,8 @@ python tools/audit-ai-planner-guide-alignment.py
 - 每單元題幹皆唯一。
 - 每單元選項組合列入報告觀察，但不作為失敗條件；高擬真程式碼與計算題可能刻意重用相近選項樣式。
 - 每單元偵測到 16 個概念種子。
+- 全題庫解析平均長度約 188 字，且無低於 120 字的簡短解析。
+- 答案一致性稽核通過：2220 題結構有效，604 題可機械驗證題型正解符合公式、語法或統計判斷，100 題公告試題保留 PDF 原始答案。
 
 ## 注意
 

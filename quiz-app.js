@@ -1486,9 +1486,7 @@ class QuizApp {
         if (!this.showingResults || !question.explanation) return '';
         const userAnswer = this.userAnswers[questionIndex];
         if (this.isQuestionCorrect(question, userAnswer)) return '';
-        const explanation = question.explanation.length > 100
-            ? `${question.explanation.slice(0, 99)}。`
-            : question.explanation;
+        const explanation = question.explanation;
         return `<div class="question-explanation"><strong>解析：</strong>${explanation.replace(/^解析：/, '')}</div>`;
     }
 

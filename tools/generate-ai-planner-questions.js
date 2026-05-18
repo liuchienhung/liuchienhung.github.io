@@ -1637,13 +1637,26 @@ function rotateOptions(options, answerIndex) {
   };
 }
 
+function buildExamStyleExplanation(explanation) {
+  const core = explanation.replace(/^解析：/, '').trim();
+  const isCodeOrCalculation = /Z=|p-value|describe\(\)|groupby|astype|Int64|fit\(X, y\)|DBSCAN|Gini|Accuracy|nlargest|pandas|sklearn|ANOVA|CDF|PDF/.test(core);
+  const decisionHint = isCodeOrCalculation
+    ? '本題判斷時，應先抓出題幹給定的數值、API 或資料條件，再對照公式、函式行為或模型評估意義；只背名詞但忽略條件的選項通常是干擾。'
+    : '本題判斷時，應先確認題幹的導入目標、資料限制與風險情境，再選擇能同時回應業務需求與驗證控管的作法；只強調工具、算力或完全自動化的選項通常是干擾。';
+  const eliminationHint = '因此正確答案要能對應適用場景、限制與後續驗證方式，其他選項若偏離題幹目的、混淆相近概念或忽略治理要求，即使用語看似專業也不宜選。';
+  if (core.length >= 120 && /判斷|干擾|考點|因此/.test(core)) {
+    return `解析：${core}`;
+  }
+  return `解析：${core} ${decisionHint}${eliminationHint}`;
+}
+
 function buildDirectQuestion(question, options, answerIndex, explanation) {
   const rotated = rotateOptions(options, answerIndex);
   return {
     question,
     options: rotated.options,
     answer: rotated.answer,
-    explanation: `解析：${explanation}`
+    explanation: buildExamStyleExplanation(explanation)
   };
 }
 
@@ -1682,11 +1695,27 @@ function buildSubjectOneExamQuestion(unit, concept, index, globalIndex) {
   const distractorPool = unit.concepts
     .filter((candidate) => candidate[0] !== concept[0])
     .map((candidate) => cleanOptionText(candidate[1]));
-  const wrongA = distractorPool[(index + globalIndex) % distractorPool.length] || subjectOneWrongPatterns[0];
-  const wrongB = subjectOneWrongPatterns[(index * 2 + globalIndex) % subjectOneWrongPatterns.length];
-  const wrongC = subjectOneWrongPatterns[(index * 5 + globalIndex + 3) % subjectOneWrongPatterns.length];
+  const wrongCandidates = [...distractorPool, ...subjectOneWrongPatterns];
+  const wrongOptions = [];
+  let offset = index + globalIndex;
+  while (wrongOptions.length < 3 && offset < wrongCandidates.length * 3) {
+    const candidate = wrongCandidates[offset % wrongCandidates.length];
+    if (candidate && candidate !== correct && candidate !== correctOption && !wrongOptions.includes(candidate)) {
+      wrongOptions.push(candidate);
+    }
+    offset += 1;
+  }
+  [
+    '只依單一技術名稱判斷，不需檢查資料條件、任務目標或模型限制',
+    '只要購買雲端服務即可保證所有推論結果正確，無需測試集驗證',
+    '主要用來取代資料保存、交易一致性與權限控管等資料治理作業'
+  ].forEach((fallback) => {
+    if (wrongOptions.length < 3 && !wrongOptions.includes(fallback)) {
+      wrongOptions.push(fallback);
+    }
+  });
   const correctSlot = (index + globalIndex) % 4;
-  const options = [wrongA, wrongB, wrongC, correctOption];
+  const options = [...wrongOptions, correctOption];
   const ordered = new Array(4);
   ordered[correctSlot] = correctOption;
   let cursor = 0;
@@ -1713,7 +1742,7 @@ const statsPractice = [
       const z = 2 + (index % 3);
       const value = mean + std * z;
       return buildDirectQuestion(
-        `某資料集平均數為 ${mean}、標準差為 ${std}，觀察值為 ${value}。若題目考點為「${conceptLabel(concept)}」，此觀察值的 Z-Score 為何？`,
+        `某資料集平均數為 ${mean}、標準差為 ${std}，觀察值為 ${value}。此觀察值的 Z-Score 為何？`,
         [`${z - 1}`, `${z}`, `${z + 0.5}`, `${z + 1}`],
         1,
         `Z=(觀察值-平均數)/標準差=(${value}-${mean})/${std}=${z}。`
@@ -1726,7 +1755,7 @@ const statsPractice = [
       const p = index % 2 === 0 ? '0.03' : '0.08';
       const reject = p === '0.03';
       return buildDirectQuestion(
-        `A/B 測試得到 p-value=${p}，顯著水準 α=0.05。若題目聚焦「${conceptLabel(concept)}」，下列解讀何者正確？`,
+        `A/B 測試得到 p-value=${p}，顯著水準 α=0.05。下列解讀何者正確？`,
         reject
           ? ['拒絕虛無假設，但仍需檢查效果大小與實務意義', '證明方案一定有巨大商業價值', '接受虛無假設為真', '表示樣本完全沒有抽樣誤差']
           : ['拒絕虛無假設', '在 0.05 水準下未達顯著，尚不足以拒絕虛無假設', '證明兩組完全相同', '代表資料已完成標準化'],
@@ -1738,7 +1767,7 @@ const statsPractice = [
   {
     tag: '分佈',
     make: (concept, index) => buildDirectQuestion(
-      `某客服中心平均每分鐘來電率固定，且各來電事件彼此獨立。若題目要求以「${conceptLabel(concept)}」相關觀念選擇機率模型，下列何者最適合描述每分鐘來電通數？`,
+      `某客服中心平均每分鐘來電率固定，且各來電事件彼此獨立。下列何者最適合描述每分鐘來電通數？`,
       ['常態分佈', '卜瓦松分佈', '均勻分佈', '資料湖'],
       1,
       '固定時間區間內獨立事件發生次數常以卜瓦松分佈描述。'
@@ -1749,7 +1778,7 @@ const statsPractice = [
 const codePractice = [
   {
     make: (concept, index) => buildDirectQuestion(
-      `使用 pandas 處理銷售資料 df，若要計算欄位 df['sales'] 的 count、mean、std、四分位數與最大最小值，且考點為「${conceptLabel(concept)}」，下列哪個語法最適合？`,
+      `使用 pandas 處理銷售資料 df，若要計算欄位 df['sales'] 的 count、mean、std、四分位數與最大最小值，下列哪個語法最適合？`,
       ["df['sales'].sum()", "df['sales'].describe()", "df['sales'].sort_values()", "df['sales'].stats()"],
       1,
       'describe() 會回傳常見敘述性統計量。'
@@ -1757,7 +1786,7 @@ const codePractice = [
   },
   {
     make: (concept, index) => buildDirectQuestion(
-      `某資料欄位 data['Year'] 含 NaN，且需保留缺值並轉為可空整數型態。若題目聚焦「${conceptLabel(concept)}」，下列哪一行 pandas 語法較合適？`,
+      `某資料欄位 data['Year'] 含 NaN，且需保留缺值並轉為可空整數型態。下列哪一行 pandas 語法較合適？`,
       ["data['Year'].astype(int)", "data['Year'].astype('Int64')", "data['Year'].fillna(0).astype(int)", "data['Year'].astype(float).astype(int)"],
       1,
       "pandas 的 nullable integer 型別 'Int64' 可保留缺值。"
@@ -1765,7 +1794,7 @@ const codePractice = [
   },
   {
     make: (concept, index) => buildDirectQuestion(
-      `若要統計每個 Platform 的 Global_Sales 總和並以長條圖呈現，且題目考點為「${conceptLabel(concept)}」，下列程式碼何者較正確？`,
+      `若要統計每個 Platform 的 Global_Sales 總和並以長條圖呈現，下列程式碼何者較正確？`,
       [
         "data.groupby('Platform')['Global_Sales'].sum().plot(kind='bar')",
         "data['Platform'].sum().plot(kind='bar')",
@@ -1778,7 +1807,7 @@ const codePractice = [
   },
   {
     make: (concept, index) => buildDirectQuestion(
-      `若要檢查 DataFrame 每個欄位的遺漏值數量，且題目聚焦「${conceptLabel(concept)}」，下列哪些語法正確？`,
+      `若要檢查 DataFrame 每個欄位的遺漏值數量，下列哪些語法正確？`,
       ['df.isnull().sum() 與 df.isna().sum()', 'df.isnan().sum() 與 df.isNaN().sum()', 'df.missing().count()', 'df.nulls().sum()'],
       0,
       'pandas 可用 isnull() 或 isna() 檢查缺值，再用 sum() 彙總。'
@@ -1786,7 +1815,7 @@ const codePractice = [
   },
   {
     make: (concept, index) => buildDirectQuestion(
-      `使用 LinearRegression().fit(X, y) 建立迴歸模型時，若題目聚焦「${conceptLabel(concept)}」與模型輸入輸出判讀，下列何者正確？`,
+      `使用 LinearRegression().fit(X, y) 建立迴歸模型時，關於模型輸入與輸出變數的判讀，下列何者正確？`,
       ['X 為目標變數，y 為特徵矩陣', 'X 為特徵矩陣，y 為目標變數', 'X 為 p 值，y 為信賴區間', 'X 為截距項，y 為殘差'],
       1,
       'sklearn 慣例是 fit(X, y)，X 為特徵矩陣，y 為目標變數。'
@@ -1794,7 +1823,7 @@ const codePractice = [
   },
   {
     make: (concept, index) => buildDirectQuestion(
-      `使用 sns.barplot(x='Name', y='NA_Sales', data=data.nlargest(5, 'NA_Sales')) 時，若考點為「${conceptLabel(concept)}」，此程式碼主要想呈現什麼？`,
+      `使用 sns.barplot(x='Name', y='NA_Sales', data=data.nlargest(5, 'NA_Sales')) 時，此程式碼主要想呈現什麼？`,
       ['NA_Sales 前五名資料的長條圖', '所有欄位的缺值數量', '迴歸模型係數', '資料庫交易是否符合 ACID'],
       0,
       'nlargest(5, 欄位) 取前五筆，再以 barplot 呈現。'
@@ -1805,7 +1834,7 @@ const codePractice = [
 const methodPractice = [
   {
     make: (concept, index) => buildDirectQuestion(
-      `某資料集兩個類別 A/B 各 5 筆，二元 Gini impurity 為 0.5；若以二元最大值 0.5 做正規化，且題目聚焦「${conceptLabel(concept)}」，正規化後結果為何？`,
+      `某資料集兩個類別 A/B 各 5 筆，二元 Gini impurity 為 0.5；若以二元最大值 0.5 做正規化，正規化後結果為何？`,
       ['0', '0.5', '1', '2'],
       2,
       '二元類別均分時 Gini 達最大值，0.5/0.5=1。'
@@ -1813,7 +1842,7 @@ const methodPractice = [
   },
   {
     make: (concept, index) => buildDirectQuestion(
-      `某團隊使用 DBSCAN 進行顧客行為分群。若題目考點為「${conceptLabel(concept)}」，決定聚類結果的兩個主要超參數為何？`,
+      `某團隊使用 DBSCAN 進行顧客行為分群。決定聚類結果的兩個主要超參數為何？`,
       ['K 值與學習率', 'Epsilon 鄰域半徑與 MinPts 最小點數', 'Precision 與 Recall', '平均數與標準差'],
       1,
       'DBSCAN 主要由 eps 與 MinPts 控制密度群集。'
@@ -1821,7 +1850,7 @@ const methodPractice = [
   },
   {
     make: (concept, index) => buildDirectQuestion(
-      `某分類任務少數類別不到 1%，若題目聚焦「${conceptLabel(concept)}」，只看 Accuracy 的主要風險為何？`,
+      `某分類任務少數類別不到 1%，只看 Accuracy 的主要風險為何？`,
       ['可能忽略少數類偵測能力', '必定無法訓練模型', '會讓資料庫交易失敗', '等同資料已完成匿名化'],
       0,
       '類別不平衡時，Accuracy 可能高估模型表現，需搭配 Precision、Recall、F1 或 PR 曲線。'
@@ -1963,7 +1992,7 @@ function buildQuestion(unit, index, globalIndex) {
     question,
     options: labelOptions(ordered),
     answer: ['A', 'B', 'C', 'D'][correctSlot],
-    explanation: buildExplanation(concept, distractors.concepts[0])
+    explanation: buildExamStyleExplanation(buildExplanation(concept, distractors.concepts[0]))
   };
 }
 

@@ -12,6 +12,7 @@
 
 - 第一階段：將 `docs/114年第二梯次考古題` 內兩份公告試題解析後加入題庫。
 - 第二階段：把原本第一科、第二科各 1000 題本體重生為高擬真模擬題。
+- 第三階段：將完成測驗後的解析升級為高擬真詳解，補入考點判斷線索、常見干擾選項辨識與作答排除邏輯。
 
 已將 `docs/114年第二梯次考古題` 內兩份公告試題解析後加入題庫：
 
@@ -31,6 +32,7 @@
 - 第二科：增加 Z-Score、p-value、分佈選擇、pandas 語法、groupby、astype、isna、LinearRegression、seaborn 等實作判讀題。
 - 題幹：降低無關背景堆疊，改為正式考試常見的「情境 + 指定考點 + 問正確判斷」。
 - 選項：允許正式考題常見的同組語法/數值選項樣式重複，稽核改以題幹唯一與題數配比為硬性條件。
+- 解析：完成測驗後顯示完整解析，不再截斷為 100 字；解析會說明題幹判斷順序、正確選項對應考點，以及干擾選項常見錯誤。
 
 產生工具：
 
@@ -50,6 +52,8 @@ python tools/build-ai-planner-exam-supplement.py
 | 數字、計算或符號題比例 | 24% | 42% | 21.7% |
 | 程式碼/圖表判讀題比例 | 2% | 22% | 12.4% |
 | 單句或短題幹比例 | 32% | 38% | 29.1% |
+| 平均解析長度 | - | - | 188 字 |
+| 低於 120 字解析題數 | - | - | 0 |
 
 補強科目單獨看已有 220 題，英文縮寫/英文全名比例約 81.8%，數字/計算/符號題比例約 51.8%，程式碼/圖表判讀題比例約 15%。主題庫本體也已明顯往考古題風格靠攏。
 
@@ -59,6 +63,8 @@ python tools/build-ai-planner-exam-supplement.py
 - 核心術語覆蓋完整：NLP、Transformer、BERT、Word2Vec、TF-IDF、IoU、mAP、DBSCAN、PCA、ACID、Robust Scaling、同態加密等都有進入題庫。
 - 情境式題型足夠：現行題庫大量使用企業、資料流程、模型導入與治理情境，且題幹更接近考古題的單一考點。
 - 單選格式穩定：每題皆有四選項、答案與解析，適合練習系統使用。
+- 解析已高擬真化：解析不只給正解，也補充判斷線索與排除干擾選項的理由，適合考後檢討。
+- 正解一致性已檢查：新增答案稽核，逐題檢查答案欄位、選項標籤、重複選項、PDF 匯入雜訊，並對 Z-Score、p-value、pandas、sklearn、DBSCAN、Gini、Accuracy 等可機械驗證題型確認正解。
 - 科目二實作判讀已補強：pandas、seaborn、LinearRegression、groupby、astype、isna 等語法題已進入主題庫本體。
 - 數值/統計判讀已補強：Z-Score、p-value、分佈選擇、Gini、類別不平衡指標等已提高比重。
 
@@ -73,6 +79,7 @@ python tools/build-ai-planner-exam-supplement.py
 ```bash
 node tools/generate-ai-planner-questions.js
 python tools/build-ai-planner-exam-supplement.py
+node tools/audit-ai-planner-answer-consistency.js
 python tools/audit-ai-planner-exam-parity.py
 node tools/audit-ai-planner-coverage.js
 python tools/audit-ai-planner-guide-alignment.py
