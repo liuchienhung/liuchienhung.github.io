@@ -586,9 +586,31 @@ const evidenceSignals = [
   '業務單位要求降低人工處理時間',
   '系統需要與既有流程及權限控管串接',
   '資料分佈隨季節或活動檔期改變',
-  '管理層希望先小範圍驗證再擴大導入',
+  '高層要求先定義驗收門檻再投入正式建置',
   '模型輸出需要能被非技術人員理解',
-  '專案團隊需判斷應採用哪一類技術'
+  '專案團隊需判斷應採用哪一類技術',
+  '現場單位擔心新流程會增加人工覆核負擔',
+  '資訊部門要求估算雲端成本與延遲上限',
+  '資料治理小組發現欄位定義在各系統不一致',
+  '稽核人員要求保留決策依據與版本紀錄',
+  '使用者希望查詢結果能附上可追溯來源',
+  '營運團隊需要在不中斷既有服務下導入',
+  '產品負責人要求先確認商業指標是否改善',
+  '跨部門會議對資料使用權限仍有疑慮',
+  '模型監控報表顯示近期輸入資料型態改變',
+  '客服主管希望降低錯誤分派與重複回覆',
+  '資料工程團隊擔心批次流程無法支援尖峰',
+  '資安單位要求先完成敏感欄位盤點',
+  '外部供應商方案需要與內部架構相容',
+  '專案時程有限，必須優先處理高影響流程',
+  '業務單位要求說明模型結果如何轉成行動建議',
+  '資料科學團隊需要確認樣本是否具代表性',
+  '系統維運人員要求建立異常告警與回復流程',
+  '法遵審查要求區分訓練資料與推論資料用途',
+  '主管關注成果是否能被長期追蹤與比較',
+  '第一線人員反映資料標註規則不夠一致',
+  '架構師要求評估未來資料量成長後的擴充方式',
+  '專案團隊需要先釐清問題是否適合用 AI 解決'
 ];
 
 const decisionPressures = [
@@ -651,7 +673,7 @@ const optionQualifiers = [
   '，才符合情境式試題的考法',
   '，並與既有基準線比較',
   '，同時注意資料品質是否足夠',
-  '，再決定是否擴大導入',
+  '，再檢查是否達到正式上線門檻',
   '，並確認責任分工清楚',
   '，以避免把相近概念混為一談',
   '，且不應忽略法遵與資安條件',
@@ -716,6 +738,44 @@ const subject1Conditions = [
   '建立可驗證且可維運的 AI 應用'
 ];
 
+const subject1FailureSignals = [
+  '模型在正式資料上的表現低於測試集結果',
+  '系統能產生答案但偶爾缺乏可驗證依據',
+  '模型面對長文本或複雜脈絡時判斷不穩定',
+  '不同部門對輸出結果的解讀標準不一致',
+  '上線後使用者回饋指出部分結果難以信任',
+  '模型在少數族群或低頻案例上的錯誤率偏高',
+  '生成內容符合主題但細節與事實偶爾不一致',
+  '推論服務在尖峰流量下出現延遲與佇列累積',
+  '新增資料來源後模型輸出品質反而下降',
+  '標註資料不足，使模型難以涵蓋所有情境',
+  '訓練資料分佈與近期輸入資料明顯不同',
+  '模型能完成單一任務，但跨任務表現互相牽制',
+  '輸出結果需要人工覆核才能進入正式流程',
+  '系統整合時發現權限、日誌與版本紀錄不足',
+  '主管要求說明模型錯誤發生時的追蹤方式',
+  '供應商展示效果良好，但內部資料測試落差明顯',
+  '模型對相似輸入給出不一致判斷',
+  '資料增強後的樣本與原始業務語意出現偏移',
+  '模型部署後需要頻繁回滾才能維持服務穩定',
+  '使用者希望結果能同時呈現判斷依據與限制'
+];
+
+const subject1DecisionGoals = [
+  '找出最可能的技術限制',
+  '選擇較能降低上線風險的作法',
+  '確認該技術能解決的核心問題',
+  '判斷哪一項說明最符合模型機制',
+  '區分此技術與相近 AI 概念的差異',
+  '建立可被驗收與追蹤的導入依據',
+  '避免把模型評估、部署與資料治理混為一談',
+  '說明何者最符合中級能力鑑定的情境判斷',
+  '決定後續應優先改善的環節',
+  '評估是否適合納入正式營運流程',
+  '釐清問題是來自資料、模型或部署流程',
+  '讓非技術主管理解正確的風險控管方向'
+];
+
 const subject2Conditions = [
   '具備良好的擴充性與查詢效率',
   '降低資料偏差與前處理錯誤',
@@ -726,6 +786,266 @@ const subject2Conditions = [
   '保護敏感資料並符合合規要求',
   '讓分析結果能支援後續 AI 應用'
 ];
+
+const subject2AnalysisGoals = {
+  '科目二 3': [
+    '判讀資料分佈、離群值與集中趨勢',
+    '根據樣本資料進行統計推論與假設檢定',
+    '選擇合適的機率模型描述事件發生情形',
+    '解讀 p 值、信賴區間與檢定結論',
+    '衡量變數之間的線性關係與變異程度',
+    '確認資料是否符合統計模型的基本假設'
+  ],
+  '科目二 3.3': [
+    '根據樣本資料選擇合適的假設檢定方法',
+    '解讀 p 值、顯著水準與信賴區間的關係',
+    '判斷兩組比例、平均數或分佈差異是否顯著',
+    '避免將不顯著結果誤解為研究假設成立',
+    '選擇能符合資料型態與檢定目的的統計方法',
+    '確認檢定結論是否能支援後續決策'
+  ],
+  '科目二 4': [
+    '處理缺值、資料型態與欄位轉換問題',
+    '設計資料庫交易、資料湖與資料管線流程',
+    '使用 pandas 完成摘要統計、分組彙總與欄位轉換',
+    '降低編碼、標準化與特徵工程造成的偏誤',
+    '建立可支援批次與即時分析的資料處理架構',
+    '確保資料清理流程能保留可用資訊'
+  ],
+  '科目二 4.1': [
+    '處理缺值、離群值與資料型態轉換問題',
+    '選擇適合類別欄位的編碼方式',
+    '避免標準化、正規化或分箱造成分析偏誤',
+    '建立可重複的資料清理與前處理規則',
+    '將原始欄位轉換為可用於模型訓練的特徵',
+    '確認資料品質是否足以支援後續分析'
+  ],
+  '科目二 4.2': [
+    '設計符合 ACID 特性的資料庫交易流程',
+    '選擇能支援資料湖、資料倉儲或圖資料查詢的儲存架構',
+    '確保資料目錄、資料血緣與權限控管一致',
+    '在分散式資料庫中避免部分提交與資料不一致',
+    '兼顧資料儲存擴充性、查詢效率與治理需求',
+    '讓資料架構支援後續分析與模型訓練'
+  ],
+  '科目二 5': [
+    '選擇合適的分析方法找出關聯、群集或異常',
+    '根據資料目的選擇適當的視覺化圖表',
+    '設計圖模型、知識圖譜或關聯規則分析方式',
+    '處理高維度資料、長尾分佈與非線性關係',
+    '以單一圖表呈現關聯強度、方向或趨勢',
+    '用資料摘要支援即時監控與商業決策'
+  ],
+  '科目二 5.1': [
+    '在大規模資料中快速估算摘要統計量',
+    '使用降維或抽樣方法降低分析成本',
+    '確認模型假設是否受到資料分佈影響',
+    '處理高維度、共線性與尺度差異造成的分析偏誤',
+    '以近似計算支援即時分析與監控',
+    '衡量變數關聯與模型配適是否合理'
+  ],
+  '科目二 6': [
+    '評估資料在機器學習模型中的訓練與驗證方式',
+    '處理不平衡資料、資料漂移與模型監控問題',
+    '設計生成式 AI 系統的資料治理與隱私保護流程',
+    '選擇符合合規要求的敏感資料處理技術',
+    '確認模型評估方法是否能反映少數類別表現',
+    '建立大數據與 AI 應用的安全控制措施'
+  ],
+  '科目二 6.3': [
+    '整理生成式 AI 訓練、檢索與生成所需資料',
+    '降低生成式 AI 系統洩漏敏感資訊或產生不當內容的風險',
+    '設計向量資料庫、檢索片段與生成回答的資料流程',
+    '確認生成式 AI 使用的資料來源可追溯且合規',
+    '處理非結構化資料以支援語言模型訓練或 RAG',
+    '建立生成式 AI 的資料治理與輸出稽核機制'
+  ]
+};
+
+const subject2DataIssues = {
+  '科目二 3': [
+    '資料呈現右偏且伴隨多筆極端值',
+    '樣本數有限且母體標準差未知',
+    'p 值大於顯著水準且信賴區間包含虛無假設值',
+    '事件彼此獨立且平均發生率固定',
+    '兩個數值變數呈現明顯線性趨勢',
+    '成功機率固定且重複試驗次數很大'
+  ],
+  '科目二 3.3': [
+    'p 值大於顯著水準且信賴區間包含虛無假設值',
+    '兩條生產線的良率比例不同但需確認是否顯著',
+    '樣本數有限且需比較平均數是否與基準值不同',
+    '類別資料的觀察次數需檢驗是否符合預期分佈',
+    '實驗組與對照組結果不同但仍需排除抽樣誤差',
+    '檢定方法需同時符合資料型態與研究假設'
+  ],
+  '科目二 4': [
+    'Year 欄位含有 NaN，讀入後型態變成 float64',
+    '無序類別欄位被轉成整數後可能產生虛假順序',
+    '數值欄位存在極端值，導致縮放結果受影響',
+    '交易更新過程中某節點失敗，系統不得出現部分提交',
+    '資料包含巢狀欄位、缺值與型態不一致問題',
+    'IoT 資料需同時支援毫秒級異常偵測與雲端留存'
+  ],
+  '科目二 4.2': [
+    '交易更新過程中某節點失敗，系統不得出現部分提交',
+    '資料需同時進入資料湖保存原始內容與資料倉儲支援查詢',
+    '多個系統對同一欄位定義不同，造成資料目錄難以維護',
+    '分散式查詢需要兼顧一致性、可用性與延遲',
+    '圖形資料中的關係與屬性都需要被有效查詢',
+    '權限控管與資料血緣紀錄需與儲存架構同步維護'
+  ],
+  '科目二 5': [
+    '高維度資料中距離差異趨於接近',
+    '消費金額呈現長尾分佈且高金額區域差異被壓縮',
+    '多檔股票報酬率需要呈現彼此相關強度與方向',
+    '使用者行為規則需同時判讀支持度、信賴度與提升度',
+    '圖形資料中的互動關係本身也具有時間與裝置屬性',
+    '知識資料需支援語意查詢與關聯推理'
+  ],
+  '科目二 5.1': [
+    '高維欄位量級差異過大，導致降維結果被單一欄位主導',
+    '上億筆交易需要在可容忍誤差內快速估算分位數',
+    '資料分佈明顯右偏且變異數隨自變數增加',
+    '多個特徵高度相關，影響模型參數估計穩定性',
+    '兩個變數呈線性趨勢且無明顯離群值',
+    '報酬率分佈非對稱且存在極端損失事件'
+  ],
+  '科目二 6': [
+    '少數類別樣本不到 1%，且短期內難以取得更多標註',
+    '交叉驗證切分後各折類別比例可能失衡',
+    '模型可能生成真實姓名、電話或交易資訊',
+    '雲端服務需在不解密原始資料下執行模型運算',
+    '訓練資料與近期輸入資料分佈明顯不同',
+    '模型評估只看 Accuracy，無法反映少數類偵測能力'
+  ],
+  '科目二 6.3': [
+    '模型可能在回答中生成真實姓名、電話或交易資訊',
+    '檢索片段語意相似但與使用者問題不完全相關',
+    '非結構化文字、影像與表格資料需進入同一訓練流程',
+    '向量資料庫內容更新後需要維持索引與來源追溯',
+    '生成式 AI 使用的訓練資料包含多種授權與敏感程度',
+    '輸出內容需要同時接受安全過濾與人工稽核'
+  ]
+};
+
+const subject2CodeContexts = [
+  '使用 pandas 讀取銷售資料集 data',
+  '使用 seaborn 繪製分組長條圖',
+  '使用 scikit-learn 建立迴歸模型',
+  '使用 df 檢查各欄位缺失值數量',
+  '使用 groupby 彙總不同平台或類別的銷售額',
+  '使用 pd.melt 將多個地區銷售欄位轉為長格式',
+  '使用 nlargest 找出指定指標前五名資料',
+  '使用 astype 轉換含缺值的年份欄位'
+];
+
+const subject2CodeSnippets = [
+  "df['sales'].describe()",
+  "df.isna().sum()",
+  "data.groupby('Platform')['Global_Sales'].sum()",
+  "data['Year'].astype('Int64')",
+  "pd.melt(data, value_vars=['NA_Sales','EU_Sales','JP_Sales'])",
+  "sns.barplot(x='Name', y='NA_Sales', data=data.nlargest(5, 'NA_Sales'))",
+  "LinearRegression().fit(X, y)",
+  "StandardScaler().fit_transform(X)"
+];
+
+const subject2QuestionFocus = [
+  '下列何者最能說明此現象？',
+  '下列哪一項判斷最合理？',
+  '下列哪一種方法最適合？',
+  '下列何者為最常見的潛在風險？',
+  '下列哪一種語法或設計最符合需求？',
+  '根據上述條件，下列敘述何者正確？',
+  '若要避免分析偏誤，下列何者最應優先處理？',
+  '下列哪一項最符合實務可行的資料處理方式？'
+];
+
+const subject2AnalysisWindows = [
+  '近一週',
+  '近兩週',
+  '近一個月',
+  '近一季',
+  '近半年',
+  '近一年',
+  '促銷活動期間',
+  '尖峰交易時段',
+  '產品改版前後',
+  '模型上線後三個月',
+  '年度稽核期間',
+  '每日批次結算後',
+  '每小時串流彙整後',
+  '跨區域彙整時',
+  '資料清理完成後',
+  '訓練資料切分前',
+  '正式報表產出前'
+];
+
+const subject2SampleScopes = [
+  '全量資料',
+  '抽樣資料',
+  '測試資料',
+  '訓練資料',
+  '驗證資料',
+  '交易明細',
+  '顧客分群資料',
+  '設備感測資料',
+  '客服紀錄',
+  '銷售報表',
+  '異常事件紀錄',
+  '多區域營運資料',
+  '高維特徵資料',
+  '缺值處理後資料',
+  '匿名化資料',
+  '雲端資料湖資料',
+  '串流事件資料',
+  '模型監控資料',
+  '視覺化報表資料'
+];
+
+const subject2MetricPools = {
+  '科目二 3': [
+    '平均數',
+    '標準差',
+    'Z 分數',
+    '偏態',
+    'p 值',
+    '信賴區間'
+  ],
+  '科目二 4': [
+    '缺值數量',
+    '欄位型態',
+    '資料完整性',
+    '交易一致性',
+    '資料處理延遲',
+    '資料血緣完整性'
+  ],
+  '科目二 5': [
+    '相關係數',
+    '分群輪廓係數',
+    '提升度',
+    '視覺化可讀性',
+    '近似分位數誤差',
+    '異常分數'
+  ],
+  '科目二 5.1': [
+    '近似分位數誤差',
+    '主成分解釋變異',
+    '共線性程度',
+    '殘差分佈',
+    '尾部分位風險',
+    '模型假設符合度'
+  ],
+  '科目二 6': [
+    '少數類召回率',
+    '資料漂移指標',
+    '模型 F1 分數',
+    '隱私風險',
+    '合規缺失數',
+    '生成內容稽核通過率'
+  ]
+};
 
 const dataSources = [
   '社群留言、客服紀錄與商品評論',
@@ -864,6 +1184,30 @@ const unitSourcePools = {
     '多來源欄位、資料型別與轉換紀錄',
     '作業排程、錯誤佇列與資料血緣'
   ],
+  '科目二 4.1': [
+    'Year 欄位、缺失值與資料型態',
+    '類別欄位、Label Encoding 與 One-Hot Encoding 結果',
+    '銷售金額、瀏覽次數與衍生欄位',
+    '連續數值欄位、離群值與縮放結果',
+    '原始 CSV 欄位、NaN 與欄位轉換紀錄',
+    '巢狀 JSON 欄位、時間戳記與聚合特徵'
+  ],
+  '科目二 4.2': [
+    '交易紀錄、提交狀態與回滾紀錄',
+    '資料湖檔案、資料倉儲表與資料目錄',
+    '分散式資料庫節點、交易日誌與一致性檢查',
+    '主鍵外鍵、索引設計與查詢路徑',
+    '圖資料節點、邊屬性與關係查詢',
+    '資料血緣、權限規則與欄位定義'
+  ],
+  '科目二 4.3': [
+    'IoT 串流事件、邊緣運算結果與雲端資料湖',
+    '批次 ETL 作業、錯誤佇列與排程紀錄',
+    'Spark 處理結果、分散式特徵抽取與模型管線',
+    'API 事件、訊息佇列與即時儀表板',
+    '資料清理腳本、轉換規則與處理延遲',
+    '多來源資料流、資料分區與運算資源紀錄'
+  ],
   '科目二 5': [
     '顧客行為、商品關聯與推薦紀錄',
     '知識圖譜、實體關係與語意查詢',
@@ -872,6 +1216,30 @@ const unitSourcePools = {
     '抽樣資料、迴歸特徵與實驗分組',
     '文本主題、關聯規則與分群特徵'
   ],
+  '科目二 5.1': [
+    '大規模交易金額、分位數與摘要統計',
+    '高維特徵欄位、主成分與標準化結果',
+    '廣告預算、銷售金額與相關係數',
+    '報酬率資料、尾部分位與極端損失紀錄',
+    '迴歸特徵、殘差分佈與模型假設檢查',
+    '抽樣資料、近似估計與誤差容忍範圍'
+  ],
+  '科目二 5.2': [
+    '顧客行為、商品關聯與推薦紀錄',
+    '知識圖譜、實體關係與語意查詢',
+    '時間序列、群集結果與異常分數',
+    '交易序列、序列模式與關聯規則',
+    '高維顧客資料、距離度量與分群結果',
+    '文本主題、關聯規則與分群特徵'
+  ],
+  '科目二 5.3': [
+    '多地區銷售量、產品線與趨勢圖',
+    '股票報酬率、相關係數矩陣與熱力圖',
+    '消費金額、箱型圖與長尾分佈',
+    '平台銷售總額、長條圖與排序結果',
+    '地區銷售比例、長格式資料與 barplot',
+    '儀表板指標、篩選條件與標註資訊'
+  ],
   '科目二 6': [
     '訓練資料、特徵資料與模型監控紀錄',
     '分類分數、混淆矩陣與決策閾值',
@@ -879,13 +1247,270 @@ const unitSourcePools = {
     '個資欄位、存取紀錄與合規文件',
     '資料漂移報告、重訓紀錄與回饋資料',
     '匿名資料、加密資料與跨境傳輸紀錄'
+  ],
+  '科目二 6.3': [
+    '客服紀錄、產品評論與生成式 AI 訓練資料',
+    '向量資料庫、檢索片段與生成回答',
+    '非結構化文字、影像與表格訓練資料',
+    '提示紀錄、引用來源與輸出稽核結果',
+    '敏感欄位、模型輸出與安全過濾紀錄',
+    'RAG 文件、嵌入向量與來源追溯紀錄'
+  ],
+  '科目二 6.4': [
+    '匿名資料、加密資料與跨境傳輸紀錄',
+    '個資欄位、存取紀錄與合規文件',
+    '金融交易、加密運算需求與雲端模型服務',
+    '資料授權紀錄、刪除請求與稽核追蹤',
+    '敏感資料、遮罩規則與輸出檢查結果',
+    '資料本地化要求、跨境傳輸與風險評估'
+  ]
+};
+
+const unitTaskPools = {
+  '科目一 3.1': [
+    '提升客服自動回覆與文字理解能力',
+    '分析顧客留言與內部文件內容',
+    '判斷文本中的情緒、意圖或實體資訊',
+    '改善長文本理解、摘要與語意搜尋成效',
+    '強化多語客服、文件分類與知識檢索流程',
+    '降低文字模型在語意判斷上的錯誤率'
+  ],
+  '科目一 3.2': [
+    '提升影像辨識、偵測與分割的準確度',
+    '辨識現場影像中的物件、區域或異常狀態',
+    '改善影像模型在標註資料有限時的泛化能力',
+    '建立可用於品質檢測或智慧監控的視覺模型',
+    '評估邊界框、像素分類或影像分類的模型成效',
+    '降低影像辨識系統在實務場景中的誤判風險'
+  ],
+  '科目一 3.3': [
+    '建立能產生可靠內容的生成式 AI 服務',
+    '降低生成模型幻覺、過時知識與不當輸出風險',
+    '改善提示、檢索與微調流程的輸出品質',
+    '讓生成式 AI 能結合企業知識庫回應問題',
+    '評估生成內容的正確性、可追溯性與安全性',
+    '強化內容產出、摘要與程式輔助流程'
+  ],
+  '科目一 3.4': [
+    '整合文字、影像與語音以支援跨模態理解',
+    '改善圖文檢索、影像問答或文件理解成效',
+    '讓多模態模型能處理缺失、對齊或品質不一的輸入',
+    '提升圖片、語音與文本共同判讀的穩定度',
+    '建立能理解截圖、描述與歷史紀錄的智慧服務',
+    '評估跨模態生成或檢索結果是否符合語意需求'
+  ],
+  '科目一 4': [
+    '判斷 AI 導入是否具備資料、流程與效益基礎',
+    '把業務痛點轉換成可驗收的 AI 應用目標',
+    '規劃 POC、利害關係人溝通與投資效益評估',
+    '降低因需求不清或資料不足造成的導入風險',
+    '建立符合組織流程與治理要求的導入計畫',
+    '確認 AI 應用能與現有作業流程銜接'
+  ],
+  '科目一 4.3': [
+    '降低 AI 應用在偏誤、隱私、資安與法遵上的風險',
+    '建立可追蹤、可解釋且符合治理要求的 AI 控制措施',
+    '評估生成內容、個資使用與模型決策可能造成的責任',
+    '避免模型輸出造成歧視、不實資訊或未授權資料使用',
+    '確認資料使用、模型推論與人工覆核符合風險控管要求',
+    '建立模型錯誤、攻擊與合規事件的處理依據'
+  ],
+  '科目一 5': [
+    '建立可重現、可監控且可回滾的模型上線流程',
+    '改善資料準備、模型選擇與部署維運品質',
+    '確保推論服務能支援流量、版本與監控需求',
+    '降低模型上線後漂移、延遲與服務中斷風險',
+    '讓模型、資料與系統介接能進入正式營運',
+    '建立 MLOps、容器部署與模型版本管理流程'
+  ],
+  '科目一 5.1': [
+    '提升訓練資料品質與模型泛化能力',
+    '處理缺值、異常值、不平衡資料與特徵工程問題',
+    '選擇符合資料特性與任務目標的模型',
+    '降低過擬合、資料洩漏與評估偏差風險',
+    '建立訓練、驗證與測試資料的正確切分方式',
+    '確認模型評估指標能反映實際任務需求'
+  ],
+  '科目一 5.2': [
+    '確保模型服務可穩定部署、擴展、監控與回滾',
+    '建立模型版本、容器環境與服務流量切換流程',
+    '降低推論延遲、部署失敗與系統中斷風險',
+    '讓 AI 模型能與既有系統安全且穩定地整合',
+    '管理模型服務副本、負載平衡與自動擴展需求',
+    '建立符合正式營運要求的 MLOps 部署機制'
+  ]
+};
+
+const unitFailurePools = {
+  '科目一 3.1': [
+    '模型面對長文本時難以維持上下文連貫判斷',
+    '不同語氣或文化背景的評論被誤判為相同情緒',
+    '系統能分類文本但無法正確抓出關鍵實體',
+    '低頻詞與專有名詞在語意表示上不夠穩定',
+    '客服查詢語句相似但實際意圖不同，模型容易混淆',
+    '多語資料加入後，翻譯與語意判斷品質不一致'
+  ],
+  '科目一 3.2': [
+    '模型能辨識大型物件，但小物件與遮蔽場景誤判率偏高',
+    '預測邊界框與人工標註框重疊程度不足',
+    '影像光線與拍攝角度改變後辨識準確率下降',
+    '資料增強後的影像特徵偏離真實場景',
+    '模型能判斷整張影像類別，但無法定位物件位置',
+    '像素級分類結果在物件邊界處出現明顯錯誤'
+  ],
+  '科目一 3.3': [
+    '生成內容符合語氣但部分事實缺乏來源依據',
+    '模型回答過度依賴訓練時記憶，無法反映最新文件',
+    '提示語稍微改寫後輸出格式與內容穩定性下降',
+    '檢索到的文件語意相近但與使用者意圖不完全相關',
+    '微調後模型在特定任務提升，但通用回答品質下降',
+    '生成結果偶爾包含不當、侵權或隱私風險內容'
+  ],
+  '科目一 3.4': [
+    '文字描述與影像內容對齊不足，導致檢索結果偏離需求',
+    '其中一種模態缺失時，模型整體判斷品質明顯下降',
+    '圖片主要主題正確，但細節與提示語要求不一致',
+    '語音轉文字錯誤影響後續文件理解與回覆品質',
+    '模型能處理文字或影像單一輸入，但跨模態推論不穩',
+    '圖表、版面與段落資訊未能被同時理解'
+  ],
+  '科目一 4': [
+    '供應商展示效果良好，但內部資料測試落差明顯',
+    '需求單位提出 AI 應用想法，但缺少可量化驗收指標',
+    '資料擁有者、IT 與法遵單位對權責分工看法不同',
+    '專案團隊尚未確認資料品質是否足以支援模型訓練',
+    '導入成本、維運支出與預期效益尚未被完整估算',
+    'POC 結果可行，但尚未確認是否能銜接正式流程'
+  ],
+  '科目一 4.3': [
+    '模型在不同族群資料上的錯誤率差異明顯',
+    '生成內容可能引用未授權資料或洩漏敏感資訊',
+    '推論紀錄缺乏可追溯性，難以回應稽核要求',
+    '使用者無法理解模型做出高風險判斷的依據',
+    '輸入資料包含個資，但尚未確認最小化與授權範圍',
+    '模型面對惡意擾動時可能產生錯誤決策'
+  ],
+  '科目一 5': [
+    '模型上線後輸入資料分佈與訓練資料明顯不同',
+    '推論服務在尖峰流量下出現延遲與佇列累積',
+    '模型版本、訓練紀錄與部署狀態缺乏集中管理',
+    '容器服務擴展後仍無法穩定支援高併發請求',
+    '部署更新失敗時，團隊無法快速切回穩定版本',
+    '監控儀表板只顯示系統資源，無法提早反映模型衰退'
+  ],
+  '科目一 5.1': [
+    '訓練集表現良好，但驗證集與測試集表現明顯下降',
+    '少數類別樣本不足，導致模型召回率偏低',
+    '多個特徵高度相關，使模型參數估計不穩定',
+    '資料切分方式不當，可能讓測試資料間接參與訓練',
+    '特徵尺度差異過大，影響部分模型的訓練穩定性',
+    '評估指標只看準確率，無法反映實際錯誤成本'
+  ],
+  '科目一 5.2': [
+    '推論服務在尖峰流量下出現延遲與佇列累積',
+    '模型版本、訓練紀錄與部署狀態缺乏集中管理',
+    '容器服務擴展後仍無法穩定支援高併發請求',
+    '部署更新失敗時，團隊無法快速切回穩定版本',
+    '服務副本數不足，導致部分請求逾時或失敗',
+    '監控告警缺少部署版本與流量切換紀錄'
+  ]
+};
+
+const unitMetricPools = {
+  '科目一 3.1': [
+    '文本分類準確率',
+    '情緒判斷一致性',
+    '實體抽取召回率',
+    '摘要正確性',
+    '語意檢索命中率',
+    '多語文本處理品質'
+  ],
+  '科目一 3.2': [
+    'mAP',
+    'IoU 閾值表現',
+    '影像分類準確率',
+    '小物件偵測召回率',
+    '像素分類一致性',
+    '邊界框定位誤差'
+  ],
+  '科目一 3.3': [
+    '回答事實正確率',
+    '引用來源命中率',
+    '幻覺發生率',
+    '提示遵循率',
+    '生成內容安全性',
+    '人工覆核通過率'
+  ],
+  '科目一 3.4': [
+    '跨模態檢索命中率',
+    '圖文對齊品質',
+    '影像問答正確率',
+    '模態缺失下的穩定度',
+    '文件理解完整性',
+    '多模態輸出一致性'
+  ],
+  '科目一 4': [
+    'POC 驗收達成率',
+    '導入成本效益',
+    '資料可用性',
+    '利害關係人接受度',
+    '流程改善幅度',
+    '風險緩解成效'
+  ],
+  '科目一 4.3': [
+    '偏誤降低幅度',
+    '敏感資料暴露風險',
+    '稽核追蹤完整性',
+    '人工覆核命中率',
+    '法遵缺失數',
+    '高風險輸出攔截率'
+  ],
+  '科目一 5.1': [
+    '驗證集 F1 分數',
+    '少數類別召回率',
+    '交叉驗證穩定度',
+    '資料洩漏風險',
+    '過擬合程度',
+    '特徵重要性穩定度'
+  ],
+  '科目一 5.2': [
+    '推論延遲',
+    '服務可用率',
+    '部署回滾時間',
+    '版本追蹤完整性',
+    '自動擴展反應時間',
+    '監控告警命中率'
   ]
 };
 
 function getUnitSources(unit, index, globalIndex) {
-  const key = Object.keys(unitSourcePools).find((prefix) => unit.unit.startsWith(prefix));
+  const key = Object.keys(unitSourcePools).sort((a, b) => b.length - a.length).find((prefix) => unit.unit.startsWith(prefix));
   const pool = key ? unitSourcePools[key] : dataSources;
   return pool[(index * 7 + globalIndex) % pool.length];
+}
+
+function getSubjectOneTask(unit, index, globalIndex) {
+  const key = Object.keys(unitTaskPools).sort((a, b) => b.length - a.length).find((prefix) => unit.unit.startsWith(prefix));
+  const pool = key ? unitTaskPools[key] : subject1Tasks;
+  return pool[(index * 5 + globalIndex) % pool.length];
+}
+
+function getSubjectOneFailure(unit, index, globalIndex) {
+  const key = Object.keys(unitFailurePools).sort((a, b) => b.length - a.length).find((prefix) => unit.unit.startsWith(prefix));
+  const pool = key ? unitFailurePools[key] : subject1FailureSignals;
+  return pool[(index * 11 + globalIndex) % pool.length];
+}
+
+function getSubjectOneMetric(unit, index, globalIndex) {
+  const key = Object.keys(unitMetricPools).sort((a, b) => b.length - a.length).find((prefix) => unit.unit.startsWith(prefix));
+  const pool = key ? unitMetricPools[key] : outcomeMetrics;
+  return pool[(index * 13 + globalIndex) % pool.length];
+}
+
+function pickBySubjectTwoUnit(pools, unit, index, globalIndex, multiplier = 1) {
+  const key = Object.keys(pools).sort((a, b) => b.length - a.length).find((prefix) => unit.unit.startsWith(prefix));
+  const pool = key ? pools[key] : Object.values(pools)[0];
+  return pool[(index * multiplier + globalIndex) % pool.length];
 }
 
 function isSubjectTwo(unit) {
@@ -959,41 +1584,82 @@ function pickUnitDistractors(unit, concept, index, globalIndex) {
 
 function buildSubjectOneQuestion(unit, concept, index, globalIndex) {
   const ctx = contexts[(index * 3 + globalIndex) % contexts.length];
-  const task = subject1Tasks[(index + globalIndex) % subject1Tasks.length];
+  const task = getSubjectOneTask(unit, index, globalIndex);
   const condition = subject1Conditions[(index * 2 + globalIndex) % subject1Conditions.length];
   const detail = caseDetails[(index + globalIndex * 2) % caseDetails.length];
   const signal = evidenceSignals[(index * 3 + globalIndex) % evidenceSignals.length];
+  const failure = getSubjectOneFailure(unit, index, globalIndex);
+  const finding = /^[A-Za-z0-9]/.test(failure) ? `發現 ${failure}` : `發現${failure}`;
+  const decisionGoal = subject1DecisionGoals[(index * 7 + globalIndex) % subject1DecisionGoals.length];
   const source = getUnitSources(unit, index, globalIndex);
-  const metric = outcomeMetrics[(index * 11 + globalIndex) % outcomeMetrics.length];
+  const sourceText = /^[A-Za-z0-9]/.test(source) ? ` ${source}` : source;
+  const appearedFailure = /^[A-Za-z0-9]/.test(failure) ? ` ${failure}` : failure;
+  const metric = getSubjectOneMetric(unit, index, globalIndex);
   const scale = dataScales[(index * 13 + globalIndex) % dataScales.length];
   const templates = [
-    `某${ctx}在${detail}中，希望利用 AI 技術分析${source}，資料條件為${scale}，以掌握${metric}。若採用「${concept[0]}」，其主要目的為何？`,
-    `某${ctx}導入「${concept[0]}」處理${source}，系統條件為${scale}，並觀察到${signal}。下列何者最能說明此技術的核心作用？`,
-    `某${ctx}規劃以「${concept[0]}」改善${task}，資料來源包含${source}且${scale}。若專案目標是${condition}，最應掌握下列哪一項？`,
-    `某${ctx}在${detail}中使用「${concept[0]}」，資料條件為${scale}，期望${condition}並改善${metric}。下列何者為其主要功能？`,
-    `某${ctx}欲將「${concept[0]}」納入智慧化服務，以支援${task}；目前團隊需處理${source}、${scale}且面臨${signal}。下列敘述何者最正確？`,
-    `某${ctx}評估「${concept[0]}」於${detail}中的應用。若依其技術特性、${condition}需求、${scale}與${metric}指標判斷，下列何者最適當？`
+    `某${ctx}在需要處理${sourceText}的專案中導入「${concept[0]}」，希望${task}。試行後${finding}。若要${decisionGoal}，下列何者最能說明此技術的正確判斷？`,
+    `某${ctx}在${detail}中導入「${concept[0]}」，目標是${condition}，但團隊同時面臨${signal}。下列何者最符合該技術在此情境中的主要作用？`,
+    `某${ctx}規劃導入「${concept[0]}」，目標是${task}，資料來源包含${sourceText}且${scale}。若主管要求以${metric}作為驗收重點，下列哪一項判斷最適當？`,
+    `某${ctx}使用「${concept[0]}」後，${finding}；專案團隊需要在${detail}中釐清問題成因。下列何者最能反映此技術的核心特性？`,
+    `某${ctx}欲將「${concept[0]}」納入智慧化服務，專案資料與流程包含${sourceText}，並需支援${condition}。若審查委員要求${decisionGoal}，下列敘述何者最正確？`,
+    `某${ctx}評估「${concept[0]}」於${detail}中的應用，已知情境條件為${scale}，且近期出現${appearedFailure}。若依科目一考點判斷，下列何者最適合作為決策依據？`,
+    `某${ctx}正在比較多種 AI 技術是否適合${task}。其中「${concept[0]}」被列為候選方案，且資料包含${sourceText}。若要避免與相近概念混淆，下列哪一項說法最合理？`,
+    `某${ctx}已將 AI 模型導入${detail}，並以${metric}追蹤成效。若目前觀察到${signal}，關於「${concept[0]}」的應用判斷何者最適當？`
   ];
   return templates[(index + Math.floor(index / unit.concepts.length)) % templates.length];
 }
 
 function buildSubjectTwoQuestion(unit, concept, index, globalIndex) {
   const ctx = contexts[(index * 5 + globalIndex) % contexts.length];
-  const task = subject2Tasks[(index + globalIndex) % subject2Tasks.length];
+  const task = pickBySubjectTwoUnit(subject2AnalysisGoals, unit, index, globalIndex, 5);
   const condition = subject2Conditions[(index * 3 + globalIndex) % subject2Conditions.length];
   const detail = caseDetails[(index * 2 + globalIndex) % caseDetails.length];
   const signal = evidenceSignals[(index + globalIndex * 3) % evidenceSignals.length];
+  const issue = pickBySubjectTwoUnit(subject2DataIssues, unit, index, globalIndex, 7);
   const source = getUnitSources(unit, index, globalIndex);
-  const metric = outcomeMetrics[(index * 17 + globalIndex) % outcomeMetrics.length];
+  const sourceText = /^[A-Za-z0-9]/.test(source) ? ` ${source}` : source;
+  const metric = pickBySubjectTwoUnit(subject2MetricPools, unit, index, globalIndex, 17);
   const scale = dataScales[(index * 19 + globalIndex) % dataScales.length];
-  const templates = [
-    `某${ctx}欲在${detail}中整合${source}，資料條件為${scale}，以${task}。若評估「${concept[0]}」相關方法並希望${condition}，下列哪一種方法最為合適？`,
-    `某${ctx}正在設計大數據應用，以${task}；目前資料呈現${signal}，且需追蹤${metric}、${scale}。若主要考量為「${concept[0]}」與${condition}，下列何者最適當？`,
-    `某${ctx}處理${source}等大量資料時，資料規模為${scale}，需要${condition}。若以「${concept[0]}」相關觀念判斷，下列哪一項設計最合理？`,
-    `某${ctx}規劃資料分析流程，目標是${task}，並用於${detail}與${metric}改善；資料條件為${scale}。下列哪一種作法最符合「${concept[0]}」的應用情境？`,
-    `某${ctx}希望改善資料處理與 AI 應用成效，並要求${condition}；團隊同時面臨${signal}、${scale}與${source}整合問題。若考點為「${concept[0]}」，下列何者最符合此需求？`,
-    `某${ctx}建構資料驅動服務時，需${task}並兼顧${condition}。若服務將用於${detail}、${scale}且以${metric}為觀察指標，下列哪一項最符合「${concept[0]}」的選擇？`
-  ];
+  const focus = subject2QuestionFocus[(index * 11 + globalIndex) % subject2QuestionFocus.length];
+  const codeContext = subject2CodeContexts[(index * 13 + globalIndex) % subject2CodeContexts.length];
+  const codeSnippet = subject2CodeSnippets[(index * 17 + globalIndex) % subject2CodeSnippets.length];
+  const window = subject2AnalysisWindows[(index * 23 + globalIndex) % subject2AnalysisWindows.length];
+  const scope = subject2SampleScopes[(index * 29 + globalIndex) % subject2SampleScopes.length];
+  const templates = unit.unit.startsWith('科目二 3')
+    ? [
+      `某${ctx}分析${window}的${sourceText}時，觀察到${issue}。若以「${concept[0]}」進行判讀，${focus}`,
+      `在${detail}的統計分析中，團隊希望${task}。已知${scope}包含${sourceText}且${scale}，考點為「${concept[0]}」。下列敘述何者最正確？`,
+      `某${ctx}進行${detail}時，需要根據${window}的${sourceText}完成${task}。若資料呈現${issue}，下列哪一項最符合「${concept[0]}」的判斷？`,
+      `某分析師檢視${scope}中的${sourceText}後，準備用「${concept[0]}」解讀${metric}，資料條件為${scale}。若要避免統計推論錯誤，${focus}`,
+      `若一組${window}的${sourceText}情境為${issue}，且分析目標是${task}，關於「${concept[0]}」的正確理解為何？`,
+      `某${ctx}在${detail}中建立統計模型，資料來源為${scope}中的${sourceText}且${scale}。若主要考量「${concept[0]}」，下列哪一項推論最合理？`
+    ]
+    : unit.unit.startsWith('科目二 4')
+      ? [
+        `某資料分析師處理${window}的${sourceText}時，發現${issue}。若考點為「${concept[0]}」，${focus}`,
+        `${codeContext}，資料來源為${scope}中的${sourceText}。若要完成與「${concept[0]}」相關的資料處理，最應注意下列哪一項？`,
+        `某${ctx}在${detail}中整理${sourceText}，資料條件為${scale}，分析範圍為${window}，且需${task}。關於「${concept[0]}」，下列何者最適當？`,
+        `資料工程團隊設計${scope}中的${sourceText}處理流程，並要求${condition}。若使用「${concept[0]}」相關觀念判斷，${focus}`,
+        `若程式或流程中出現 ${codeSnippet}，且分析目標是${task}，資料條件為${scale}，範圍為${window}。下列哪一項最符合「${concept[0]}」的資料處理重點？`,
+        `某${ctx}需將${window}的${sourceText}轉換為可分析資料，並面臨${issue}。下列哪一項最符合「${concept[0]}」的實務風險或用途？`
+      ]
+      : unit.unit.startsWith('科目二 5')
+        ? [
+          `某${ctx}希望利用${window}的${sourceText}完成${task}，但資料狀況為${issue}。若考點為「${concept[0]}」，${focus}`,
+          `分析師需要在單一報表中呈現${metric}與${scope}中${sourceText}的關係。若以「${concept[0]}」為重點，下列哪一項設計最合理？`,
+          `某研究團隊在${detail}中分析${window}的${sourceText}，目標是${task}。若要選擇「${concept[0]}」相關方法，下列何者最適合？`,
+          `某${ctx}處理高維度或多來源資料時發現${issue}，資料條件為${scale}，範圍為${scope}。關於「${concept[0]}」的判斷，下列何者正確？`,
+          `若資料應用需要${condition}，且希望${task}，資料來源為${scope}中的${sourceText}。下列何者最符合「${concept[0]}」的分析情境？`,
+          `某分析師評估${window}的${sourceText}視覺化或建模方式，並希望主管能快速掌握${metric}。若採用「${concept[0]}」觀念，${focus}`
+        ]
+        : [
+          `某${ctx}建立 AI 應用資料流程時，發現${issue}，資料來源包含${window}的${sourceText}。若主要考量「${concept[0]}」，${focus}`,
+          `某團隊在模型訓練與評估階段希望${task}，資料條件為${scale}，使用${scope}。下列哪一項最符合「${concept[0]}」的做法？`,
+          `某${ctx}導入大數據與 AI 系統，需同時${condition}。若資料來源包含${scope}中的${sourceText}，關於「${concept[0]}」何者最適當？`,
+          `在生成式 AI 或機器學習應用中，團隊面臨${issue}，並需處理${window}的${sourceText}。若考點為「${concept[0]}」，下列哪一項策略最合理？`,
+          `某資料治理會議檢討${detail}，要求說明${sourceText}的隱私、安全或模型風險，分析範圍為${scope}。若使用「${concept[0]}」，${focus}`,
+          `某${ctx}希望以大數據支援後續 AI 應用，並追蹤${metric}。當${window}的資料狀況為${issue}時，下列何者最符合「${concept[0]}」的選擇？`
+        ];
   return templates[(index + Math.floor(index / unit.concepts.length)) % templates.length];
 }
 
