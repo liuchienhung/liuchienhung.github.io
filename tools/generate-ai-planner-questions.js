@@ -1582,7 +1582,277 @@ function pickUnitDistractors(unit, concept, index, globalIndex) {
   };
 }
 
+const conceptAliases = {
+  '情感分析': 'Sentiment Analysis',
+  'Transformer 自注意力機制': 'Self-Attention Mechanism',
+  'BERT 遮罩語言模型': 'Masked Language Model, MLM',
+  '詞向量 Word2Vec': 'Word Embedding / Word2Vec',
+  '命名實體辨識 NER': 'Named Entity Recognition, NER',
+  'TF-IDF': 'Term Frequency-Inverse Document Frequency',
+  'N-gram 語言模型限制': 'N-gram Language Model',
+  '物件偵測': 'Object Detection',
+  'IoU': 'Intersection over Union',
+  'mAP': 'Mean Average Precision',
+  'CNN 卷積層': 'Convolutional Neural Network, CNN',
+  'Max-Pooling': 'Max-Pooling',
+  '大型語言模型 LLM 與生成式 AI': 'Large Language Model, LLM',
+  'RAG': 'Retrieval-Augmented Generation',
+  '擴散模型 Diffusion 溫度參數': 'Diffusion Model / Temperature',
+  '圖文檢索 CLIP': 'CLIP',
+  'MLOps': 'Machine Learning Operations',
+  'Kubernetes': 'Kubernetes',
+  '差分隱私': 'Differential Privacy',
+  '平均數': 'Mean',
+  '中位數': 'Median',
+  '標準差': 'Standard Deviation',
+  'Z 分數': 'Z-Score',
+  '偏態': 'Skewness',
+  '常態分佈': 'Normal Distribution',
+  '二項分佈': 'Binomial Distribution',
+  '卜瓦松分佈': 'Poisson Distribution',
+  'CDF': 'Cumulative Distribution Function',
+  'PDF': 'Probability Density Function',
+  'p 值 p-value': 'p-value',
+  't 檢定與 ANOVA 變異數分析': 't-test / ANOVA',
+  'Label Encoding': 'Label Encoding',
+  'One-Hot Encoding': 'One-Hot Encoding',
+  'Robust Scaling': 'Robust Scaling',
+  'ACID 原子性': 'Atomicity',
+  'Hadoop 與 Spark': 'Hadoop / Spark',
+  'Kafka': 'Kafka',
+  'DBSCAN': 'Density-Based Spatial Clustering',
+  'PCA': 'Principal Component Analysis',
+  '同態加密': 'Homomorphic Encryption'
+};
+
+function conceptLabel(concept) {
+  const alias = conceptAliases[concept[0]];
+  return alias ? `${concept[0]}（${alias}）` : concept[0];
+}
+
+function rotateOptions(options, answerIndex) {
+  return {
+    options: labelOptions(options),
+    answer: ['A', 'B', 'C', 'D'][answerIndex]
+  };
+}
+
+function buildDirectQuestion(question, options, answerIndex, explanation) {
+  const rotated = rotateOptions(options, answerIndex);
+  return {
+    question,
+    options: rotated.options,
+    answer: rotated.answer,
+    explanation: `解析：${explanation}`
+  };
+}
+
+function toChineseNumber(value) {
+  const digits = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+  return String(value).split('').map((digit) => digits[Number(digit)]).join('');
+}
+
+const subjectOneExamAngles = [
+  ({ ctx, concept, source, correct }) => `某${ctx}希望利用「${concept}」處理${source}，以提升 AI 應用規劃品質。下列何者最符合此技術或方法的主要目的？`,
+  ({ ctx, concept, failure }) => `某${ctx}導入「${concept}」後，發現${failure}。下列哪一項最可能是此技術的正確限制或改善方向？`,
+  ({ ctx, concept }) => `關於「${concept}」在企業 AI 導入情境中的應用，下列敘述何者正確？`,
+  ({ ctx, concept, source }) => `某${ctx}評估${source}資料是否適合導入「${concept}」。若依中級能力鑑定常見考法，下列何者最適當？`,
+  ({ ctx, concept }) => `某${ctx}需要向主管說明「${concept}」與相近 AI 概念的差異。下列哪一項說法最精確？`
+];
+
+const subjectOneWrongPatterns = [
+  '只要資料量足夠，即可完全不需要人工驗證或風險控管',
+  '主要目的在於取代資料庫交易、備份與權限管理',
+  '只適用於單機離線報表，與模型部署或推論無關',
+  '不需要確認資料來源、標註品質或正式環境限制',
+  '可保證模型在所有族群、場景與時間區間都不會出錯',
+  '只要使用最新模型，即可忽略 POC、監控與回滾設計'
+];
+
+function buildSubjectOneExamQuestion(unit, concept, index, globalIndex) {
+  const ctx = contexts[(index * 3 + globalIndex) % contexts.length];
+  const source = getUnitSources(unit, index, globalIndex);
+  const failure = getSubjectOneFailure(unit, index, globalIndex);
+  const label = conceptLabel(concept);
+  const correct = cleanOptionText(concept[1]);
+  const template = subjectOneExamAngles[(index + globalIndex) % subjectOneExamAngles.length];
+  const detail = caseDetails[(index * 7 + globalIndex) % caseDetails.length];
+  const question = `${template({ ctx, concept: label, source, failure, correct })}（${detail}，案例${toChineseNumber(globalIndex)}）`;
+  const correctOption = `${correct}，並依業務情境設定驗收或風險控管方式`;
+  const distractorPool = unit.concepts
+    .filter((candidate) => candidate[0] !== concept[0])
+    .map((candidate) => cleanOptionText(candidate[1]));
+  const wrongA = distractorPool[(index + globalIndex) % distractorPool.length] || subjectOneWrongPatterns[0];
+  const wrongB = subjectOneWrongPatterns[(index * 2 + globalIndex) % subjectOneWrongPatterns.length];
+  const wrongC = subjectOneWrongPatterns[(index * 5 + globalIndex + 3) % subjectOneWrongPatterns.length];
+  const correctSlot = (index + globalIndex) % 4;
+  const options = [wrongA, wrongB, wrongC, correctOption];
+  const ordered = new Array(4);
+  ordered[correctSlot] = correctOption;
+  let cursor = 0;
+  for (let i = 0; i < 4; i += 1) {
+    if (i !== correctSlot) {
+      ordered[i] = options[cursor];
+      cursor += 1;
+    }
+  }
+  return buildDirectQuestion(
+    question,
+    ordered,
+    correctSlot,
+    `${concept[0]} 的核心是${shortenForExplanation(concept[1])}；考古題常要求考生在情境中辨識主要目的、限制或適用條件。`
+  );
+}
+
+const statsPractice = [
+  {
+    tag: 'Z 分數',
+    make: (concept, index) => {
+      const mean = 1000 + (index % 6) * 200;
+      const std = 100 + (index % 4) * 50;
+      const z = 2 + (index % 3);
+      const value = mean + std * z;
+      return buildDirectQuestion(
+        `某資料集平均數為 ${mean}、標準差為 ${std}，觀察值為 ${value}。若題目考點為「${conceptLabel(concept)}」，此觀察值的 Z-Score 為何？`,
+        [`${z - 1}`, `${z}`, `${z + 0.5}`, `${z + 1}`],
+        1,
+        `Z=(觀察值-平均數)/標準差=(${value}-${mean})/${std}=${z}。`
+      );
+    }
+  },
+  {
+    tag: 'p 值',
+    make: (concept, index) => {
+      const p = index % 2 === 0 ? '0.03' : '0.08';
+      const reject = p === '0.03';
+      return buildDirectQuestion(
+        `A/B 測試得到 p-value=${p}，顯著水準 α=0.05。若題目聚焦「${conceptLabel(concept)}」，下列解讀何者正確？`,
+        reject
+          ? ['拒絕虛無假設，但仍需檢查效果大小與實務意義', '證明方案一定有巨大商業價值', '接受虛無假設為真', '表示樣本完全沒有抽樣誤差']
+          : ['拒絕虛無假設', '在 0.05 水準下未達顯著，尚不足以拒絕虛無假設', '證明兩組完全相同', '代表資料已完成標準化'],
+        reject ? 0 : 1,
+        `p-value 需與顯著水準比較，且統計顯著不等於實務效果大小。`
+      );
+    }
+  },
+  {
+    tag: '分佈',
+    make: (concept, index) => buildDirectQuestion(
+      `某客服中心平均每分鐘來電率固定，且各來電事件彼此獨立。若題目要求以「${conceptLabel(concept)}」相關觀念選擇機率模型，下列何者最適合描述每分鐘來電通數？`,
+      ['常態分佈', '卜瓦松分佈', '均勻分佈', '資料湖'],
+      1,
+      '固定時間區間內獨立事件發生次數常以卜瓦松分佈描述。'
+    )
+  }
+];
+
+const codePractice = [
+  {
+    make: (concept, index) => buildDirectQuestion(
+      `使用 pandas 處理銷售資料 df，若要計算欄位 df['sales'] 的 count、mean、std、四分位數與最大最小值，且考點為「${conceptLabel(concept)}」，下列哪個語法最適合？`,
+      ["df['sales'].sum()", "df['sales'].describe()", "df['sales'].sort_values()", "df['sales'].stats()"],
+      1,
+      'describe() 會回傳常見敘述性統計量。'
+    )
+  },
+  {
+    make: (concept, index) => buildDirectQuestion(
+      `某資料欄位 data['Year'] 含 NaN，且需保留缺值並轉為可空整數型態。若題目聚焦「${conceptLabel(concept)}」，下列哪一行 pandas 語法較合適？`,
+      ["data['Year'].astype(int)", "data['Year'].astype('Int64')", "data['Year'].fillna(0).astype(int)", "data['Year'].astype(float).astype(int)"],
+      1,
+      "pandas 的 nullable integer 型別 'Int64' 可保留缺值。"
+    )
+  },
+  {
+    make: (concept, index) => buildDirectQuestion(
+      `若要統計每個 Platform 的 Global_Sales 總和並以長條圖呈現，且題目考點為「${conceptLabel(concept)}」，下列程式碼何者較正確？`,
+      [
+        "data.groupby('Platform')['Global_Sales'].sum().plot(kind='bar')",
+        "data['Platform'].sum().plot(kind='bar')",
+        "data.groupby('Global_Sales')['Platform'].mean()",
+        "data['Global_Sales'].describe().plot(kind='line')"
+      ],
+      0,
+      'groupby 類別欄位後對數值欄位加總，才能比較各平台總銷售額。'
+    )
+  },
+  {
+    make: (concept, index) => buildDirectQuestion(
+      `若要檢查 DataFrame 每個欄位的遺漏值數量，且題目聚焦「${conceptLabel(concept)}」，下列哪些語法正確？`,
+      ['df.isnull().sum() 與 df.isna().sum()', 'df.isnan().sum() 與 df.isNaN().sum()', 'df.missing().count()', 'df.nulls().sum()'],
+      0,
+      'pandas 可用 isnull() 或 isna() 檢查缺值，再用 sum() 彙總。'
+    )
+  },
+  {
+    make: (concept, index) => buildDirectQuestion(
+      `使用 LinearRegression().fit(X, y) 建立迴歸模型時，若題目聚焦「${conceptLabel(concept)}」與模型輸入輸出判讀，下列何者正確？`,
+      ['X 為目標變數，y 為特徵矩陣', 'X 為特徵矩陣，y 為目標變數', 'X 為 p 值，y 為信賴區間', 'X 為截距項，y 為殘差'],
+      1,
+      'sklearn 慣例是 fit(X, y)，X 為特徵矩陣，y 為目標變數。'
+    )
+  },
+  {
+    make: (concept, index) => buildDirectQuestion(
+      `使用 sns.barplot(x='Name', y='NA_Sales', data=data.nlargest(5, 'NA_Sales')) 時，若考點為「${conceptLabel(concept)}」，此程式碼主要想呈現什麼？`,
+      ['NA_Sales 前五名資料的長條圖', '所有欄位的缺值數量', '迴歸模型係數', '資料庫交易是否符合 ACID'],
+      0,
+      'nlargest(5, 欄位) 取前五筆，再以 barplot 呈現。'
+    )
+  }
+];
+
+const methodPractice = [
+  {
+    make: (concept, index) => buildDirectQuestion(
+      `某資料集兩個類別 A/B 各 5 筆，二元 Gini impurity 為 0.5；若以二元最大值 0.5 做正規化，且題目聚焦「${conceptLabel(concept)}」，正規化後結果為何？`,
+      ['0', '0.5', '1', '2'],
+      2,
+      '二元類別均分時 Gini 達最大值，0.5/0.5=1。'
+    )
+  },
+  {
+    make: (concept, index) => buildDirectQuestion(
+      `某團隊使用 DBSCAN 進行顧客行為分群。若題目考點為「${conceptLabel(concept)}」，決定聚類結果的兩個主要超參數為何？`,
+      ['K 值與學習率', 'Epsilon 鄰域半徑與 MinPts 最小點數', 'Precision 與 Recall', '平均數與標準差'],
+      1,
+      'DBSCAN 主要由 eps 與 MinPts 控制密度群集。'
+    )
+  },
+  {
+    make: (concept, index) => buildDirectQuestion(
+      `某分類任務少數類別不到 1%，若題目聚焦「${conceptLabel(concept)}」，只看 Accuracy 的主要風險為何？`,
+      ['可能忽略少數類偵測能力', '必定無法訓練模型', '會讓資料庫交易失敗', '等同資料已完成匿名化'],
+      0,
+      '類別不平衡時，Accuracy 可能高估模型表現，需搭配 Precision、Recall、F1 或 PR 曲線。'
+    )
+  }
+];
+
+function buildSubjectTwoSpecialQuestion(unit, concept, index, globalIndex) {
+  const withBatch = (item) => ({
+    ...item,
+    question: `${item.question}（資料批次${toChineseNumber(globalIndex)}）`
+  });
+  if (unit.unit.startsWith('科目二 3') && index % 2 === 0) {
+    return withBatch(statsPractice[(index + globalIndex) % statsPractice.length].make(concept, index));
+  }
+  if (unit.unit.startsWith('科目二 4') && index % 2 === 0) {
+    return withBatch(codePractice[(index + globalIndex) % codePractice.length].make(concept, index));
+  }
+  if (unit.unit.startsWith('科目二 5') && index % 3 !== 1) {
+    const pool = unit.unit.startsWith('科目二 5.3') ? codePractice : methodPractice;
+    return withBatch(pool[(index + globalIndex) % pool.length].make(concept, index));
+  }
+  if (unit.unit.startsWith('科目二 6') && index % 3 !== 2) {
+    return withBatch(methodPractice[(index + globalIndex) % methodPractice.length].make(concept, index));
+  }
+  return null;
+}
+
 function buildSubjectOneQuestion(unit, concept, index, globalIndex) {
+  return buildSubjectOneExamQuestion(unit, concept, index, globalIndex).question;
+/*
   const ctx = contexts[(index * 3 + globalIndex) % contexts.length];
   const task = getSubjectOneTask(unit, index, globalIndex);
   const condition = subject1Conditions[(index * 2 + globalIndex) % subject1Conditions.length];
@@ -1607,6 +1877,7 @@ function buildSubjectOneQuestion(unit, concept, index, globalIndex) {
     `某${ctx}已將 AI 模型導入${detail}，並以${metric}追蹤成效。若目前觀察到${signal}，關於「${concept[0]}」的應用判斷何者最適當？`
   ];
   return templates[(index + Math.floor(index / unit.concepts.length)) % templates.length];
+*/
 }
 
 function buildSubjectTwoQuestion(unit, concept, index, globalIndex) {
@@ -1665,6 +1936,11 @@ function buildSubjectTwoQuestion(unit, concept, index, globalIndex) {
 
 function buildQuestion(unit, index, globalIndex) {
   const concept = unit.concepts[index % unit.concepts.length];
+  if (!isSubjectTwo(unit)) {
+    return buildSubjectOneExamQuestion(unit, concept, index, globalIndex);
+  }
+  const special = buildSubjectTwoSpecialQuestion(unit, concept, index, globalIndex);
+  if (special) return special;
   const correctSlot = (index + globalIndex) % 4;
   const distractors = pickUnitDistractors(unit, concept, index, globalIndex);
   const choices = [

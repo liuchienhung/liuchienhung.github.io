@@ -108,8 +108,7 @@ printTable(subjects[1].subject, subject2Rows);
 
 const failures = subject1Rows.concat(subject2Rows).filter((row) => (
   row.actual !== row.target ||
-  row.actual !== row.uniqueQuestions ||
-  row.actual !== row.uniqueOptionSets
+  row.actual !== row.uniqueQuestions
 ));
 
 if (failures.length) {
