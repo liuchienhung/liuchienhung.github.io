@@ -1689,8 +1689,7 @@ function buildSubjectOneExamQuestion(unit, concept, index, globalIndex) {
   const label = conceptLabel(concept);
   const correct = cleanOptionText(concept[1]);
   const template = subjectOneExamAngles[(index + globalIndex) % subjectOneExamAngles.length];
-  const detail = caseDetails[(index * 7 + globalIndex) % caseDetails.length];
-  const question = `${template({ ctx, concept: label, source, failure, correct })}（${detail}，案例${toChineseNumber(globalIndex)}）`;
+  const question = template({ ctx, concept: label, source, failure, correct });
   const correctOption = `${correct}，並依業務情境設定驗收或風險控管方式`;
   const distractorPool = unit.concepts
     .filter((candidate) => candidate[0] !== concept[0])
