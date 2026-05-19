@@ -729,6 +729,51 @@ function labelOptions(items) {
   return ['A', 'B', 'C', 'D'].map((label, index) => `${label}) ${items[index]}`);
 }
 
+function optionText(option) {
+  return option.replace(/^[A-D]\)\s*/, '');
+}
+
+function deterministicSlot(seed) {
+  let hash = 2166136261;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash ^= seed.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) % 4;
+}
+
+function rebalanceAnswerSlots(questions) {
+  const counts = { A: 0, B: 0, C: 0, D: 0 };
+  const labels = ['A', 'B', 'C', 'D'];
+  return questions.map((question, index) => {
+    const currentSlot = labels.indexOf(question.answer);
+    if (currentSlot < 0) return question;
+    const texts = question.options.map(optionText);
+    const correct = texts[currentSlot];
+    const wrongs = texts.filter((_, optionIndex) => optionIndex !== currentSlot);
+    const preferred = deterministicSlot(`${question.question}|rebalance|${index}`);
+    const targetSlot = labels
+      .map((label, labelIndex) => ({ label, labelIndex, count: counts[label], distance: (labelIndex - preferred + 4) % 4 }))
+      .sort((a, b) => a.count - b.count || a.distance - b.distance)[0].labelIndex;
+    const ordered = new Array(4);
+    ordered[targetSlot] = correct;
+    let wrongIndex = deterministicSlot(`${question.question}|wrong-rebalance`) % wrongs.length;
+    for (let i = 0; i < 4; i += 1) {
+      if (i !== targetSlot) {
+        ordered[i] = wrongs[wrongIndex % wrongs.length];
+        wrongIndex += 1;
+      }
+    }
+    const answer = labels[targetSlot];
+    counts[answer] += 1;
+    return {
+      ...question,
+      options: labelOptions(ordered),
+      answer
+    };
+  });
+}
+
 function shortenForExplanation(text) {
   return text
     .replace(/^將/, '')
@@ -1571,17 +1616,17 @@ function cleanOptionText(text) {
 
 const subject1OptionVariants = [
   (text) => text,
-  (text) => `主要用於${text}`,
-  (text) => `目的在於${text}`,
-  (text) => `核心是${text}`,
-  (text) => `可用來${text}`,
-  (text) => `重點是${text}`,
-  (text) => `適合用於${text}`,
-  (text) => `通常用來${text}`,
-  (text) => `可支援${text}`,
-  (text) => `其作用是${text}`,
-  (text) => `主要功能是${text}`,
-  (text) => `技術重點為${text}`
+  (text) => `此概念重點是：${text}`,
+  (text) => `較符合的理解是：${text}`,
+  (text) => `核心判斷為：${text}`,
+  (text) => `在此情境下應理解為：${text}`,
+  (text) => `主要判斷依據是：${text}`,
+  (text) => `較能對應題幹的是：${text}`,
+  (text) => `此技術或方法通常表示：${text}`,
+  (text) => `實務上較接近：${text}`,
+  (text) => `其作用可概括為：${text}`,
+  (text) => `較合理的說法是：${text}`,
+  (text) => `技術重點為：${text}`
 ];
 
 const subject2OptionVariants = [
@@ -1693,7 +1738,19 @@ function buildExamStyleExplanation(explanation) {
 }
 
 function buildDirectQuestion(question, options, answerIndex, explanation) {
-  const rotated = rotateOptions(options, answerIndex);
+  const correct = options[answerIndex];
+  const wrongs = options.filter((_, index) => index !== answerIndex);
+  const targetSlot = deterministicSlot(`${question}|${correct}|${explanation}`);
+  const ordered = new Array(4);
+  ordered[targetSlot] = correct;
+  let wrongIndex = deterministicSlot(`${question}|wrong-order`) % wrongs.length;
+  for (let i = 0; i < 4; i += 1) {
+    if (i !== targetSlot) {
+      ordered[i] = wrongs[wrongIndex % wrongs.length];
+      wrongIndex += 1;
+    }
+  }
+  const rotated = rotateOptions(ordered, targetSlot);
   return {
     question,
     options: rotated.options,
@@ -1716,12 +1773,21 @@ const subjectOneExamAngles = [
 ];
 
 const subjectOneWrongPatterns = [
-  '只要資料量足夠，即可完全不需要人工驗證或風險控管',
-  '主要目的在於取代資料庫交易、備份與權限管理',
-  '只適用於單機離線報表，與模型部署或推論無關',
-  '不需要確認資料來源、標註品質或正式環境限制',
-  '可保證模型在所有族群、場景與時間區間都不會出錯',
-  '只要使用最新模型，即可忽略 POC、監控與回滾設計'
+  ({ source }) => `只要增加${source}的資料量，就能保證不需要人工驗證`,
+  ({ metric }) => `只需追蹤${metric}，即可忽略資料來源、標註品質與使用限制`,
+  ({ task }) => `主要目的在於${task}時完全取代所有業務與法遵判斷`,
+  ({ scale }) => `只要資料條件為${scale}，模型就能自動排除偏差與錯誤`,
+  ({ signal }) => `遇到${signal}時，應直接擴大上線範圍而不需重新驗證`,
+  ({ source }) => `主要用來取代${source}的資料保存、交易一致性與權限控管`,
+  ({ metric }) => `只要${metric}短期改善，就代表模型在所有正式情境都可靠`,
+  ({ task }) => `適合在未定義${task}的驗收方式前直接投入正式營運`,
+  ({ scale }) => `在${scale}時，不需要檢查模型限制、資料偏差或維運成本`,
+  ({ signal }) => `若觀察到${signal}，最合理做法是刪除監控紀錄以降低複雜度`,
+  ({ source }) => `可不經清理、授權與版本控管，直接把${source}交給模型使用`,
+  ({ metric }) => `只要選用最新模型，就能保證${metric}永遠維持最佳`,
+  ({ task }) => `其核心作用是跳過${task}相關的需求訪談與風險盤點`,
+  ({ scale }) => `因為${scale}，所以不必保留測試集、回滾方案或人工覆核流程`,
+  ({ signal }) => `面對${signal}時，應只調整介面文字而不需檢查資料與模型`
 ];
 
 function buildSubjectOneExamQuestion(unit, concept, index, globalIndex) {
@@ -1737,29 +1803,40 @@ function buildSubjectOneExamQuestion(unit, concept, index, globalIndex) {
   const correct = cleanOptionText(concept[1]);
   const template = subjectOneExamAngles[(index + globalIndex) % subjectOneExamAngles.length];
   const question = template({ ctx, concept: label, source, failure, correct, task, metric, decisionGoal, scale, signal });
-  const correctOption = `${correct}，並依業務情境設定驗收或風險控管方式`;
+  const correctOption = formatOption(unit, concept, index + globalIndex + 17);
   const distractorPool = unit.concepts
-    .filter((candidate) => candidate[0] !== concept[0])
-    .map((candidate) => cleanOptionText(candidate[1]));
-  const wrongCandidates = [...distractorPool, ...subjectOneWrongPatterns];
+    .filter((candidate) => candidate[0] !== concept[0]);
   const wrongOptions = [];
-  let offset = index + globalIndex;
-  while (wrongOptions.length < 3 && offset < wrongCandidates.length * 3) {
-    const candidate = wrongCandidates[offset % wrongCandidates.length];
-    if (candidate && candidate !== correct && candidate !== correctOption && !wrongOptions.includes(candidate)) {
-      wrongOptions.push(candidate);
+  let offset = (index * 5 + globalIndex) % distractorPool.length;
+  let attempts = 0;
+  while (wrongOptions.length < 3 && attempts < distractorPool.length * 4) {
+    const candidate = distractorPool[offset % distractorPool.length];
+    const option = formatOption(unit, candidate, index + globalIndex + attempts + wrongOptions.length * 11);
+    if (
+      option &&
+      option !== correct &&
+      option !== correctOption &&
+      !wrongOptions.includes(option)
+    ) {
+      wrongOptions.push(option);
     }
     offset += 1;
+    attempts += 1;
   }
-  [
-    '只依單一技術名稱判斷，不需檢查資料條件、任務目標或模型限制',
-    '只要購買雲端服務即可保證所有推論結果正確，無需測試集驗證',
-    '主要用來取代資料保存、交易一致性與權限控管等資料治理作業'
-  ].forEach((fallback) => {
-    if (wrongOptions.length < 3 && !wrongOptions.includes(fallback)) {
+  let fallbackOffset = index + globalIndex;
+  while (wrongOptions.length < 3 && fallbackOffset < index + globalIndex + subjectOneWrongPatterns.length * 2) {
+    const fallback = subjectOneWrongPatterns[fallbackOffset % subjectOneWrongPatterns.length]({
+      source,
+      task,
+      metric,
+      scale,
+      signal
+    });
+    if (fallback !== correctOption && !wrongOptions.includes(fallback)) {
       wrongOptions.push(fallback);
     }
-  });
+    fallbackOffset += 1;
+  }
   const correctSlot = (index + globalIndex) % 4;
   const options = [...wrongOptions, correctOption];
   const ordered = new Array(4);
@@ -2016,12 +2093,15 @@ function buildQuestion(unit, index, globalIndex) {
   }
   const special = buildSubjectTwoSpecialQuestion(unit, concept, index, globalIndex);
   if (special) return special;
-  const correctSlot = (index + globalIndex) % 4;
   const distractors = pickUnitDistractors(unit, concept, index, globalIndex);
   const choices = [
     formatOption(unit, concept, index + globalIndex),
     ...distractors.options
   ];
+  const question = isSubjectTwo(unit)
+    ? buildSubjectTwoQuestion(unit, concept, index, globalIndex)
+    : buildSubjectOneQuestion(unit, concept, index, globalIndex);
+  const correctSlot = deterministicSlot(`${unit.unit}|${concept[0]}|${question}|${index}|${globalIndex}`);
   const ordered = new Array(4);
   ordered[correctSlot] = choices[0];
   let wrong = 1;
@@ -2031,9 +2111,6 @@ function buildQuestion(unit, index, globalIndex) {
       wrong += 1;
     }
   }
-  const question = isSubjectTwo(unit)
-    ? buildSubjectTwoQuestion(unit, concept, index, globalIndex)
-    : buildSubjectOneQuestion(unit, concept, index, globalIndex);
   return {
     question,
     options: labelOptions(ordered),
@@ -2045,7 +2122,7 @@ function buildQuestion(unit, index, globalIndex) {
 function buildUnits(units, startIndex = 1) {
   let globalIndex = startIndex;
   const result = units.map((unit) => {
-    const questions = Array.from({ length: unit.count }, (_, i) => buildQuestion(unit, i, globalIndex++));
+    const questions = rebalanceAnswerSlots(Array.from({ length: unit.count }, (_, i) => buildQuestion(unit, i, globalIndex++)));
     return { unit: unit.unit, questions };
   });
   return { units: result, nextIndex: globalIndex };
