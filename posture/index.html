@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>寫字姿勢即時偵測</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1F3A5F; --paper:#FAFBFC; --line:#D9E1EA; --pencil:#F2C230;
+  --good:#2E8B57; --warn:#D99A00; --bad:#D1453B; --text:#1C2530; --muted:#5B6B7C; --card:#FFFFFF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0F1722; --card:#172233; --line:#2A3A50; --text:#E6ECF3; --muted:#9AAABB; --ink:#8FB4E0;
+}}
+:root[data-theme="dark"]{
+  --paper:#0F1722; --card:#172233; --line:#2A3A50; --text:#E6ECF3; --muted:#9AAABB; --ink:#8FB4E0;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%} body{margin:0;min-height:100%;background:var(--paper);color:var(--text);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:16px;line-height:1.5}
+header{padding:14px 16px 8px}
+h1{margin:0;font-size:1.25rem;color:var(--ink);font-weight:700}
+header p{margin:2px 0 0;color:var(--muted);font-size:.85rem}
+.stage{position:relative;margin:0 12px;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:3/4;max-height:58vh}
+video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mirror{transform:scaleX(-1)}
+.banner{position:absolute;left:10px;right:10px;top:10px;padding:8px 12px;border-radius:10px;font-weight:700;
+  background:var(--bad);color:#fff;display:none;font-size:.95rem}
+.viewtag{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.55);color:#fff;padding:3px 10px;border-radius:20px;font-size:.8rem}
+.hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px;font-size:.95rem}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 12px}
+.m{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:10px;padding:8px 10px}
+.m .k{font-size:.8rem;color:var(--muted)} .m .v{font-size:1.3rem;font-weight:700}
+.m.good{border-left-color:var(--good)} .m.warn{border-left-color:var(--warn)} .m.bad{border-left-color:var(--bad)}
+.m.off{opacity:.45}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin:4px 12px 12px}
+button,select{font:inherit;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);padding:10px 12px;min-height:44px}
+button.primary{background:var(--ink);color:#fff;border-color:var(--ink);flex:1 1 100%;font-weight:700}
+button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outline-offset:2px}
+#report{margin:0 12px 24px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:none}
+#report h2{margin:0 0 6px;font-size:1.05rem;color:var(--ink)}
+#report h3{margin:14px 0 4px;font-size:.95rem}
+#report ol,#report ul{margin:4px 0;padding-left:1.3em}
+#report li{margin:4px 0}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;display:flex;margin:2px 0 6px}
+.bar i{display:block;height:100%}
+.small{font-size:.82rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <a href="../" style="color:var(--muted);font-size:.85rem;text-decoration:none">← 回服務首頁</a>
+  <h1>寫字姿勢即時偵測</h1>
+  <p>手機放在孩子側面約 1–1.5 公尺、與肩同高，拍到頭、肩、髖。影像只在本機運算，不上傳。</p>
+</header>
+
+<div class="stage" id="stage">
+  <video id="video" playsinline muted></video>
+  <canvas id="canvas"></canvas>
+  <div class="banner" id="banner"></div>
+  <div class="viewtag" id="viewtag">—</div>
+  <div class="hint" id="hint">按「開始偵測」開啟相機</div>
+</div>
+
+<div class="metrics" id="metrics"></div>
+
+<div class="controls">
+  <button class="primary" id="startBtn">開始偵測</button>
+  <select id="viewSel" aria-label="拍攝角度">
+    <option value="auto">角度：自動</option>
+    <option value="side">角度：側面</option>
+    <option value="front">角度：正面</option>
+  </select>
+  <button id="flipBtn">切換鏡頭</button>
+  <button id="soundBtn" aria-pressed="true">提醒音：開</button>
+  <button id="reportBtn">結束並產生報告</button>
+</div>
+
+<section id="report" aria-live="polite"></section>
+
+<script type="module">
+import { PoseLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+
+const $ = id => document.getElementById(id);
+const video=$("video"), canvas=$("canvas"), ctx=canvas.getContext("2d");
+const I={nose:0,lEye:2,rEye:5,lEar:7,rEar:8,lSh:11,rSh:12,lHip:23,rHip:24};
+
+/* 指標定義：thr=[良好上限, 注意上限]，dir=1 數值越大越差；dir=-1 數值越小越差 */
+const METRICS={
+  neck:  {label:"頸部前傾",view:"side", unit:"°",thr:[20,35],dir:1},
+  trunk: {label:"軀幹前傾",view:"side", unit:"°",thr:[15,30],dir:1},
+  sh:    {label:"肩膀高低",view:"front",unit:"°",thr:[4,8],  dir:1},
+  tilt:  {label:"頭部側歪",view:"front",unit:"°",thr:[6,12], dir:1},
+  drop:  {label:"頭部低垂",view:"front",unit:"", thr:[0.35,0.2],dir:-1},
+};
+const ADVICE={
+  neck:"頭頸過度前傾：眼睛離紙面保持約 30–35 cm（一尺），改用斜面寫字板或把本子墊高 10–15°，減少低頭角度。",
+  trunk:"上身趴向桌面：胸口與桌緣保持一拳距離，臀部坐滿椅面、背部靠直；檢查椅子是否過低或桌子過高（手肘自然彎曲約 90° 時前臂應平放桌面）。",
+  sh:"兩肩高低不一：非寫字手要壓住紙張、平放桌面，不要垂在桌下；紙張放在寫字手同側前方並稍微斜放，避免身體扭轉。",
+  tilt:"頭部歪向一側：常因紙張擺正但握筆手擋住視線。將紙張往寫字手方向傾斜 15–30°，並確認光源在寫字手的對側，避免手影。",
+  drop:"頭部垂得太低：多半是握筆太靠近筆尖，看不到筆尖只好低頭。手指離筆尖約 3 cm（一寸），並檢查視力是否需要檢查。",
+};
+
+const state={running:false,landmarker:null,stream:null,facing:"environment",sound:true,
+  ema:{},stats:{},badSince:null,lastAlert:0,lastTs:-1,frames:0,startTime:0,audio:null};
+
+function resetStats(){
+  state.ema={}; state.stats={}; state.frames=0; state.startTime=performance.now();
+  for(const k in METRICS) state.stats[k]={good:0,warn:0,bad:0};
+}
+function level(k,v){
+  const m=METRICS[k];
+  if(m.dir===1) return v<=m.thr[0]?"good":v<=m.thr[1]?"warn":"bad";
+  return v>=m.thr[0]?"good":v>=m.thr[1]?"warn":"bad";
+}
+const deg=r=>r*180/Math.PI;
+
+function renderMetricCards(values,view){
+  $("metrics").innerHTML=Object.entries(METRICS).map(([k,m])=>{
+    const v=values[k]; const active=v!=null;
+    const lv=active?level(k,v):"off";
+    const txt=active?(m.unit?v.toFixed(0)+m.unit:v.toFixed(2)):(m.view===view?"偵測不到":"需"+(m.view==="side"?"側面":"正面"));
+    return `<div class="m ${lv}"><div class="k">${m.label}</div><div class="v">${txt}</div></div>`;
+  }).join("");
+}
+renderMetricCards({},"side");
+
+async function init(){
+  $("hint").textContent="載入模型中…";
+  const fileset=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  const opts=d=>({baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",delegate:d},
+    runningMode:"VIDEO",numPoses:1});
+  try{ state.landmarker=await PoseLandmarker.createFromOptions(fileset,opts("GPU")); }
+  catch{ state.landmarker=await PoseLandmarker.createFromOptions(fileset,opts("CPU")); }
+}
+
+async function startCamera(){
+  if(state.stream) state.stream.getTracks().forEach(t=>t.stop());
+  state.stream=await navigator.mediaDevices.getUserMedia({audio:false,
+    video:{facingMode:state.facing,width:{ideal:1280},height:{ideal:960}}});
+  video.srcObject=state.stream; await video.play();
+  const mir=state.facing==="user";
+  video.classList.toggle("mirror",mir); canvas.classList.toggle("mirror",mir);
+  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+}
+
+function detectView(p){
+  const sel=$("viewSel").value; if(sel!=="auto") return sel;
+  const shW=Math.abs(p[I.lSh].x-p[I.rSh].x);
+  const midY=(p[I.lSh].y+p[I.rSh].y)/2;
+  const neckH=Math.max(1,Math.abs(midY-p[I.nose].y));
+  return shW/neckH>0.9?"front":"side";
+}
+
+function compute(p,view){
+  const out={}; const vis=i=>p[i].v>0.5;
+  if(view==="side"){
+    const L=p[I.lEar].v+p[I.lSh].v, R=p[I.rEar].v+p[I.rSh].v;
+    const [ear,sh,hip]=L>=R?[I.lEar,I.lSh,I.lHip]:[I.rEar,I.rSh,I.rHip];
+    if(vis(ear)&&vis(sh)) out.neck=deg(Math.atan2(Math.abs(p[ear].x-p[sh].x),p[sh].y-p[ear].y));
+    if(vis(sh)&&vis(hip)) out.trunk=deg(Math.atan2(Math.abs(p[sh].x-p[hip].x),p[hip].y-p[sh].y));
+  }else{
+    if(vis(I.lSh)&&vis(I.rSh)){
+      const dx=p[I.lSh].x-p[I.rSh].x, dy=p[I.lSh].y-p[I.rSh].y;
+      out.sh=deg(Math.atan2(Math.abs(dy),Math.abs(dx)));
+      if(vis(I.nose)) out.drop=((p[I.lSh].y+p[I.rSh].y)/2-p[I.nose].y)/Math.hypot(dx,dy);
+    }
+    if(vis(I.lEye)&&vis(I.rEye)){
+      const dx=p[I.lEye].x-p[I.rEye].x, dy=p[I.lEye].y-p[I.rEye].y;
+      out.tilt=deg(Math.atan2(Math.abs(dy),Math.abs(dx)));
+    }
+  }
+  for(const k in out){ const prev=state.ema[k]; state.ema[k]=prev==null?out[k]:prev*0.7+out[k]*0.3; out[k]=state.ema[k]; }
+  return out;
+}
+
+function beep(){
+  if(!state.sound) return;
+  try{
+    state.audio ||= new AudioContext();
+    const o=state.audio.createOscillator(), g=state.audio.createGain();
+    o.frequency.value=880; g.gain.value=0.15; o.connect(g); g.connect(state.audio.destination);
+    o.start(); o.stop(state.audio.currentTime+0.25);
+  }catch{}
+}
+
+function handleAlert(values){
+  const bad=Object.keys(values).filter(k=>level(k,values[k])==="bad");
+  const b=$("banner"); const now=performance.now();
+  if(!bad.length){ state.badSince=null; b.style.display="none"; return; }
+  state.badSince ??= now;
+  if(now-state.badSince>3000){
+    b.textContent="請調整："+bad.map(k=>METRICS[k].label).join("、");
+    b.style.display="block";
+    if(now-state.lastAlert>10000){ state.lastAlert=now; beep(); navigator.vibrate?.(300); }
+  }
+}
+
+function loop(){
+  if(!state.running) return;
+  if(video.currentTime!==state.lastTs && video.readyState>=2){
+    state.lastTs=video.currentTime;
+    const res=state.landmarker.detectForVideo(video,performance.now());
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if(res.landmarks?.length){
+      const lm=res.landmarks[0];
+      const p=lm.map(l=>({x:l.x*canvas.width,y:l.y*canvas.height,v:l.visibility??1}));
+      const view=detectView(p);
+      $("viewtag").textContent=view==="side"?"側面":"正面";
+      const values=compute(p,view);
+      const du=new DrawingUtils(ctx);
+      du.drawConnectors(lm,PoseLandmarker.POSE_CONNECTIONS.filter(c=>c.start<25&&c.end<25),{color:"#F2C230",lineWidth:4});
+      du.drawLandmarks(lm.slice(0,25),{color:"#1F3A5F",fillColor:"#fff",radius:3});
+      state.frames++;
+      for(const k in values) state.stats[k][level(k,values[k])]++;
+      renderMetricCards(values,view);
+      handleAlert(values);
+    }else{
+      $("viewtag").textContent="找不到人";
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+async function start(){
+  try{
+    $("startBtn").disabled=true;
+    if(!state.landmarker) await init();
+    $("hint").textContent="開啟相機中…";
+    await startCamera();
+    $("hint").style.display="none";
+    try{ await navigator.wakeLock?.request("screen"); }catch{}
+    resetStats(); state.running=true; $("report").style.display="none";
+    $("startBtn").textContent="偵測中"; loop();
+  }catch(e){
+    $("startBtn").disabled=false;
+    $("hint").style.display="flex";
+    $("hint").textContent=e.name==="NotAllowedError"?"相機權限被拒絕：請在瀏覽器設定允許相機後重試。"
+      :location.protocol!=="https:"&&location.hostname!=="localhost"?"相機需要 HTTPS 網址才能開啟。"
+      :"啟動失敗："+e.message;
+  }
+}
+
+function stop(){
+  state.running=false;
+  state.stream?.getTracks().forEach(t=>t.stop()); state.stream=null;
+  $("startBtn").disabled=false; $("startBtn").textContent="重新開始偵測";
+  $("banner").style.display="none";
+  $("hint").style.display="flex"; $("hint").textContent="已停止";
+}
+
+function report(){
+  stop();
+  const mins=((performance.now()-state.startTime)/60000).toFixed(1);
+  const rows=[], issues=[];
+  for(const [k,m] of Object.entries(METRICS)){
+    const s=state.stats[k]; const n=s.good+s.warn+s.bad;
+    if(n<30) continue;
+    const pg=s.good/n*100, pw=s.warn/n*100, pb=s.bad/n*100;
+    rows.push(`<div><b>${m.label}</b> <span class="small">良好 ${pg.toFixed(0)}%｜注意 ${pw.toFixed(0)}%｜不良 ${pb.toFixed(0)}%</span>
+      <div class="bar"><i style="width:${pg}%;background:var(--good)"></i><i style="width:${pw}%;background:var(--warn)"></i><i style="width:${pb}%;background:var(--bad)"></i></div></div>`);
+    const score=pb+pw*0.5;
+    if(pb+pw>20) issues.push({k,score,pb});
+  }
+  issues.sort((a,b)=>b.score-a.score);
+  const r=$("report");
+  r.innerHTML=`<h2>本次報告（${mins} 分鐘）</h2>
+    ${rows.length?rows.join(""):'<p class="small">有效資料不足，請拍攝至少 30 秒且人物完整入鏡。</p>'}
+    <h3>優先改善</h3>
+    ${issues.length?`<ol>${issues.map(i=>`<li>${ADVICE[i.k]}<span class="small">（不良 ${i.pb.toFixed(0)}%）</span></li>`).join("")}</ol>`
+      :'<p class="small">偵測到的項目皆良好，繼續保持。</p>'}
+    <h3>鏡頭無法判斷，請人工確認</h3>
+    <ul>
+      <li>一尺一拳一寸：眼離紙約 33 cm、胸離桌一拳、指離筆尖 3 cm。</li>
+      <li>握筆：拇指與食指不重疊、指節不凹陷，筆桿斜靠虎口；握太緊會指尖發白。</li>
+      <li>桌椅：雙腳平踩地面、膝約 90°；桌面約在手肘高度下方 3–5 cm。</li>
+      <li>照明：檯燈置於寫字手對側，桌面照度足夠且無強烈反光。</li>
+      <li>時間：每寫 30–40 分鐘起身休息、看遠處 5–10 分鐘。</li>
+    </ul>
+    <p class="small">角度為 2D 影像估算，受鏡頭位置影響，建議固定同一位置拍攝以比較前後變化；非醫療診斷，若長期駝背或歪頭請諮詢復健科或眼科。</p>`;
+  r.style.display="block"; r.scrollIntoView({behavior:"smooth"});
+}
+
+$("startBtn").onclick=start;
+$("reportBtn").onclick=()=>state.frames?report():null;
+$("flipBtn").onclick=async()=>{ state.facing=state.facing==="user"?"environment":"user"; if(state.running){ await startCamera(); } };
+$("soundBtn").onclick=e=>{ state.sound=!state.sound; e.target.textContent="提醒音："+(state.sound?"開":"關"); e.target.setAttribute("aria-pressed",state.sound); };
+$("viewSel").onchange=()=>{ state.ema={}; };
+</script>
+</body>
+</html>
