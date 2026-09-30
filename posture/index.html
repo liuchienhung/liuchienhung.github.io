@@ -1,295 +1,2041 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>寫字姿勢即時偵測</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --ink:#1F3A5F; --paper:#FAFBFC; --line:#D9E1EA; --pencil:#F2C230;
-  --good:#2E8B57; --warn:#D99A00; --bad:#D1453B; --text:#1C2530; --muted:#5B6B7C; --card:#FFFFFF;
-  box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:#0F1722; --card:#172233; --line:#2A3A50; --text:#E6ECF3; --muted:#9AAABB; --ink:#8FB4E0;
-}}
-:root[data-theme="dark"]{
-  --paper:#0F1722; --card:#172233; --line:#2A3A50; --text:#E6ECF3; --muted:#9AAABB; --ink:#8FB4E0;
-}
-*,*::before,*::after{box-sizing:inherit}
-html{height:100%} body{margin:0;min-height:100%;background:var(--paper);color:var(--text);
-  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:16px;line-height:1.5}
-header{padding:14px 16px 8px}
-h1{margin:0;font-size:1.25rem;color:var(--ink);font-weight:700}
-header p{margin:2px 0 0;color:var(--muted);font-size:.85rem}
-.stage{position:relative;margin:0 12px;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:3/4;max-height:58vh}
-video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.mirror{transform:scaleX(-1)}
-.banner{position:absolute;left:10px;right:10px;top:10px;padding:8px 12px;border-radius:10px;font-weight:700;
-  background:var(--bad);color:#fff;display:none;font-size:.95rem}
-.viewtag{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.55);color:#fff;padding:3px 10px;border-radius:20px;font-size:.8rem}
-.hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px;font-size:.95rem}
-.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 12px}
-.m{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:10px;padding:8px 10px}
-.m .k{font-size:.8rem;color:var(--muted)} .m .v{font-size:1.3rem;font-weight:700}
-.m.good{border-left-color:var(--good)} .m.warn{border-left-color:var(--warn)} .m.bad{border-left-color:var(--bad)}
-.m.off{opacity:.45}
-.controls{display:flex;flex-wrap:wrap;gap:8px;margin:4px 12px 12px}
-button,select{font:inherit;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);padding:10px 12px;min-height:44px}
-button.primary{background:var(--ink);color:#fff;border-color:var(--ink);flex:1 1 100%;font-weight:700}
-button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outline-offset:2px}
-#report{margin:0 12px 24px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:none}
-#report h2{margin:0 0 6px;font-size:1.05rem;color:var(--ink)}
-#report h3{margin:14px 0 4px;font-size:.95rem}
-#report ol,#report ul{margin:4px 0;padding-left:1.3em}
-#report li{margin:4px 0}
-.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;display:flex;margin:2px 0 6px}
-.bar i{display:block;height:100%}
-.small{font-size:.82rem;color:var(--muted)}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多應用服務入口</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(255, 199, 95, 0.25), transparent 28%),
+                radial-gradient(circle at top right, rgba(0, 173, 181, 0.18), transparent 30%),
+                linear-gradient(160deg, #0f172a 0%, #102542 45%, #16324f 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            padding: 0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .quiz-content {
+            padding: 40px;
+        }
+
+        .unit-selector {
+            margin-bottom: 30px;
+        }
+
+        .unit-selector h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .unit-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .unit-btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .unit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .quiz-area {
+            display: none;
+        }
+
+        .question-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #3498db;
+        }
+
+        .question-number {
+            color: #3498db;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .question-explanation {
+            margin-top: 15px;
+            padding: 12px 14px;
+            border-left: 4px solid #f39c12;
+            background: #fff8e6;
+            color: #6b4e00;
+            line-height: 1.6;
+            border-radius: 6px;
+            font-size: 0.98em;
+        }
+
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .option {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .option:hover {
+            border-color: #3498db;
+            background: #f0f8ff;
+        }
+
+        .option.selected {
+            border-color: #3498db;
+            background: #e3f2fd;
+        }
+
+        .option.correct {
+            border-color: #27ae60;
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .star {
+            cursor: pointer;
+            color: #ccc;
+            font-size: 1.2em;
+        }
+
+        .star.starred {
+            color: #f1c40f;
+        }
+
+        .option.incorrect {
+            border-color: #e74c3c;
+            background: #fdeaea;
+            color: #e74c3c;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding: 20px 0;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .import-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .import-section select,
+        .import-section input[type="file"] {
+            font-size: 1em;
+            padding: 8px;
+        }
+
+        .card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .card h4 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .file-ops {
+            background-color: #f9fbfc;
+            border: 1px solid #d0d7de;
+        }
+
+        .file-ops .row > div {
+            margin-bottom: 10px;
+        }
+
+        .file-ops-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        fieldset {
+            border: 1px solid #d0d7de;
+            padding: 10px;
+            margin-bottom: 1rem;
+        }
+
+        fieldset legend {
+            padding: 0 5px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 576px) {
+            .file-ops-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .file-ops-buttons .btn {
+                width: 100%;
+            }
+        }
+
+        .section-title {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .unit-selector {
+            position: relative;
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+
+        .settings-panel {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        .btn-outline-primary {
+            background: none;
+            border: 2px solid #3498db;
+            color: #3498db;
+        }
+
+        .btn-outline-primary:hover {
+            background: #3498db;
+            color: #fff;
+        }
+
+        .btn-outline-secondary {
+            background: none;
+            border: 2px solid #7f8c8d;
+            color: #7f8c8d;
+        }
+
+        .btn-outline-secondary:hover {
+            background: #7f8c8d;
+            color: #fff;
+        }
+
+        .btn-outline-danger {
+            background: none;
+            border: 2px solid #e74c3c;
+            color: #e74c3c;
+        }
+
+        .btn-outline-danger:hover {
+            background: #e74c3c;
+            color: #fff;
+        }
+
+        .btn-outline-info {
+            background: none;
+            border: 2px solid #17a2b8;
+            color: #17a2b8;
+        }
+
+        .btn-outline-info:hover {
+            background: #17a2b8;
+            color: #fff;
+        }
+
+        .pagination-info {
+            color: #7f8c8d;
+            font-size: 1em;
+        }
+
+        .timer {
+            text-align: right;
+            font-size: 1.1em;
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+
+        .score-display {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .score-display h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .score-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .progress {
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        #quiz-controls {
+            padding: 0 15px;
+        }
+
+        #quiz-controls .file-ops-buttons {
+            margin-bottom: 15px;
+        }
+
+        .progress-container {
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        #progress-text {
+            display: block;
+            margin-top: 5px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .status-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .status-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 80vh;
+            overflow-y: auto;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        .status-item.answered {
+            background: #e8f5e9;
+            color: #27ae60;
+        }
+
+        .status-item.unanswered {
+            background: #fdeaea;
+            color: #e74c3c;
+        }
+
+        .status-item.correct {
+            background: #e8f5e9;
+            color: #27ae60;
+        }
+
+        .status-item.incorrect {
+            background: #fdeaea;
+            color: #e74c3c;
+        }
+
+        .status-mark {
+            margin: 0 5px;
+            font-weight: bold;
+        }
+
+        .select-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .select-item label {
+            margin-left: 5px;
+        }
+
+        @media (max-width: 768px), (orientation: landscape) and (max-width: 992px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .quiz-content {
+                padding: 20px;
+            }
+
+            .unit-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .import-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .d-grid {
+                display: block !important;
+            }
+
+            .d-grid .btn {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+        }
+        .footer {
+            text-align: center;
+            padding: 10px 0;
+            color: #fff;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 4px;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        .service-home {
+            max-width: 1180px;
+            margin: 0 auto 24px;
+            color: #eff6ff;
+        }
+
+        .service-shell {
+            background: rgba(10, 18, 31, 0.7);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 28px;
+            padding: 32px;
+            box-shadow: 0 24px 80px rgba(2, 6, 23, 0.35);
+            backdrop-filter: blur(18px);
+        }
+
+        .service-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.9fr);
+            gap: 24px;
+            align-items: stretch;
+            margin-bottom: 28px;
+        }
+
+        .hero-panel,
+        .hero-summary,
+        .service-card,
+        .roadmap-note {
+            border-radius: 24px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.72));
+        }
+
+        .hero-panel {
+            padding: 32px;
+        }
+
+        .hero-eyebrow,
+        .section-eyebrow,
+        .service-badge,
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            background: rgba(14, 165, 233, 0.14);
+            color: #7dd3fc;
+            border: 1px solid rgba(125, 211, 252, 0.24);
+        }
+
+        .hero-panel h1 {
+            margin: 18px 0 14px;
+            font-size: clamp(2.2rem, 4vw, 3.5rem);
+            line-height: 1.08;
+            letter-spacing: -0.04em;
+        }
+
+        .hero-panel p {
+            max-width: 700px;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: rgba(226, 232, 240, 0.82);
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .hero-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 150px;
+            padding: 12px 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            color: #eff6ff;
+            text-decoration: none;
+            background: rgba(15, 23, 42, 0.4);
+        }
+
+        .hero-link:hover {
+            border-color: rgba(125, 211, 252, 0.55);
+            background: rgba(14, 165, 233, 0.12);
+        }
+
+        .hero-summary {
+            padding: 28px;
+        }
+
+        .hero-summary h2 {
+            font-size: 1.1rem;
+            margin-bottom: 18px;
+            color: #f8fafc;
+        }
+
+        .summary-metrics {
+            display: grid;
+            gap: 14px;
+        }
+
+        .metric-card {
+            padding: 18px 20px;
+            border-radius: 20px;
+            background: rgba(30, 41, 59, 0.55);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+        }
+
+        .metric-value {
+            display: block;
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 6px;
+        }
+
+        .metric-label {
+            display: block;
+            color: rgba(226, 232, 240, 0.72);
+            font-size: 0.92rem;
+        }
+
+        .service-sections {
+            display: grid;
+            gap: 28px;
+        }
+
+        .section-head {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .section-head h2 {
+            font-size: 1.55rem;
+            color: #f8fafc;
+            margin-top: 10px;
+        }
+
+        .section-head p {
+            color: rgba(226, 232, 240, 0.72);
+            line-height: 1.7;
+            max-width: 720px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+        }
+
+        .service-card {
+            padding: 24px;
+            display: grid;
+            gap: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::after {
+            content: '';
+            position: absolute;
+            inset: auto -30px -30px auto;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(125, 211, 252, 0.25), transparent 70%);
+            pointer-events: none;
+        }
+
+        .service-card.active-service {
+            background:
+                linear-gradient(180deg, rgba(12, 74, 110, 0.3), rgba(15, 23, 42, 0.88)),
+                linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.72));
+            border-color: rgba(56, 189, 248, 0.22);
+        }
+
+        .service-card.coming-soon {
+            opacity: 0.88;
+        }
+
+        .service-card-top {
+            display: flex;
+            align-items: start;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .service-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: rgba(14, 165, 233, 0.12);
+            border: 1px solid rgba(125, 211, 252, 0.2);
+        }
+
+        .service-card h3 {
+            font-size: 1.25rem;
+            color: #f8fafc;
+            margin-bottom: 8px;
+        }
+
+        .service-card p {
+            color: rgba(226, 232, 240, 0.78);
+            line-height: 1.75;
+        }
+
+        .service-meta {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .service-meta-item {
+            padding: 12px;
+            border-radius: 16px;
+            background: rgba(30, 41, 59, 0.55);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        .service-meta-value {
+            display: block;
+            color: #f8fafc;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .service-meta-label {
+            display: block;
+            margin-top: 4px;
+            color: rgba(226, 232, 240, 0.62);
+            font-size: 0.85rem;
+        }
+
+        .service-launch-btn,
+        .service-disabled-btn,
+        .ghost-home-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 46px;
+            padding: 0 18px;
+            border-radius: 999px;
+            border: none;
+            font-size: 0.96rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .service-launch-btn {
+            color: #082f49;
+            background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+            box-shadow: 0 10px 24px rgba(245, 158, 11, 0.24);
+            text-decoration: none;
+        }
+
+        .service-launch-btn:hover,
+        .ghost-home-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .service-disabled-btn {
+            color: rgba(226, 232, 240, 0.7);
+            background: rgba(51, 65, 85, 0.7);
+            cursor: default;
+        }
+
+        .service-video {
+            width: 100%;
+            aspect-ratio: 544 / 452;
+            border-radius: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: #020617;
+            object-fit: contain;
+            position: relative;
+            z-index: 1;
+        }
+
+        .service-card-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .roadmap-note {
+            padding: 22px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            color: rgba(226, 232, 240, 0.78);
+        }
+
+        .roadmap-note strong {
+            color: #f8fafc;
+        }
+
+        #quiz-service-app {
+            display: none;
+        }
+
+        .header-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .header-copy {
+            text-align: center;
+        }
+
+        .ghost-home-btn {
+            color: #e2e8f0;
+            background: rgba(15, 23, 42, 0.28);
+            border: 1px solid rgba(226, 232, 240, 0.18);
+        }
+
+        .reader-app {
+            display: none;
+        }
+
+        .reader-toolbar,
+        .reader-panel,
+        .reader-detail-card,
+        .reader-question-card,
+        .reader-page-card,
+        .reader-empty-state,
+        .reader-page-preview,
+        .reader-stats-card {
+            background: #f8fbff;
+            border: 1px solid #dbe7f3;
+            border-radius: 18px;
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+        }
+
+        .reader-toolbar {
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .reader-toolbar-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .reader-toolbar-top h3,
+        .reader-section-title,
+        .reader-detail-card h3,
+        .reader-panel h3 {
+            color: #16324f;
+        }
+
+        .reader-toolbar-top p,
+        .reader-panel p,
+        .reader-muted,
+        .reader-question-meta,
+        .reader-status-log,
+        .reader-preview-meta {
+            color: #556273;
+            line-height: 1.7;
+        }
+
+        .reader-upload-actions,
+        .reader-speech-actions,
+        .reader-option-buttons,
+        .reader-detail-actions,
+        .reader-form-actions,
+        .reader-page-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .reader-upload-row,
+        .reader-controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .reader-file-input,
+        .reader-select,
+        .reader-rate-input,
+        .reader-edit-field,
+        .reader-edit-textarea {
+            border: 1px solid #c6d6e5;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 0.95rem;
+            background: #fff;
+            color: #16324f;
+        }
+
+        .reader-file-input {
+            min-width: 300px;
+            flex: 1 1 320px;
+        }
+
+        .reader-rate-wrap,
+        .reader-control-group {
+            display: grid;
+            gap: 8px;
+        }
+
+        .reader-status {
+            margin-top: 18px;
+            padding: 16px 18px;
+            border-radius: 16px;
+            background: #eef6ff;
+            border: 1px solid #cfe3fb;
+        }
+
+        .reader-status strong {
+            display: block;
+            color: #0f4c81;
+            margin-bottom: 6px;
+        }
+
+        .reader-status-log {
+            white-space: pre-line;
+            font-size: 0.92rem;
+        }
+
+        .reader-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.95fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .reader-left-column,
+        .reader-right-column {
+            display: grid;
+            gap: 20px;
+        }
+
+        .reader-panel {
+            padding: 20px;
+        }
+
+        .reader-page-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .reader-page-card {
+            padding: 16px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .reader-page-card.active {
+            border-color: #0ea5e9;
+            background: #e8f8ff;
+            transform: translateY(-1px);
+        }
+
+        .reader-page-preview {
+            overflow: hidden;
+        }
+
+        .reader-preview-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid #dbe7f3;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .reader-page-canvas-wrap {
+            padding: 18px;
+            background: linear-gradient(180deg, #ecf5ff 0%, #f8fbff 100%);
+        }
+
+        .reader-page-stage {
+            position: relative;
+            width: 100%;
+        }
+
+        .reader-document-stack {
+            display: grid;
+            gap: 24px;
+        }
+
+        .reader-document-page {
+            display: grid;
+            gap: 12px;
+        }
+
+        .reader-document-page.active .reader-page-stage img {
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.18);
+        }
+
+        .reader-document-page-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            color: #16324f;
+            font-weight: 600;
+        }
+
+        .reader-page-canvas-wrap img {
+            display: block;
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid #d5e3f0;
+            background: #fff;
+        }
+
+        .reader-overlay-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .reader-hotspot,
+        .reader-option-hotspot,
+        .reader-passage-hotspot {
+            position: absolute;
+            border-radius: 12px;
+            pointer-events: auto;
+            cursor: pointer;
+            transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .reader-text-item-hotspot {
+            position: absolute;
+            pointer-events: auto;
+            cursor: pointer;
+            border: 0;
+            padding: 0;
+            margin: 0;
+            background: transparent;
+            box-shadow: none;
+            border-radius: 2px;
+        }
+
+        .reader-hotspot-label {
+            display: none;
+        }
+
+        .reader-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .reader-stats-card {
+            padding: 16px;
+        }
+
+        .reader-stats-card strong {
+            display: block;
+            font-size: 1.4rem;
+            color: #0f4c81;
+        }
+
+        .reader-question-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+            max-height: 580px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        .reader-question-card {
+            padding: 16px;
+            cursor: pointer;
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .reader-question-card.active {
+            border-color: #0ea5e9;
+            background: #e8f8ff;
+            transform: translateY(-1px);
+        }
+
+        .reader-question-card.warning {
+            border-color: #f59e0b;
+            background: #fff8eb;
+        }
+
+        .reader-question-card h4 {
+            margin-bottom: 8px;
+            color: #16324f;
+        }
+
+        .reader-badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .reader-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            background: #e0f2fe;
+            color: #0c4a6e;
+        }
+
+        .reader-chip.warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .reader-empty-state,
+        .reader-detail-card {
+            padding: 24px;
+        }
+
+        .reader-empty-state {
+            text-align: center;
+        }
+
+        .reader-detail-card {
+            display: grid;
+            gap: 16px;
+        }
+
+        .reader-selected-question-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 16px;
+        }
+
+        .reader-passage-box,
+        .reader-source-box {
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: #eef6ff;
+            border: 1px solid #d7e8fb;
+        }
+
+        .reader-option-buttons {
+            margin-top: 8px;
+        }
+
+        .reader-option-btn {
+            min-width: 120px;
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        .reader-edit-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .reader-edit-field,
+        .reader-edit-textarea {
+            width: 100%;
+        }
+
+        .reader-edit-textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: Consolas, 'Microsoft JhengHei', monospace;
+        }
+
+        .reader-help-list {
+            display: grid;
+            gap: 6px;
+            margin-top: 14px;
+            color: #556273;
+        }
+
+        .reader-mode-toggle.active {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #fff;
+        }
+
+        .reader-app.student-mode .reader-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .reader-app.student-mode .reader-right-column {
+            display: none;
+        }
+
+        .reader-app.student-mode .reader-toolbar {
+            padding: 20px;
+        }
+
+        .reader-app.student-mode .reader-page-list {
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        }
+
+        .reader-app.student-mode .reader-panel:first-child {
+            position: sticky;
+            top: 12px;
+            z-index: 4;
+        }
+
+        .reader-app.student-mode .reader-page-preview {
+            border-width: 2px;
+        }
+
+        .reader-app.student-mode .reader-page-canvas-wrap {
+            padding: 14px;
+        }
+
+        .reader-app.student-mode .reader-hotspot,
+        .reader-app.student-mode .reader-option-hotspot,
+        .reader-app.student-mode .reader-passage-hotspot {
+            min-width: 28px;
+            min-height: 28px;
+            border-color: transparent;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .reader-app.student-mode .reader-hotspot-label {
+            display: none;
+        }
+
+        .reader-app.student-mode .reader-hotspot.active,
+        .reader-app.student-mode .reader-option-hotspot.active,
+        .reader-app.student-mode .reader-passage-hotspot.active {
+            border-color: transparent;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .reader-app.student-mode .reader-preview-header {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            background: #f8fbff;
+        }
+
+        .reader-student-bar {
+            display: none;
+        }
+
+        .reader-app.student-mode .reader-student-bar {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+            position: sticky;
+            bottom: 12px;
+            margin-top: 18px;
+            padding: 16px 18px;
+            border-radius: 20px;
+            background: rgba(15, 23, 42, 0.94);
+            color: #f8fafc;
+            box-shadow: 0 20px 48px rgba(15, 23, 42, 0.32);
+            z-index: 8;
+        }
+
+        .reader-student-bar strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .reader-student-text {
+            color: rgba(226, 232, 240, 0.9);
+            line-height: 1.65;
+        }
+
+        .reader-student-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .reader-student-actions .btn {
+            min-height: 50px;
+            padding: 0 20px;
+        }
+
+        .reader-calibration-hint {
+            margin-top: 12px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: #fff7ed;
+            border: 1px solid #fdba74;
+            color: #9a3412;
+            line-height: 1.7;
+        }
+
+        .reader-calibration-box {
+            position: absolute;
+            border: 2px dashed #ef4444;
+            background: rgba(239, 68, 68, 0.12);
+            border-radius: 10px;
+            pointer-events: none;
+        }
+
+        @media (max-width: 900px) {
+            .service-hero {
+                grid-template-columns: 1fr;
+            }
+
+            .roadmap-note,
+            .header-topbar,
+            .section-head {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .header-copy {
+                text-align: left;
+            }
+
+            .reader-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 14px;
+            }
+
+            .service-shell,
+            .quiz-content {
+                padding: 22px;
+            }
+
+            .service-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-panel h1,
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .hero-actions {
+                flex-direction: column;
+            }
+
+            .reader-toolbar-top,
+            .reader-upload-row,
+            .reader-controls-row,
+            .reader-selected-question-title,
+            .reader-preview-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .reader-file-input {
+                min-width: 100%;
+            }
+
+            .reader-app.student-mode .reader-student-bar {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    </style>
 </head>
 <body>
-<header>
-  <a href="../" style="color:var(--muted);font-size:.85rem;text-decoration:none">← 回服務首頁</a>
-  <h1>寫字姿勢即時偵測</h1>
-  <p>手機放在孩子側面約 1–1.5 公尺、與肩同高，拍到頭、肩、髖。影像只在本機運算，不上傳。</p>
-</header>
+    <section id="service-home" class="service-home">
+        <div class="service-shell">
+            <div class="service-hero">
+                <div class="hero-panel">
+                    <span class="hero-eyebrow">Multi-Service Portal</span>
+                    <h1>一個首頁，集中展示持續增加中的服務。</h1>
+                    <p>
+                        這個入口頁會先列出目前已經上線的服務，並保留後續擴充空間。目前已提供資通安全題庫測驗、AI 應用規劃師模擬測驗、試卷報讀、寫字姿勢偵測與 Codex Pets Demo 影片，
+                        之後可陸續加入成績查詢、學習儀表板、教材中心或其他工具，不需要重做整個首頁架構。
+                    </p>
+                    <div class="hero-actions">
+                        <button id="open-quiz-service" class="service-launch-btn">進入目前服務</button>
+                        <button id="open-ai-planner-service" class="service-launch-btn">AI應用規劃師測驗</button>
+                        <button id="open-reader-service" class="service-launch-btn">試用報讀服務</button>
+                        <a class="service-launch-btn" href="posture/">寫字姿勢偵測</a>
+                        <a class="service-launch-btn" href="#codex-pets-demo">觀看 Codex Pets Demo</a>
+                        <a class="hero-link" href="#service-list">查看服務清單</a>
+                    </div>
+                </div>
+                <aside class="hero-summary">
+                    <h2>服務概況</h2>
+                    <div class="summary-metrics">
+                        <div class="metric-card">
+                            <span id="live-service-count" class="metric-value">5</span>
+                            <span class="metric-label">已上線服務</span>
+                        </div>
+                        <div class="metric-card">
+                            <span id="subject-total-count" class="metric-value">0</span>
+                            <span class="metric-label">目前測驗科目數</span>
+                        </div>
+                        <div class="metric-card">
+                            <span id="question-total-count" class="metric-value">0</span>
+                            <span class="metric-label">累計題目數</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
 
-<div class="stage" id="stage">
-  <video id="video" playsinline muted></video>
-  <canvas id="canvas"></canvas>
-  <div class="banner" id="banner"></div>
-  <div class="viewtag" id="viewtag">—</div>
-  <div class="hint" id="hint">按「開始偵測」開啟相機</div>
-</div>
+            <div id="service-list" class="service-sections">
+                <section>
+                    <div class="section-head">
+                        <div>
+                            <span class="section-eyebrow">Live Services</span>
+                            <h2>目前已上線</h2>
+                        </div>
+                        <p>使用者進到首頁時會先看到可用服務。現在已經有五個可用項目，後續也可持續擴充成更多入口。</p>
+                    </div>
+                    <div class="services-grid">
+                        <article class="service-card active-service">
+                            <div class="service-card-top">
+                                <div class="service-icon">🛡</div>
+                                <span class="status-pill">已上線</span>
+                            </div>
+                            <div>
+                                <h3>資通安全題庫線上測驗</h3>
+                                <p>提供單選、多選、混合題測驗，支援題庫匯入匯出、收藏、計時、成績計算與 PDF 結果下載。</p>
+                            </div>
+                            <div class="service-meta">
+                                <div class="service-meta-item">
+                                    <span id="card-subject-count" class="service-meta-value">0</span>
+                                    <span class="service-meta-label">科目</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span id="card-single-count" class="service-meta-value">0</span>
+                                    <span class="service-meta-label">單選題</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span id="card-multi-count" class="service-meta-value">0</span>
+                                    <span class="service-meta-label">多選題</span>
+                                </div>
+                            </div>
+                            <button id="open-quiz-service-secondary" class="service-launch-btn">開始使用</button>
+                        </article>
 
-<div class="metrics" id="metrics"></div>
+                        <article class="service-card active-service">
+                            <div class="service-card-top">
+                                <div class="service-icon">AI</div>
+                                <span class="status-pill">已上線</span>
+                            </div>
+                            <div>
+                                <h3>AI應用規劃師(中級)題庫模擬測驗</h3>
+                                <p>獨立提供科目一與科目二單選模擬測驗，每科各 1000 題，依學習指引章節與公告試題趨勢設計。</p>
+                            </div>
+                            <div class="service-meta">
+                                <div class="service-meta-item">
+                                    <span id="ai-card-subject-count" class="service-meta-value">2</span>
+                                    <span class="service-meta-label">科目</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span id="ai-card-question-count" class="service-meta-value">2000</span>
+                                    <span class="service-meta-label">單選題</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span id="ai-card-multi-count" class="service-meta-value">0</span>
+                                    <span class="service-meta-label">多選題</span>
+                                </div>
+                            </div>
+                            <button id="open-ai-planner-service-secondary" class="service-launch-btn">開始使用</button>
+                        </article>
 
-<div class="controls">
-  <button class="primary" id="startBtn">開始偵測</button>
-  <select id="viewSel" aria-label="拍攝角度">
-    <option value="auto">角度：自動</option>
-    <option value="side">角度：側面</option>
-    <option value="front">角度：正面</option>
-  </select>
-  <button id="flipBtn">切換鏡頭</button>
-  <button id="soundBtn" aria-pressed="true">提醒音：開</button>
-  <button id="reportBtn">結束並產生報告</button>
-</div>
+                        <article class="service-card active-service">
+                            <div class="service-card-top">
+                                <div class="service-icon">🔊</div>
+                                <span class="status-pill">已上線</span>
+                            </div>
+                            <div>
+                                <h3>國小國語試卷報讀</h3>
+                                <p>上傳國語試卷 PDF 或圖片後，自動分析題型，建立可逐題、逐選項朗讀的互動閱讀畫面。</p>
+                            </div>
+                            <div class="service-meta">
+                                <div class="service-meta-item">
+                                    <span class="service-meta-value">PDF</span>
+                                    <span class="service-meta-label">上傳來源</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span class="service-meta-value">TTS</span>
+                                    <span class="service-meta-label">題目報讀</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span class="service-meta-value">MVP</span>
+                                    <span class="service-meta-label">題型初判</span>
+                                </div>
+                            </div>
+                            <button id="open-reader-service-secondary" class="service-launch-btn">開始使用</button>
+                        </article>
 
-<section id="report" aria-live="polite"></section>
+                        <article id="writing-posture" class="service-card active-service">
+                            <div class="service-card-top">
+                                <div class="service-icon">✏️</div>
+                                <span class="status-pill">已上線</span>
+                            </div>
+                            <div>
+                                <h3>寫字姿勢即時偵測</h3>
+                                <p>用手機相機即時偵測孩子寫字時的頸部前傾、軀幹前傾、肩膀高低與頭部側歪，結束後產生改善建議。影像只在手機本機運算，不上傳。</p>
+                            </div>
+                            <div class="service-meta">
+                                <div class="service-meta-item">
+                                    <span class="service-meta-value">5</span>
+                                    <span class="service-meta-label">偵測指標</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span class="service-meta-value">即時</span>
+                                    <span class="service-meta-label">提醒</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span class="service-meta-value">本機</span>
+                                    <span class="service-meta-label">影像處理</span>
+                                </div>
+                            </div>
+                            <a class="service-launch-btn" href="posture/">開始使用</a>
+                        </article>
 
-<script type="module">
-import { PoseLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+                        <article id="codex-pets-demo" class="service-card active-service">
+                            <div class="service-card-top">
+                                <div class="service-icon">▶</div>
+                                <span class="status-pill">Demo</span>
+                            </div>
+                            <div>
+                                <h3>Demo Codex Pets</h3>
+                                <p>展示 Codex Pets 的操作畫面，可直接在首頁播放，也可開啟完整播放器頁面。</p>
+                            </div>
+                            <video class="service-video" controls preload="metadata" poster="CodexPets.ecm.mp4/cover.jpg">
+                                <source src="CodexPets.ecm.mp4/media.mp4" type="video/mp4">
+                                您的瀏覽器不支援影片播放。
+                            </video>
+                            <div class="service-card-actions">
+                                <a class="service-launch-btn" href="CodexPets.ecm.mp4/index.html">開啟完整播放器</a>
+                            </div>
+                        </article>
+                    </div>
+                </section>
 
-const $ = id => document.getElementById(id);
-const video=$("video"), canvas=$("canvas"), ctx=canvas.getContext("2d");
-const I={nose:0,lEye:2,rEye:5,lEar:7,rEar:8,lSh:11,rSh:12,lHip:23,rHip:24};
+                <section>
+                    <div class="section-head">
+                        <div>
+                            <span class="section-eyebrow">Roadmap</span>
+                            <h2>即將加入</h2>
+                        </div>
+                        <p>先把服務入口與版面骨架定好，後續只要增加服務卡片與對應頁面，就能持續擴充。</p>
+                    </div>
+                    <div class="services-grid">
+                        <article class="service-card coming-soon">
+                            <div class="service-card-top">
+                                <div class="service-icon">📈</div>
+                                <span class="status-pill">規劃中</span>
+                            </div>
+                            <div>
+                                <h3>成績追蹤中心</h3>
+                                <p>集中顯示各次測驗紀錄、通過率與弱項分析，讓學習狀態可持續追蹤。</p>
+                            </div>
+                            <button class="service-disabled-btn" type="button">即將推出</button>
+                        </article>
 
-/* 指標定義：thr=[良好上限, 注意上限]，dir=1 數值越大越差；dir=-1 數值越小越差 */
-const METRICS={
-  neck:  {label:"頸部前傾",view:"side", unit:"°",thr:[20,35],dir:1},
-  trunk: {label:"軀幹前傾",view:"side", unit:"°",thr:[15,30],dir:1},
-  sh:    {label:"肩膀高低",view:"front",unit:"°",thr:[4,8],  dir:1},
-  tilt:  {label:"頭部側歪",view:"front",unit:"°",thr:[6,12], dir:1},
-  drop:  {label:"頭部低垂",view:"front",unit:"", thr:[0.35,0.2],dir:-1},
-};
-const ADVICE={
-  neck:"頭頸過度前傾：眼睛離紙面保持約 30–35 cm（一尺），改用斜面寫字板或把本子墊高 10–15°，減少低頭角度。",
-  trunk:"上身趴向桌面：胸口與桌緣保持一拳距離，臀部坐滿椅面、背部靠直；檢查椅子是否過低或桌子過高（手肘自然彎曲約 90° 時前臂應平放桌面）。",
-  sh:"兩肩高低不一：非寫字手要壓住紙張、平放桌面，不要垂在桌下；紙張放在寫字手同側前方並稍微斜放，避免身體扭轉。",
-  tilt:"頭部歪向一側：常因紙張擺正但握筆手擋住視線。將紙張往寫字手方向傾斜 15–30°，並確認光源在寫字手的對側，避免手影。",
-  drop:"頭部垂得太低：多半是握筆太靠近筆尖，看不到筆尖只好低頭。手指離筆尖約 3 cm（一寸），並檢查視力是否需要檢查。",
-};
+                        <article class="service-card coming-soon">
+                            <div class="service-card-top">
+                                <div class="service-icon">🧭</div>
+                                <span class="status-pill">規劃中</span>
+                            </div>
+                            <div>
+                                <h3>學習路徑儀表板</h3>
+                                <p>把教材、單元與測驗結果串成學習流程，讓使用者知道接下來該練什麼。</p>
+                            </div>
+                            <button class="service-disabled-btn" type="button">即將推出</button>
+                        </article>
 
-const state={running:false,landmarker:null,stream:null,facing:"environment",sound:true,
-  ema:{},stats:{},badSince:null,lastAlert:0,lastTs:-1,frames:0,startTime:0,audio:null};
+                        <article class="service-card coming-soon">
+                            <div class="service-card-top">
+                                <div class="service-icon">🗂</div>
+                                <span class="status-pill">規劃中</span>
+                            </div>
+                            <div>
+                                <h3>教材與檔案中心</h3>
+                                <p>統一提供題庫範本、教材、公告與匯出檔案，降低使用者在不同頁面間切換的成本。</p>
+                            </div>
+                            <button class="service-disabled-btn" type="button">即將推出</button>
+                        </article>
+                    </div>
+                </section>
 
-function resetStats(){
-  state.ema={}; state.stats={}; state.frames=0; state.startTime=performance.now();
-  for(const k in METRICS) state.stats[k]={good:0,warn:0,bad:0};
-}
-function level(k,v){
-  const m=METRICS[k];
-  if(m.dir===1) return v<=m.thr[0]?"good":v<=m.thr[1]?"warn":"bad";
-  return v>=m.thr[0]?"good":v>=m.thr[1]?"warn":"bad";
-}
-const deg=r=>r*180/Math.PI;
+                <div class="roadmap-note">
+                    <div>
+                        <strong>目前的首頁已經是可延展的服務入口。</strong>
+                        後續新增服務時，直接複製卡片結構並接上新頁面即可。
+                    </div>
+                    <span class="section-eyebrow">Static Ready</span>
+                </div>
+            </div>
+        </div>
+    </section>
 
-function renderMetricCards(values,view){
-  $("metrics").innerHTML=Object.entries(METRICS).map(([k,m])=>{
-    const v=values[k]; const active=v!=null;
-    const lv=active?level(k,v):"off";
-    const txt=active?(m.unit?v.toFixed(0)+m.unit:v.toFixed(2)):(m.view===view?"偵測不到":"需"+(m.view==="side"?"側面":"正面"));
-    return `<div class="m ${lv}"><div class="k">${m.label}</div><div class="v">${txt}</div></div>`;
-  }).join("");
-}
-renderMetricCards({},"side");
+    <div id="quiz-service-app" class="container">
+        <div class="header">
+            <div class="header-topbar">
+                <button id="back-to-home" class="ghost-home-btn" type="button">← 返回服務首頁</button>
+                <span id="quiz-service-badge" class="service-badge">Service 01</span>
+            </div>
+            <div class="header-copy">
+                <h1 id="quiz-service-title">資通安全題庫線上測驗</h1>
+                <p id="quiz-service-subtitle">專業能力評估系統</p>
+            </div>
+        </div>
 
-async function init(){
-  $("hint").textContent="載入模型中…";
-  const fileset=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
-  const opts=d=>({baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",delegate:d},
-    runningMode:"VIDEO",numPoses:1});
-  try{ state.landmarker=await PoseLandmarker.createFromOptions(fileset,opts("GPU")); }
-  catch{ state.landmarker=await PoseLandmarker.createFromOptions(fileset,opts("CPU")); }
-}
+        <div class="quiz-content">
+            <!-- 科目選擇區域 -->
+            <div id="subject-selector" class="unit-selector">
+                <h3>請選擇測驗科目：</h3>
+                <div class="unit-buttons" id="subject-buttons">
+                    <!-- 科目按鈕將由JavaScript動態生成 -->
+                </div>
+                <div class="controls">
+                    <button id="home-from-subjects" class="btn btn-secondary" type="button">返回服務首頁</button>
+                    <div class="file-ops-buttons">
+                        <button id="add-subject" class="btn">新增科目</button>
+                        <button id="remove-subject" class="btn btn-secondary">刪除科目</button>
+                    </div>
+                </div>
+            </div>
 
-async function startCamera(){
-  if(state.stream) state.stream.getTracks().forEach(t=>t.stop());
-  state.stream=await navigator.mediaDevices.getUserMedia({audio:false,
-    video:{facingMode:state.facing,width:{ideal:1280},height:{ideal:960}}});
-  video.srcObject=state.stream; await video.play();
-  const mir=state.facing==="user";
-  video.classList.toggle("mirror",mir); canvas.classList.toggle("mirror",mir);
-  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-}
+            <!-- 單元選擇區域 -->
+            <div id="unit-selector" class="unit-selector" style="display:none;">
+                <button id="unit-settings-btn" class="settings-btn">⚙</button>
+                <div class="card file-ops p-4 shadow-sm rounded mb-4">
+                    <h3 class="mb-3">請選擇要測驗的單元：</h3>
+                    <fieldset class="p-3 mb-4 shadow-sm rounded">
+                        <legend class="section-title">單選題</legend>
+                        <div class="unit-buttons" id="single-unit-buttons">
+                            <!-- 單選單元按鈕將由JavaScript動態生成 -->
+                        </div>
+                    </fieldset>
+                    <fieldset class="p-3 mb-4 shadow-sm rounded">
+                        <legend class="section-title">多選題</legend>
+                        <div class="unit-buttons" id="multi-unit-buttons">
+                            <!-- 多選單元按鈕將由JavaScript動態生成 -->
+                        </div>
+                    </fieldset>
+                    <fieldset class="p-3 shadow-sm rounded">
+                        <legend class="section-title">混合題</legend>
+                        <div class="unit-buttons" id="mixed-unit-buttons">
+                            <!-- 混合題按鈕將由JavaScript動態生成 -->
+                        </div>
+                    </fieldset>
+                </div>
+                <div id="unit-settings-panel" class="card file-ops p-4 shadow-sm rounded settings-panel">
+                    <h4 class="section-title mb-3">📁 檔案管理操作</h4>
 
-function detectView(p){
-  const sel=$("viewSel").value; if(sel!=="auto") return sel;
-  const shW=Math.abs(p[I.lSh].x-p[I.rSh].x);
-  const midY=(p[I.lSh].y+p[I.rSh].y)/2;
-  const neckH=Math.max(1,Math.abs(midY-p[I.nose].y));
-  return shW/neckH>0.9?"front":"side";
-}
+                    <fieldset class="p-3 mb-4 shadow-sm rounded">
+                        <legend class="section-title">單選題庫</legend>
+                        <div class="row g-2 align-items-center mb-3">
+                            <div class="col-md-6 col-lg-4">
+                                <label for="import-unit" class="form-label">題庫單元</label>
+                                <select id="import-unit" class="form-select">
+                                    <option value="0">第一單元：滲透測試簡介</option>
+                                    <option value="1">第二單元：資訊蒐集</option>
+                                    <option value="2">第三單元：網路、主機及網站掃描</option>
+                                    <option value="3">第四單元：弱點利用</option>
+                                    <option value="4">第五單元：提升權限</option>
+                                    <option value="5">第六單元：維持存取權限</option>
+                                    <option value="6">第七單元：整理漏洞與撰寫報告</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <input type="file" id="import-file" class="form-control" placeholder="請選擇 json 檔案" accept="application/json">
+                            </div>
+                            <div class="col-12 col-lg-4 file-ops-buttons">
+                                <button id="import-btn" class="btn btn-primary btn-sm" disabled>⬆ 匯入單選題庫</button>
+                                <button id="export-unit-btn" class="btn btn-outline-primary btn-sm">⬇ 匯出單選題庫</button>
+                                <button id="edit-unit-btn" class="btn btn-secondary btn-sm">✏ 編輯</button>
+                                <button id="download-format-btn" class="btn btn-outline-info btn-sm">📄 範例下載</button>
+                            </div>
+                        </div>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-6">
+                                <input type="file" id="import-all-file" class="form-control" placeholder="請選擇 json 檔案" accept="application/json">
+                            </div>
+                            <div class="col-md-6 file-ops-buttons">
+                                <button id="import-all-btn" class="btn btn-primary btn-sm" disabled>⬆ 全部匯入</button>
+                                <button id="export-all-btn" class="btn btn-outline-primary btn-sm">⬇ 全部匯出</button>
+                            </div>
+                        </div>
+                        <div class="row g-2 align-items-center mt-2">
+                            <div class="col file-ops-buttons">
+                                <button id="sync-unit-to-multi" class="btn btn-outline-info btn-sm">同步到多選題庫</button>
+                                <button id="add-unit" class="btn btn-sm">新增單元</button>
+                                <button id="remove-unit" class="btn btn-secondary btn-sm">刪除單元</button>
+                            </div>
+                        </div>
+                    </fieldset>
 
-function compute(p,view){
-  const out={}; const vis=i=>p[i].v>0.5;
-  if(view==="side"){
-    const L=p[I.lEar].v+p[I.lSh].v, R=p[I.rEar].v+p[I.rSh].v;
-    const [ear,sh,hip]=L>=R?[I.lEar,I.lSh,I.lHip]:[I.rEar,I.rSh,I.rHip];
-    if(vis(ear)&&vis(sh)) out.neck=deg(Math.atan2(Math.abs(p[ear].x-p[sh].x),p[sh].y-p[ear].y));
-    if(vis(sh)&&vis(hip)) out.trunk=deg(Math.atan2(Math.abs(p[sh].x-p[hip].x),p[hip].y-p[sh].y));
-  }else{
-    if(vis(I.lSh)&&vis(I.rSh)){
-      const dx=p[I.lSh].x-p[I.rSh].x, dy=p[I.lSh].y-p[I.rSh].y;
-      out.sh=deg(Math.atan2(Math.abs(dy),Math.abs(dx)));
-      if(vis(I.nose)) out.drop=((p[I.lSh].y+p[I.rSh].y)/2-p[I.nose].y)/Math.hypot(dx,dy);
-    }
-    if(vis(I.lEye)&&vis(I.rEye)){
-      const dx=p[I.lEye].x-p[I.rEye].x, dy=p[I.lEye].y-p[I.rEye].y;
-      out.tilt=deg(Math.atan2(Math.abs(dy),Math.abs(dx)));
-    }
-  }
-  for(const k in out){ const prev=state.ema[k]; state.ema[k]=prev==null?out[k]:prev*0.7+out[k]*0.3; out[k]=state.ema[k]; }
-  return out;
-}
+                    <fieldset class="p-3 mt-5 mb-4 shadow-sm rounded">
+                        <legend class="section-title">多選題庫</legend>
+                        <div class="row g-2 align-items-center mb-3">
+                            <div class="col-md-6 col-lg-4">
+                                <label for="import-unit-multi" class="form-label">題庫單元</label>
+                                <select id="import-unit-multi" class="form-select"></select>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <input type="file" id="import-file-multi" class="form-control" placeholder="請選擇 json 檔案" accept="application/json">
+                            </div>
+                            <div class="col-12 col-lg-4 file-ops-buttons">
+                                <button id="import-multi-btn" class="btn btn-primary btn-sm" disabled>⬆ 匯入多選題庫</button>
+                                <button id="export-unit-multi-btn" class="btn btn-outline-primary btn-sm">⬇ 匯出多選題庫</button>
+                                <button id="edit-unit-multi-btn" class="btn btn-secondary btn-sm">✏ 編輯</button>
+                                <button id="download-multi-format-btn" class="btn btn-outline-info btn-sm">📄 範例下載</button>
+                            </div>
+                        </div>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-6">
+                                <input type="file" id="import-all-file-multi" class="form-control" placeholder="請選擇 json 檔案" accept="application/json">
+                            </div>
+                            <div class="col-md-6 file-ops-buttons">
+                                <button id="import-all-multi-btn" class="btn btn-primary btn-sm" disabled>⬆ 全部匯入</button>
+                                <button id="export-all-multi-btn" class="btn btn-outline-primary btn-sm">⬇ 全部匯出</button>
+                            </div>
+                        </div>
+                        <div class="row g-2 align-items-center mt-2">
+                            <div class="col file-ops-buttons">
+                                <button id="sync-unit-multi-to-single" class="btn btn-outline-info btn-sm">同步到單選題庫</button>
+                                <button id="add-unit-multi" class="btn btn-sm">新增單元</button>
+                                <button id="remove-unit-multi" class="btn btn-secondary btn-sm">刪除單元</button>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="controls">
+                    <button id="back-to-subjects" class="btn btn-secondary">返回科目選擇</button>
+                </div>
+            </div>
 
-function beep(){
-  if(!state.sound) return;
-  try{
-    state.audio ||= new AudioContext();
-    const o=state.audio.createOscillator(), g=state.audio.createGain();
-    o.frequency.value=880; g.gain.value=0.15; o.connect(g); g.connect(state.audio.destination);
-    o.start(); o.stop(state.audio.currentTime+0.25);
-  }catch{}
-}
+            <!-- 測驗區域 -->
+            <div id="quiz-area" class="quiz-area">
+                <div id="score-display" class="score-display" style="display: none;">
+                    <h3>測驗結果</h3>
+                    <p id="score-text"></p>
+                    <div class="score-bar">
+                        <div id="score-progress" class="progress-fill"></div>
+                    </div>
+                </div>
 
-function handleAlert(values){
-  const bad=Object.keys(values).filter(k=>level(k,values[k])==="bad");
-  const b=$("banner"); const now=performance.now();
-  if(!bad.length){ state.badSince=null; b.style.display="none"; return; }
-  state.badSince ??= now;
-  if(now-state.badSince>3000){
-    b.textContent="請調整："+bad.map(k=>METRICS[k].label).join("、");
-    b.style.display="block";
-    if(now-state.lastAlert>10000){ state.lastAlert=now; beep(); navigator.vibrate?.(300); }
-  }
-}
+                <div id="timer" class="timer"></div>
 
-function loop(){
-  if(!state.running) return;
-  if(video.currentTime!==state.lastTs && video.readyState>=2){
-    state.lastTs=video.currentTime;
-    const res=state.landmarker.detectForVideo(video,performance.now());
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    if(res.landmarks?.length){
-      const lm=res.landmarks[0];
-      const p=lm.map(l=>({x:l.x*canvas.width,y:l.y*canvas.height,v:l.visibility??1}));
-      const view=detectView(p);
-      $("viewtag").textContent=view==="side"?"側面":"正面";
-      const values=compute(p,view);
-      const du=new DrawingUtils(ctx);
-      du.drawConnectors(lm,PoseLandmarker.POSE_CONNECTIONS.filter(c=>c.start<25&&c.end<25),{color:"#F2C230",lineWidth:4});
-      du.drawLandmarks(lm.slice(0,25),{color:"#1F3A5F",fillColor:"#fff",radius:3});
-      state.frames++;
-      for(const k in values) state.stats[k][level(k,values[k])]++;
-      renderMetricCards(values,view);
-      handleAlert(values);
-    }else{
-      $("viewtag").textContent="找不到人";
-    }
-  }
-  requestAnimationFrame(loop);
-}
+                <div id="question-container" class="question-container">
+                    <!-- 題目內容將由JavaScript動態生成 -->
+                </div>
 
-async function start(){
-  try{
-    $("startBtn").disabled=true;
-    if(!state.landmarker) await init();
-    $("hint").textContent="開啟相機中…";
-    await startCamera();
-    $("hint").style.display="none";
-    try{ await navigator.wakeLock?.request("screen"); }catch{}
-    resetStats(); state.running=true; $("report").style.display="none";
-    $("startBtn").textContent="偵測中"; loop();
-  }catch(e){
-    $("startBtn").disabled=false;
-    $("hint").style.display="flex";
-    $("hint").textContent=e.name==="NotAllowedError"?"相機權限被拒絕：請在瀏覽器設定允許相機後重試。"
-      :location.protocol!=="https:"&&location.hostname!=="localhost"?"相機需要 HTTPS 網址才能開啟。"
-      :"啟動失敗："+e.message;
-  }
-}
+                <div id="quiz-controls">
+                    <div class="file-ops-buttons">
+                        <button id="prev-btn" class="btn btn-outline-secondary btn-sm">上一題</button>
+                        <button id="next-btn" class="btn btn-primary btn-sm">下一題</button>
+                        <button id="submit-btn" class="btn btn-success btn-sm" style="display:none;">✅ 結束作答</button>
+                        <button id="status-btn" class="btn btn-outline-dark btn-sm">👁 檢視答題狀態</button>
+                        <button id="back-to-units" class="btn btn-outline-secondary btn-sm">🔙 返回單元選擇</button>
+                        <button id="restart-quiz" class="btn btn-outline-primary btn-sm">🔁 重新開始</button>
+                        <button id="download-pdf" class="btn btn-success btn-sm" style="display:none;">下載結果PDF</button>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress" style="height: 8px;">
+                            <div id="question-progress" class="progress-bar" role="progressbar" style="width: 0%;"></div>
+                        </div>
+                        <small id="progress-text">1 / 1</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-function stop(){
-  state.running=false;
-  state.stream?.getTracks().forEach(t=>t.stop()); state.stream=null;
-  $("startBtn").disabled=false; $("startBtn").textContent="重新開始偵測";
-  $("banner").style.display="none";
-  $("hint").style.display="flex"; $("hint").textContent="已停止";
-}
+    <div id="reader-service-app" class="container reader-app student-mode">
+        <div class="header">
+            <div class="header-topbar">
+                <button id="reader-back-to-home" class="ghost-home-btn" type="button">← 返回服務首頁</button>
+                <span class="service-badge">Service 02</span>
+            </div>
+            <div class="header-copy">
+                <h1>國語試卷靜態報讀輔助工具</h1>
+                <p>上傳試卷、自動分析、保留原卷版面，點題與點選項即可朗讀</p>
+            </div>
+        </div>
 
-function report(){
-  stop();
-  const mins=((performance.now()-state.startTime)/60000).toFixed(1);
-  const rows=[], issues=[];
-  for(const [k,m] of Object.entries(METRICS)){
-    const s=state.stats[k]; const n=s.good+s.warn+s.bad;
-    if(n<30) continue;
-    const pg=s.good/n*100, pw=s.warn/n*100, pb=s.bad/n*100;
-    rows.push(`<div><b>${m.label}</b> <span class="small">良好 ${pg.toFixed(0)}%｜注意 ${pw.toFixed(0)}%｜不良 ${pb.toFixed(0)}%</span>
-      <div class="bar"><i style="width:${pg}%;background:var(--good)"></i><i style="width:${pw}%;background:var(--warn)"></i><i style="width:${pb}%;background:var(--bad)"></i></div></div>`);
-    const score=pb+pw*0.5;
-    if(pb+pw>20) issues.push({k,score,pb});
-  }
-  issues.sort((a,b)=>b.score-a.score);
-  const r=$("report");
-  r.innerHTML=`<h2>本次報告（${mins} 分鐘）</h2>
-    ${rows.length?rows.join(""):'<p class="small">有效資料不足，請拍攝至少 30 秒且人物完整入鏡。</p>'}
-    <h3>優先改善</h3>
-    ${issues.length?`<ol>${issues.map(i=>`<li>${ADVICE[i.k]}<span class="small">（不良 ${i.pb.toFixed(0)}%）</span></li>`).join("")}</ol>`
-      :'<p class="small">偵測到的項目皆良好，繼續保持。</p>'}
-    <h3>鏡頭無法判斷，請人工確認</h3>
-    <ul>
-      <li>一尺一拳一寸：眼離紙約 33 cm、胸離桌一拳、指離筆尖 3 cm。</li>
-      <li>握筆：拇指與食指不重疊、指節不凹陷，筆桿斜靠虎口；握太緊會指尖發白。</li>
-      <li>桌椅：雙腳平踩地面、膝約 90°；桌面約在手肘高度下方 3–5 cm。</li>
-      <li>照明：檯燈置於寫字手對側，桌面照度足夠且無強烈反光。</li>
-      <li>時間：每寫 30–40 分鐘起身休息、看遠處 5–10 分鐘。</li>
-    </ul>
-    <p class="small">角度為 2D 影像估算，受鏡頭位置影響，建議固定同一位置拍攝以比較前後變化；非醫療診斷，若長期駝背或歪頭請諮詢復健科或眼科。</p>`;
-  r.style.display="block"; r.scrollIntoView({behavior:"smooth"});
-}
+        <div class="quiz-content">
+            <section class="reader-toolbar">
+                <div class="reader-toolbar-top">
+                    <div>
+                        <h3>上傳試卷並建立靜態報讀畫面</h3>
+                        <p>建議優先上傳可抽文字的 PDF。圖片檔會改走 OCR，辨識結果可能需要人工修正。</p>
+                    </div>
+                    <div class="reader-speech-actions">
+                        <button id="reader-enable-speech-btn" class="btn" type="button">啟用朗讀</button>
+                        <button id="reader-play-all-btn" class="btn btn-outline-primary" type="button" disabled>整卷朗讀</button>
+                        <button id="reader-student-mode-btn" class="btn reader-mode-toggle active" type="button">學生模式</button>
+                        <button id="reader-calibration-wizard-btn" class="btn btn-outline-primary" type="button" disabled>上傳後校正精靈</button>
+                        <button id="reader-stop-speech" class="btn btn-secondary" type="button">停止朗讀</button>
+                        <button id="reader-export-json" class="btn btn-outline-primary" type="button" disabled>匯出分析 JSON</button>
+                    </div>
+                </div>
 
-$("startBtn").onclick=start;
-$("reportBtn").onclick=()=>state.frames?report():null;
-$("flipBtn").onclick=async()=>{ state.facing=state.facing==="user"?"environment":"user"; if(state.running){ await startCamera(); } };
-$("soundBtn").onclick=e=>{ state.sound=!state.sound; e.target.textContent="提醒音："+(state.sound?"開":"關"); e.target.setAttribute("aria-pressed",state.sound); };
-$("viewSel").onchange=()=>{ state.ema={}; };
-</script>
+                <div class="reader-upload-row">
+                    <input id="reader-file-input" class="reader-file-input" type="file" accept=".pdf,.png,.jpg,.jpeg,image/png,image/jpeg,application/pdf">
+                    <div class="reader-upload-actions">
+                        <button id="reader-analyze-btn" class="btn" type="button" disabled>開始分析</button>
+                        <button id="reader-clear-btn" class="btn btn-secondary" type="button">清除結果</button>
+                    </div>
+                </div>
+
+                <div class="reader-controls-row" style="margin-top: 16px;">
+                    <div class="reader-control-group">
+                        <label for="reader-layout-mode">版面方向</label>
+                        <select id="reader-layout-mode" class="reader-select">
+                            <option value="auto">自動判斷</option>
+                            <option value="vertical" selected>直排中文優先</option>
+                            <option value="horizontal">橫排優先</option>
+                        </select>
+                    </div>
+                    <div class="reader-control-group">
+                        <label for="reader-rate-input">朗讀語速</label>
+                        <input id="reader-rate-input" class="reader-rate-input" type="range" min="0.7" max="1.4" step="0.1" value="1">
+                    </div>
+                    <div class="reader-control-group">
+                        <label for="reader-ocr-mode">圖片辨識模式</label>
+                        <select id="reader-ocr-mode" class="reader-select">
+                            <option value="prefer-text">PDF 先用文字層</option>
+                            <option value="ocr-fallback">無文字層時用 OCR</option>
+                            <option value="ocr-force">全部走 OCR</option>
+                        </select>
+                    </div>
+                    <div class="reader-control-group">
+                        <label for="reader-voice-select">朗讀語音</label>
+                        <select id="reader-voice-select" class="reader-select">
+                            <option value="">自動選擇中文語音</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="reader-status" class="reader-status">
+                    <strong>尚未開始分析</strong>
+                    <div id="reader-status-log" class="reader-status-log">請先選擇 PDF 或圖片檔，再按下「開始分析」。</div>
+                </div>
+
+                <div class="reader-help-list">
+                    <div>1. 主畫面就是電子試卷，直接點題目區塊即可報讀題幹。</div>
+                    <div>2. 直接點版面上的選項區塊即可報讀該選項，不需要先選題。</div>
+                    <div>3. 若系統切題不準，請按「上傳後校正精靈」，依序框選題幹、題組文章與選項。</div>
+                    <div>4. 行動裝置第一次使用請先按「啟用朗讀」；若仍無聲音，請確認裝置未靜音並改用 Safari 或 Chrome。</div>
+                </div>
+            </section>
+
+            <div class="reader-layout">
+                <div class="reader-left-column">
+                    <section class="reader-panel">
+                        <h3 class="reader-section-title">頁面導覽</h3>
+                        <p class="reader-muted">點頁碼可快速定位到該頁。主畫面會保留 PDF 原始出題版面，直接點版面上的題目與選項朗讀。</p>
+                        <div id="reader-page-list" class="reader-page-list"></div>
+                    </section>
+
+                    <section class="reader-page-preview">
+                        <div class="reader-preview-header">
+                            <div>
+                                <h3>原始 PDF 版面</h3>
+                                <div id="reader-preview-meta" class="reader-preview-meta">尚未載入頁面</div>
+                            </div>
+                            <div class="reader-page-actions">
+                                <button id="reader-prev-page" class="btn btn-outline-secondary" type="button">上一頁</button>
+                                <button id="reader-next-page" class="btn btn-outline-secondary" type="button">下一頁</button>
+                            </div>
+                        </div>
+                        <div id="reader-page-canvas-wrap" class="reader-page-canvas-wrap">
+                            <div class="reader-empty-state">
+                                <h3>尚未有預覽內容</h3>
+                                <p>完成分析後，這裡會顯示試卷頁面影像。</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="reader-student-bar" class="reader-student-bar">
+                        <div>
+                            <strong>目前朗讀內容</strong>
+                            <div id="reader-student-text" class="reader-student-text">點選試卷上的題目、選項或題組文章後，這裡會顯示剛剛朗讀的內容。</div>
+                        </div>
+                        <div class="reader-student-actions">
+                            <button id="reader-repeat-last" class="btn" type="button">重播剛剛內容</button>
+                            <button id="reader-stop-speech-secondary" class="btn btn-secondary" type="button">停止</button>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="reader-right-column">
+                    <section class="reader-panel">
+                        <h3 class="reader-section-title">分析摘要</h3>
+                        <div id="reader-summary-grid" class="reader-summary-grid">
+                            <div class="reader-stats-card">
+                                <strong id="reader-summary-pages">0</strong>
+                                <span class="reader-muted">頁面</span>
+                            </div>
+                            <div class="reader-stats-card">
+                                <strong id="reader-summary-questions">0</strong>
+                                <span class="reader-muted">題目</span>
+                            </div>
+                            <div class="reader-stats-card">
+                                <strong id="reader-summary-choice">0</strong>
+                                <span class="reader-muted">選擇題</span>
+                            </div>
+                            <div class="reader-stats-card">
+                                <strong id="reader-summary-warning">0</strong>
+                                <span class="reader-muted">待校正</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="reader-panel">
+                        <h3 class="reader-section-title">題目清單</h3>
+                        <p class="reader-muted">系統會依據大題標題、題號與選項結構做初步判斷。</p>
+                        <div id="reader-question-list" class="reader-question-list">
+                            <div class="reader-empty-state">
+                                <h3>尚未產生題目</h3>
+                                <p>分析完成後，這裡會出現可點擊的題目卡片。</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="reader-detail-card" class="reader-detail-card">
+                        <div class="reader-empty-state">
+                            <h3>尚未選擇題目</h3>
+                            <p>點選右側題目卡片後，可在這裡朗讀題目、逐一朗讀選項，並手動修正內容。</p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="status-overlay" class="status-overlay" style="display:none;">
+        <div class="status-content">
+            <h3>答題狀態</h3>
+            <div id="status-list"></div>
+            <button id="close-status" class="btn" style="margin-top:10px;">關閉</button>
+        </div>
+    </div>
+    <div id="select-overlay" class="status-overlay" style="display:none;">
+        <div class="status-content">
+            <h3 id="select-title"></h3>
+            <div id="select-list"></div>
+            <div style="text-align:center;margin-top:10px;">
+                <button id="select-confirm" class="btn">刪除</button>
+                <button id="select-cancel" class="btn btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+    <footer class="footer">
+        Copyright © 2025 by Neil 三寶爸(劉建宏)
+    </footer>
+    <div id="toast" class="toast"></div>
+    <script src="quiz-data.js"></script>
+    <script src="ai-planner-data.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="quiz-app.js"></script>
+    <script src="exam-reader-app.js"></script>
 </body>
 </html>
+
