@@ -46,6 +46,35 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
 #report h3{margin:14px 0 4px;font-size:.95rem}
 #report ol,#report ul{margin:4px 0;padding-left:1.3em}
 #report li{margin:4px 0}
+.ex{margin:6px 0 10px;padding:8px 10px;border-radius:8px;background:var(--paper);border:1px dashed var(--line)}
+.ex b{color:var(--ink)} .ex .dose{display:inline-block;margin-left:4px;padding:0 6px;border-radius:6px;background:var(--pencil);color:#1C2530;font-size:.75rem;font-weight:700}
+.ex p{margin:2px 0 0;font-size:.88rem}
+.exbtn{min-height:36px;padding:4px 10px;margin-top:6px;font-size:.85rem;color:var(--ink);border-color:var(--ink)}
+[hidden]{display:none!important}
+.exlib{margin:0 12px 16px}
+.exlib h2{font-size:1.05rem;color:var(--ink);margin:8px 0}
+.exlib .primary{width:100%;margin-bottom:10px}
+.exgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.excard{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:8px}
+.excard svg{width:72px;height:72px}
+.excard .n{font-weight:700;font-size:.9rem} .excard .d{font-size:.75rem;color:var(--muted)}
+.fig line,.fig path,.fig circle{stroke:var(--ink);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.fig circle{fill:var(--card)} .fig .env{stroke:var(--line);stroke-width:3}
+.fig .pb{display:none} .fig.b .pa{display:none} .fig.b .pb{display:inline}
+.tut{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;padding-top:env(safe-area-inset-top,0px)}
+.tut-box{background:var(--card);color:var(--text);width:100%;max-width:520px;max-height:100%;overflow:auto;border-radius:16px 16px 0 0;
+  padding:14px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.tut-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tut-head h2{margin:0;font-size:1.15rem;color:var(--ink);flex:1}
+.tut-head button{min-height:40px;padding:4px 12px}
+.tut-fig{display:flex;justify-content:center;margin:6px 0}
+.tut-fig svg{width:min(62vw,240px);height:auto}
+.tut-timer{text-align:center;font-size:2.4rem;font-weight:700;color:var(--ink);min-height:1.3em;font-variant-numeric:tabular-nums}
+.tut-cue{text-align:center;font-size:1.05rem;min-height:1.6em;font-weight:500}
+.tut-steps{padding-left:1.4em;margin:8px 0}
+.tut-steps li{margin:4px 0;padding:2px 6px;border-radius:6px}
+.tut-steps li.on{background:var(--pencil);color:#1C2530;font-weight:700}
+.tut-btns{display:flex;gap:8px} .tut-btns button{flex:1}
 .bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;display:flex;margin:2px 0 6px}
 .bar i{display:block;height:100%}
 .small{font-size:.82rem;color:var(--muted)}
@@ -87,6 +116,30 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
 
 <section id="report" aria-live="polite"></section>
 
+<section class="exlib" aria-labelledby="exlibTitle">
+  <h2 id="exlibTitle">矯正運動教學</h2>
+  <button class="primary" id="dailyBtn">▶ 跟著做每日 5 分鐘矯正操</button>
+  <div class="exgrid" id="exGrid"></div>
+</section>
+
+<div id="tut" class="tut" hidden role="dialog" aria-modal="true" aria-labelledby="tutName">
+  <div class="tut-box">
+    <div class="tut-head">
+      <h2 id="tutName"></h2>
+      <span id="tutSeq" class="small"></span>
+      <button id="tutMute" aria-pressed="false">🔊</button>
+      <button id="tutClose" aria-label="關閉">✕</button>
+    </div>
+    <span id="tutDose" class="dose"></span>
+    <div class="tut-fig" id="tutFig"></div>
+    <div class="tut-timer" id="tutTimer"></div>
+    <div class="tut-cue" id="tutCue" aria-live="polite"></div>
+    <ol id="tutSteps" class="tut-steps"></ol>
+    <p class="small">動作要慢、不憋氣，不應該痛；有疼痛或麻就停止。</p>
+    <div class="tut-btns"><button class="primary" id="tutGo">▶ 跟著做</button><button id="tutStop" disabled>停止</button></div>
+  </div>
+</div>
+
 <script type="module">
 import { PoseLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
 
@@ -102,6 +155,66 @@ const METRICS={
   tilt:  {label:"頭部側歪",view:"front",unit:"°",thr:[6,12], dir:1},
   drop:  {label:"頭部低垂",view:"front",unit:"", thr:[0.35,0.2],dir:-1},
 };
+/* 矯正運動：溫和、無器材、適合國小學童；動作以不痛為原則
+   type reps：做 reps 次，每次維持 hold 秒（0 = 節奏動作）；type hold：維持 sec 秒 × sets 次（sides 為左右各做） */
+const EX={
+  chin:{name:"烏龜縮頭（收下巴）",dose:"10 次 × 停 5 秒",how:"坐直眼睛看前方，下巴水平往後收，像做出雙下巴，後頸會感覺被拉長。不要低頭。",
+    steps:["坐直或站直，眼睛看正前方","下巴水平往後收，像烏龜把頭縮進殼裡","後脖子會感覺被拉長，眼睛不要往下看"],type:"reps",reps:10,hold:5},
+  wall:{name:"貼牆站",dose:"30 秒 × 2 次",how:"腳跟離牆約一個拳頭，後腦、肩胛、屁股貼牆，下巴微收，保持正常呼吸。",
+    steps:["背對牆壁站，腳跟離牆一個拳頭","後腦勺、肩膀、屁股都貼到牆","下巴微微收，肩膀放鬆，正常呼吸"],type:"hold",sec:30,sets:2},
+  angel:{name:"牆壁天使",dose:"8 次",how:"貼牆站好，手臂彎成「W」貼牆，慢慢往上滑成「Y」再滑回來，手背盡量不離開牆。",
+    steps:["貼牆站好，手臂彎成英文字母 W","手背和手肘貼著牆，慢慢往上滑成 Y","再慢慢滑回 W，背不要離開牆"],type:"reps",reps:8,hold:0,tempo:2000},
+  cat:{name:"貓牛式",dose:"8 次",how:"四足跪姿，吸氣時抬頭、腰往下沉（牛），吐氣時低頭、背拱起來（貓），動作放慢。",
+    steps:["雙手雙膝跪在地上，手在肩膀正下方","吸氣，抬頭看前面，肚子往下沉，這是小牛","吐氣，低頭看肚子，背拱起來，這是小貓"],type:"reps",reps:8,hold:0,tempo:2500,cues:["吸氣，抬頭，肚子往下","吐氣，低頭，背拱起來"]},
+  superman:{name:"超人飛飛",dose:"5 次 × 停 5 秒",how:"趴在地上，雙手往前伸直，手腳同時微微抬離地面，眼睛看地板，不要抬頭。",
+    steps:["趴在地上，雙手往前伸直","手和腳一起輕輕抬起來，像超人在飛","眼睛看地板，脖子不要往後仰"],type:"reps",reps:5,hold:5},
+  shrug:{name:"聳肩放下",dose:"10 次",how:"肩膀用力往上提到耳朵，停 2 秒，再往後、往下放鬆。",
+    steps:["站好，手自然放下","肩膀用力往上提，靠近耳朵","停一下，再往後、往下放鬆"],type:"reps",reps:10,hold:2},
+  side:{name:"側邊伸展",dose:"每邊 15 秒 × 2 次",how:"坐或站，一手舉高往對側彎，感覺身體側邊拉長，換邊。",
+    steps:["站好，一隻手舉高","身體慢慢往另一邊彎","感覺身體側邊被拉長，停住不要晃"],type:"hold",sec:15,sets:2,sides:["右邊","左邊"]},
+  neckside:{name:"耳朵找肩膀",dose:"每邊 15 秒",how:"肩膀不動，頭慢慢往一側倒，耳朵靠近肩膀，輕輕停住再換邊，不要用手拉。",
+    steps:["坐好，肩膀放鬆不要動","頭慢慢往一邊倒，耳朵靠近肩膀","輕輕停住，不要用手拉"],type:"hold",sec:15,sets:1,sides:["右邊","左邊"]},
+  finger:{name:"手指操",dose:"各 10 次",how:"手指用力張開再握拳；拇指依序碰食指到小指；用曬衣夾夾物或捏黏土，訓練握筆的指力。",
+    steps:["雙手伸到前面","手指用力張開，越開越好","再用力握拳，換著做"],type:"reps",reps:10,hold:0,tempo:1200},
+};
+
+/* 火柴人圖：A = 起始姿勢，B = 動作姿勢（側面人物面向右） */
+const FRONT_A={head:[60,20],neck:[60,32],hip:[60,66],sh:[[48,36],[72,36]],arms:[[[46,52],[46,68]],[[74,52],[74,68]]],legs:[[[54,89],[54,111]],[[66,89],[66,111]]]};
+const SIDE_A={head:[62,20],neck:[60,32],hip:[58,66],arms:[[[60,50],[64,64]]],legs:[[[58,89],[58,111]]]};
+const POSE={
+  chin:[{...SIDE_A,head:[69,23]},{...SIDE_A,head:[58,19]}],
+  wall:[{head:[58,20],neck:[56,32],hip:[55,66],arms:[[[56,50],[58,66]]],legs:[[[56,89],[60,111]]],wall:50},
+        {head:[58,20],neck:[56,32],hip:[55,66],arms:[[[56,50],[58,66]]],legs:[[[56,89],[60,111]]],wall:50}],
+  angel:[{...FRONT_A,arms:[[[36,42],[36,26]],[[84,42],[84,26]]]},{...FRONT_A,arms:[[[42,20],[36,6]],[[78,20],[84,6]]]}],
+  cat:[{head:[30,60],neck:[42,72],mid:[62,86],hip:[84,72],arms:[[[42,90],[42,110]]],legs:[[[84,110],[106,110]]]},
+       {head:[32,86],neck:[42,74],mid:[62,52],hip:[84,74],arms:[[[42,92],[42,110]]],legs:[[[84,110],[106,110]]]}],
+  superman:[{head:[20,102],neck:[30,106],hip:[72,106],arms:[[[18,109],[6,109]]],legs:[[[92,108],[112,108]]]},
+            {head:[22,97],neck:[31,103],hip:[72,106],arms:[[[18,98],[6,92]]],legs:[[[92,102],[112,96]]]}],
+  shrug:[FRONT_A,{...FRONT_A,neck:[60,30],sh:[[48,28],[72,28]],arms:[[[46,44],[46,60]],[[74,44],[74,60]]]}],
+  side:[FRONT_A,{head:[71,23],neck:[67,34],hip:[60,66],sh:[[57,32],[77,38]],arms:[[[55,12],[76,3]],[[80,54],[78,68]]],legs:FRONT_A.legs}],
+  neckside:[FRONT_A,{...FRONT_A,head:[52,23]}],
+};
+const L=(a,b)=>`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`;
+function figG(p){
+  let g=`<line class="env" x1="4" y1="114" x2="116" y2="114"/>`;
+  if(p.wall) g+=`<line class="env" x1="${p.wall}" y1="4" x2="${p.wall}" y2="114"/>`;
+  if(p.sh) g+=L(p.sh[0],p.sh[1]);
+  g+=p.mid?`<path d="M${p.neck} Q${p.mid} ${p.hip}"/>`:L(p.neck,p.hip);
+  g+=L(p.head,p.neck);
+  p.arms.forEach((a,i)=>{ const o=p.sh?p.sh[i]:p.neck; g+=L(o,a[0])+L(a[0],a[1]); });
+  p.legs.forEach(l=>{ g+=L(p.hip,l[0])+L(l[0],l[1]); });
+  return g+`<circle cx="${p.head[0]}" cy="${p.head[1]}" r="8"/>`;
+}
+const HAND_OPEN=`<circle cx="60" cy="78" r="15"/>${L([50,68],[38,46])}${L([56,64],[52,34])}${L([63,64],[66,32])}${L([69,68],[80,40])}${L([46,82],[26,76])}`;
+const HAND_FIST=`<rect x="42" y="56" width="36" height="40" rx="14" ry="14" style="stroke:var(--ink);stroke-width:5;fill:var(--card)"/>${L([46,70],[66,64])}${L([50,78],[74,78])}`;
+function figSVG(k){
+  const [a,b]=k==="finger"?[HAND_OPEN,HAND_FIST]:POSE[k].map(figG);
+  return `<svg class="fig" viewBox="0 0 120 120" aria-hidden="true"><g class="pa">${a}</g><g class="pb">${b}</g></svg>`;
+}
+const EX_FOR={neck:["chin","wall"],drop:["chin","finger"],trunk:["superman","cat","wall"],sh:["shrug","side"],tilt:["neckside","angel"]};
+const EX_DAILY=["chin","wall","angel","finger"];
+const exHtml=keys=>keys.map(k=>`<div class="ex"><b>${EX[k].name}</b><span class="dose">${EX[k].dose}</span><p>${EX[k].how}</p><button class="exbtn" data-ex="${k}">看教學 ▶</button></div>`).join("");
+
 const ADVICE={
   neck:"頭頸過度前傾：眼睛離紙面保持約 30–35 cm（一尺），改用斜面寫字板或把本子墊高 10–15°，減少低頭角度。",
   trunk:"上身趴向桌面：胸口與桌緣保持一拳距離，臀部坐滿椅面、背部靠直；檢查椅子是否過低或桌子過高（手肘自然彎曲約 90° 時前臂應平放桌面）。",
@@ -191,7 +304,7 @@ const VOICE={
   tilt:["頭擺正，本子可以斜一點","頭不要歪，眼睛看正前方的字"],
   drop:["頭抬起來，手指離筆尖一寸","握筆往上一點，才看得到筆尖"],
   praise:["很好，姿勢正確，繼續保持","好棒，就是這樣坐","姿勢很漂亮，加油"],
-  break:["已經寫了三十分鐘，起來休息一下，看看遠方吧"],
+  break:["已經寫了三十分鐘，起來休息一下，看看遠方吧","寫了三十分鐘囉，站起來做十次烏龜縮頭","休息時間到，去貼牆站三十秒吧"],
   start:["開始偵測囉，記得坐好"],
 };
 const BREAK_MS=30*60*1000;
@@ -228,6 +341,7 @@ function beep(){
 }
 
 function handleAlert(values){
+  if(tut.open) return;
   const bad=Object.keys(values).filter(k=>level(k,values[k])==="bad")
     .sort((a,c)=>severity(c,values[c])-severity(a,values[a]));
   const b=$("banner"); const now=performance.now();
@@ -321,8 +435,12 @@ function report(){
   r.innerHTML=`<h2>本次報告（${mins} 分鐘）</h2>
     ${rows.length?rows.join(""):'<p class="small">有效資料不足，請拍攝至少 30 秒且人物完整入鏡。</p>'}
     <h3>優先改善</h3>
-    ${issues.length?`<ol>${issues.map(i=>`<li>${ADVICE[i.k]}<span class="small">（不良 ${i.pb.toFixed(0)}%）</span></li>`).join("")}</ol>`
+    ${issues.length?`<ol>${issues.map(i=>`<li>${ADVICE[i.k]}<span class="small">（不良 ${i.pb.toFixed(0)}%）</span>${exHtml(EX_FOR[i.k])}</li>`).join("")}</ol>`
       :'<p class="small">偵測到的項目皆良好，繼續保持。</p>'}
+    <h3>每日 5 分鐘矯正操</h3>
+    <p class="small">寫功課前或休息時做一輪，建議家長陪著做、確認動作正確。</p>
+    ${exHtml(EX_DAILY)}
+    <p class="small">動作要慢、不憋氣，做的時候不應該痛；有疼痛或麻就停止。</p>
     <h3>鏡頭無法判斷，請人工確認</h3>
     <ul>
       <li>一尺一拳一寸：眼離紙約 33 cm、胸離桌一拳、指離筆尖 3 cm。</li>
@@ -334,6 +452,111 @@ function report(){
     <p class="small">角度為 2D 影像估算，受鏡頭位置影響，建議固定同一位置拍攝以比較前後變化；非醫療診斷，若長期駝背或歪頭請諮詢復健科或眼科。</p>`;
   r.style.display="block"; r.scrollIntoView({behavior:"smooth"});
 }
+
+/* ===== 運動教學 ===== */
+const tut={open:false,running:false,abort:false,mute:false,preview:null,keys:[]};
+const chk=()=>{ if(tut.abort) throw "abort"; };
+const sleep=ms=>new Promise(r=>setTimeout(r,ms)).then(chk);
+function sayNow(text){
+  if(tut.mute||!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang=state.voice?.lang||"zh-TW"; if(state.voice) u.voice=state.voice; u.rate=0.95; u.pitch=1.1;
+  speechSynthesis.speak(u); return u;
+}
+function say(text){
+  $("tutCue").textContent=text;
+  return new Promise(res=>{
+    const fb=setTimeout(res,700+text.length*260);
+    const u=sayNow(text);
+    if(u){ u.onend=u.onerror=()=>{ clearTimeout(fb); res(); }; }
+  }).then(chk);
+}
+const setPose=b=>$("tutFig").querySelector(".fig")?.classList.toggle("b",b);
+function startPreview(){ stopPreview(); let b=false; tut.preview=setInterval(()=>setPose(b=!b),1300); }
+function stopPreview(){ clearInterval(tut.preview); tut.preview=null; setPose(false); }
+const NUM="零一二三四五六七八九十";
+async function hold(sec,countUp){
+  for(let t=1;t<=sec;t++){
+    $("tutTimer").textContent=sec-t+1;
+    if(countUp) sayNow(NUM[t]||String(t));
+    else if(sec-t+1===10) sayNow("還有十秒");
+    else if(sec-t+1<=3) sayNow(NUM[sec-t+1]);
+    await sleep(1000);
+  }
+  $("tutTimer").textContent="";
+}
+async function doEx(k){
+  const e=EX[k];
+  if(e.type==="reps"){
+    for(let r=1;r<=e.reps;r++){
+      $("tutCue").textContent=`第 ${r} 次，共 ${e.reps} 次`;
+      setPose(true);
+      if(e.cues&&r<=2) await say(e.cues[0]);
+      if(e.hold){ await hold(e.hold,true); } else await sleep(e.tempo/2);
+      setPose(false);
+      if(e.cues&&r<=2) await say(e.cues[1]);
+      else if(e.hold){ await say("放鬆"); await sleep(800); }
+      else { sayNow(String(r)); await sleep(e.tempo/2); }
+    }
+  }else{
+    const sides=e.sides||[""];
+    for(const [si,side] of sides.entries()) for(let n=1;n<=e.sets;n++){
+      await say(side?(e.sets>1?`${side}，第${n}次`:side):(e.sets>1?`第${n}次`:"開始"));
+      setPose(true); await hold(e.sec,false); setPose(false);
+      if(n<e.sets||si<sides.length-1){ await say("放鬆休息一下"); await sleep(3000); }
+    }
+  }
+}
+function showEx(k,seq=""){
+  const e=EX[k];
+  $("tutName").textContent=e.name; $("tutDose").textContent=e.dose; $("tutSeq").textContent=seq;
+  $("tutFig").innerHTML=figSVG(k);
+  $("tutSteps").innerHTML=e.steps.map(t=>`<li>${t}</li>`).join("");
+  $("tutTimer").textContent=""; $("tutCue").textContent="";
+}
+const hlStep=i=>[...$("tutSteps").children].forEach((li,j)=>li.classList.toggle("on",j===i));
+function openTut(keys){
+  tut.keys=keys; tut.open=true; tut.abort=false;
+  showEx(keys[0],keys.length>1?`共 ${keys.length} 個動作`:"");
+  $("tut").hidden=false; $("tutGo").disabled=false; $("tutStop").disabled=true;
+  $("banner").style.display="none";
+  startPreview(); $("tutGo").focus();
+}
+function closeTut(){
+  tut.abort=true; tut.open=false; stopPreview();
+  if("speechSynthesis" in window) speechSynthesis.cancel();
+  $("tut").hidden=true;
+}
+async function runTut(){
+  const keys=tut.keys; tut.abort=false; tut.running=true; stopPreview();
+  $("tutGo").disabled=true; $("tutStop").disabled=false;
+  try{
+    for(const [i,k] of keys.entries()){
+      showEx(k,keys.length>1?`第 ${i+1} / ${keys.length} 個`:"");
+      await say(EX[k].name);
+      for(const [j,t] of EX[k].steps.entries()){ hlStep(j); await say(t); }
+      hlStep(-1);
+      await say("準備，開始");
+      await doEx(k);
+      if(i<keys.length-1){ await say("做得好，下一個動作"); await sleep(1500); }
+    }
+    await say(keys.length>1?"全部完成，你做得很棒！":"完成，做得很好！");
+  }catch(err){ if(err!=="abort") console.error(err); }
+  finally{
+    tut.running=false; $("tutTimer").textContent="";
+    if(tut.open){ $("tutGo").disabled=false; $("tutStop").disabled=true; $("tutGo").textContent="▶ 再做一次"; showEx(keys[0],keys.length>1?`共 ${keys.length} 個動作`:""); startPreview(); }
+  }
+}
+$("exGrid").innerHTML=Object.keys(EX).map(k=>`<button class="excard" data-ex="${k}">${figSVG(k)}<span class="n">${EX[k].name}</span><span class="d">${EX[k].dose}</span></button>`).join("");
+document.addEventListener("click",e=>{ const b=e.target.closest("[data-ex]"); if(b){ $("tutGo").textContent="▶ 跟著做"; openTut([b.dataset.ex]); } });
+$("dailyBtn").onclick=()=>{ $("tutGo").textContent="▶ 跟著做"; openTut(EX_DAILY); };
+$("tutGo").onclick=runTut;
+$("tutStop").onclick=()=>{ tut.abort=true; if("speechSynthesis" in window) speechSynthesis.cancel(); $("tutCue").textContent="已停止"; };
+$("tutClose").onclick=closeTut;
+$("tut").addEventListener("click",e=>{ if(e.target.id==="tut") closeTut(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&tut.open) closeTut(); });
+$("tutMute").onclick=e=>{ tut.mute=!tut.mute; e.target.textContent=tut.mute?"🔇":"🔊"; e.target.setAttribute("aria-pressed",tut.mute); if(tut.mute&&"speechSynthesis" in window) speechSynthesis.cancel(); };
 
 $("startBtn").onclick=start;
 $("reportBtn").onclick=()=>state.frames?report():null;
