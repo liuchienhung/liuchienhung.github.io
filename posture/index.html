@@ -106,6 +106,7 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
   <a href="../" style="color:var(--muted);font-size:.85rem;text-decoration:none">← 回服務首頁</a>
   <h1>寫字姿勢即時偵測</h1>
   <p>手機放在孩子側面約 1–1.5 公尺、與肩同高，拍到頭、肩、髖。影像只在本機運算，不上傳。</p>
+  <p id="devInfo" class="small"></p>
 </header>
 
 <div class="stage" id="stage">
@@ -126,7 +127,7 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
     <option value="side">角度：側面</option>
     <option value="front">角度：正面</option>
   </select>
-  <button id="flipBtn">切換鏡頭</button>
+  <button id="flipBtn" hidden>切換鏡頭</button>
   <select id="alertSel" aria-label="提醒方式">
     <option value="voice">提醒：語音</option>
     <option value="beep">提醒：提示音</option>
@@ -298,14 +299,41 @@ async function init(){
   catch{ state.landmarker=await PoseLandmarker.createFromOptions(fileset,opts("CPU")); }
 }
 
+/* ===== 裝置與鏡頭 =====
+   手機／平板：預設後鏡頭（畫質較好），切換時前後互換
+   電腦：預設網路攝影機，切換時輪流使用每一支鏡頭
+   只有一支鏡頭就不顯示「切換鏡頭」 */
+const ua=navigator.userAgent;
+const DEVICE=/iPad|Tablet|PlayBook|Silk/i.test(ua)||(/Android/i.test(ua)&&!/Mobile/i.test(ua))||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)?"tablet"
+  :navigator.userAgentData?.mobile||/Mobi|iPhone|iPod|Android/i.test(ua)?"phone":"desktop";
+const MOBILE=DEVICE!=="desktop";
+const cam={list:[],deviceId:null,cur:null,known:false};
+state.facing=MOBILE?"environment":"user";
+const gUM=video=>navigator.mediaDevices.getUserMedia({audio:false,video});
+
+async function refreshCams(){
+  try{ cam.list=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="videoinput"); }catch{ cam.list=[]; }
+  /* 開啟相機前瀏覽器常只回報一支或不回報，行動裝置先假設有兩支鏡頭 */
+  const canFlip=cam.known?cam.list.length>=2:MOBILE;
+  $("flipBtn").hidden=!canFlip;
+  const name={phone:"手機",tablet:"平板",desktop:"電腦"}[DEVICE];
+  $("devInfo").textContent=`偵測到：${name}`+(canFlip?"（可切換鏡頭）":"");
+}
+
 async function startCamera(){
   if(state.stream) state.stream.getTracks().forEach(t=>t.stop());
-  state.stream=await navigator.mediaDevices.getUserMedia({audio:false,
-    video:{facingMode:state.facing,width:{ideal:1280},height:{ideal:960}}});
+  const size={width:{ideal:1280},height:{ideal:960}};
+  const want=cam.deviceId?{deviceId:{exact:cam.deviceId}}:{facingMode:MOBILE?{exact:state.facing}:state.facing};
+  try{ state.stream=await gUM({...want,...size}); }
+  catch(e){ if(e.name==="NotAllowedError") throw e; state.stream=await gUM({facingMode:state.facing,...size}); }
   video.srcObject=state.stream; await video.play();
-  const mir=state.facing==="user";
+  const track=state.stream.getVideoTracks()[0], set=track.getSettings?.()||{};
+  if(set.facingMode==="user"||set.facingMode==="environment") state.facing=set.facingMode;
+  cam.cur=set.deviceId||null; cam.deviceId=MOBILE?null:cam.cur; cam.known=true;
+  const mir=MOBILE?state.facing==="user":set.facingMode!=="environment";
   video.classList.toggle("mirror",mir); canvas.classList.toggle("mirror",mir);
   canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+  await refreshCams();
 }
 
 function detectView(p){
@@ -676,7 +704,30 @@ $("tutMute").onclick=e=>{ tut.mute=!tut.mute; e.target.textContent=tut.mute?"�
 
 $("startBtn").onclick=start;
 $("reportBtn").onclick=()=>state.frames?report():null;
-$("flipBtn").onclick=async()=>{ state.facing=state.facing==="user"?"environment":"user"; if(state.running){ await startCamera(); } };
+$("flipBtn").onclick=async()=>{
+  const prev=state.facing, prevId=cam.deviceId;
+  state.facing=prev==="user"?"environment":"user"; state.ema={};
+  if(!MOBILE&&cam.list.length>=2){ /* 電腦：輪流使用下一支鏡頭 */
+    const i=cam.list.findIndex(d=>d.deviceId===cam.deviceId);
+    cam.deviceId=cam.list[(i+1)%cam.list.length].deviceId;
+  }
+  if(!state.running) return;
+  $("flipBtn").disabled=true;
+  try{
+    const before=cam.cur;
+    await startCamera();
+    /* 有些手機不回報鏡頭方向，切換後若還是同一支鏡頭，就直接換下一支 */
+    if(MOBILE&&cam.cur&&cam.cur===before&&cam.list.length>=2){
+      const i=cam.list.findIndex(d=>d.deviceId===cam.cur);
+      cam.deviceId=cam.list[(i+1)%cam.list.length].deviceId;
+      await startCamera();
+    }
+  }
+  catch{ state.facing=prev; cam.deviceId=prevId; try{ await startCamera(); }catch{} alert("無法切換鏡頭，這台裝置可能只有一支鏡頭。"); }
+  finally{ $("flipBtn").disabled=false; }
+};
+navigator.mediaDevices?.addEventListener?.("devicechange",refreshCams);
+refreshCams();
 $("alertSel").onchange=e=>{ state.alertMode=e.target.value; if(state.alertMode!=="voice"&&"speechSynthesis" in window) speechSynthesis.cancel(); };
 $("testVoiceBtn").onclick=()=>{
   if(!speak(withName(pick(VOICE.neck)))){ alert("此瀏覽器不支援語音，請改用 Chrome 或 Safari。"); return; }
