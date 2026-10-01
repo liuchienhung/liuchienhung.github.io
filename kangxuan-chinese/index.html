@@ -47,6 +47,10 @@ details.edit summary{cursor:pointer;color:var(--ink2);font-weight:700;min-height
 .erow input.bad{border-color:var(--bad)}
 .eacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .emsg{font-size:.85rem;margin-top:6px;color:var(--muted)}
+.sound{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sound details{flex:1 1 220px;font-size:.88rem}
+.sound summary{cursor:pointer;color:var(--ink2);font-weight:700;min-height:32px}
+.sound ol{margin:6px 0 0;padding-left:1.3em} .sound li{margin:4px 0}
 .modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
 .mode{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;text-align:left}
 .mode .e{font-size:2rem;line-height:1}
@@ -99,6 +103,18 @@ details.edit summary{cursor:pointer;color:var(--ink2);font-weight:700;min-height
 
   <!-- 首頁：選課 + 選模式 -->
   <section id="home">
+    <div class="panel sound">
+      <button class="primary" id="soundtest" type="button">🔊 測試聲音</button>
+      <details id="soundhelp">
+        <summary>聲音太小聲？</summary>
+        <ol>
+          <li>先按「測試聲音」，<b>在播放的時候</b>按手機側邊的音量鍵調大，這樣調到的才是播放用的媒體音量。</li>
+          <li>iPhone：請關閉靜音模式；也可到「設定 › 輔助使用 › 朗讀內容 › 聲音 › 中文（台灣）」下載「加強版」語音，聲音更清楚。</li>
+          <li>Android：若調大後仍小聲，按音量鍵後展開音量面板，把各項音量（媒體、協助工具）都調高；或到「設定 › 協助工具 › 文字轉語音輸出」更換語音。</li>
+          <li>網頁語音最大只能到手機目前的音量，環境吵的話建議接耳機或藍牙喇叭。</li>
+        </ol>
+      </details>
+    </div>
     <div class="panel">
       <h2>1. 選擇課次</h2>
       <div id="lessons" class="lessons"></div>
@@ -233,7 +249,7 @@ function speak(text) {
   if (!('speechSynthesis' in window)) return false;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'zh-TW'; u.rate = 0.8; if (zhVoice) u.voice = zhVoice;
+  u.lang = 'zh-TW'; u.rate = 0.8; u.volume = 1; u.pitch = 1.05; if (zhVoice) u.voice = zhVoice;
   speechSynthesis.speak(u);
   return true;
 }
@@ -321,6 +337,12 @@ $('#lessons').addEventListener('click', e => {
 $('#cumulative').addEventListener('change', e => { cumulative = e.target.checked; store.set('cum', cumulative); });
 document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => startMode(b.dataset.mode)));
 $('#quit').addEventListener('click', showHome);
+$('#soundtest').addEventListener('click', () => {
+  if (!speak('小朋友好，我們一起來練習注音符號。ㄅ，ㄆ，ㄇ，ㄈ。')) {
+    $('#soundhelp').open = true;
+    alert('這個瀏覽器不支援語音朗讀，請改用 Chrome 或 Safari 開啟。');
+  }
+});
 
 function showHome() {
   if ('speechSynthesis' in window) speechSynthesis.cancel();
