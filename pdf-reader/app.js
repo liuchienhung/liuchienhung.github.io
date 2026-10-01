@@ -157,8 +157,12 @@
 
     // iOS Safari 等瀏覽器要求「第一次發聲」必須發生在使用者點擊的當下；
     // 在第一次觸控／點擊時先送出一段無聲語音解鎖，之後連續朗讀才不會被擋掉。
+    // Android Chrome 不需要解鎖，而且解鎖用的語音會和接著要念的句子互相取消，反而造成沒聲音，因此只在 iOS 執行。
+    const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
     function unlockSpeech() {
-        if (!speech.supported || speech.unlocked) return;
+        if (!speech.supported || speech.unlocked || !IS_IOS) return;
         speech.unlocked = true;
         try {
             const silent = new SpeechSynthesisUtterance('');
@@ -173,7 +177,9 @@
     function showNoSoundHint(reason) {
         const tips = reason === 'not-allowed'
             ? '瀏覽器擋下了語音播放，請再點一次文字或按「▶ 朗讀」。'
-            : '沒有聽到聲音？請確認音量已開啟、iPhone／iPad 側邊靜音鍵未開啟，並在「⚙️ 設定」選擇中文（台灣）語音。';
+            : (IS_IOS
+                ? '沒有聽到聲音？請確認音量已開啟、iPhone／iPad 側邊靜音鍵未開啟，並在「⚙️ 設定」選擇中文（台灣）語音。'
+                : '沒有聽到聲音？請調高「媒體音量」，並到手機「設定 › 協助工具 › 文字轉語音輸出」確認已安裝中文語音；也可在「⚙️ 設定」換一個語音。');
         setCaption('沒有聲音', tips);
     }
 
@@ -188,7 +194,9 @@
         const utterance = new SpeechSynthesisUtterance(text);
         const voice = currentVoice();
         if (voice) utterance.voice = voice;
-        utterance.lang = voice && voice.lang ? voice.lang.replace('_', '-') : 'zh-TW';
+        // Android 回報的語言常是「zh_TW」，直接套用不是合法語言代碼，會讓語音引擎不出聲
+        const voiceLang = voice && voice.lang ? voice.lang.replace(/_/g, '-') : '';
+        utterance.lang = /^zh-(CN|HK)/i.test(voiceLang) ? voiceLang : 'zh-TW';
         utterance.rate = settings.rate;
         utterance.volume = 1;
         utterance.pitch = 1;
@@ -218,7 +226,6 @@
         // 保留參考，避免 Chrome 在朗讀途中把物件回收，造成中斷或 onend 不觸發
         speech.current = utterance;
         speech.unlocked = true;
-        window.speechSynthesis.resume();
         window.speechSynthesis.speak(utterance);
         speech.watchdog = setTimeout(() => {
             if (token === state.speechToken && !started && !window.speechSynthesis.speaking) {
