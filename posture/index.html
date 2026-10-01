@@ -45,10 +45,11 @@ button,select{font:inherit;border-radius:10px;border:1px solid var(--line);backg
 button.primary{background:var(--ink);color:#fff;border-color:var(--ink);flex:1 1 100%;font-weight:700}
 button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outline-offset:2px}
 #report{margin:0 12px 24px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:none}
-#report h2{margin:0 0 6px;font-size:1.05rem;color:var(--ink)}
-#report h3{margin:14px 0 4px;font-size:.95rem}
-#report ol,#report ul{margin:4px 0;padding-left:1.3em}
-#report li{margin:4px 0}
+.rep h2{margin:0 0 6px;font-size:1.05rem;color:var(--ink)}
+.rep h3{margin:14px 0 4px;font-size:.95rem}
+.rep ol,.rep ul{margin:4px 0;padding-left:1.3em}
+.rep li{margin:4px 0}
+.rep.pdf{display:block;width:720px;margin:0;border:0;border-radius:0;padding:0;background:#fff;color:#1C2530}
 .ex{margin:6px 0 10px;padding:8px 10px;border-radius:8px;background:var(--paper);border:1px dashed var(--line)}
 .ex b{color:var(--ink)} .ex .dose{display:inline-block;margin-left:4px;padding:0 6px;border-radius:6px;background:var(--pencil);color:#1C2530;font-size:.75rem;font-weight:700}
 .ex p{margin:2px 0 0;font-size:.88rem}
@@ -81,6 +82,20 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
 .bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;display:flex;margin:2px 0 6px}
 .bar i{display:block;height:100%}
 .small{font-size:.82rem;color:var(--muted)}
+.rep-actions{display:flex;gap:8px;margin:0 0 8px}
+.rep-actions button{flex:1}
+.snaps{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:6px 0}
+.snap{margin:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--paper);break-inside:avoid}
+.snap img{display:block;width:100%;height:auto;background:#000}
+.snap figcaption{padding:6px 8px;font-size:.78rem;line-height:1.45}
+.snap .tag{display:inline-block;padding:0 6px;margin-right:4px;border-radius:6px;color:#fff;font-weight:700;background:var(--ink)}
+.snap .tag.worst{background:var(--bad)}
+.lv-good{color:var(--good)} .lv-warn{color:var(--warn)} .lv-bad{color:var(--bad);font-weight:700}
+@media print{
+  body>*:not(#report){display:none!important}
+  #report{display:block!important;border:0;margin:0;padding:0}
+  [data-html2canvas-ignore]{display:none!important}
+}
 .fit{margin:0 12px 16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .fit h2{margin:0 0 4px;font-size:1.05rem;color:var(--ink)}
 .fit-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
@@ -137,7 +152,7 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
   <button id="reportBtn">結束並產生報告</button>
 </div>
 
-<section id="report" aria-live="polite"></section>
+<section id="report" class="rep" aria-live="polite"></section>
 
 <section class="fit" aria-labelledby="fitTitle">
   <h2 id="fitTitle">桌椅高度建議</h2>
@@ -256,7 +271,7 @@ function figSVG(k){
 }
 const EX_FOR={neck:["chin","wall"],drop:["chin","finger"],trunk:["superman","cat","wall"],sh:["shrug","side"],tilt:["neckside","angel"]};
 const EX_DAILY=["chin","wall","angel","finger"];
-const exHtml=keys=>keys.map(k=>`<div class="ex"><b>${EX[k].name}</b><span class="dose">${EX[k].dose}</span><p>${EX[k].how}</p><button class="exbtn" data-ex="${k}">看教學 ▶</button></div>`).join("");
+const exHtml=keys=>keys.map(k=>`<div class="ex"><b>${EX[k].name}</b><span class="dose">${EX[k].dose}</span><p>${EX[k].how}</p><button class="exbtn" data-ex="${k}" data-html2canvas-ignore>看教學 ▶</button></div>`).join("");
 
 const ADVICE={
   neck:"頭頸過度前傾：眼睛離紙面保持約 30–35 cm（一尺），改用斜面寫字板或把本子墊高 10–15°，減少低頭角度。",
@@ -272,7 +287,48 @@ const state={running:false,landmarker:null,stream:null,facing:"environment",aler
 function resetStats(){
   state.ema={}; state.stats={}; state.frames=0; state.startTime=performance.now();
   for(const k in METRICS) state.stats[k]={good:0,warn:0,bad:0};
+  resetSnaps();
 }
+/* ===== 姿勢快照：最差狀態、隨機抽樣、最後姿態（只存在本頁記憶體，不上傳） ===== */
+const SNAP_W=480, RAND_K=3;
+const snaps={};
+const randGap=()=>15000+Math.random()*45000; /* 每 15–60 秒抽一張候選 */
+function resetSnaps(){ Object.assign(snaps,{worst:null,last:null,rand:[],seen:0,lastValues:null,lastWorstAt:0,nextRand:performance.now()+randGap()}); }
+resetSnaps();
+function grab(values,view){
+  const w=SNAP_W, h=Math.round(w*canvas.height/canvas.width)||360;
+  const c=document.createElement("canvas"); c.width=w; c.height=h; const g=c.getContext("2d");
+  if(video.classList.contains("mirror")){ g.translate(w,0); g.scale(-1,1); }
+  g.drawImage(video,0,0,w,h); g.drawImage(canvas,0,0,w,h);
+  return {img:c.toDataURL("image/jpeg",0.8),t:performance.now()-state.startTime,values:{...values},view};
+}
+function frameScore(values){
+  let sc=0;
+  for(const k in values){ const lv=level(k,values[k]); if(lv!=="good") sc+=(lv==="bad"?2:0.5)+Math.max(0,severity(k,values[k])); }
+  return sc;
+}
+function trackSnaps(values,view){
+  const now=performance.now();
+  snaps.lastValues={values:{...values},view};
+  const sc=frameScore(values);
+  if(sc>0&&sc>(snaps.worst?.score??0)*1.05&&now-snaps.lastWorstAt>1000&&now-state.startTime>3000){
+    snaps.lastWorstAt=now; snaps.worst={...grab(values,view),score:sc};
+  }
+  if(now>=snaps.nextRand){ /* 蓄水池抽樣：整段偵測中平均隨機留下 RAND_K 張 */
+    snaps.nextRand=now+randGap(); snaps.seen++;
+    const shot=grab(values,view);
+    if(snaps.rand.length<RAND_K) snaps.rand.push(shot);
+    else{ const j=Math.floor(Math.random()*snaps.seen); if(j<RAND_K) snaps.rand[j]=shot; }
+  }
+}
+const mmss=ms=>{ const t=Math.round(ms/1000); return `${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`; };
+function snapFig(sn,title,cls=""){
+  if(!sn) return "";
+  const vals=Object.entries(sn.values).map(([k,v])=>{ const m=METRICS[k], lv=level(k,v);
+    return `<span class="lv-${lv}">${m.label} ${m.unit?v.toFixed(0)+m.unit:v.toFixed(2)}${lv==="bad"?"（不良）":lv==="warn"?"（注意）":""}</span>`; }).join("<br>");
+  return `<figure class="snap"><img src="${sn.img}" alt="${title}，第 ${mmss(sn.t)}"><figcaption><span class="tag ${cls}">${title}</span>第 ${mmss(sn.t)}・${sn.view==="side"?"側面":"正面"}<br>${vals||'<span class="small">未偵測到指標</span>'}</figcaption></figure>`;
+}
+
 function level(k,v){
   const m=METRICS[k];
   if(m.dir===1) return v<=m.thr[0]?"good":v<=m.thr[1]?"warn":"bad";
@@ -456,6 +512,7 @@ function loop(){
       for(const k in values) state.stats[k][level(k,values[k])]++;
       renderMetricCards(values,view);
       handleAlert(values);
+      trackSnaps(values,view);
     }else{
       $("viewtag").textContent="找不到人";
     }
@@ -494,6 +551,8 @@ function stop(){
 }
 
 function report(){
+  if(state.running&&snaps.lastValues) snaps.last=grab(snaps.lastValues.values,snaps.lastValues.view);
+  state.reportAt=new Date();
   stop();
   const mins=((performance.now()-state.startTime)/60000).toFixed(1);
   const rows=[], issues=[];
@@ -508,8 +567,17 @@ function report(){
   }
   issues.sort((a,b)=>b.score-a.score);
   const r=$("report");
-  r.innerHTML=`<h2>${nick()?esc(nick())+" 的":""}本次報告（${mins} 分鐘）</h2>
+  const d=state.reportAt, when=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  const shots=[snapFig(snaps.worst,"最差狀態","worst"),snapFig(snaps.last,"最後姿態"),
+    ...[...snaps.rand].sort((a,b)=>a.t-b.t).map(sn=>snapFig(sn,"隨機紀錄"))].join("");
+  r.innerHTML=`<div class="rep-actions" data-html2canvas-ignore><button class="primary" id="pdfBtn">下載 PDF</button></div>
+    <h2>${nick()?esc(nick())+" 的":""}本次報告（${mins} 分鐘）</h2>
+    <p class="small">${when}</p>
     ${rows.length?rows.join(""):'<p class="small">有效資料不足，請拍攝至少 30 秒且人物完整入鏡。</p>'}
+    <h3>姿勢快照</h3>
+    ${shots?`<div class="snaps">${shots}</div>`:'<p class="small">偵測時間太短，沒有留下快照。</p>'}
+    ${snaps.worst?"":'<p class="small">全程沒有出現需要注意的姿勢，很棒！</p>'}
+    <p class="small">快照只存在這個頁面、不會上傳；重新偵測或關閉頁面就會消失，要留存請下載 PDF。</p>
     <h3>優先改善</h3>
     ${issues.length?`<ol>${issues.map(i=>`<li>${ADVICE[i.k]}<span class="small">（不良 ${i.pb.toFixed(0)}%）</span>${exHtml(EX_FOR[i.k])}</li>`).join("")}</ol>`
       :'<p class="small">偵測到的項目皆良好，繼續保持。</p>'}
@@ -703,6 +771,41 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&tut.open) closeTut
 $("tutMute").onclick=e=>{ tut.mute=!tut.mute; e.target.textContent=tut.mute?"🔇":"🔊"; e.target.setAttribute("aria-pressed",tut.mute); if(tut.mute&&"speechSynthesis" in window) speechSynthesis.cancel(); };
 
 $("startBtn").onclick=start;
+/* ===== 報告下載 PDF ===== */
+function pdfCopy(){ /* 固定 720px 寬的副本，PDF 版面不受手機螢幕寬度影響 */
+  const el=document.createElement("div"); el.className="rep pdf";
+  el.innerHTML=$("report").innerHTML;
+  el.querySelectorAll("[data-html2canvas-ignore]").forEach(n=>n.remove());
+  return el;
+}
+const loadScript=src=>new Promise((ok,ng)=>{ const el=document.createElement("script"); el.src=src; el.onload=ok; el.onerror=ng; document.head.appendChild(el); });
+async function downloadPdf(btn){
+  btn.disabled=true; btn.textContent="產生 PDF 中…";
+  const root=document.documentElement, prevTheme=root.getAttribute("data-theme");
+  try{
+    if(!window.html2pdf) await loadScript("https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js");
+    root.setAttribute("data-theme","light"); /* PDF 一律用淺色 */
+    const d=state.reportAt||new Date(), p2=n=>String(n).padStart(2,"0");
+    const who=nick().replace(/[\\/:*?"<>|\s]/g,"");
+    await html2pdf().set({
+      margin:[10,10,12,10],
+      filename:`寫字姿勢報告${who?"_"+who:""}_${d.getFullYear()}${p2(d.getMonth()+1)}${p2(d.getDate())}-${p2(d.getHours())}${p2(d.getMinutes())}.pdf`,
+      image:{type:"jpeg",quality:0.92},
+      html2canvas:{scale:2,backgroundColor:"#ffffff",scrollX:0,scrollY:0},
+      jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
+      pagebreak:{mode:["avoid-all","css"]},
+    }).from(pdfCopy()).save();
+  }catch(e){
+    console.error(e);
+    alert("PDF 產生失敗，將改用列印：請在列印畫面選擇「另存為 PDF」。");
+    window.print();
+  }finally{
+    prevTheme==null?root.removeAttribute("data-theme"):root.setAttribute("data-theme",prevTheme);
+    btn.disabled=false; btn.textContent="下載 PDF";
+  }
+}
+$("report").addEventListener("click",e=>{ if(e.target.id==="pdfBtn") downloadPdf(e.target); });
+
 $("reportBtn").onclick=()=>state.frames?report():null;
 $("flipBtn").onclick=async()=>{
   const prev=state.facing, prevId=cam.deviceId;
