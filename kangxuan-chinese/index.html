@@ -40,6 +40,13 @@ button.primary{background:var(--ink);border-color:var(--ink);color:#fff;font-wei
 .lesson.sel{border-color:var(--ink);background:color-mix(in srgb,var(--ink) 10%,var(--card))}
 .toggle{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.9rem;color:var(--muted)}
 .toggle input{width:20px;height:20px}
+details.edit{margin-top:12px;font-size:.9rem}
+details.edit summary{cursor:pointer;color:var(--ink2);font-weight:700;min-height:32px}
+.erow{display:grid;grid-template-columns:3.2em 1fr 1.4fr;gap:6px;align-items:center;margin:6px 0}
+.erow input{font:inherit;color:inherit;background:var(--paper);border:2px solid var(--line);border-radius:10px;padding:8px;min-width:0}
+.erow input.bad{border-color:var(--bad)}
+.eacts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.emsg{font-size:.85rem;margin-top:6px;color:var(--muted)}
 .modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
 .mode{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;text-align:left}
 .mode .e{font-size:2rem;line-height:1}
@@ -88,7 +95,7 @@ button.primary{background:var(--ink);border-color:var(--ink);color:#fff;font-wei
     <h1>🐱 康軒國語首冊・注音遊戲</h1>
     <a href="../">← 回服務首頁</a>
   </header>
-  <p class="sub">依 114 學年度康軒一上首冊 9 課編排，練習 37 個注音符號、拼音與聲調。點 🔊 可以聽發音。</p>
+  <p class="sub">依 115 學年度康軒一上首冊 9 課編排，練習 37 個注音符號、拼音與聲調。點 🔊 可以聽發音。</p>
 
   <!-- 首頁：選課 + 選模式 -->
   <section id="home">
@@ -96,6 +103,13 @@ button.primary{background:var(--ink);border-color:var(--ink);color:#fff;font-wei
       <h2>1. 選擇課次</h2>
       <div id="lessons" class="lessons"></div>
       <label class="toggle"><input type="checkbox" id="cumulative" checked> 包含前面學過的課（累積複習）</label>
+      <details class="edit" id="editbox">
+        <summary>⚙️ 調整課次內容（對照課本修改課名與符號）</summary>
+        <p class="emsg">若孩子手上的 115 學年度課本與預設不同，可在這裡改課名和每課教的注音符號，儲存在這台裝置的瀏覽器。</p>
+        <div id="erows"></div>
+        <div class="eacts"><button class="primary" id="esave" type="button">儲存</button><button id="ereset" type="button">恢復預設</button></div>
+        <div class="emsg" id="emsg"></div>
+      </details>
     </div>
     <div class="panel">
       <h2>2. 選擇遊戲</h2>
@@ -120,12 +134,12 @@ button.primary{background:var(--ink);border-color:var(--ink);color:#fff;font-wei
     <div id="stage" class="panel"></div>
   </section>
 
-  <p class="note">課次與符號依康軒首冊教學順序整理（第 1 課〈貓咪〉教ㄅㄆㄇㄉㄧㄠ與一、二、四聲）；各課符號分配若與孩子手上的課本不同，可修改本頁 <code>LESSONS</code> 設定。發音使用瀏覽器內建中文語音。</p>
+  <p class="note">課次與符號依康軒首冊教學順序整理（第 1 課〈貓咪〉教ㄅㄆㄇㄉㄧㄠ與一、二、四聲）；各課符號分配若與孩子手上的課本不同，可用上方「調整課次內容」修改。發音使用瀏覽器內建中文語音。</p>
 </div>
 
 <script>
 // ===== 課程資料 =====
-const LESSONS = [
+const DEFAULT_LESSONS = [
   { n: 1, title: '貓咪',       syms: 'ㄅㄆㄇㄉㄧㄠ', tones: [1, 2, 4] },
   { n: 2, title: '鵝寶寶',     syms: 'ㄊㄋㄜㄨ',     tones: [3] },
   { n: 3, title: '河馬和河狸', syms: 'ㄏㄌㄈㄚㄛ',   tones: [5] },
@@ -197,6 +211,17 @@ const store = {
   set(k, v) { try { localStorage.setItem('kx1:' + k, JSON.stringify(v)); } catch {} },
 };
 
+const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let LESSONS = [];
+function loadLessons() {
+  const custom = store.get('lessons', null);
+  LESSONS = DEFAULT_LESSONS.map((l, i) => {
+    const c = custom && custom[i];
+    return c && !l.review ? { ...l, title: c.title, syms: c.syms } : { ...l };
+  });
+}
+loadLessons();
+
 let zhVoice = null;
 function loadVoice() {
   if (!('speechSynthesis' in window)) return;
@@ -248,13 +273,47 @@ function renderHome() {
   $('#lessons').innerHTML = LESSONS.map((l, i) => {
     const stars = Object.values(best[l.n] || {}).reduce((a, b) => Math.max(a, b), 0);
     return `<button class="lesson${i === lessonIdx ? ' sel' : ''}" data-i="${i}">
-      <span class="t">${l.review ? '' : '第' + l.n + '課 '}${l.title}</span>
-      <span class="s">${l.review ? '全部 37 個' : l.syms}</span>
+      <span class="t">${l.review ? '' : '第' + l.n + '課 '}${esc(l.title)}</span>
+      <span class="s">${l.review ? '全部 37 個' : l.syms || '（未設定）'}</span>
       <span class="st">${l.note ? l.note + '・' : ''}${stars ? '⭐'.repeat(stars) : '尚未挑戰'}</span>
     </button>`;
   }).join('');
   $('#cumulative').checked = cumulative;
+  renderEditor();
 }
+
+// ===== 調整課次內容 =====
+function renderEditor() {
+  $('#erows').innerHTML = LESSONS.filter(l => !l.review).map((l, i) => `<div class="erow">
+    <span>第${l.n}課</span>
+    <input data-k="title" data-i="${i}" value="${esc(l.title)}" placeholder="課名" aria-label="第${l.n}課課名">
+    <input data-k="syms" data-i="${i}" value="${esc(l.syms)}" placeholder="例：ㄅㄆㄇ" aria-label="第${l.n}課注音符號">
+  </div>`).join('');
+}
+$('#esave').addEventListener('click', () => {
+  const rows = LESSONS.filter(l => !l.review).map(() => ({ title: '', syms: '' }));
+  let bad = false;
+  document.querySelectorAll('#erows input').forEach(inp => {
+    const i = +inp.dataset.i;
+    if (inp.dataset.k === 'title') { rows[i].title = inp.value.trim().slice(0, 20); return; }
+    const chars = [...inp.value].filter(c => !/\s|[,，、]/.test(c));
+    const ok = chars.every(c => SYMBOLS[c]);
+    inp.classList.toggle('bad', !ok);
+    if (!ok) bad = true;
+    rows[i].syms = [...new Set(chars)].join('');
+  });
+  if (bad) { $('#emsg').textContent = '紅框欄位只能填注音符號（ㄅ～ㄩ）。'; return; }
+  const all = rows.flatMap(r => [...r.syms]);
+  const dup = [...new Set(all.filter((c, k) => all.indexOf(c) !== k))];
+  const missing = Object.keys(SYMBOLS).filter(c => !all.includes(c));
+  store.set('lessons', rows); loadLessons(); renderHome();
+  $('#emsg').textContent = '已儲存。' + (dup.length ? `重複出現：${dup.join('')}。` : '') + (missing.length ? `尚未安排：${missing.join('')}（總複習仍會練到）。` : '');
+});
+$('#ereset').addEventListener('click', () => {
+  if (!confirm('確定恢復預設的課次內容？')) return;
+  store.set('lessons', null); loadLessons(); renderHome();
+  $('#emsg').textContent = '已恢復預設。';
+});
 $('#lessons').addEventListener('click', e => {
   const b = e.target.closest('.lesson'); if (!b) return;
   lessonIdx = +b.dataset.i; store.set('lesson', lessonIdx); renderHome();
@@ -278,6 +337,7 @@ function startMode(mode) {
   $('#gtitle').textContent = MODE_TITLE[mode] + '・' + (LESSONS[lessonIdx].review ? '總複習' : '第' + LESSONS[lessonIdx].n + '課');
   G = { mode, i: 0, score: 0, qs: [] };
   setProgress(0); $('#gscore').textContent = '';
+  if (!activeSyms().length) { $('#stage').innerHTML = '<p>這一課還沒有設定注音符號，請到「調整課次內容」補上，或換一課。</p>'; return; }
   if (mode === 'learn') return renderLearn();
   if (mode === 'memory') return renderMemory();
   G.qs = buildQuestions(mode);
@@ -419,6 +479,8 @@ function renderLearn() {
 // ===== 翻牌配對 =====
 function renderMemory() {
   const syms = pick(activeSyms().length >= 6 ? activeSyms() : learnedSyms(), 6);
+  const pairs = syms.length;
+  if (pairs < 2) { $('#stage').innerHTML = '<p>符號太少，無法配對，請換一課或勾選累積複習。</p>'; return; }
   const tiles = shuffle(syms.flatMap(s => [{ s, kind: 'sym' }, { s, kind: 'pic' }]));
   let open = [], flips = 0, done = 0, busy = false;
   $('#stage').innerHTML = `<p style="margin-top:0;color:var(--muted)">翻開兩張牌，找出符號和它的代表圖（代表字的第一個音）。</p>
@@ -434,8 +496,8 @@ function renderMemory() {
     const [[b1, t1], [b2, t2]] = open; open = [];
     if (t1.s === t2.s && t1.kind !== t2.kind) {
       b1.classList.add('done'); b2.classList.add('done'); done++;
-      setProgress(done / 6);
-      if (done === 6) setTimeout(() => { G.mode = 'memory'; finishMemory(flips); }, 700);
+      setProgress(done / pairs);
+      if (done === pairs) setTimeout(() => { G.mode = 'memory'; finishMemory(flips); }, 700);
     } else {
       busy = true;
       setTimeout(() => { b1.classList.remove('open'); b2.classList.remove('open'); busy = false; }, 1000);
@@ -443,8 +505,9 @@ function renderMemory() {
   });
 }
 function finishMemory(flips) {
-  // 6 對最少 6 次；≤9 次三顆星、≤13 次兩顆星
-  const score = flips <= 9 ? 10 : flips <= 13 ? 7 : 3;
+  // 每對至少翻 1 次；多翻不到一半三顆星、不到一倍兩顆星
+  const pairs = document.querySelectorAll('#stage .tile').length / 2;
+  const score = flips <= pairs * 1.5 ? 10 : flips <= pairs * 2.2 ? 7 : 3;
   G.score = score;
   finish(score, 10);
   $('#stage .score').textContent = `翻了 ${flips} 次完成配對！`;
