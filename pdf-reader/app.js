@@ -149,9 +149,35 @@
 
     function cancelSpeech() {
         state.speechToken += 1;
-        if (speech.supported) window.speechSynthesis.cancel();
+        clearTimeout(speech.watchdog);
+        if (speech.supported && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) {
+            window.speechSynthesis.cancel();
+        }
     }
 
+    // iOS Safari 等瀏覽器要求「第一次發聲」必須發生在使用者點擊的當下；
+    // 在第一次觸控／點擊時先送出一段無聲語音解鎖，之後連續朗讀才不會被擋掉。
+    function unlockSpeech() {
+        if (!speech.supported || speech.unlocked) return;
+        speech.unlocked = true;
+        try {
+            const silent = new SpeechSynthesisUtterance('');
+            silent.volume = 0;
+            silent.lang = 'zh-TW';
+            window.speechSynthesis.speak(silent);
+        } catch (error) {
+            // 解鎖失敗不影響後續操作
+        }
+    }
+
+    function showNoSoundHint(reason) {
+        const tips = reason === 'not-allowed'
+            ? '瀏覽器擋下了語音播放，請再點一次文字或按「▶ 朗讀」。'
+            : '沒有聽到聲音？請確認音量已開啟、iPhone／iPad 側邊靜音鍵未開啟，並在「⚙️ 設定」選擇中文（台灣）語音。';
+        setCaption('沒有聲音', tips);
+    }
+
+    // 注意：必須在點擊事件中「同步」呼叫，不可先 await 或 setTimeout，否則行動裝置會靜默擋下
     function speak(text, onDone) {
         cancelSpeech();
         const token = state.speechToken;
@@ -161,28 +187,44 @@
         }
         const utterance = new SpeechSynthesisUtterance(text);
         const voice = currentVoice();
-        if (voice) {
-            utterance.voice = voice;
-            utterance.lang = voice.lang;
-        } else {
-            utterance.lang = 'zh-TW';
-        }
+        if (voice) utterance.voice = voice;
+        utterance.lang = voice && voice.lang ? voice.lang.replace('_', '-') : 'zh-TW';
         utterance.rate = settings.rate;
+        utterance.volume = 1;
+        utterance.pitch = 1;
+        let started = false;
         const finish = () => {
             if (token !== state.speechToken) return;
+            clearTimeout(speech.watchdog);
             if (onDone) onDone();
+        };
+        utterance.onstart = () => {
+            started = true;
+            clearTimeout(speech.watchdog);
         };
         utterance.onend = finish;
         utterance.onerror = (event) => {
             if (event.error === 'interrupted' || event.error === 'canceled') return;
+            if (token !== state.speechToken) return;
+            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                speech.unlocked = false;
+                state.playing = false;
+                updatePlayButton();
+                showNoSoundHint('not-allowed');
+                return;
+            }
             finish();
         };
-        // 部分瀏覽器 cancel 後立即 speak 會被吞掉，稍微延後
-        setTimeout(() => {
-            if (token !== state.speechToken) return;
-            window.speechSynthesis.resume();
-            window.speechSynthesis.speak(utterance);
-        }, 30);
+        // 保留參考，避免 Chrome 在朗讀途中把物件回收，造成中斷或 onend 不觸發
+        speech.current = utterance;
+        speech.unlocked = true;
+        window.speechSynthesis.resume();
+        window.speechSynthesis.speak(utterance);
+        speech.watchdog = setTimeout(() => {
+            if (token === state.speechToken && !started && !window.speechSynthesis.speaking) {
+                showNoSoundHint();
+            }
+        }, 3000);
     }
 
     function speechOptions() {
@@ -603,7 +645,24 @@
         speak(text, onDone);
     }
 
+    // 只用已分析完成的頁面找相鄰句子；遇到尚未分析的頁面回傳 undefined
+    function neighbourCursorSync(cursor, direction) {
+        let page = cursor.page;
+        let index = cursor.sentence + direction;
+        while (page >= 0 && page < state.pages.length) {
+            const analysis = state.pages[page].analysis;
+            if (!analysis) return undefined;
+            if (index < 0) index = analysis.sentences.length - 1;
+            if (index >= 0 && index < analysis.sentences.length) return { page, sentence: index };
+            page += direction;
+            index = direction > 0 ? 0 : -1;
+        }
+        return null;
+    }
+
     async function neighbourCursor(cursor, direction) {
+        const ready = neighbourCursorSync(cursor, direction);
+        if (ready !== undefined) return ready;
         let page = cursor.page;
         let index = cursor.sentence + direction;
         while (page >= 0 && page < state.pages.length) {
@@ -627,7 +686,9 @@
 
     async function startReading() {
         if (!state.doc) return;
-        const cursor = state.cursor || await firstCursor();
+        unlockSpeech();
+        let cursor = state.cursor || neighbourCursorSync({ page: 0, sentence: -1 }, 1);
+        if (cursor === undefined) cursor = await firstCursor();
         if (!cursor) {
             setCaption('提示', '這份 PDF 沒有可朗讀的文字。');
             return;
@@ -668,7 +729,9 @@
         if (!state.doc) return;
         const base = state.cursor || (direction > 0 ? { page: 0, sentence: -1 } : null);
         if (!base) return;
-        const target = await neighbourCursor(base, direction);
+        unlockSpeech();
+        let target = neighbourCursorSync(base, direction);
+        if (target === undefined) target = await neighbourCursor(base, direction);
         if (!target) return;
         if (state.playing) playFrom(target); else readSentence(target);
     }
@@ -760,7 +823,7 @@
             const x1 = Math.max(start.x, end.x);
             const y0 = Math.min(start.y, end.y);
             const y1 = Math.max(start.y, end.y);
-            const analysis = await analyzePage(record);
+            const analysis = record.analysis || await analyzePage(record);
             if (x1 - x0 < 4 && y1 - y0 < 4) {
                 // 框選模式下單點一下，仍當作點讀
                 clickRead(record, start);
@@ -790,7 +853,8 @@
 
         record.sheet.addEventListener('click', async (event) => {
             if (state.selectMode) return;
-            await analyzePage(record);
+            unlockSpeech();
+            if (!record.analysis) await analyzePage(record);
             clickRead(record, pagePoint(record, event));
         });
     }
@@ -926,6 +990,10 @@
         } else {
             refreshVoices();
         }
+
+        ['pointerdown', 'touchend', 'keydown'].forEach((type) => {
+            document.addEventListener(type, unlockSpeech, { capture: true, passive: true });
+        });
 
         window.addEventListener('beforeunload', cancelSpeech);
     }
