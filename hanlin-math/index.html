@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>一上數學遊戲</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F8FF; --card:#FFFFFF; --line:#D5E3F2; --text:#1F2A36; --muted:#5E6E80;
+  --ink:#2F6FD6; --ink2:#E0603A; --sun:#FFC83D; --good:#2E9E5B; --bad:#D9483B;
+  --c1:#E0603A; --c2:#2F9E8F; --c3:#8A5CD0; --c4:#E8A21A;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#141A21; --card:#1E2630; --line:#33404F; --text:#EEF3F8; --muted:#A7B4C2; --ink:#6EA5FF; --ink2:#FF8A63;
+  --c1:#FF8A63; --c2:#4FC7B5; --c3:#B08AF0; --c4:#F5BE4A;
+}}
+:root[data-theme="dark"]{
+  --paper:#141A21; --card:#1E2630; --line:#33404F; --text:#EEF3F8; --muted:#A7B4C2; --ink:#6EA5FF; --ink2:#FF8A63;
+  --c1:#FF8A63; --c2:#4FC7B5; --c3:#B08AF0; --c4:#F5BE4A;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;min-height:100%}
+body{background:var(--paper);color:var(--text);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.5;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+.wrap{max-width:860px;margin:0 auto;padding:12px 16px 32px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+header h1{margin:0;font-size:1.35rem;color:var(--ink);flex:1 1 auto}
+header a{color:var(--ink);text-decoration:none;font-size:.9rem}
+.sub{color:var(--muted);font-size:.85rem;margin:-6px 0 12px}
+button{font:inherit;color:inherit;cursor:pointer;border:2px solid var(--line);background:var(--card);border-radius:14px;padding:10px 14px;min-height:48px}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+button.primary{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:700}
+button:disabled{opacity:.4;cursor:default}
+.panel{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:14px;margin-bottom:14px}
+.panel h2{margin:0 0 10px;font-size:1.05rem}
+.units{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.unit{text-align:left;display:flex;flex-direction:column;gap:2px;padding:10px 12px}
+.unit .no{font-size:.8rem;color:var(--muted)}
+.unit .t{font-weight:700}
+.unit .st{font-size:.85rem;letter-spacing:1px;color:var(--c4)}
+.unit.sel{border-color:var(--ink);background:color-mix(in srgb,var(--ink) 10%,var(--card))}
+.toggle{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.9rem;color:var(--muted);min-height:44px}
+.toggle input{width:20px;height:20px}
+.modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.mode{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;text-align:left}
+.mode .e{font-size:2rem;line-height:1}
+.mode .n{font-weight:700;font-size:1.05rem}
+.mode .d{font-size:.82rem;color:var(--muted)}
+.topbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.topbar .grow{flex:1;min-width:0}
+.progress{height:10px;border-radius:6px;background:var(--line);overflow:hidden;margin-bottom:12px}
+.progress>div{height:100%;background:var(--sun);transition:width .3s}
+.q{text-align:center;padding:6px 0}
+.qhead{display:flex;align-items:center;justify-content:center;gap:10px}
+.prompt{font-size:1.3rem;font-weight:700;margin:4px 0}
+.speak{border-radius:50%;width:52px;height:52px;min-height:52px;font-size:1.4rem;padding:0;background:var(--sun);border-color:var(--sun);color:#2B2620;flex:none}
+.visual{margin:10px auto 0;max-width:100%;overflow-x:auto}
+.visual svg{max-width:100%;height:auto}
+.eq{font-size:2.6rem;font-weight:900;letter-spacing:4px;color:var(--ink)}
+.objs{display:inline-grid;grid-template-columns:repeat(5,auto);gap:2px 6px;font-size:2.1rem;line-height:1.2;padding:6px 10px;border-radius:14px;background:color-mix(in srgb,var(--ink) 6%,var(--card))}
+.objs .gone{opacity:.35;position:relative}
+.objs .gone::after{content:"✕";position:absolute;inset:0;color:var(--bad);font-size:.9em;display:flex;align-items:center;justify-content:center}
+.rowlab{display:flex;align-items:center;gap:10px;justify-content:center;margin:6px 0;flex-wrap:wrap}
+.rowlab b{min-width:3em;text-align:right}
+.cmp{display:inline-block;text-align:left}
+.cmp .rowlab{justify-content:flex-start;flex-wrap:nowrap;gap:6px}
+.rowlab .objs{font-size:1.5rem}
+.cmp .objs{gap:2px 3px;padding:4px 6px}
+@media (max-width:400px){.cmp .rowlab .objs{font-size:1rem}.cmp .rowlab b{min-width:2.4em}}
+.line{display:flex;gap:4px;font-size:2rem;align-items:flex-end;justify-content:center;flex-wrap:wrap}
+.line .cell{display:flex;flex-direction:column;align-items:center}
+.line .cell small{font-size:.7rem;color:var(--muted)}
+.dir{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);max-width:420px;margin:0 auto}
+.bond{display:inline-flex;flex-direction:column;align-items:center;gap:0}
+.bond .top,.bond .kid{width:76px;height:76px;border-radius:50%;border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:2.2rem;font-weight:900;background:var(--card)}
+.bond .kids{display:flex;gap:60px}
+.bond .q2{color:var(--ink2);border-color:var(--ink2);border-style:dashed}
+.tens{display:flex;gap:10px;justify-content:center;align-items:flex-end;flex-wrap:wrap}
+.stick{display:grid;grid-template-rows:repeat(10,14px);gap:2px;padding:3px;border:2px solid var(--c2);border-radius:6px}
+.stick i,.ones i{display:block;width:16px;height:14px;border-radius:3px;background:var(--c2)}
+.ones{display:grid;grid-template-columns:repeat(2,16px);gap:2px;align-content:end}
+.ones i{background:var(--c4)}
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.opts.three{grid-template-columns:repeat(3,1fr)}
+.opt{font-size:1.7rem;font-weight:700;min-height:76px;display:flex;align-items:center;justify-content:center;padding:8px}
+.opt.txt{font-size:1.2rem}
+.opt svg{max-width:100%;height:auto}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 18%,var(--card))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,var(--card))}
+.feedback{min-height:1.6em;text-align:center;font-weight:700;margin-top:10px}
+.feedback.ok{color:var(--good)} .feedback.no{color:var(--bad)}
+.next{display:block;margin:10px auto 0}
+.timer{font-weight:900;font-size:1.1rem;color:var(--ink2)}
+.result{text-align:center;padding:20px 0}
+.result .stars{font-size:3rem;letter-spacing:6px}
+.result .score{font-size:1.4rem;font-weight:700;margin:6px 0 14px}
+.result .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.review{text-align:left;margin:14px auto 0;max-width:520px;font-size:.92rem;color:var(--muted)}
+.review li{margin:4px 0}
+.note{font-size:.8rem;color:var(--muted);margin-top:16px}
+[hidden]{display:none!important}
+@media (max-width:480px){
+  .opt{font-size:1.45rem;min-height:66px}.opt.txt{font-size:1.05rem}
+  .opts.three{grid-template-columns:repeat(3,1fr);gap:6px}
+  .objs{font-size:1.7rem}.eq{font-size:2.1rem}.prompt{font-size:1.15rem}
+  .bond .top,.bond .kid{width:62px;height:62px;font-size:1.8rem}.bond .kids{gap:40px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🔢 翰林數學一上・闖關遊戲</h1>
+    <a href="../">← 回服務首頁</a>
+  </header>
+  <p class="sub">依 115 學年度翰林版國小數學一上 9 個單元出題，題目每次隨機產生，可以一直練。點 🔊 可以聽題目。</p>
+
+  <section id="home">
+    <div class="panel">
+      <h2>1. 選擇單元</h2>
+      <div id="units" class="units"></div>
+      <label class="toggle"><input type="checkbox" id="autoread" checked> 每題自動念題目</label>
+    </div>
+    <div class="panel">
+      <h2>2. 選擇玩法</h2>
+      <div class="modes">
+        <button class="mode" data-mode="unit"><span class="e">📝</span><span class="n">單元闖關</span><span class="d">選定單元 10 題，拿星星</span></button>
+        <button class="mode" data-mode="mix"><span class="e">🧩</span><span class="n">累積複習</span><span class="d">第 1 單元到選定單元混合出題 15 題</span></button>
+        <button class="mode" data-mode="speed"><span class="e">⚡</span><span class="n">60 秒快算</span><span class="d">10 以內加減法，看你答對幾題</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section id="game" hidden>
+    <div class="topbar">
+      <button id="quit" type="button">← 返回</button>
+      <strong id="gtitle" class="grow"></strong>
+      <span id="gscore"></span>
+    </div>
+    <div class="progress" id="pbar"><div></div></div>
+    <div id="stage" class="panel"></div>
+  </section>
+
+  <p class="note">單元名稱與順序依 115 學年度翰林版一上數學整理（10 以內的數、比長短、順序與多少、分與合、認識形狀、10 以內的加法、10 以內的減法、30 以內的數、認識時間）；題目為依各單元學習重點自動產生的練習題，不是課本或習作原題。成績與星星只存在這台裝置的瀏覽器。</p>
+</div>
+
+<script>
+// ===== 工具 =====
+const $ = s => document.querySelector(s);
+const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = (a, n) => shuffle(a).slice(0, n);
+const one = a => a[Math.floor(Math.random() * a.length)];
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem('hl1m:' + k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('hl1m:' + k, JSON.stringify(v)); } catch {} },
+};
+const ZH = '零一二三四五六七八九十';
+const ITEMS = ['🍎','🐟','⭐','🐱','🎈','🚗','🌸','🐤','🍓','⚽','🍪','🐸'];
+
+// 數字選項：答案加上鄰近的干擾數
+function numOpts(ans, lo, hi, n = 4) {
+  const set = new Set([ans]);
+  const near = shuffle([-1, 1, -2, 2, -3, 3, 10, -10].map(d => ans + d)).filter(v => v >= lo && v <= hi);
+  for (const v of near) { if (set.size >= n) break; set.add(v); }
+  while (set.size < n && set.size < hi - lo + 1) set.add(R(lo, hi));
+  return shuffle([...set]).map(v => ({ v, label: String(v) }));
+}
+const textOpts = (list) => shuffle(list).map(v => ({ v, label: v, txt: true }));
+// 排成一列一列的物件；gone 表示最後幾個被拿走，cols 為每列個數，style 為額外樣式
+function objs(n, e, gone = 0, cols = 5, style = '') {
+  let h = '';
+  for (let i = 0; i < n; i++) h += `<span class="${i >= n - gone ? 'gone' : ''}">${e}</span>`;
+  return `<div class="objs" style="grid-template-columns:repeat(${Math.min(cols, Math.max(1, n))},auto);${style}">${h || '<span style="font-size:1rem">（空空的）</span>'}</div>`;
+}
+const rowObjs = (label, n, e) => `<div class="rowlab"><b>${label}</b>${objs(n, e, 0, 10)}</div>`;
+
+// ===== 語音與音效 =====
+let zhVoice = null;
+function loadVoice() {
+  const vs = speechSynthesis.getVoices();
+  zhVoice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh/i.test(v.lang)) || null;
+}
+if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+function speak(text) {
+  if (!('speechSynthesis' in window) || !text) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text.replace(/\+/g, '加').replace(/−|-/g, '減').replace(/=/g, '等於').replace(/？|\?/g, '多少'));
+  speak.last = u;
+  u.lang = 'zh-TW'; u.rate = 0.85; if (zhVoice) u.voice = zhVoice;
+  speechSynthesis.speak(u);
+}
+let actx = null;
+function beep(ok) {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = ok ? [660, 880] : [300, 220];
+    notes.forEach((f, i) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.frequency.value = f; o.type = ok ? 'triangle' : 'sawtooth';
+      g.gain.setValueAtTime(0.12, actx.currentTime + i * 0.12);
+      g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + i * 0.12 + 0.18);
+      o.connect(g).connect(actx.destination);
+      o.start(actx.currentTime + i * 0.12); o.stop(actx.currentTime + i * 0.12 + 0.2);
+    });
+  } catch {}
+}
+
+// ===== SVG 圖形 =====
+const css = v => `var(--${v})`;
+function bars(list, unit = 22, start = null) {
+  // list: [{name, len, color, off}]，畫成鉛筆
+  const h = 34, w = 60 + 14 * unit + 20;
+  let s = `<svg viewBox="0 0 ${w} ${list.length * h + 6}" width="${w}" role="img" aria-label="長短比較圖">`;
+  list.forEach((b, i) => {
+    const y = 6 + i * h, x = 60 + (b.off || 0) * unit, L = b.len * unit;
+    s += `<text x="8" y="${y + 19}" font-size="18" font-weight="700" fill="currentColor">${b.name}</text>`;
+    s += `<rect x="${x}" y="${y + 4}" width="${L - 14}" height="18" rx="3" fill="${css(b.color)}"/>`;
+    s += `<polygon points="${x + L - 14},${y + 4} ${x + L},${y + 13} ${x + L - 14},${y + 22}" fill="#E9C99A"/>`;
+    s += `<polygon points="${x + L - 5},${y + 10} ${x + L},${y + 13} ${x + L - 5},${y + 16}" fill="#333"/>`;
+  });
+  if (start !== null) s += `<line x1="${60 + start * unit}" y1="0" x2="${60 + start * unit}" y2="${list.length * h + 6}" stroke="${css('muted')}" stroke-dasharray="4 3"/>`;
+  return s + '</svg>';
+}
+function clipsBar(n) {
+  const u = 30, w = n * u + 20;
+  let s = `<svg viewBox="0 0 ${w} 70" width="${w}" role="img" aria-label="用迴紋針量長度">`;
+  s += `<rect x="10" y="6" width="${n * u - 14}" height="18" rx="3" fill="${css('c1')}"/><polygon points="${10 + n * u - 14},6 ${10 + n * u},15 ${10 + n * u - 14},24" fill="#E9C99A"/>`;
+  for (let i = 0; i < n; i++) s += `<rect x="${12 + i * u}" y="36" width="${u - 4}" height="12" rx="6" fill="none" stroke="${css('c2')}" stroke-width="3"/><rect x="${17 + i * u}" y="39" width="${u - 14}" height="6" rx="3" fill="none" stroke="${css('c2')}" stroke-width="2"/>`;
+  return s + '</svg>';
+}
+function shapeSVG(kind, color, size = 70, rot = 0) {
+  const c = css(color), z = size;
+  let inner;
+  if (kind === '圓形') inner = `<circle cx="50" cy="50" r="38" fill="${c}"/>`;
+  else if (kind === '三角形') inner = `<polygon points="50,12 90,84 10,84" fill="${c}"/>`;
+  else if (kind === '正方形') inner = `<rect x="16" y="16" width="68" height="68" fill="${c}"/>`;
+  else inner = `<rect x="6" y="28" width="88" height="44" fill="${c}"/>`;
+  return `<svg viewBox="0 0 100 100" width="${z}" height="${z}" role="img" aria-label="形狀"><g transform="rotate(${rot} 50 50)">${inner}</g></svg>`;
+}
+function clockSVG(h, m, size = 190) {
+  let s = `<svg viewBox="0 0 200 200" width="${size}" height="${size}" role="img" aria-label="時鐘">`;
+  s += `<circle cx="100" cy="100" r="92" fill="${css('card')}" stroke="${css('ink')}" stroke-width="6"/>`;
+  for (let i = 1; i <= 12; i++) {
+    const a = i * Math.PI / 6;
+    s += `<text x="${100 + 72 * Math.sin(a)}" y="${100 - 72 * Math.cos(a) + 7}" text-anchor="middle" font-size="20" font-weight="700" fill="currentColor">${i}</text>`;
+  }
+  for (let i = 0; i < 60; i++) {
+    const a = i * Math.PI / 30, r1 = i % 5 ? 86 : 82;
+    s += `<line x1="${100 + r1 * Math.sin(a)}" y1="${100 - r1 * Math.cos(a)}" x2="${100 + 90 * Math.sin(a)}" y2="${100 - 90 * Math.cos(a)}" stroke="${css('muted')}" stroke-width="${i % 5 ? 1 : 2}"/>`;
+  }
+  const ha = ((h % 12) + m / 60) * Math.PI / 6, ma = m * Math.PI / 30;
+  s += `<line x1="100" y1="100" x2="${100 + 45 * Math.sin(ha)}" y2="${100 - 45 * Math.cos(ha)}" stroke="${css('ink2')}" stroke-width="8" stroke-linecap="round"/>`;
+  s += `<line x1="100" y1="100" x2="${100 + 68 * Math.sin(ma)}" y2="${100 - 68 * Math.cos(ma)}" stroke="${css('ink')}" stroke-width="5" stroke-linecap="round"/>`;
+  s += `<circle cx="100" cy="100" r="6" fill="currentColor"/>`;
+  return s + '</svg>';
+}
+const timeName = (h, m) => m ? `${h}點半` : `${h}點`;
+const tensHTML = (t, u) => `<div class="tens">${Array.from({ length: t }, () => '<div class="stick">' + '<i></i>'.repeat(10) + '</div>').join('')}${u ? `<div class="ones">${'<i></i>'.repeat(u)}</div>` : ''}</div>`;
+
+// ===== 各單元出題 =====
+// 題目格式：{ p: 題目, say: 念出的文字, vis: 圖HTML, opts: [{v,label,txt}], a: 正確值, ex: 解說, cols }
+const GEN = {
+  1() { // 10 以內的數
+    const t = R(1, 5), e = one(ITEMS);
+    if (t === 1) { const n = R(1, 10); return { p: `數一數，有幾個？`, vis: objs(n, e), opts: numOpts(n, 0, 10), a: n, ex: `一共有 ${n} 個。` }; }
+    if (t === 2) { const n = R(0, 10); return { p: `國字「${ZH[n]}」是數字幾？`, opts: numOpts(n, 0, 10), a: n, ex: `「${ZH[n]}」就是 ${n}。` }; }
+    if (t === 3) { const up = Math.random() < .5, n = up ? R(0, 9) : R(1, 10), a = up ? n + 1 : n - 1;
+      return { p: `比 ${n} ${up ? '多' : '少'} 1 是多少？`, opts: numOpts(a, 0, 10), a, ex: `${n} ${up ? '的後面是' : '的前面是'} ${a}。` }; }
+    if (t === 4) { const n = R(2, 9), ns = shuffle([n, n - 1, n + 1].filter(v => v >= 1 && v <= 10)).slice(0, 3); while (ns.length < 3) { const v = R(1, 10); if (!ns.includes(v)) ns.push(v); }
+      return { p: `哪一盤有 ${n} 個？`, say: `哪一盤有${n}個`, opts: shuffle(ns).map(v => ({ v, label: objs(v, e, 0, 5, 'font-size:1.1rem') })), a: n, cols: 3, ex: `有 ${n} 個的那一盤才對。` }; }
+    const ns = pick([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 3), big = Math.random() < .5, a = big ? Math.max(...ns) : Math.min(...ns);
+    return { p: `哪一個數最${big ? '大' : '小'}？`, opts: ns.map(v => ({ v, label: String(v) })), a, cols: 3, ex: `${ns.slice().sort((x, y) => x - y).join(' < ')}，最${big ? '大' : '小'}的是 ${a}。` };
+  },
+  2() { // 比長短
+    const t = R(1, 4), names = ['甲', '乙', '丙'], cols = ['c1', 'c2', 'c3'];
+    if (t === 1 || t === 2) {
+      const k = t === 1 ? 2 : 3, lens = pick([4, 5, 6, 7, 8, 9, 10, 11, 12], k), long = Math.random() < .5;
+      const list = lens.map((len, i) => ({ name: names[i], len, color: cols[i] }));
+      const target = list.reduce((a, b) => (long ? b.len > a.len : b.len < a.len) ? b : a).name;
+      const word = k === 2 ? (long ? '比較長' : '比較短') : (long ? '最長' : '最短');
+      return { p: `哪一枝鉛筆${word}？`, vis: bars(list, 22, 0), opts: names.slice(0, k).map(v => ({ v, label: v })), a: target, cols: k === 3 ? 3 : 2, ex: `一端對齊後，${target} ${word}。` };
+    }
+    if (t === 3) { const n = R(2, 8); return { p: `這枝鉛筆有幾個迴紋針長？`, vis: clipsBar(n), opts: numOpts(n, 1, 10), a: n, ex: `一個接一個排，共 ${n} 個迴紋針長。` }; }
+    const [a, b, c] = shuffle(['哥哥', '妹妹', '弟弟']), long = Math.random() < .5;
+    return { p: `${a}的繩子比${b}的${long ? '長' : '短'}，${b}的繩子比${c}的${long ? '長' : '短'}。誰的繩子最${long ? '長' : '短'}？`, opts: textOpts([a, b, c]), a, cols: 3,
+      ex: `${a} > ${b} > ${c}（比${long ? '長' : '短'}），所以${a}的最${long ? '長' : '短'}。` };
+  },
+  3() { // 順序與多少
+    const t = R(1, 4);
+    if (t <= 2) {
+      const row = pick(['🐶','🐱','🐰','🐻','🐼','🐸','🐵','🐯','🐷','🐮'], R(5, 7)), left = Math.random() < .5;
+      const line = `<div class="dir"><span>⬅ 左</span><span>右 ➡</span></div><div class="line">${row.map(x => `<span class="cell">${x}</span>`).join('')}</div>`;
+      if (t === 1) { const k = R(1, row.length), a = left ? row[k - 1] : row[row.length - k];
+        return { p: `從${left ? '左' : '右'}邊數來第 ${k} 個是誰？`, vis: line, opts: shuffle(pick(row.filter(x => x !== a), 3).concat(a)).map(v => ({ v, label: v })), a, ex: `從${left ? '左' : '右'}邊一個一個數到第 ${k} 個是 ${a}。` }; }
+      const idx = R(0, row.length - 1), a = left ? idx + 1 : row.length - idx;
+      return { p: `${row[idx]} 從${left ? '左' : '右'}邊數來排第幾個？`, vis: line, opts: numOpts(a, 1, row.length).map(o => ({ v: o.v, label: `第${o.v}個`, txt: true })), a, ex: `從${left ? '左' : '右'}邊數，${row[idx]} 是第 ${a} 個。` };
+    }
+    const e1 = one(ITEMS), e2 = one(ITEMS.filter(x => x !== e1));
+    let n1 = R(2, 10), n2 = R(2, 10);
+    if (t === 3) {
+      if (Math.random() < .2) n2 = n1;
+      const a = n1 > n2 ? '上排' : n1 < n2 ? '下排' : '一樣多';
+      return { p: `哪一排比較多？`, vis: `<div class="cmp">${rowObjs('上排', n1, e1)}${rowObjs('下排', n2, e2)}</div>`,
+        opts: ['上排', '下排', '一樣多'].map(v => ({ v, label: v, txt: true })), a, cols: 3, ex: `上排 ${n1} 個，下排 ${n2} 個，${a === '一樣多' ? '一樣多' : a + '比較多'}。` };
+    }
+    while (n1 === n2) n2 = R(2, 10);
+    const d = Math.abs(n1 - n2);
+    return { p: `上排和下排相差幾個？`, vis: `<div class="cmp">${rowObjs('上排', n1, e1)}${rowObjs('下排', n2, e2)}</div>`,
+      opts: numOpts(d, 1, 9), a: d, ex: `一個對一個排，${Math.max(n1, n2)} 比 ${Math.min(n1, n2)} 多 ${d} 個。` };
+  },
+  4() { // 分與合
+    const tot = R(2, 10), a = R(1, tot - 1), b = tot - a;
+    const bond = (top, l, r) => `<div class="bond"><div class="top ${top === '?' ? 'q2' : ''}">${top}</div><svg width="150" height="30" aria-hidden="true"><line x1="75" y1="0" x2="30" y2="30" stroke="currentColor" stroke-width="3"/><line x1="75" y1="0" x2="120" y2="30" stroke="currentColor" stroke-width="3"/></svg><div class="kids"><div class="kid">${l}</div><div class="kid ${r === '?' ? 'q2' : ''}">${r}</div></div></div>`;
+    if (Math.random() < .5) return { p: `${tot} 可以分成 ${a} 和幾？`, vis: bond(tot, a, '?'), opts: numOpts(b, 0, 10), a: b, ex: `${tot} 可以分成 ${a} 和 ${b}。` };
+    return { p: `${a} 和 ${b} 合起來是幾？`, vis: bond('?', a, b), opts: numOpts(tot, 0, 10), a: tot, ex: `${a} 和 ${b} 合起來是 ${tot}。` };
+  },
+  5() { // 認識形狀
+    const t = R(1, 4);
+    const SOLID = { '球': ['⚽', '🏀', '🍊', '🌍', '🎱', '🍉'], '罐子形': ['🥫', '🥁', '🧻', '🕯️'], '箱子形': ['📦', '🎁', '🎲', '🧊', '🧱'] };
+    if (t === 1) { const k = one(Object.keys(SOLID)), it = one(SOLID[k]);
+      return { p: `這個東西像哪一種形狀？`, vis: `<div style="font-size:5rem">${it}</div>`, opts: textOpts(Object.keys(SOLID)), a: k, cols: 3, ex: `${it} 像${k}。（球：圓圓的；罐子形：上下是圓的平面；箱子形：每一面都是平平的）` }; }
+    if (t === 2) { const ask = one([['哪一個不管怎麼放都可以滾來滾去？', '球'], ['哪一個每一面都是平的，可以穩穩地疊高？', '箱子形'], ['哪一個躺著可以滾、立著放就不會滾？', '罐子形']]);
+      return { p: ask[0], opts: Object.keys(SOLID).map(k => ({ v: k, label: `${SOLID[k][0]} ${k}`, txt: true })), a: ask[1], cols: 3, ex: `答案是${ask[1]}。` }; }
+    const kinds = ['圓形', '三角形', '正方形', '長方形'], colors = ['c1', 'c2', 'c3', 'c4'];
+    if (t === 3) { const k = one(kinds);
+      return { p: `哪一個是${k}？`, opts: shuffle(kinds).map((v, i) => ({ v, label: shapeSVG(v, colors[i], 70, v === '圓形' ? 0 : one([0, 0, 15, -20])) })), a: k, ex: `${k}是這個樣子：${k === '三角形' ? '3 條邊、3 個尖角' : k === '圓形' ? '圓圓的，沒有尖角' : k === '正方形' ? '4 條邊一樣長' : '4 條邊，對邊一樣長，一組長一組短'}。` }; }
+    const k = one(kinds), n = R(1, 5), others = R(2, 4);
+    const all = shuffle([...Array(n).fill(k), ...Array.from({ length: others }, () => one(kinds.filter(x => x !== k)))]);
+    return { p: `圖裡有幾個${k}？`, vis: `<div>${all.map((s, i) => shapeSVG(s, colors[i % 4], 54, s === '圓形' ? 0 : R(-25, 25))).join('')}</div>`, opts: numOpts(n, 0, 9), a: n, ex: `${k}一共有 ${n} 個。` };
+  },
+  6() { // 10 以內的加法
+    const a = R(1, 9), b = R(1, 10 - a), s = a + b, t = R(1, 4), e = one(ITEMS);
+    if (t === 1) return { p: `合起來是多少？`, say: `${a}加${b}等於多少`, vis: `<div class="rowlab">${objs(a, e)}<b style="min-width:0;font-size:2rem">＋</b>${objs(b, e)}</div><div class="eq">${a} + ${b} = ？</div>`, opts: numOpts(s, 0, 10), a: s, ex: `${a} + ${b} = ${s}` };
+    if (t === 2) return { p: `算算看`, say: `${a}加${b}等於多少`, vis: `<div class="eq">${a} + ${b} = ？</div>`, opts: numOpts(s, 0, 10), a: s, ex: `${a} + ${b} = ${s}` };
+    if (t === 3) return { p: `□ 裡應該填多少？`, say: `${a}加多少等於${s}`, vis: `<div class="eq">${a} + □ = ${s}</div>`, opts: numOpts(b, 0, 10), a: b, ex: `${a} + ${b} = ${s}，所以 □ 是 ${b}。` };
+    const st = one([
+      [`樹上有 ${a} 隻鳥，又飛來 ${b} 隻，現在樹上有幾隻鳥？`, '🐦'],
+      [`哥哥有 ${a} 顆彈珠，弟弟有 ${b} 顆，兩個人一共有幾顆？`, '🔵'],
+      [`盤子裡有 ${a} 個蘋果，媽媽又放進 ${b} 個，現在有幾個？`, '🍎'],
+      [`公車上有 ${a} 個人，到站又上來 ${b} 個人，現在車上有幾個人？`, '🧑'],
+    ]);
+    return { p: st[0], vis: `<div class="rowlab">${objs(a, st[1])}${objs(b, st[1])}</div>`, opts: numOpts(s, 0, 10), a: s, ex: `${a} + ${b} = ${s}` };
+  },
+  7() { // 10 以內的減法
+    const a = R(2, 10), b = R(1, a), d = a - b, t = R(1, 4), e = one(ITEMS);
+    if (t === 1) return { p: `拿走後還剩多少？`, say: `${a}減${b}等於多少`, vis: `${objs(a, e, b)}<div class="eq">${a} − ${b} = ？</div>`, opts: numOpts(d, 0, 10), a: d, ex: `${a} − ${b} = ${d}` };
+    if (t === 2) return { p: `算算看`, say: `${a}減${b}等於多少`, vis: `<div class="eq">${a} − ${b} = ？</div>`, opts: numOpts(d, 0, 10), a: d, ex: `${a} − ${b} = ${d}` };
+    if (t === 3) { const s = one([
+        [`有 ${a} 顆糖果，吃掉 ${b} 顆，還剩幾顆？`, '🍬'],
+        [`池塘裡有 ${a} 隻青蛙，跳走了 ${b} 隻，還剩幾隻？`, '🐸'],
+        [`有 ${a} 顆氣球，破了 ${b} 顆，還有幾顆？`, '🎈'],
+      ]);
+      return { p: s[0], vis: objs(a, s[1], b), opts: numOpts(d, 0, 10), a: d, ex: `${a} − ${b} = ${d}` }; }
+    const x = R(3, 10), y = R(1, x - 1), df = x - y;
+    return { p: `姊姊有 ${x} 張貼紙，我有 ${y} 張。姊姊比我多幾張？`, vis: `<div class="cmp">${rowObjs('姊姊', x, '⭐')}${rowObjs('我', y, '⭐')}</div>`,
+      opts: numOpts(df, 0, 10), a: df, ex: `${x} − ${y} = ${df}，姊姊多 ${df} 張。` };
+  },
+  8() { // 30 以內的數
+    const t = R(1, 5);
+    if (t === 1) { const tn = R(0, 2), u = tn === 0 ? R(1, 9) : R(0, 9), n = tn * 10 + u || 30, T = n === 30 ? 3 : tn, U = n === 30 ? 0 : u;
+      return { p: `一共有多少個方塊？（一條是 10 個）`, vis: tensHTML(T, U), opts: numOpts(n, 1, 30), a: n, ex: `${T} 個十和 ${U} 個一，合起來是 ${n}。` }; }
+    if (t === 2) { const tn = R(1, 2), u = R(0, 9), n = tn * 10 + u;
+      return { p: `${tn} 個十和 ${u} 個一合起來是多少？`, opts: numOpts(n, 1, 30), a: n, ex: `${tn} 個十是 ${tn * 10}，再加 ${u} 個一是 ${n}。` }; }
+    if (t === 3) { const n = R(11, 29), ten = Math.random() < .5, a = ten ? Math.floor(n / 10) : n % 10;
+      return { p: `${n} 的${ten ? '十位' : '個位'}數字是幾？`, opts: numOpts(a, 0, 9), a, ex: `${n} 是 ${Math.floor(n / 10)} 個十和 ${n % 10} 個一，${ten ? '十位' : '個位'}是 ${a}。` }; }
+    if (t === 4) { const st = R(10, 25), miss = R(1, 3), seq = [0, 1, 2, 3, 4].map(i => st + i);
+      return { p: `按照順序，□ 裡應該是多少？`, say: `按照順序，空格裡應該是多少`, vis: `<div class="eq" style="font-size:2rem">${seq.map((v, i) => i === miss ? '□' : v).join('、')}</div>`, opts: numOpts(seq[miss], 1, 30), a: seq[miss], ex: `一個一個數：${seq.join('、')}。` }; }
+    const ns = pick(Array.from({ length: 20 }, (_, i) => i + 11), 3), big = Math.random() < .5, a = big ? Math.max(...ns) : Math.min(...ns);
+    return { p: `哪一個數最${big ? '大' : '小'}？`, opts: ns.map(v => ({ v, label: String(v) })), a, cols: 3, ex: `先比十位，再比個位：最${big ? '大' : '小'}的是 ${a}。` };
+  },
+  9() { // 認識時間（整點、半點）
+    const h = R(1, 12), m = one([0, 30]), t = R(1, 3);
+    if (t === 1) { const set = new Map([[timeName(h, m), 1]]);
+      const cands = shuffle([[h, 30 - m], [h % 12 + 1, m], [(h + 10) % 12 + 1, m], [h % 12 + 1, 0], [(h + 10) % 12 + 1, 30]]);
+      for (const [hh, mm] of cands) { if (set.size >= 4) break; set.set(timeName(hh, mm), 1); }
+      return { p: `時鐘上是幾點？`, vis: clockSVG(h, m), opts: textOpts([...set.keys()]), a: timeName(h, m),
+        ex: m ? `長針指著 6，短針在 ${h} 和 ${h % 12 + 1} 的中間，是 ${h} 點半。` : `長針指著 12，短針指著 ${h}，是 ${h} 點。` }; }
+    if (t === 2) { const wrong = [[h, 30 - m], [h % 12 + 1, m], [(h + 5) % 12 + 1, m]];
+      const list = shuffle([[h, m], ...wrong]);
+      return { p: `哪一個時鐘是 ${timeName(h, m)}？`, opts: list.map(([hh, mm]) => ({ v: timeName(hh, mm), label: clockSVG(hh, mm, 120) })), a: timeName(h, m), ex: m ? `${h} 點半：長針指 6，短針在 ${h} 和 ${h % 12 + 1} 中間。` : `${h} 點：長針指 12，短針指 ${h}。` }; }
+    return { p: m ? `長針指著 6，短針在 ${h} 和 ${h % 12 + 1} 的中間，是幾點？` : `長針指著 12，短針指著 ${h}，是幾點？`,
+      opts: textOpts([timeName(h, m), timeName(h, 30 - m), timeName(h % 12 + 1, m), m ? timeName(h % 12 + 1, 0) : timeName((h + 10) % 12 + 1, 30)]), a: timeName(h, m),
+      ex: `答案是 ${timeName(h, m)}。` };
+  },
+};
+
+const UNITS = [
+  [1, '10以內的數', '數數、讀寫 0～10、比大小'],
+  [2, '比長短', '直接比較、用迴紋針量'],
+  [3, '順序與多少', '第幾個、一樣多、多幾個'],
+  [4, '分與合', '10 以內數的分解與合成'],
+  [5, '認識形狀', '球、罐子、箱子與平面圖形'],
+  [6, '10以內的加法', '合起來、添加、加法算式'],
+  [7, '10以內的減法', '拿走、比較、減法算式'],
+  [8, '30以內的數', '十個一數、位值、數的順序'],
+  [9, '認識時間', '整點與半點'],
+];
+
+// ===== 狀態與畫面 =====
+let selUnit = store.get('unit', 1);
+let G = null;
+
+function starText(n) { return '★'.repeat(n) + '☆'.repeat(3 - n); }
+function renderHome() {
+  const best = store.get('best', {});
+  $('#units').innerHTML = UNITS.map(([n, t, d]) => `<button class="unit ${n === selUnit ? 'sel' : ''}" data-u="${n}" aria-pressed="${n === selUnit}">
+    <span class="no">第 ${n} 單元</span><span class="t">${t}</span><span class="no">${d}</span><span class="st">${starText(best[n] || 0)}</span></button>`).join('');
+  const sp = store.get('speedBest', 0);
+  document.querySelector('[data-mode="speed"] .d').textContent = `10 以內加減法，看你答對幾題${sp ? `（最佳 ${sp} 題）` : ''}`;
+}
+$('#units').addEventListener('click', e => {
+  const b = e.target.closest('.unit'); if (!b) return;
+  selUnit = +b.dataset.u; store.set('unit', selUnit); renderHome();
+});
+$('#autoread').checked = store.get('autoread', true);
+$('#autoread').addEventListener('change', e => store.set('autoread', e.target.checked));
+document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => start(b.dataset.mode)));
+$('#quit').addEventListener('click', showHome);
+
+function showHome() {
+  if (G && G.timer) clearInterval(G.timer);
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  G = null; $('#game').hidden = true; $('#home').hidden = false; renderHome();
+}
+
+function makeQ(unitList) {
+  // 避免連續出現相同題目
+  for (let i = 0; i < 8; i++) {
+    const u = one(unitList), q = GEN[u]();
+    q.unit = u; q.key = q.p + '|' + q.a;
+    if (!G.seen.has(q.key)) { G.seen.add(q.key); return q; }
+  }
+  const u = one(unitList); return { ...GEN[u](), unit: u };
+}
+
+function start(mode, retry) {
+  G = { mode, idx: 0, score: 0, wrong: [], seen: new Set() };
+  if (mode === 'speed') { G.total = Infinity; G.units = ['speed']; G.left = 60; }
+  else {
+    G.units = mode === 'unit' ? [selUnit] : Array.from({ length: selUnit }, (_, i) => i + 1);
+    G.total = mode === 'unit' ? 10 : 15;
+    if (retry) { G.queue = retry.map(q => ({ ...q })); G.total = retry.length; G.retry = true; }
+  }
+  $('#home').hidden = true; $('#game').hidden = false;
+  const u = UNITS[selUnit - 1];
+  $('#gtitle').textContent = mode === 'speed' ? '⚡ 60 秒快算' : mode === 'unit' ? `第 ${u[0]} 單元・${u[1]}${retry ? '（錯題再練）' : ''}` : `累積複習（第 1～${selUnit} 單元）${retry ? '（錯題再練）' : ''}`;
+  if (mode === 'speed') {
+    G.timer = setInterval(() => {
+      G.left--; updateScore();
+      $('#pbar>div').style.width = (G.left / 60 * 100) + '%';
+      if (G.left <= 0) { clearInterval(G.timer); G.timer = null; finishSpeed(); }
+    }, 1000);
+  }
+  nextQ();
+}
+
+function speedQ() {
+  if (Math.random() < .5) { const a = R(0, 10), b = R(0, 10 - a); return { p: '', vis: `<div class="eq">${a} + ${b} = ？</div>`, say: '', opts: numOpts(a + b, 0, 10), a: a + b, ex: `${a} + ${b} = ${a + b}` }; }
+  const a = R(1, 10), b = R(0, a); return { p: '', vis: `<div class="eq">${a} − ${b} = ？</div>`, say: '', opts: numOpts(a - b, 0, 10), a: a - b, ex: `${a} − ${b} = ${a - b}` };
+}
+
+function updateScore() {
+  $('#gscore').innerHTML = G.mode === 'speed' ? `<span class="timer">⏱ ${G.left}</span>　答對 ${G.score}` : `⭐ ${G.score}`;
+}
+
+function nextQ() {
+  if (G.mode !== 'speed' && G.idx >= G.total) return finish();
+  const q = G.mode === 'speed' ? speedQ() : G.queue ? G.queue[G.idx] : makeQ(G.units);
+  G.q = q; G.locked = false;
+  updateScore();
+  if (G.mode !== 'speed') $('#pbar>div').style.width = (G.idx / G.total * 100) + '%';
+  const cols = q.cols === 3 || q.opts.length === 3 ? 'three' : '';
+  $('#stage').innerHTML = `<div class="q">
+    ${q.p ? `<div class="qhead"><button class="speak" type="button" aria-label="念題目">🔊</button><div class="prompt">${q.p}</div></div>` : ''}
+    ${q.vis ? `<div class="visual">${q.vis}</div>` : ''}
+  </div>
+  <div class="opts ${cols}">${q.opts.map((o, i) => `<button class="opt ${o.txt ? 'txt' : ''}" data-i="${i}" type="button">${o.label}</button>`).join('')}</div>
+  <div class="feedback" aria-live="polite"></div>`;
+  const sb = $('#stage .speak');
+  if (sb) sb.addEventListener('click', () => speak(q.say || q.p));
+  $('#stage .opts').addEventListener('click', e => { const b = e.target.closest('.opt'); if (b) answer(b); });
+  if (G.mode !== 'speed' && $('#autoread').checked) speak(q.say || q.p);
+}
+
+function answer(btn) {
+  if (G.locked) return;
+  const q = G.q, o = q.opts[+btn.dataset.i], ok = o.v === q.a, fb = $('#stage .feedback');
+  if (G.mode === 'speed') {
+    beep(ok); if (ok) G.score++;
+    btn.classList.add(ok ? 'right' : 'wrong'); G.locked = true;
+    setTimeout(() => { if (G && G.left > 0) nextQ(); }, ok ? 250 : 700);
+    if (!ok) fb.className = 'feedback no', fb.textContent = q.ex;
+    return;
+  }
+  G.locked = true; beep(ok);
+  document.querySelectorAll('#stage .opt').forEach((b, i) => { if (q.opts[i].v === q.a) b.classList.add('right'); });
+  if (ok) {
+    G.score++; fb.className = 'feedback ok'; fb.textContent = one(['答對了！好棒！', '太厲害了！', '完全正確！', '讚喔！']);
+    setTimeout(() => { if (G) { G.idx++; nextQ(); } }, 900);
+  } else {
+    btn.classList.add('wrong'); G.wrong.push(q);
+    fb.className = 'feedback no'; fb.textContent = '再想想看喔！' + q.ex;
+    speak('再想想看，' + q.ex);
+    const nb = document.createElement('button'); nb.className = 'primary next'; nb.type = 'button'; nb.textContent = '下一題 →';
+    nb.addEventListener('click', () => { G.idx++; nextQ(); });
+    $('#stage').appendChild(nb); nb.focus();
+  }
+  updateScore();
+}
+
+function finish() {
+  $('#pbar>div').style.width = '100%';
+  const r = G.score / G.total, stars = r >= .9 ? 3 : r >= .7 ? 2 : r >= .5 ? 1 : 0;
+  if (G.mode === 'unit' && !G.retry) { const best = store.get('best', {}); if (stars > (best[selUnit] || 0)) { best[selUnit] = stars; store.set('best', best); } }
+  const wrong = G.wrong;
+  $('#stage').innerHTML = `<div class="result">
+    <div class="stars" aria-label="${stars} 顆星">${starText(stars)}</div>
+    <div class="score">答對 ${G.score} / ${G.total} 題</div>
+    <div class="actions">
+      <button class="primary" id="again" type="button">再玩一次</button>
+      ${wrong.length ? `<button id="retry" type="button">錯題再練（${wrong.length} 題）</button>` : ''}
+      <button id="home2" type="button">回選單</button>
+    </div>
+    ${wrong.length ? `<ol class="review">${wrong.map(q => `<li>${q.p.replace(/<[^>]+>/g, '') || '計算題'}　→　<b>${q.ex}</b></li>`).join('')}</ol>` : ''}
+  </div>`;
+  speak(stars === 3 ? '太棒了，拿到三顆星！' : `答對${G.score}題，繼續加油！`);
+  const mode = G.mode;
+  $('#again').addEventListener('click', () => start(mode));
+  if (wrong.length) $('#retry').addEventListener('click', () => start(mode, wrong));
+  $('#home2').addEventListener('click', showHome);
+}
+
+function finishSpeed() {
+  const best = store.get('speedBest', 0), nb = G.score > best;
+  if (nb) store.set('speedBest', G.score);
+  $('#stage').innerHTML = `<div class="result">
+    <div class="stars">⚡</div>
+    <div class="score">60 秒答對 ${G.score} 題${nb ? '　🎉 新紀錄！' : `（最佳 ${Math.max(best, G.score)} 題）`}</div>
+    <div class="actions"><button class="primary" id="again" type="button">再挑戰</button><button id="home2" type="button">回選單</button></div>
+  </div>`;
+  speak(`時間到！答對${G.score}題`);
+  $('#again').addEventListener('click', () => start('speed'));
+  $('#home2').addEventListener('click', showHome);
+}
+
+renderHome();
+</script>
+</body>
+</html>
