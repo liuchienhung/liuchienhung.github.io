@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>注音首冊遊戲</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FFF8EC; --card:#FFFFFF; --line:#F0DFC4; --text:#2B2620; --muted:#7A6B58;
+  --ink:#E0603A; --ink2:#2F7F9E; --sun:#FFC83D; --good:#2E9E5B; --bad:#D9483B;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#1B1915; --card:#26231D; --line:#3D372D; --text:#F3EDE3; --muted:#B5A891; --ink:#FF8A63; --ink2:#6CC0E0;
+}}
+:root[data-theme="dark"]{
+  --paper:#1B1915; --card:#26231D; --line:#3D372D; --text:#F3EDE3; --muted:#B5A891; --ink:#FF8A63; --ink2:#6CC0E0;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;min-height:100%}
+body{background:var(--paper);color:var(--text);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.5;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+.wrap{max-width:860px;margin:0 auto;padding:12px 16px 32px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+header h1{margin:0;font-size:1.35rem;color:var(--ink);flex:1 1 auto}
+header a{color:var(--ink2);text-decoration:none;font-size:.9rem}
+.sub{color:var(--muted);font-size:.85rem;margin:-6px 0 12px}
+button{font:inherit;color:inherit;cursor:pointer;border:2px solid var(--line);background:var(--card);border-radius:14px;padding:10px 14px;min-height:48px}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+button.primary{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:700}
+.panel{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:14px;margin-bottom:14px}
+.panel h2{margin:0 0 10px;font-size:1.05rem}
+.lessons{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.lesson{text-align:left;display:flex;flex-direction:column;gap:2px;padding:10px 12px}
+.lesson .t{font-weight:700}
+.lesson .s{font-size:1.05rem;letter-spacing:2px;color:var(--ink2)}
+.lesson .st{font-size:.8rem;color:var(--muted)}
+.lesson.sel{border-color:var(--ink);background:color-mix(in srgb,var(--ink) 10%,var(--card))}
+.toggle{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.9rem;color:var(--muted)}
+.toggle input{width:20px;height:20px}
+.modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.mode{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;text-align:left}
+.mode .e{font-size:2rem;line-height:1}
+.mode .n{font-weight:700;font-size:1.05rem}
+.mode .d{font-size:.82rem;color:var(--muted)}
+.topbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.topbar .grow{flex:1}
+.progress{height:10px;border-radius:6px;background:var(--line);overflow:hidden;margin-bottom:12px}
+.progress>div{height:100%;background:var(--sun);transition:width .3s}
+.q{text-align:center;padding:10px 0}
+.q .prompt{font-size:1rem;color:var(--muted);margin-bottom:8px}
+.q .pic{font-size:5rem;line-height:1.1}
+.q .word{font-size:2rem;font-weight:900;letter-spacing:4px}
+.q .big{font-size:4.5rem;font-weight:900;color:var(--ink2)}
+.speak{border-radius:50%;width:72px;height:72px;font-size:2rem;padding:0;background:var(--sun);border-color:var(--sun);color:#2B2620}
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.opt{font-size:2rem;font-weight:700;min-height:84px;letter-spacing:2px}
+.opt.small{font-size:1.5rem}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 18%,var(--card))}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,var(--card))}
+.feedback{min-height:1.6em;text-align:center;font-weight:700;margin-top:10px}
+.feedback.ok{color:var(--good)} .feedback.no{color:var(--bad)}
+.zy{display:inline-flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.card{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px}
+.card .sym{font-size:2.6rem;font-weight:900;color:var(--ink2);line-height:1.1}
+.card .kw{font-size:.95rem}
+.mem{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tile{aspect-ratio:1;font-size:2.2rem;font-weight:900;padding:0;display:flex;align-items:center;justify-content:center;
+  background:var(--ink2);border-color:var(--ink2);color:transparent;transition:transform .2s}
+.tile.open,.tile.done{background:var(--card);border-color:var(--line);color:var(--text)}
+.tile.done{border-color:var(--good);opacity:.7}
+.tile .sm{font-size:.8rem;display:block;font-weight:500}
+.result{text-align:center;padding:20px 0}
+.result .stars{font-size:3rem;letter-spacing:6px}
+.result .score{font-size:1.4rem;font-weight:700;margin:6px 0 14px}
+.result .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.note{font-size:.8rem;color:var(--muted);margin-top:16px}
+[hidden]{display:none!important}
+@media (max-width:480px){.opt{font-size:1.6rem;min-height:72px}.q .pic{font-size:4rem}.mem{gap:6px}.tile{font-size:1.7rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🐱 康軒國語首冊・注音遊戲</h1>
+    <a href="../">← 回服務首頁</a>
+  </header>
+  <p class="sub">依 114 學年度康軒一上首冊 9 課編排，練習 37 個注音符號、拼音與聲調。點 🔊 可以聽發音。</p>
+
+  <!-- 首頁：選課 + 選模式 -->
+  <section id="home">
+    <div class="panel">
+      <h2>1. 選擇課次</h2>
+      <div id="lessons" class="lessons"></div>
+      <label class="toggle"><input type="checkbox" id="cumulative" checked> 包含前面學過的課（累積複習）</label>
+    </div>
+    <div class="panel">
+      <h2>2. 選擇遊戲</h2>
+      <div class="modes">
+        <button class="mode" data-mode="learn"><span class="e">📖</span><span class="n">符號學習卡</span><span class="d">看符號、聽發音、認識代表字</span></button>
+        <button class="mode" data-mode="listen"><span class="e">🔊</span><span class="n">聽音選符號</span><span class="d">聽聽看，是哪一個注音？</span></button>
+        <button class="mode" data-mode="picture"><span class="e">🖼️</span><span class="n">看圖選注音</span><span class="d">看圖片，選出正確的拼音</span></button>
+        <button class="mode" data-mode="tone"><span class="e">🎵</span><span class="n">聲調小達人</span><span class="d">這個字是第幾聲？</span></button>
+        <button class="mode" data-mode="memory"><span class="e">🃏</span><span class="n">翻牌配對</span><span class="d">把符號和圖片配成一對</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 遊戲畫面 -->
+  <section id="game" hidden>
+    <div class="topbar">
+      <button id="quit" type="button">← 返回</button>
+      <strong id="gtitle" class="grow"></strong>
+      <span id="gscore"></span>
+    </div>
+    <div class="progress" id="pbar"><div></div></div>
+    <div id="stage" class="panel"></div>
+  </section>
+
+  <p class="note">課次與符號依康軒首冊教學順序整理（第 1 課〈貓咪〉教ㄅㄆㄇㄉㄧㄠ與一、二、四聲）；各課符號分配若與孩子手上的課本不同，可修改本頁 <code>LESSONS</code> 設定。發音使用瀏覽器內建中文語音。</p>
+</div>
+
+<script>
+// ===== 課程資料 =====
+const LESSONS = [
+  { n: 1, title: '貓咪',       syms: 'ㄅㄆㄇㄉㄧㄠ', tones: [1, 2, 4] },
+  { n: 2, title: '鵝寶寶',     syms: 'ㄊㄋㄜㄨ',     tones: [3] },
+  { n: 3, title: '河馬和河狸', syms: 'ㄏㄌㄈㄚㄛ',   tones: [5] },
+  { n: 4, title: '', syms: 'ㄍㄎㄞㄟ',     tones: [], note: '結合韻' },
+  { n: 5, title: '', syms: 'ㄐㄑㄒㄩㄝ',   tones: [] },
+  { n: 6, title: '', syms: 'ㄓㄔㄕㄖㄡ',   tones: [] },
+  { n: 7, title: '', syms: 'ㄗㄘㄙㄢㄣ',   tones: [] },
+  { n: 8, title: '', syms: 'ㄤㄥㄦ',       tones: [] },
+  { n: 9, title: '總複習',     syms: '',             tones: [], review: true },
+];
+
+// 符號：朗讀用字、代表字、代表圖
+const SYMBOLS = {
+  'ㄅ':['玻','包','🥟'], 'ㄆ':['坡','葡萄','🍇'], 'ㄇ':['摸','貓','🐱'], 'ㄈ':['佛','飛機','✈️'],
+  'ㄉ':['得','刀','🔪'], 'ㄊ':['特','兔子','🐰'], 'ㄋ':['訥','牛','🐮'], 'ㄌ':['勒','鹿','🦌'],
+  'ㄍ':['哥','狗','🐶'], 'ㄎ':['科','褲子','👖'], 'ㄏ':['喝','老虎','🐯'],
+  'ㄐ':['基','雞','🐔'], 'ㄑ':['欺','氣球','🎈'], 'ㄒ':['希','西瓜','🍉'],
+  'ㄓ':['知','豬','🐷'], 'ㄔ':['吃','車','🚗'], 'ㄕ':['詩','獅子','🦁'], 'ㄖ':['日','太陽','☀️'],
+  'ㄗ':['資','嘴巴','👄'], 'ㄘ':['疵','草','🌿'], 'ㄙ':['思','雨傘','☂️'],
+  'ㄚ':['啊','馬','🐴'], 'ㄛ':['喔','公雞喔喔','🐓'], 'ㄜ':['鵝','鵝','🦢'], 'ㄝ':['欸','葉子','🍃'],
+  'ㄞ':['哀','大海','🌊'], 'ㄟ':['誒','杯子','🥛'], 'ㄠ':['凹','豹','🐆'], 'ㄡ':['歐','猴子','🐒'],
+  'ㄢ':['安','山','⛰️'], 'ㄣ':['恩','門','🚪'], 'ㄤ':['骯','羊','🐑'], 'ㄥ':['亨的韻','燈','💡'],
+  'ㄦ':['兒','耳朵','👂'], 'ㄧ':['衣','衣服','👕'], 'ㄨ':['屋','房屋','🏠'], 'ㄩ':['迂','魚','🐟'],
+};
+
+// 詞語：[字, 注音(音節以空白分隔, 輕聲以˙開頭), 圖]
+const WORDS = [
+  ['貓','ㄇㄠ','🐱'],['包','ㄅㄠ','🥟'],['跑','ㄆㄠˇ','🏃'],['刀','ㄉㄠ','🔪'],['鼻','ㄅㄧˊ','👃'],['米','ㄇㄧˇ','🍚'],
+  ['笛','ㄉㄧˊ','🪈'],['豹','ㄅㄠˋ','🐆'],['帽','ㄇㄠˋ','🧢'],['雕','ㄉㄧㄠ','🦅'],['票','ㄆㄧㄠˋ','🎫'],['苗','ㄇㄧㄠˊ','🌱'],
+  ['表','ㄅㄧㄠˇ','⌚'],['釣','ㄉㄧㄠˋ','🎣'],['地','ㄉㄧˋ','🌏'],['皮','ㄆㄧˊ','🧥'],
+  ['鵝','ㄜˊ','🦢'],['兔','ㄊㄨˋ','🐰'],['圖','ㄊㄨˊ','🖼️'],['鳥','ㄋㄧㄠˇ','🐦'],['木','ㄇㄨˋ','🪵'],['讀','ㄉㄨˊ','📖'],
+  ['五','ㄨˇ','5️⃣'],['屋','ㄨ','🏠'],['霧','ㄨˋ','🌫️'],['跳','ㄊㄧㄠˋ','🦘'],['踢','ㄊㄧ','⚽'],['肚','ㄉㄨˋ','🫃'],
+  ['葡萄','ㄆㄨˊ ㄊㄠˊ','🍇'],['寶寶','ㄅㄠˇ ㄅㄠˇ','👶'],['泥','ㄋㄧˊ','🟤'],
+  ['河','ㄏㄜˊ','🏞️'],['馬','ㄇㄚˇ','🐴'],['河馬','ㄏㄜˊ ㄇㄚˇ','🦛'],['河狸','ㄏㄜˊ ㄌㄧˊ','🦫'],['花','ㄏㄨㄚ','🌸'],
+  ['爸爸','ㄅㄚˋ ˙ㄅㄚ','👨'],['媽媽','ㄇㄚ ˙ㄇㄚ','👩'],['辣','ㄌㄚˋ','🌶️'],['鹿','ㄌㄨˋ','🦌'],['梨','ㄌㄧˊ','🍐'],
+  ['虎','ㄏㄨˇ','🐯'],['壺','ㄏㄨˊ','🫖'],['髮','ㄈㄚˇ','💇'],['婆婆','ㄆㄛˊ ˙ㄆㄛ','👵'],['伯伯','ㄅㄛˊ ˙ㄅㄛ','👴'],
+  ['喝','ㄏㄜ','🥤'],['娃娃','ㄨㄚˊ ˙ㄨㄚ','🪆'],['蛙','ㄨㄚ','🐸'],['鴨','ㄧㄚ','🦆'],['牙','ㄧㄚˊ','🦷'],['火','ㄏㄨㄛˇ','🔥'],
+  ['蘿蔔','ㄌㄨㄛˊ ˙ㄅㄛ','🥕'],
+  ['鴿','ㄍㄜ','🕊️'],['哥哥','ㄍㄜ ˙ㄍㄜ','👦'],['鍋','ㄍㄨㄛ','🍲'],['筷','ㄎㄨㄞˋ','🥢'],['杯','ㄅㄟ','🥛'],['飛','ㄈㄟ','✈️'],
+  ['妹妹','ㄇㄟˋ ˙ㄇㄟ','👧'],['奶奶','ㄋㄞˇ ˙ㄋㄞ','👵'],['海','ㄏㄞˇ','🌊'],['貝','ㄅㄟˋ','🐚'],['烏龜','ㄨ ㄍㄨㄟ','🐢'],
+  ['鬼','ㄍㄨㄟˇ','👻'],['褲','ㄎㄨˋ','👖'],['哭','ㄎㄨ','😭'],['白','ㄅㄞˊ','⚪'],['黑','ㄏㄟ','⚫'],
+  ['雞','ㄐㄧ','🐔'],['魚','ㄩˊ','🐟'],['雨','ㄩˇ','🌧️'],['西瓜','ㄒㄧ ㄍㄨㄚ','🍉'],['鞋','ㄒㄧㄝˊ','👟'],['蝴蝶','ㄏㄨˊ ㄉㄧㄝˊ','🦋'],
+  ['腳','ㄐㄧㄠˇ','🦶'],['橋','ㄑㄧㄠˊ','🌉'],['雪','ㄒㄩㄝˇ','❄️'],['月','ㄩㄝˋ','🌙'],['家','ㄐㄧㄚ','🏡'],['爺爺','ㄧㄝˊ ˙ㄧㄝ','👴'],
+  ['葉','ㄧㄝˋ','🍃'],['七','ㄑㄧ','7️⃣'],['蝦','ㄒㄧㄚ','🦐'],['企鵝','ㄑㄧˇ ㄜˊ','🐧'],
+  ['豬','ㄓㄨ','🐷'],['車','ㄔㄜ','🚗'],['書','ㄕㄨ','📚'],['獅','ㄕ','🦁'],['紙','ㄓˇ','📄'],['尺','ㄔˇ','📏'],['肉','ㄖㄡˋ','🍖'],
+  ['牛','ㄋㄧㄡˊ','🐮'],['狗','ㄍㄡˇ','🐶'],['猴','ㄏㄡˊ','🐒'],['手','ㄕㄡˇ','✋'],['球','ㄑㄧㄡˊ','⚽'],['氣球','ㄑㄧˋ ㄑㄧㄡˊ','🎈'],
+  ['樹','ㄕㄨˋ','🌳'],['水','ㄕㄨㄟˇ','💧'],['茶','ㄔㄚˊ','🍵'],['口','ㄎㄡˇ','👄'],['日','ㄖˋ','☀️'],
+  ['嘴','ㄗㄨㄟˇ','👄'],['草','ㄘㄠˇ','🌿'],['菜','ㄘㄞˋ','🥬'],['傘','ㄙㄢˇ','☂️'],['三','ㄙㄢ','3️⃣'],['山','ㄕㄢ','⛰️'],
+  ['飯','ㄈㄢˋ','🍚'],['門','ㄇㄣˊ','🚪'],['人','ㄖㄣˊ','🧑'],['雲','ㄩㄣˊ','☁️'],['船','ㄔㄨㄢˊ','⛵'],['錢','ㄑㄧㄢˊ','💰'],
+  ['鉛筆','ㄑㄧㄢ ㄅㄧˇ','✏️'],['碗','ㄨㄢˇ','🥣'],['森林','ㄙㄣ ㄌㄧㄣˊ','🌲'],['四','ㄙˋ','4️⃣'],['蛋','ㄉㄢˋ','🥚'],
+  ['羊','ㄧㄤˊ','🐑'],['糖','ㄊㄤˊ','🍬'],['熊','ㄒㄩㄥˊ','🐻'],['熊貓','ㄒㄩㄥˊ ㄇㄠ','🐼'],['燈','ㄉㄥ','💡'],['風','ㄈㄥ','🌬️'],
+  ['星星','ㄒㄧㄥ ˙ㄒㄧㄥ','⭐'],['耳','ㄦˇ','👂'],['二','ㄦˋ','2️⃣'],['蜂','ㄈㄥ','🐝'],['龍','ㄌㄨㄥˊ','🐉'],['象','ㄒㄧㄤˋ','🐘'],
+  ['香蕉','ㄒㄧㄤ ㄐㄧㄠ','🍌'],['床','ㄔㄨㄤˊ','🛏️'],['蘋果','ㄆㄧㄥˊ ㄍㄨㄛˇ','🍎'],['冰','ㄅㄧㄥ','🧊'],['鐘','ㄓㄨㄥ','⏰'],
+  ['螃蟹','ㄆㄤˊ ㄒㄧㄝˋ','🦀'],['太陽','ㄊㄞˋ ㄧㄤˊ','🌞'],
+].map(([w, zy, pic]) => ({ w, zy, pic, syms: [...zy].filter(c => SYMBOLS[c]) }));
+
+const TONE_MARK = { 1: '', 2: 'ˊ', 3: 'ˇ', 4: 'ˋ', 5: '˙' };
+const TONE_NAME = { 1: '一聲', 2: '二聲', 3: '三聲', 4: '四聲', 5: '輕聲' };
+const toneOf = syl => syl.startsWith('˙') ? 5 : syl.includes('ˊ') ? 2 : syl.includes('ˇ') ? 3 : syl.includes('ˋ') ? 4 : 1;
+const bare = syl => [...syl].filter(c => SYMBOLS[c]).join('');
+const withTone = (b, t) => t === 5 ? '˙' + b : b + TONE_MARK[t];
+
+// ===== 工具 =====
+const $ = s => document.querySelector(s);
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = (a, n) => shuffle(a).slice(0, n);
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem('kx1:' + k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('kx1:' + k, JSON.stringify(v)); } catch {} },
+};
+
+let zhVoice = null;
+function loadVoice() {
+  if (!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  zhVoice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh/i.test(v.lang)) || null;
+}
+if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+function speak(text) {
+  if (!('speechSynthesis' in window)) return false;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-TW'; u.rate = 0.8; if (zhVoice) u.voice = zhVoice;
+  speechSynthesis.speak(u);
+  return true;
+}
+const sayWord = w => speak(w.w);
+const saySym = s => speak(SYMBOLS[s][0] === '亨的韻' ? s : SYMBOLS[s][0]);
+
+// ===== 狀態 =====
+let lessonIdx = store.get('lesson', 0);
+let cumulative = store.get('cum', true);
+
+function activeSyms() {
+  const L = LESSONS[lessonIdx];
+  if (L.review) return Object.keys(SYMBOLS);
+  const from = cumulative ? 0 : lessonIdx;
+  return LESSONS.slice(from, lessonIdx + 1).flatMap(l => [...l.syms]);
+}
+function learnedSyms() { // 拼音、聲調題可用的符號（永遠包含之前所學）
+  const L = LESSONS[lessonIdx];
+  return L.review ? Object.keys(SYMBOLS) : LESSONS.slice(0, lessonIdx + 1).flatMap(l => [...l.syms]);
+}
+function learnedTones() {
+  const t = new Set(LESSONS.slice(0, lessonIdx + 1).flatMap(l => l.tones));
+  return LESSONS[lessonIdx].review || lessonIdx >= 2 ? [1, 2, 3, 4, 5] : [...t].sort();
+}
+function activeWords() {
+  const ok = new Set(learnedSyms());
+  const pool = WORDS.filter(w => w.syms.every(s => ok.has(s)));
+  if (cumulative || LESSONS[lessonIdx].review) return pool;
+  const cur = new Set(activeSyms());
+  const focused = pool.filter(w => w.syms.some(s => cur.has(s)));
+  return focused.length >= 6 ? focused : pool;
+}
+
+// ===== 首頁 =====
+function renderHome() {
+  const best = store.get('best', {});
+  $('#lessons').innerHTML = LESSONS.map((l, i) => {
+    const stars = Object.values(best[l.n] || {}).reduce((a, b) => Math.max(a, b), 0);
+    return `<button class="lesson${i === lessonIdx ? ' sel' : ''}" data-i="${i}">
+      <span class="t">${l.review ? '' : '第' + l.n + '課 '}${l.title}</span>
+      <span class="s">${l.review ? '全部 37 個' : l.syms}</span>
+      <span class="st">${l.note ? l.note + '・' : ''}${stars ? '⭐'.repeat(stars) : '尚未挑戰'}</span>
+    </button>`;
+  }).join('');
+  $('#cumulative').checked = cumulative;
+}
+$('#lessons').addEventListener('click', e => {
+  const b = e.target.closest('.lesson'); if (!b) return;
+  lessonIdx = +b.dataset.i; store.set('lesson', lessonIdx); renderHome();
+});
+$('#cumulative').addEventListener('change', e => { cumulative = e.target.checked; store.set('cum', cumulative); });
+document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => startMode(b.dataset.mode)));
+$('#quit').addEventListener('click', showHome);
+
+function showHome() {
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  $('#game').hidden = true; $('#home').hidden = false; renderHome(); window.scrollTo(0, 0);
+}
+
+// ===== 遊戲框架 =====
+const MODE_TITLE = { learn: '📖 符號學習卡', listen: '🔊 聽音選符號', picture: '🖼️ 看圖選注音', tone: '🎵 聲調小達人', memory: '🃏 翻牌配對' };
+const ROUND = 10;
+let G = null;
+
+function startMode(mode) {
+  $('#home').hidden = true; $('#game').hidden = false; window.scrollTo(0, 0);
+  $('#gtitle').textContent = MODE_TITLE[mode] + '・' + (LESSONS[lessonIdx].review ? '總複習' : '第' + LESSONS[lessonIdx].n + '課');
+  G = { mode, i: 0, score: 0, qs: [] };
+  setProgress(0); $('#gscore').textContent = '';
+  if (mode === 'learn') return renderLearn();
+  if (mode === 'memory') return renderMemory();
+  G.qs = buildQuestions(mode);
+  if (!G.qs.length) { $('#stage').innerHTML = '<p>這一課的題目還不夠，請換一課或勾選累積複習。</p>'; return; }
+  nextQ();
+}
+function setProgress(r) { $('#pbar').hidden = G.mode === 'learn'; $('#pbar>div').style.width = Math.round(r * 100) + '%'; }
+
+function buildQuestions(mode) {
+  if (mode === 'listen') {
+    const syms = activeSyms(), all = learnedSyms();
+    const order = []; while (order.length < ROUND) order.push(...shuffle(syms));
+    return order.slice(0, ROUND).map(ans => {
+      const sameKind = all.filter(s => s !== ans && isInitial(s) === isInitial(ans));
+      const others = pick(sameKind.length >= 3 ? sameKind : all.filter(s => s !== ans), 3);
+      return { ans, opts: shuffle([ans, ...others]) };
+    });
+  }
+  if (mode === 'picture') {
+    const words = activeWords();
+    return pick(words, Math.min(ROUND, words.length)).map(w => ({ w, ans: w.zy, opts: shuffle([w.zy, ...distractZy(w)]) }));
+  }
+  if (mode === 'tone') {
+    const tones = learnedTones();
+    const sylls = activeWords().flatMap(w => w.zy.split(' ').length === 1 ? [{ w, syl: w.zy }] : [])
+      .filter(x => tones.includes(toneOf(x.syl)));
+    return pick(sylls, Math.min(ROUND, sylls.length)).map(x => ({ ...x, ans: toneOf(x.syl), opts: tones }));
+  }
+}
+const INITIALS = 'ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙ';
+const isInitial = s => INITIALS.includes(s);
+
+// 產生拼音干擾選項：換聲符、換韻符或換聲調
+function distractZy(w) {
+  const known = learnedSyms();
+  const ini = known.filter(isInitial), fin = known.filter(s => !isInitial(s));
+  const tones = learnedTones();
+  const out = new Set();
+  for (let tries = 0; out.size < 3 && tries < 60; tries++) {
+    const sylls = w.zy.split(' ');
+    const k = Math.floor(Math.random() * sylls.length);
+    let b = bare(sylls[k]), t = toneOf(sylls[k]);
+    const chars = [...b];
+    const r = Math.random();
+    if (r < 0.4) {
+      const idx = chars.findIndex(isInitial);
+      if (idx >= 0 && ini.length > 1) chars[idx] = pick(ini.filter(c => c !== chars[idx]), 1)[0]; else continue;
+    } else if (r < 0.75) {
+      const idxs = chars.map((c, i) => isInitial(c) ? -1 : i).filter(i => i >= 0);
+      if (!idxs.length || fin.length < 2) continue;
+      const idx = idxs[idxs.length - 1];
+      chars[idx] = pick(fin.filter(c => c !== chars[idx]), 1)[0];
+    } else {
+      const other = tones.filter(x => x !== t); if (!other.length) continue;
+      t = pick(other, 1)[0];
+    }
+    sylls[k] = withTone(chars.join(''), t);
+    const cand = sylls.join(' ');
+    if (cand !== w.zy) out.add(cand);
+  }
+  return [...out];
+}
+
+function zyHTML(zy) { return zy.split(' ').map(s => `<span>${s}</span>`).join(''); }
+
+function nextQ() {
+  if (G.i >= G.qs.length) return finish(G.score, G.qs.length);
+  const q = G.qs[G.i]; G.locked = false;
+  $('#gscore').textContent = `第 ${G.i + 1} / ${G.qs.length} 題・答對 ${G.score}`;
+  let head = '', opts = '';
+  if (G.mode === 'listen') {
+    head = `<div class="prompt">按喇叭聽發音，選出正確的符號</div><button class="speak" id="sp" aria-label="播放發音">🔊</button>
+      <div class="prompt" id="hint" style="margin-top:8px"></div>`;
+    opts = q.opts.map(s => `<button class="opt" data-v="${s}">${s}</button>`).join('');
+  } else if (G.mode === 'picture') {
+    head = `<div class="prompt">這是什麼？選出正確的注音</div><div class="pic">${q.w.pic}</div>
+      <div class="word">${q.w.w}</div><button class="speak" id="sp" aria-label="播放發音">🔊</button>`;
+    opts = q.opts.map(z => `<button class="opt small" data-v="${z}"><span class="zy">${zyHTML(z)}</span></button>`).join('');
+  } else if (G.mode === 'tone') {
+    head = `<div class="prompt">「${q.w.w}」是第幾聲？</div><div class="pic">${q.w.pic}</div>
+      <div class="big">${bare(q.syl)}<span style="opacity:.25">？</span></div><button class="speak" id="sp" aria-label="播放發音">🔊</button>`;
+    opts = q.opts.map(t => `<button class="opt small" data-v="${t}">${TONE_NAME[t]} ${t === 1 ? 'ˉ' : TONE_MARK[t]}</button>`).join('');
+  }
+  $('#stage').innerHTML = `<div class="q">${head}</div><div class="opts">${opts}</div><div class="feedback" id="fb"></div>`;
+  const play = () => {
+    const ok = G.mode === 'listen' ? saySym(q.ans) : sayWord(q.w);
+    if (!ok && G.mode === 'listen') $('#hint').textContent = `提示：${SYMBOLS[q.ans][2]} ${SYMBOLS[q.ans][1]} 的第一個音`;
+  };
+  $('#sp').addEventListener('click', play);
+  setTimeout(play, 250);
+  $('#stage .opts').addEventListener('click', e => {
+    const b = e.target.closest('.opt'); if (!b || G.locked) return;
+    G.locked = true;
+    const right = String(q.ans) === b.dataset.v;
+    if (right) G.score++;
+    b.classList.add(right ? 'right' : 'wrong');
+    if (!right) $(`#stage .opt[data-v="${q.ans}"]`).classList.add('right');
+    const fb = $('#fb');
+    const ansText = G.mode === 'tone' ? withTone(bare(q.syl), q.ans) + '（' + TONE_NAME[q.ans] + '）' : q.ans;
+    fb.className = 'feedback ' + (right ? 'ok' : 'no');
+    fb.textContent = right ? pick(['答對了！🎉', '好棒！👍', '太厲害了！🌟', '完全正確！💯'], 1)[0] : `再加油！正確答案是 ${ansText}`;
+    if (G.mode === 'listen') setTimeout(() => saySym(q.ans), 100);
+    G.i++; setProgress(G.i / G.qs.length);
+    setTimeout(nextQ, right ? 1100 : 2000);
+  });
+}
+
+function finish(score, total) {
+  const r = score / total;
+  const stars = r >= 0.9 ? 3 : r >= 0.6 ? 2 : r > 0 ? 1 : 0;
+  const best = store.get('best', {}), key = LESSONS[lessonIdx].n;
+  best[key] = best[key] || {};
+  best[key][G.mode] = Math.max(best[key][G.mode] || 0, stars);
+  store.set('best', best);
+  setProgress(1);
+  $('#gscore').textContent = '';
+  $('#stage').innerHTML = `<div class="result">
+    <div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
+    <div class="score">${G.mode === 'memory' ? `翻了 ${total} 次完成配對！` : `答對 ${score} / ${total} 題`}</div>
+    <p>${stars === 3 ? '你是注音小高手！' : stars === 2 ? '很不錯，再玩一次會更棒！' : '多練習幾次，一定會進步！'}</p>
+    <div class="actions"><button class="primary" id="again">再玩一次</button><button id="back">選其他遊戲</button></div></div>`;
+  if (stars === 3) speak('你好棒');
+  $('#again').addEventListener('click', () => startMode(G.mode));
+  $('#back').addEventListener('click', showHome);
+}
+
+// ===== 學習卡 =====
+function renderLearn() {
+  const syms = activeSyms();
+  $('#stage').innerHTML = `<p class="prompt" style="margin-top:0;color:var(--muted)">點卡片聽發音，再念念看代表字。</p>
+    <div class="cards">${syms.map(s => `<button class="card" data-s="${s}"><span class="sym">${s}</span><span class="kw">${SYMBOLS[s][2]} ${SYMBOLS[s][1]}</span></button>`).join('')}</div>`;
+  $('#stage .cards').addEventListener('click', e => {
+    const b = e.target.closest('.card'); if (!b) return;
+    const s = b.dataset.s; saySym(s);
+    setTimeout(() => speak(SYMBOLS[s][1]), 900);
+  });
+}
+
+// ===== 翻牌配對 =====
+function renderMemory() {
+  const syms = pick(activeSyms().length >= 6 ? activeSyms() : learnedSyms(), 6);
+  const tiles = shuffle(syms.flatMap(s => [{ s, kind: 'sym' }, { s, kind: 'pic' }]));
+  let open = [], flips = 0, done = 0, busy = false;
+  $('#stage').innerHTML = `<p style="margin-top:0;color:var(--muted)">翻開兩張牌，找出符號和它的代表圖（代表字的第一個音）。</p>
+    <div class="mem">${tiles.map((t, i) => `<button class="tile" data-i="${i}" aria-label="牌 ${i + 1}">${t.kind === 'sym' ? t.s : `<span>${SYMBOLS[t.s][2]}<span class="sm">${SYMBOLS[t.s][1]}</span></span>`}</button>`).join('')}</div>`;
+  $('#gscore').textContent = '翻牌 0 次';
+  $('#stage .mem').addEventListener('click', e => {
+    const b = e.target.closest('.tile'); if (!b || busy || b.classList.contains('open') || b.classList.contains('done')) return;
+    const t = tiles[+b.dataset.i];
+    b.classList.add('open'); open.push([b, t]);
+    t.kind === 'sym' ? saySym(t.s) : speak(SYMBOLS[t.s][1]);
+    if (open.length < 2) return;
+    flips++; $('#gscore').textContent = `翻牌 ${flips} 次`;
+    const [[b1, t1], [b2, t2]] = open; open = [];
+    if (t1.s === t2.s && t1.kind !== t2.kind) {
+      b1.classList.add('done'); b2.classList.add('done'); done++;
+      setProgress(done / 6);
+      if (done === 6) setTimeout(() => { G.mode = 'memory'; finishMemory(flips); }, 700);
+    } else {
+      busy = true;
+      setTimeout(() => { b1.classList.remove('open'); b2.classList.remove('open'); busy = false; }, 1000);
+    }
+  });
+}
+function finishMemory(flips) {
+  // 6 對最少 6 次；≤9 次三顆星、≤13 次兩顆星
+  const score = flips <= 9 ? 10 : flips <= 13 ? 7 : 3;
+  G.score = score;
+  finish(score, 10);
+  $('#stage .score').textContent = `翻了 ${flips} 次完成配對！`;
+}
+
+renderHome();
+</script>
+</body>
+</html>
