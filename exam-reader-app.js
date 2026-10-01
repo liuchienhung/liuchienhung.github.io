@@ -182,7 +182,7 @@ class ExamReaderApp {
 
     renderInitialState() {
         if (this.liveServiceCount) {
-            this.liveServiceCount.textContent = '7';
+            this.liveServiceCount.textContent = '8';
         }
         this.bootstrapSpeechSupport();
         this.applyStudentMode();

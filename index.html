@@ -1446,13 +1446,14 @@
                     <span class="hero-eyebrow">Multi-Service Portal</span>
                     <h1>一個首頁，集中展示持續增加中的服務。</h1>
                     <p>
-                        這個入口頁會先列出目前已經上線的服務，並保留後續擴充空間。目前已提供資通安全題庫測驗、AI 應用規劃師模擬測驗、試卷報讀、寫字姿勢偵測、康軒國語首冊注音遊戲、翰林數學一上闖關遊戲與 Codex Pets Demo 影片，
+                        這個入口頁會先列出目前已經上線的服務，並保留後續擴充空間。目前已提供資通安全題庫測驗、AI 應用規劃師模擬測驗、試卷報讀、原版試卷報讀、寫字姿勢偵測、康軒國語首冊注音遊戲、翰林數學一上闖關遊戲與 Codex Pets Demo 影片，
                         之後可陸續加入成績查詢、學習儀表板、教材中心或其他工具，不需要重做整個首頁架構。
                     </p>
                     <div class="hero-actions">
                         <button id="open-quiz-service" class="service-launch-btn">進入目前服務</button>
                         <button id="open-ai-planner-service" class="service-launch-btn">AI應用規劃師測驗</button>
                         <button id="open-reader-service" class="service-launch-btn">試用報讀服務</button>
+                        <a class="service-launch-btn" href="pdf-reader/">原版試卷報讀</a>
                         <a class="service-launch-btn" href="posture/">寫字姿勢偵測</a>
                         <a class="service-launch-btn" href="kangxuan-chinese/">國語首冊注音遊戲</a>
                         <a class="service-launch-btn" href="hanlin-math/">翰林數學一上遊戲</a>
@@ -1464,7 +1465,7 @@
                     <h2>服務概況</h2>
                     <div class="summary-metrics">
                         <div class="metric-card">
-                            <span id="live-service-count" class="metric-value">7</span>
+                            <span id="live-service-count" class="metric-value">8</span>
                             <span class="metric-label">已上線服務</span>
                         </div>
                         <div class="metric-card">
@@ -1565,6 +1566,32 @@
                                 </div>
                             </div>
                             <button id="open-reader-service-secondary" class="service-launch-btn">開始使用</button>
+                        </article>
+
+                        <article id="pdf-reader" class="service-card active-service">
+                            <div class="service-card-top">
+                                <div class="service-icon">📄</div>
+                                <span class="status-pill">已上線</span>
+                            </div>
+                            <div>
+                                <h3>原版試卷報讀</h3>
+                                <p>上傳試卷 PDF 後依原檔版面一比一呈現、不重新排版，點選文字即念出該句，也能連續朗讀或框選範圍朗讀；支援直書與注音試卷，並避免念出「寫國字／寫注音」題的答案。</p>
+                            </div>
+                            <div class="service-meta">
+                                <div class="service-meta-item">
+                                    <span class="service-meta-value">1:1</span>
+                                    <span class="service-meta-label">原版面</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span class="service-meta-value">點讀</span>
+                                    <span class="service-meta-label">逐句朗讀</span>
+                                </div>
+                                <div class="service-meta-item">
+                                    <span class="service-meta-value">直書</span>
+                                    <span class="service-meta-label">注音試卷</span>
+                                </div>
+                            </div>
+                            <a class="service-launch-btn" href="pdf-reader/">開始使用</a>
                         </article>
 
                         <article id="writing-posture" class="service-card active-service">
