@@ -50,6 +50,15 @@ details.edit summary{cursor:pointer;color:var(--ink2);font-weight:700;min-height
 .sound{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .sound details{flex:1 1 220px;font-size:.88rem}
 .sound summary{cursor:pointer;color:var(--ink2);font-weight:700;min-height:32px}
+.vmode{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.9rem}
+.vmode label{display:flex;align-items:center;gap:4px;min-height:44px}
+.vmode input{width:20px;height:20px}
+.recrow{display:grid;grid-template-columns:2.6em 1fr auto auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.recrow .sym{font-size:1.8rem;font-weight:900;color:var(--ink2);text-align:center}
+.recrow .kw{font-size:.85rem;color:var(--muted)}
+.recrow button{min-height:44px;padding:6px 10px}
+.recrow button.rec-on{background:var(--bad);border-color:var(--bad);color:#fff}
+.recrow .has{color:var(--good);font-weight:700}
 .sound ol{margin:6px 0 0;padding-left:1.3em} .sound li{margin:4px 0}
 .modes{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
 .mode{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;text-align:left}
@@ -89,6 +98,7 @@ details.edit summary{cursor:pointer;color:var(--ink2);font-weight:700;min-height
 .result .score{font-size:1.4rem;font-weight:700;margin:6px 0 14px}
 .result .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .note{font-size:.8rem;color:var(--muted);margin-top:16px}
+button:disabled{opacity:.4;cursor:default}
 [hidden]{display:none!important}
 @media (max-width:480px){.opt{font-size:1.6rem;min-height:72px}.q .pic{font-size:4rem}.mem{gap:6px}.tile{font-size:1.7rem}}
 </style>
@@ -105,6 +115,13 @@ details.edit summary{cursor:pointer;color:var(--ink2);font-weight:700;min-height
   <section id="home">
     <div class="panel sound">
       <button class="primary" id="soundtest" type="button">🔊 測試聲音</button>
+      <div class="vmode" role="radiogroup" aria-label="注音發音方式">
+        <span>注音念法：</span>
+        <label><input type="radio" name="vmode" value="char"> 相近國字</label>
+        <label><input type="radio" name="vmode" value="sym"> 直接念符號</label>
+      </div>
+      <button id="openrec" type="button">🎙️ 自己錄發音<span id="reccount"></span></button>
+      <p class="emsg" style="flex-basis:100%;margin:0">手機語音念注音可能不準：先按「測試聲音」比較兩種念法，選聽起來對的；最準的方式是家長自己錄一次，遊戲就會播放你的聲音。</p>
       <details id="soundhelp">
         <summary>聲音太小聲？</summary>
         <ol>
@@ -169,25 +186,25 @@ const DEFAULT_LESSONS = [
 
 // 符號：朗讀用字、代表字、代表圖
 const SYMBOLS = {
-  'ㄅ':['玻','包','🥟'], 'ㄆ':['坡','葡萄','🍇'], 'ㄇ':['摸','貓','🐱'], 'ㄈ':['佛','飛機','✈️'],
+  'ㄅ':['波','包','🥟'], 'ㄆ':['坡','葡萄','🍇'], 'ㄇ':['摸','貓','🐱'], 'ㄈ':['佛','飛機','✈️'],
   'ㄉ':['得','刀','🔪'], 'ㄊ':['特','兔子','🐰'], 'ㄋ':['訥','牛','🐮'], 'ㄌ':['勒','鹿','🦌'],
   'ㄍ':['哥','狗','🐶'], 'ㄎ':['科','褲子','👖'], 'ㄏ':['喝','老虎','🐯'],
   'ㄐ':['基','雞','🐔'], 'ㄑ':['欺','氣球','🎈'], 'ㄒ':['希','西瓜','🍉'],
   'ㄓ':['知','豬','🐷'], 'ㄔ':['吃','車','🚗'], 'ㄕ':['詩','獅子','🦁'], 'ㄖ':['日','太陽','☀️'],
   'ㄗ':['資','嘴巴','👄'], 'ㄘ':['疵','草','🌿'], 'ㄙ':['思','雨傘','☂️'],
-  'ㄚ':['啊','馬','🐴'], 'ㄛ':['喔','公雞喔喔','🐓'], 'ㄜ':['鵝','鵝','🦢'], 'ㄝ':['欸','葉子','🍃'],
+  'ㄚ':['阿','馬','🐴'], 'ㄛ':['喔','公雞喔喔','🐓'], 'ㄜ':['婀','鵝','🦢'], 'ㄝ':['欸','葉子','🍃'],
   'ㄞ':['哀','大海','🌊'], 'ㄟ':['誒','杯子','🥛'], 'ㄠ':['凹','豹','🐆'], 'ㄡ':['歐','猴子','🐒'],
-  'ㄢ':['安','山','⛰️'], 'ㄣ':['恩','門','🚪'], 'ㄤ':['骯','羊','🐑'], 'ㄥ':['亨的韻','燈','💡'],
-  'ㄦ':['兒','耳朵','👂'], 'ㄧ':['衣','衣服','👕'], 'ㄨ':['屋','房屋','🏠'], 'ㄩ':['迂','魚','🐟'],
+  'ㄢ':['安','山','⛰️'], 'ㄣ':['恩','門','🚪'], 'ㄤ':['骯','羊','🐑'], 'ㄥ':['鞥','燈','💡'],
+  'ㄦ':['兒','耳朵','👂'], 'ㄧ':['衣','衣服','👕'], 'ㄨ':['烏','房屋','🏠'], 'ㄩ':['迂','魚','🐟'],
 };
 
 // 詞語：[字, 注音(音節以空白分隔, 輕聲以˙開頭), 圖]
 const WORDS = [
   ['貓','ㄇㄠ','🐱'],['包','ㄅㄠ','🥟'],['跑','ㄆㄠˇ','🏃'],['刀','ㄉㄠ','🔪'],['鼻','ㄅㄧˊ','👃'],['米','ㄇㄧˇ','🍚'],
   ['笛','ㄉㄧˊ','🪈'],['豹','ㄅㄠˋ','🐆'],['帽','ㄇㄠˋ','🧢'],['雕','ㄉㄧㄠ','🦅'],['票','ㄆㄧㄠˋ','🎫'],['苗','ㄇㄧㄠˊ','🌱'],
-  ['表','ㄅㄧㄠˇ','⌚'],['釣','ㄉㄧㄠˋ','🎣'],['地','ㄉㄧˋ','🌏'],['皮','ㄆㄧˊ','🧥'],
+  ['表','ㄅㄧㄠˇ','⌚'],['釣','ㄉㄧㄠˋ','🎣'],['皮','ㄆㄧˊ','🧥'],
   ['鵝','ㄜˊ','🦢'],['兔','ㄊㄨˋ','🐰'],['圖','ㄊㄨˊ','🖼️'],['鳥','ㄋㄧㄠˇ','🐦'],['木','ㄇㄨˋ','🪵'],['讀','ㄉㄨˊ','📖'],
-  ['五','ㄨˇ','5️⃣'],['屋','ㄨ','🏠'],['霧','ㄨˋ','🌫️'],['跳','ㄊㄧㄠˋ','🦘'],['踢','ㄊㄧ','⚽'],['肚','ㄉㄨˋ','🫃'],
+  ['五','ㄨˇ','5️⃣'],['屋','ㄨ','🏠'],['霧','ㄨˋ','🌫️'],['跳','ㄊㄧㄠˋ','🦘'],['踢','ㄊㄧ','⚽'],
   ['葡萄','ㄆㄨˊ ㄊㄠˊ','🍇'],['寶寶','ㄅㄠˇ ㄅㄠˇ','👶'],['泥','ㄋㄧˊ','🟤'],
   ['河','ㄏㄜˊ','🏞️'],['馬','ㄇㄚˇ','🐴'],['河馬','ㄏㄜˊ ㄇㄚˇ','🦛'],['河狸','ㄏㄜˊ ㄌㄧˊ','🦫'],['花','ㄏㄨㄚ','🌸'],
   ['爸爸','ㄅㄚˋ ˙ㄅㄚ','👨'],['媽媽','ㄇㄚ ˙ㄇㄚ','👩'],['辣','ㄌㄚˋ','🌶️'],['鹿','ㄌㄨˋ','🦌'],['梨','ㄌㄧˊ','🍐'],
@@ -245,16 +262,76 @@ function loadVoice() {
   zhVoice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh/i.test(v.lang)) || null;
 }
 if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
-function speak(text) {
+let curAudio = null;
+function stopAll() {
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  if (curAudio) { curAudio.pause(); curAudio = null; }
+}
+function speak(text, onend) {
   if (!('speechSynthesis' in window)) return false;
-  speechSynthesis.cancel();
+  stopAll();
   const u = new SpeechSynthesisUtterance(text);
+  if (onend) u.onend = onend;
+  speak.last = u; // 保留參照，避免部分瀏覽器回收後不觸發 onend
   u.lang = 'zh-TW'; u.rate = 0.8; u.volume = 1; u.pitch = 1.05; if (zhVoice) u.voice = zhVoice;
   speechSynthesis.speak(u);
   return true;
 }
 const sayWord = w => speak(w.w);
-const saySym = s => speak(SYMBOLS[s][0] === '亨的韻' ? s : SYMBOLS[s][0]);
+
+// 符號發音：優先播放家長錄音，其次依設定「念相近國字」或「直接念符號」
+let voiceMode = store.get('voiceMode', 'char');
+const REC = {}; // 符號 → 錄音 objectURL
+function playUrl(url, onend) {
+  stopAll();
+  const a = new Audio(url);
+  curAudio = a;
+  if (onend) a.onended = onend;
+  a.play().catch(() => {});
+  return true;
+}
+function saySym(s, onend) {
+  if (REC[s]) return playUrl(REC[s], onend);
+  return speak(voiceMode === 'sym' ? s : SYMBOLS[s][0], onend);
+}
+
+// ===== 錄音儲存（IndexedDB，只存在這台裝置） =====
+const recDB = {
+  open() {
+    return new Promise((res, rej) => {
+      if (!('indexedDB' in window)) return rej(new Error('no idb'));
+      const r = indexedDB.open('kx1-audio', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('rec');
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+  },
+  async tx(mode, fn) {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const t = db.transaction('rec', mode), st = t.objectStore('rec');
+      const out = fn(st);
+      t.oncomplete = () => res(out && out.result); t.onerror = () => rej(t.error);
+    });
+  },
+  put(k, blob) { return this.tx('readwrite', st => st.put(blob, k)); },
+  del(k) { return this.tx('readwrite', st => st.delete(k)); },
+  async all() {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const out = {}, t = db.transaction('rec'), c = t.objectStore('rec').openCursor();
+      c.onsuccess = () => { const cur = c.result; if (cur) { out[cur.key] = cur.value; cur.continue(); } };
+      t.oncomplete = () => res(out); t.onerror = () => rej(t.error);
+    });
+  },
+};
+function setRec(k, blob) {
+  if (REC[k]) URL.revokeObjectURL(REC[k]);
+  if (blob) REC[k] = URL.createObjectURL(blob); else delete REC[k];
+}
+recDB.all().then(all => { Object.entries(all).forEach(([k, b]) => setRec(k, b)); updateRecCount(); }).catch(() => {});
+function updateRecCount() {
+  const el = $('#reccount'); if (el) el.textContent = Object.keys(REC).length ? `（已錄 ${Object.keys(REC).length} 個）` : '';
+}
 
 // ===== 狀態 =====
 let lessonIdx = store.get('lesson', 0);
@@ -336,29 +413,38 @@ $('#lessons').addEventListener('click', e => {
 });
 $('#cumulative').addEventListener('change', e => { cumulative = e.target.checked; store.set('cum', cumulative); });
 document.querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => startMode(b.dataset.mode)));
-$('#quit').addEventListener('click', showHome);
+$('#quit').addEventListener('click', () => { stopRecording(); showHome(); });
+document.querySelectorAll('input[name="vmode"]').forEach(r => {
+  r.checked = r.value === voiceMode;
+  r.addEventListener('change', () => { voiceMode = r.value; store.set('voiceMode', voiceMode); });
+});
+$('#openrec').addEventListener('click', () => startMode('record'));
+function sayList(list, i = 0) {
+  if (i >= list.length) return;
+  saySym(list[i], () => setTimeout(() => sayList(list, i + 1), 250));
+}
 $('#soundtest').addEventListener('click', () => {
-  if (!speak('小朋友好，我們一起來練習注音符號。ㄅ，ㄆ，ㄇ，ㄈ。')) {
-    $('#soundhelp').open = true;
-    alert('這個瀏覽器不支援語音朗讀，請改用 Chrome 或 Safari 開啟。');
-  }
+  if (speak('小朋友好，我們一起來練習注音符號。', () => sayList(['ㄅ', 'ㄆ', 'ㄇ', 'ㄈ', 'ㄉ', 'ㄜ', 'ㄝ', 'ㄥ']))) return;
+  $('#soundhelp').open = true;
+  alert('這個瀏覽器不支援語音朗讀，請改用 Chrome 或 Safari 開啟。');
 });
 
 function showHome() {
-  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  stopAll(); updateRecCount();
   $('#game').hidden = true; $('#home').hidden = false; renderHome(); window.scrollTo(0, 0);
 }
 
 // ===== 遊戲框架 =====
-const MODE_TITLE = { learn: '📖 符號學習卡', listen: '🔊 聽音選符號', picture: '🖼️ 看圖選注音', tone: '🎵 聲調小達人', memory: '🃏 翻牌配對' };
+const MODE_TITLE = { record: '🎙️ 自己錄發音', learn: '📖 符號學習卡', listen: '🔊 聽音選符號', picture: '🖼️ 看圖選注音', tone: '🎵 聲調小達人', memory: '🃏 翻牌配對' };
 const ROUND = 10;
 let G = null;
 
 function startMode(mode) {
   $('#home').hidden = true; $('#game').hidden = false; window.scrollTo(0, 0);
-  $('#gtitle').textContent = MODE_TITLE[mode] + '・' + (LESSONS[lessonIdx].review ? '總複習' : '第' + LESSONS[lessonIdx].n + '課');
+  $('#gtitle').textContent = MODE_TITLE[mode] + (mode === 'record' ? '' : '・' + (LESSONS[lessonIdx].review ? '總複習' : '第' + LESSONS[lessonIdx].n + '課'));
   G = { mode, i: 0, score: 0, qs: [] };
   setProgress(0); $('#gscore').textContent = '';
+  if (mode === 'record') return renderRecord();
   if (!activeSyms().length) { $('#stage').innerHTML = '<p>這一課還沒有設定注音符號，請到「調整課次內容」補上，或換一課。</p>'; return; }
   if (mode === 'learn') return renderLearn();
   if (mode === 'memory') return renderMemory();
@@ -366,7 +452,7 @@ function startMode(mode) {
   if (!G.qs.length) { $('#stage').innerHTML = '<p>這一課的題目還不夠，請換一課或勾選累積複習。</p>'; return; }
   nextQ();
 }
-function setProgress(r) { $('#pbar').hidden = G.mode === 'learn'; $('#pbar>div').style.width = Math.round(r * 100) + '%'; }
+function setProgress(r) { $('#pbar').hidden = G.mode === 'learn' || G.mode === 'record'; $('#pbar>div').style.width = Math.round(r * 100) + '%'; }
 
 function buildQuestions(mode) {
   if (mode === 'listen') {
@@ -486,6 +572,65 @@ function finish(score, total) {
   $('#back').addEventListener('click', showHome);
 }
 
+// ===== 自己錄發音 =====
+let recState = null; // { sym, mr, stream, timer }
+function stopRecording() {
+  if (!recState) return;
+  clearTimeout(recState.timer);
+  if (recState.mr.state !== 'inactive') recState.mr.stop();
+}
+function renderRecord() {
+  const ok = navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder;
+  const syms = Object.keys(SYMBOLS);
+  $('#stage').innerHTML = `<p style="margin-top:0;color:var(--muted)">按「● 錄」念出符號（例如ㄅ念「ㄅㄛ」），最多 3 秒會自動停止，再按一次也可提前停止。錄好的聲音只存在這支手機的瀏覽器，遊戲中會優先播放。</p>
+    ${ok ? '' : '<p class="feedback no">這個瀏覽器不支援錄音，請改用新版 Chrome 或 Safari，並確認網址是 https 開頭。</p>'}
+    <div id="recrows">${syms.map(s => `<div class="recrow" data-s="${s}">
+      <span class="sym">${s}</span><span class="kw">${SYMBOLS[s][2]} ${SYMBOLS[s][1]} <span class="has">${REC[s] ? '✔ 已錄' : ''}</span></span>
+      <button data-a="rec" ${ok ? '' : 'disabled'}>● 錄</button>
+      <button data-a="play" aria-label="播放 ${s}">▶</button>
+      <button data-a="del" aria-label="刪除 ${s} 的錄音" ${REC[s] ? '' : 'disabled'}>🗑</button>
+    </div>`).join('')}</div>
+    <div class="eacts"><button id="recclear" type="button">刪除全部錄音</button></div>`;
+  $('#recrows').addEventListener('click', async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const row = b.closest('.recrow'), s = row.dataset.s;
+    if (b.dataset.a === 'play') return saySym(s);
+    if (b.dataset.a === 'del') {
+      await recDB.del(s).catch(() => {}); setRec(s, null); return refreshRow(row);
+    }
+    if (recState) { const same = recState.sym === s; stopRecording(); if (same) return; }
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+    catch { alert('無法使用麥克風，請在瀏覽器設定允許此網站使用麥克風。'); return; }
+    stopAll();
+    const mr = new MediaRecorder(stream), chunks = [];
+    mr.ondataavailable = ev => ev.data.size && chunks.push(ev.data);
+    mr.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      recState = null;
+      b.classList.remove('rec-on'); b.textContent = '● 錄';
+      if (!chunks.length) return;
+      const blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
+      setRec(s, blob); refreshRow(row);
+      recDB.put(s, blob).catch(() => alert('錄音已可播放，但無法儲存在這台裝置（可能是私密瀏覽模式）。'));
+      playUrl(REC[s]);
+    };
+    recState = { sym: s, mr, stream, timer: setTimeout(stopRecording, 3000) };
+    b.classList.add('rec-on'); b.textContent = '■ 停';
+    mr.start();
+  });
+  $('#recclear').addEventListener('click', async () => {
+    if (!confirm('確定刪除全部錄音？')) return;
+    for (const s of Object.keys(REC)) { await recDB.del(s).catch(() => {}); setRec(s, null); }
+    document.querySelectorAll('.recrow').forEach(refreshRow);
+  });
+}
+function refreshRow(row) {
+  const s = row.dataset.s;
+  row.querySelector('.has').textContent = REC[s] ? '✔ 已錄' : '';
+  row.querySelector('[data-a="del"]').disabled = !REC[s];
+}
+
 // ===== 學習卡 =====
 function renderLearn() {
   const syms = activeSyms();
@@ -493,8 +638,8 @@ function renderLearn() {
     <div class="cards">${syms.map(s => `<button class="card" data-s="${s}"><span class="sym">${s}</span><span class="kw">${SYMBOLS[s][2]} ${SYMBOLS[s][1]}</span></button>`).join('')}</div>`;
   $('#stage .cards').addEventListener('click', e => {
     const b = e.target.closest('.card'); if (!b) return;
-    const s = b.dataset.s; saySym(s);
-    setTimeout(() => speak(SYMBOLS[s][1]), 900);
+    const s = b.dataset.s;
+    saySym(s, () => setTimeout(() => speak(SYMBOLS[s][1]), 300));
   });
 }
 
