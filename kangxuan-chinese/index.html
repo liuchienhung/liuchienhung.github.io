@@ -121,7 +121,7 @@ button:disabled{opacity:.4;cursor:default}
         <label><input type="radio" name="vmode" value="sym"> 直接念符號</label>
       </div>
       <button id="openrec" type="button">🎙️ 自己錄發音<span id="reccount"></span></button>
-      <p class="emsg" style="flex-basis:100%;margin:0">手機語音念注音可能不準：先按「測試聲音」比較兩種念法，選聽起來對的；最準的方式是家長自己錄一次，遊戲就會播放你的聲音。</p>
+      <p class="emsg" style="flex-basis:100%;margin:0">手機語音念注音可能不準：先按「測試聲音」比較兩種念法，選聽起來對的；最準的方式是家長自己錄一次，遊戲就會播放你的聲音。想聽標準發音可參考 <a href="https://www.mdnkids.com/bopomo/" target="_blank" rel="noopener">國語日報注音學習網</a>。</p>
       <details id="soundhelp">
         <summary>聲音太小聲？</summary>
         <ol>
@@ -582,7 +582,7 @@ function stopRecording() {
 function renderRecord() {
   const ok = navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder;
   const syms = Object.keys(SYMBOLS);
-  $('#stage').innerHTML = `<p style="margin-top:0;color:var(--muted)">按「● 錄」念出符號（例如ㄅ念「ㄅㄛ」），最多 3 秒會自動停止，再按一次也可提前停止。錄好的聲音只存在這支手機的瀏覽器，遊戲中會優先播放。</p>
+  $('#stage').innerHTML = `<p style="margin-top:0;color:var(--muted)">按「● 錄」念出符號（例如ㄅ念「ㄅㄛ」），最多 3 秒會自動停止，再按一次也可提前停止。錄好的聲音只存在這支手機的瀏覽器，遊戲中會優先播放。不確定怎麼念，可以先到 <a href="https://www.mdnkids.com/bopomo/" target="_blank" rel="noopener">國語日報注音學習網</a> 聽標準發音再跟著錄。</p>
     ${ok ? '' : '<p class="feedback no">這個瀏覽器不支援錄音，請改用新版 Chrome 或 Safari，並確認網址是 https 開頭。</p>'}
     <div id="recrows">${syms.map(s => `<div class="recrow" data-s="${s}">
       <span class="sym">${s}</span><span class="kw">${SYMBOLS[s][2]} ${SYMBOLS[s][1]} <span class="has">${REC[s] ? '✔ 已錄' : ''}</span></span>
