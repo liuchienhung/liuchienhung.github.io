@@ -185,10 +185,17 @@ function loadVoice() {
   zhVoice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh/i.test(v.lang)) || null;
 }
 if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+// 把算式符號轉成念法；只有「= ？」才念成「等於多少」，一般問句的問號保留原樣
+const ANIMAL = { '🐶': '小狗', '🐱': '小貓', '🐰': '兔子', '🐻': '熊', '🐼': '貓熊', '🐸': '青蛙', '🐵': '猴子', '🐯': '老虎', '🐷': '小豬', '🐮': '牛' };
+function toSpeech(t) {
+  return t.replace(/=\s*[？?]/g, '等於多少').replace(/\+/g, '加').replace(/−/g, '減').replace(/=/g, '等於')
+    .replace(/</g, '小於').replace(/>/g, '大於').replace(/□/g, '空格')
+    .replace(/[🐶🐱🐰🐻🐼🐸🐵🐯🐷🐮]/gu, m => ANIMAL[m]);
+}
 function speak(text) {
   if (!('speechSynthesis' in window) || !text) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text.replace(/\+/g, '加').replace(/−|-/g, '減').replace(/=/g, '等於').replace(/？|\?/g, '多少'));
+  const u = new SpeechSynthesisUtterance(toSpeech(text));
   speak.last = u;
   u.lang = 'zh-TW'; u.rate = 0.85; if (zhVoice) u.voice = zhVoice;
   speechSynthesis.speak(u);
@@ -287,7 +294,7 @@ const GEN = {
     if (t === 3) { const n = R(2, 8); return { p: `這枝鉛筆有幾個迴紋針長？`, vis: clipsBar(n), opts: numOpts(n, 1, 10), a: n, ex: `一個接一個排，共 ${n} 個迴紋針長。` }; }
     const [a, b, c] = shuffle(['哥哥', '妹妹', '弟弟']), long = Math.random() < .5;
     return { p: `${a}的繩子比${b}的${long ? '長' : '短'}，${b}的繩子比${c}的${long ? '長' : '短'}。誰的繩子最${long ? '長' : '短'}？`, opts: textOpts([a, b, c]), a, cols: 3,
-      ex: `${a} > ${b} > ${c}（比${long ? '長' : '短'}），所以${a}的最${long ? '長' : '短'}。` };
+      ex: `${a}的比${b}的${long ? '長' : '短'}，${b}的又比${c}的${long ? '長' : '短'}，所以${a}的最${long ? '長' : '短'}。` };
   },
   3() { // 順序與多少
     const t = R(1, 4);
@@ -321,8 +328,10 @@ const GEN = {
   5() { // 認識形狀
     const t = R(1, 4);
     const SOLID = { '球': ['⚽', '🏀', '🍊', '🌍', '🎱', '🍉'], '罐子形': ['🥫', '🥁', '🧻', '🕯️'], '箱子形': ['📦', '🎁', '🎲', '🧊', '🧱'] };
+    const NAME = { '⚽': '足球', '🏀': '籃球', '🍊': '橘子', '🌍': '地球儀', '🎱': '撞球', '🍉': '西瓜', '🥫': '罐頭', '🥁': '鼓', '🧻': '衛生紙捲', '🕯️': '蠟燭',
+      '📦': '紙箱', '🎁': '禮物盒', '🎲': '骰子', '🧊': '冰塊', '🧱': '磚塊' };
     if (t === 1) { const k = one(Object.keys(SOLID)), it = one(SOLID[k]);
-      return { p: `這個東西像哪一種形狀？`, vis: `<div style="font-size:5rem">${it}</div>`, opts: textOpts(Object.keys(SOLID)), a: k, cols: 3, ex: `${it} 像${k}。（球：圓圓的；罐子形：上下是圓的平面；箱子形：每一面都是平平的）` }; }
+      return { p: `這個東西像哪一種形狀？`, vis: `<div style="font-size:5rem">${it}</div><div>${NAME[it]}</div>`, opts: textOpts(Object.keys(SOLID)), a: k, cols: 3, ex: `${NAME[it]}像${k}。（球：圓圓的；罐子形：上下是圓的平面；箱子形：每一面都是平平的）` }; }
     if (t === 2) { const ask = one([['哪一個不管怎麼放都可以滾來滾去？', '球'], ['哪一個每一面都是平的，可以穩穩地疊高？', '箱子形'], ['哪一個躺著可以滾、立著放就不會滾？', '罐子形']]);
       return { p: ask[0], opts: Object.keys(SOLID).map(k => ({ v: k, label: `${SOLID[k][0]} ${k}`, txt: true })), a: ask[1], cols: 3, ex: `答案是${ask[1]}。` }; }
     const kinds = ['圓形', '三角形', '正方形', '長方形'], colors = ['c1', 'c2', 'c3', 'c4'];
