@@ -682,7 +682,8 @@
             parts.push(ch);
             prev = g;
         }
-        return parts.join('')
+        const joined = parts.join('');
+        return (opts.display ? joined : joined.replace(/[「」『』]/g, ''))
             .replace(/（空格）(?=（空格）)/g, '（空格），')
             .replace(/^[，、\s]+/, '')
             .trim();

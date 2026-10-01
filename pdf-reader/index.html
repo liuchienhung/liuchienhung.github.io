@@ -77,6 +77,14 @@ select{border:1.5px solid var(--line);background:var(--card);border-radius:10px;
 .settings fieldset{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:0;min-width:240px}
 .settings legend{font-weight:700;font-size:.95rem;padding:0 4px}
 .settings label{display:flex;align-items:center;gap:6px;min-height:34px;font-size:.92rem}
+.pron{max-width:520px}
+.pron-list{list-style:none;margin:6px 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.pron-list li{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:2px 4px 2px 10px;font-size:.9rem}
+.pron-list li button{min-height:28px;padding:0 8px;border-radius:999px}
+.pron-list .empty{border:0;color:var(--muted);padding:0}
+.pron-form{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.pron-form input{font:inherit;color:inherit;background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:6px 8px;min-height:40px;width:8.5em}
+.caption .fix-pron{margin-left:auto;flex:none;min-height:30px;padding:2px 10px;font-size:.82rem}
 .settings .hint{color:var(--muted);font-size:.82rem;margin:2px 0 0;max-width:420px}
 
 /* 原版面頁面：只做等比例縮放，版面一律依 PDF */
@@ -173,6 +181,18 @@ select{border:1.5px solid var(--line);background:var(--card);border-radius:10px;
       <label><input type="radio" name="zhuyin-mode" value="mask"> 只念「注音」兩字</label>
       <p class="hint">畫面上只顯示注音的格子，念出讀音即可，不會透露要寫的國字。</p>
     </fieldset>
+    <fieldset class="pron">
+      <legend>讀音修正</legend>
+      <p class="hint">語音遇到破音字可能念錯（例如「抹布」念成ㄇㄚ布）。在這裡設定「遇到某個詞就改念成另一個寫法」，用同音字代替即可。</p>
+      <ul id="pron-list" class="pron-list"></ul>
+      <form id="pron-form" class="pron-form">
+        <input id="pron-from" type="text" placeholder="原詞，如：抹布" aria-label="原詞" maxlength="20" required>
+        <span aria-hidden="true">→</span>
+        <input id="pron-to" type="text" placeholder="念成，如：摸布" aria-label="念成" maxlength="40" required>
+        <button type="submit">新增</button>
+        <button id="pron-test" type="button" title="試聽「念成」的讀音">🔊 試聽</button>
+      </form>
+    </fieldset>
     <fieldset>
       <legend>顯示</legend>
       <label><input id="show-zones" type="checkbox"> 標示可點讀的文字範圍</label>
@@ -180,7 +200,7 @@ select{border:1.5px solid var(--line);background:var(--card);border-radius:10px;
       <label><input id="auto-scroll" type="checkbox" checked> 連續朗讀時自動捲動到朗讀位置</label>
     </fieldset>
   </div>
-  <p class="caption" aria-live="polite"><span id="caption-tag" class="tag">提示</span><span id="caption" class="text">點選試卷上的文字即可朗讀。</span></p>
+  <p class="caption" aria-live="polite"><span id="caption-tag" class="tag">提示</span><span id="caption" class="text">點選試卷上的文字即可朗讀。</span><button id="btn-fix-pron" type="button" class="fix-pron" title="設定破音字的正確讀音">讀音不對？</button></p>
   </div>
   <div id="viewer" class="viewer"></div>
 </section>

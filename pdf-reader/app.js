@@ -44,7 +44,13 @@
         captionTag: $('caption-tag'),
         showZones: $('show-zones'),
         showTargets: $('show-targets'),
-        autoScroll: $('auto-scroll')
+        autoScroll: $('auto-scroll'),
+        pronList: $('pron-list'),
+        pronForm: $('pron-form'),
+        pronFrom: $('pron-from'),
+        pronTo: $('pron-to'),
+        pronTest: $('pron-test'),
+        btnFixPron: $('btn-fix-pron')
     };
 
     const settings = loadSettings();
@@ -69,7 +75,9 @@
             zhuyinMode: 'read',
             showZones: false,
             showTargets: false,
-            autoScroll: true
+            autoScroll: true,
+            // 破音字讀音修正：遇到 from 改念 to（以同音字代替）
+            pronunciations: [{ from: '抹布', to: '摸布' }]
         };
         try {
             const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '{}');
@@ -184,7 +192,8 @@
     }
 
     // 注意：必須在點擊事件中「同步」呼叫，不可先 await 或 setTimeout，否則行動裝置會靜默擋下
-    function speak(text, onDone) {
+    function speak(rawText, onDone) {
+        const text = rawText ? applyPronunciations(rawText) : rawText;
         cancelSpeech();
         const token = state.speechToken;
         if (!speech.supported || !text) {
@@ -232,6 +241,50 @@
                 showNoSoundHint();
             }
         }, 3000);
+    }
+
+    function applyPronunciations(text) {
+        const rules = (settings.pronunciations || [])
+            .filter((rule) => rule && rule.from && rule.to)
+            .sort((a, b) => b.from.length - a.from.length);
+        if (!rules.length) return text;
+        // 一次掃描，長詞優先，避免替換後的文字又被其他規則改到
+        const pattern = new RegExp(rules.map((rule) => rule.from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
+        const lookup = new Map(rules.map((rule) => [rule.from, rule.to]));
+        return text.replace(pattern, (match) => lookup.get(match) || match);
+    }
+
+    function renderPronunciations() {
+        el.pronList.textContent = '';
+        const rules = settings.pronunciations || [];
+        if (!rules.length) {
+            const empty = document.createElement('li');
+            empty.className = 'empty';
+            empty.textContent = '尚未設定';
+            el.pronList.appendChild(empty);
+            return;
+        }
+        rules.forEach((rule, index) => {
+            const item = document.createElement('li');
+            const label = document.createElement('span');
+            label.textContent = `${rule.from} → ${rule.to}`;
+            const play = document.createElement('button');
+            play.type = 'button';
+            play.textContent = '🔊';
+            play.setAttribute('aria-label', `試聽 ${rule.to}`);
+            play.addEventListener('click', () => speak(rule.to));
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.textContent = '✕';
+            remove.setAttribute('aria-label', `刪除 ${rule.from}`);
+            remove.addEventListener('click', () => {
+                settings.pronunciations.splice(index, 1);
+                saveSettings();
+                renderPronunciations();
+            });
+            item.append(label, play, remove);
+            el.pronList.appendChild(item);
+        });
     }
 
     function speechOptions() {
@@ -959,6 +1012,31 @@
                 saveSettings();
                 state.pages.forEach(drawStaticLayers);
             });
+        });
+
+        renderPronunciations();
+        el.pronForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const from = el.pronFrom.value.trim();
+            const to = el.pronTo.value.trim();
+            if (!from || !to) return;
+            settings.pronunciations = (settings.pronunciations || []).filter((rule) => rule.from !== from);
+            settings.pronunciations.push({ from, to });
+            saveSettings();
+            renderPronunciations();
+            el.pronFrom.value = '';
+            el.pronTo.value = '';
+            el.pronFrom.focus();
+        });
+        el.pronTest.addEventListener('click', () => {
+            const to = el.pronTo.value.trim();
+            if (to) speak(to);
+        });
+        el.btnFixPron.addEventListener('click', () => {
+            el.settings.classList.add('show');
+            el.btnSettings.setAttribute('aria-expanded', 'true');
+            el.pronFrom.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            el.pronFrom.focus({ preventScroll: true });
         });
 
         el.zoomIn.addEventListener('click', () => stepZoom(1));
