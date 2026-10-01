@@ -78,6 +78,24 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
 .bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;display:flex;margin:2px 0 6px}
 .bar i{display:block;height:100%}
 .small{font-size:.82rem;color:var(--muted)}
+.fit{margin:0 12px 16px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.fit h2{margin:0 0 4px;font-size:1.05rem;color:var(--ink)}
+.fit-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.fit-form label{display:flex;flex-direction:column;gap:2px;font-size:.82rem;color:var(--muted)}
+.fit-form input{font:inherit;color:var(--text);background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:44px;width:100%}
+.fit-form input:focus-visible{outline:3px solid var(--pencil);outline-offset:2px}
+.fit-form .full{grid-column:1/-1}
+.fit details{margin:4px 0 8px;font-size:.88rem}
+.fit summary{cursor:pointer;color:var(--ink);font-weight:500;min-height:32px}
+.fit-out{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:8px 0}
+.fit-out .m .v{font-size:1.15rem}
+.fit-fig{display:flex;justify-content:center;margin:4px 0}
+.fit-fig svg{width:min(100%,300px);height:auto}
+.fit-fig line,.fit-fig rect,.fit-fig circle,.fit-fig path{stroke:var(--ink);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.fit-fig circle{fill:var(--card)}
+.fit-fig .fur{stroke:var(--muted)} .fit-fig .fr{fill:var(--pencil);stroke:#8a6d00}
+.fit-fig text{fill:var(--muted);font-size:9px;stroke:none}
+.fit ul{margin:4px 0;padding-left:1.3em} .fit li{margin:4px 0}
 </style>
 </head>
 <body>
@@ -115,6 +133,26 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
 </div>
 
 <section id="report" aria-live="polite"></section>
+
+<section class="fit" aria-labelledby="fitTitle">
+  <h2 id="fitTitle">桌椅高度建議</h2>
+  <p class="small">輸入孩子身高即可估算；有量測膝窩高、肘高會更準。再填目前的桌椅高度，就能判斷要不要調整或加腳踏板。</p>
+  <div class="fit-form">
+    <label class="full">孩子身高（cm）<input id="fitH" type="number" inputmode="decimal" min="90" max="200" step="0.5" placeholder="例如 130"></label>
+    <label>目前桌面高（cm）<input id="fitDesk" type="number" inputmode="decimal" min="30" max="110" step="0.5" placeholder="選填"></label>
+    <label>目前椅面高（cm）<input id="fitChair" type="number" inputmode="decimal" min="15" max="80" step="0.5" placeholder="選填"></label>
+  </div>
+  <details>
+    <summary>精確量測（選填）</summary>
+    <p class="small">孩子赤腳（或穿平常在家的拖鞋）坐在硬椅上，大腿水平、小腿垂直、雙腳平踩地面。</p>
+    <div class="fit-form">
+      <label>膝窩高：地面到膝蓋後窩（cm）<input id="fitPop" type="number" inputmode="decimal" min="15" max="60" step="0.5" placeholder="選填"></label>
+      <label>坐姿肘高：椅面到手肘下緣（cm）<input id="fitElb" type="number" inputmode="decimal" min="8" max="40" step="0.5" placeholder="選填"></label>
+    </div>
+    <p class="small">量肘高時，肩膀放鬆、上臂自然下垂、手肘彎 90°。</p>
+  </details>
+  <div id="fitResult" aria-live="polite"><p class="small">請先輸入身高。</p></div>
+</section>
 
 <section class="exlib" aria-labelledby="exlibTitle">
   <h2 id="exlibTitle">矯正運動教學</h2>
@@ -217,7 +255,7 @@ const exHtml=keys=>keys.map(k=>`<div class="ex"><b>${EX[k].name}</b><span class=
 
 const ADVICE={
   neck:"頭頸過度前傾：眼睛離紙面保持約 30–35 cm（一尺），改用斜面寫字板或把本子墊高 10–15°，減少低頭角度。",
-  trunk:"上身趴向桌面：胸口與桌緣保持一拳距離，臀部坐滿椅面、背部靠直；檢查椅子是否過低或桌子過高（手肘自然彎曲約 90° 時前臂應平放桌面）。",
+  trunk:"上身趴向桌面：胸口與桌緣保持一拳距離，臀部坐滿椅面、背部靠直；檢查椅子是否過低或桌子過高（手肘自然彎曲約 90° 時前臂應平放桌面），可用下方「桌椅高度建議」算出合適高度與是否需要腳踏板。",
   sh:"兩肩高低不一：非寫字手要壓住紙張、平放桌面，不要垂在桌下；紙張放在寫字手同側前方並稍微斜放，避免身體扭轉。",
   tilt:"頭部歪向一側：常因紙張擺正但握筆手擋住視線。將紙張往寫字手方向傾斜 15–30°，並確認光源在寫字手的對側，避免手影。",
   drop:"頭部垂得太低：多半是握筆太靠近筆尖，看不到筆尖只好低頭。手指離筆尖約 3 cm（一寸），並檢查視力是否需要檢查。",
@@ -445,13 +483,81 @@ function report(){
     <ul>
       <li>一尺一拳一寸：眼離紙約 33 cm、胸離桌一拳、指離筆尖 3 cm。</li>
       <li>握筆：拇指與食指不重疊、指節不凹陷，筆桿斜靠虎口；握太緊會指尖發白。</li>
-      <li>桌椅：雙腳平踩地面、膝約 90°；桌面約在手肘高度下方 3–5 cm。</li>
+      <li>桌椅：${fit.summary||"雙腳平踩地面（踩不到就加腳踏板）、膝約 90°；手肘自然彎曲時前臂平放桌面，桌面約與手肘同高或略高 0–4 cm。輸入身高可得個人化建議（見下方「桌椅高度建議」）。"}</li>
       <li>照明：檯燈置於寫字手對側，桌面照度足夠且無強烈反光。</li>
       <li>時間：每寫 30–40 分鐘起身休息、看遠處 5–10 分鐘。</li>
     </ul>
     <p class="small">角度為 2D 影像估算，受鏡頭位置影響，建議固定同一位置拍攝以比較前後變化；非醫療診斷，若長期駝背或歪頭請諮詢復健科或眼科。</p>`;
   r.style.display="block"; r.scrollIntoView({behavior:"smooth"});
 }
+
+/* ===== 桌椅高度建議 =====
+   椅面 ≈ 膝窩高 − 1 cm（估算：身高 × 0.25，大腿下方不受壓）
+   桌椅高差 ≈ 坐姿肘高 + 2 cm（估算：身高 × 0.135，前臂可平放桌面）
+   椅子為了配合桌子而高過膝窩高時，用腳踏板補足雙腳離地的距離 */
+const FIT_IDS=["fitH","fitDesk","fitChair","fitPop","fitElb"];
+const fit={summary:""};
+const num=id=>{ const v=parseFloat($(id).value); return Number.isFinite(v)&&v>0?v:null; };
+const r1=v=>Math.round(v*2)/2;
+const cm=v=>`${r1(v)} cm`;
+function fitCalc(){
+  const H=num("fitH"), desk=num("fitDesk"), chair=num("fitChair");
+  if(!H||H<90||H>200) return null;
+  const pop=num("fitPop")??H*0.25, elb=num("fitElb")??H*0.135;
+  const S=pop-1, diff=elb+2, D=S+diff;
+  const acts=[];
+  let chairF=desk!=null?desk-diff:chair!=null?chair:S;
+  let raiseDesk=0;
+  if(chairF<S-3){
+    if(desk!=null) raiseDesk=S+diff-desk;
+    chairF=S;
+  }
+  const deskF=chairF+diff;
+  const foot=chairF-S>2?chairF-S:0;
+  if(raiseDesk>0) acts.push(`桌子偏低：書桌墊高約 ${cm(raiseDesk)}（桌腳增高墊或桌上型增高架），或改用斜面寫字板，避免彎腰低頭。`);
+  if(chair!=null){
+    const d=chairF-chair;
+    if(d>1.5) acts.push(`椅子調高 ${cm(d)}，不能調就加硬一點的坐墊。`);
+    else if(d<-1.5) acts.push(`椅子調低 ${cm(-d)}${foot?"":"，讓雙腳能平踩地面"}；不能調就換椅子${desk!=null?"或調整桌高":""}。`);
+    else acts.push("椅子高度合適，維持現狀。");
+  }
+  if(foot) acts.push(`需要腳踏板，高度約 ${cm(foot)}：踏面要能放雙腳、止滑、穩固不晃，坐下時膝約 90°、大腿與椅面平貼。${foot>15?"超過 15 cm 上下椅子不方便，建議優先降低桌面或改用可調高度的兒童書桌。":""}`);
+  else acts.push("雙腳能平踩地面，不需要腳踏板。");
+  if(desk==null&&chair==null) acts.push("填入目前桌椅高度，可判斷要調哪一邊。");
+  acts.push(`坐深：坐滿椅面時膝窩與椅子前緣留 2–3 指寬；太深就在背後加靠墊。`);
+  return {H,S,D,diff,chairF,deskF,foot,acts,est:num("fitPop")==null||num("fitElb")==null};
+}
+function fitSVG(o){
+  const k=1.25, F=132, sy=F-o.chairF*k, dy=F-o.deskF*k, fy=F-o.foot*k;
+  const hip=[66,sy-3], knee=[104,sy-3], sh=[64,sy-3-o.H*0.2*k], elb=[74,sy-3-o.diff*k+6];
+  const hand=[118,dy-3], head=[70,sh[1]-o.H*0.07*k];
+  let g=`<line class="fur" x1="4" y1="${F}" x2="196" y2="${F}"/>`;
+  g+=`<line class="fur" x1="44" y1="${sy}" x2="94" y2="${sy}"/><line class="fur" x1="46" y1="${sy}" x2="46" y2="${F}"/><line class="fur" x1="92" y1="${sy}" x2="92" y2="${F}"/><line class="fur" x1="46" y1="${sy}" x2="44" y2="${sy-48}"/>`;
+  g+=`<line class="fur" x1="100" y1="${dy}" x2="196" y2="${dy}"/><line class="fur" x1="190" y1="${dy}" x2="190" y2="${F}"/>`;
+  if(o.foot) g+=`<rect class="fr" x="96" y="${fy}" width="30" height="${o.foot*k}" rx="2"/><text x="128" y="${fy+o.foot*k/2+3}">腳踏板 ${r1(o.foot)}</text>`;
+  g+=L(hip,sh)+L(sh,elb)+L(elb,hand)+L(hip,knee)+L(knee,[104,fy])+L([104,fy],[114,fy]);
+  g+=`<circle cx="${head[0]}" cy="${head[1]}" r="9"/>`;
+  g+=`<text x="6" y="${sy-4}">椅 ${r1(o.chairF)}</text><text x="150" y="${dy-4}">桌 ${r1(o.deskF)}</text>`;
+  const top=Math.min(head[1]-12,dy-14);
+  return `<svg viewBox="0 ${top} 200 ${F+4-top}" role="img" aria-label="建議坐姿示意：椅面 ${r1(o.chairF)} 公分，桌面 ${r1(o.deskF)} 公分${o.foot?`，腳踏板 ${r1(o.foot)} 公分`:""}">${g}</svg>`;
+}
+function renderFit(){
+  const o=fitCalc(), out=$("fitResult");
+  try{ localStorage.setItem("postureFit",JSON.stringify(Object.fromEntries(FIT_IDS.map(i=>[i,$(i).value])))); }catch{}
+  if(!o){ fit.summary=""; out.innerHTML=`<p class="small">${num("fitH")?"身高請輸入 90–200 cm。":"請先輸入身高。"}</p>`; return; }
+  fit.summary=`建議椅面 ${cm(o.chairF)}、桌面 ${cm(o.deskF)}，${o.foot?`需要約 ${cm(o.foot)} 的腳踏板`:"不需要腳踏板"}；雙腳平踩、膝約 90°，前臂平放桌面、肩膀不聳起。`;
+  out.innerHTML=`<div class="fit-out">
+      <div class="m good"><div class="k">建議椅面高</div><div class="v">${cm(o.chairF)}</div></div>
+      <div class="m good"><div class="k">建議桌面高</div><div class="v">${cm(o.deskF)}</div></div>
+      <div class="m ${o.foot?"warn":"good"}"><div class="k">腳踏板</div><div class="v">${o.foot?cm(o.foot):"不需要"}</div></div>
+    </div>
+    <div class="fit-fig">${fitSVG(o)}</div>
+    <ul>${o.acts.map(a=>`<li>${a}</li>`).join("")}</ul>
+    <p class="small">理想組合（雙腳著地、不用腳踏板）：椅面 ${cm(o.S)}、桌面 ${cm(o.D)}，桌椅高差 ${cm(o.diff)}。${o.est?"未填精確量測的部分以身高比例估算，個別差異約 ±2 cm，請以孩子實際坐姿微調。":""}孩子長高後請重新量測。</p>`;
+}
+try{ const s=JSON.parse(localStorage.getItem("postureFit")||"{}"); FIT_IDS.forEach(i=>{ if(s[i]) $(i).value=s[i]; }); }catch{}
+FIT_IDS.forEach(i=>$(i).addEventListener("input",renderFit));
+renderFit();
 
 /* ===== 運動教學 ===== */
 const tut={open:false,running:false,abort:false,mute:false,preview:null,keys:[]};
