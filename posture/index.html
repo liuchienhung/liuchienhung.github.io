@@ -89,7 +89,7 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
 .snap img{display:block;width:100%;height:auto;background:#000}
 .snap figcaption{padding:6px 8px;font-size:.78rem;line-height:1.45}
 .snap .tag{display:inline-block;padding:0 6px;margin-right:4px;border-radius:6px;color:#fff;font-weight:700;background:var(--ink)}
-.snap .tag.worst{background:var(--bad)}
+.snap .tag.worst{background:var(--bad)} .snap .tag.best{background:var(--good)}
 .snap-opts{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:4px 0 6px;font-size:.88rem}
 .snap-opts label{display:flex;align-items:center;gap:6px;min-height:40px;cursor:pointer}
 .snap-opts input{width:20px;height:20px;accent-color:var(--ink)}
@@ -292,12 +292,12 @@ function resetStats(){
   for(const k in METRICS) state.stats[k]={good:0,warn:0,bad:0};
   resetSnaps();
 }
-/* ===== 姿勢快照：最差狀態、隨機抽樣、最後姿態（只存在本頁記憶體，不上傳）
+/* ===== 姿勢快照：最佳姿態、最差狀態、隨機抽樣、最後姿態（只存在本頁記憶體，不上傳）
    拍下時只存原始畫面與關節點，產生報告時再依選項「裁切人物」「臉部模糊」畫出照片 ===== */
 const SNAP_W=480, BASE_W=640, RAND_K=3;
 const snaps={};
 const randGap=()=>15000+Math.random()*45000; /* 每 15–60 秒抽一張候選 */
-function resetSnaps(){ Object.assign(snaps,{worst:null,last:null,rand:[],seen:0,lastValues:null,lastWorstAt:0,nextRand:performance.now()+randGap()}); }
+function resetSnaps(){ Object.assign(snaps,{worst:null,best:null,lastBestAt:0,last:null,rand:[],seen:0,lastValues:null,lastWorstAt:0,nextRand:performance.now()+randGap()}); }
 resetSnaps();
 function grab(values,view,lm){
   const w=BASE_W, h=Math.round(w*video.videoHeight/video.videoWidth)||480;
@@ -311,12 +311,21 @@ function frameScore(values){
   for(const k in values){ const lv=level(k,values[k]); if(lv!=="good") sc+=(lv==="bad"?2:0.5)+Math.max(0,severity(k,values[k])); }
   return sc;
 }
+/* 姿勢偏離程度（越小越好）：各指標相對「良好上限」的比例取平均 */
+function frameDev(values){
+  const ks=Object.keys(values); if(!ks.length) return Infinity;
+  return ks.reduce((a,k)=>{ const m=METRICS[k], v=values[k]; return a+(m.dir===1?Math.max(0,v)/m.thr[0]:m.thr[0]/Math.max(v,0.01)); },0)/ks.length;
+}
 function trackSnaps(values,view,lm){
   const now=performance.now();
   snaps.lastValues={values:{...values},view,lm};
   const sc=frameScore(values);
   if(sc>0&&sc>(snaps.worst?.score??0)*1.05&&now-snaps.lastWorstAt>1000&&now-state.startTime>3000){
     snaps.lastWorstAt=now; snaps.worst={...grab(values,view,lm),score:sc};
+  }
+  const dev=frameDev(values);
+  if(sc===0&&dev<(snaps.best?.dev??Infinity)*0.97&&now-snaps.lastBestAt>1000&&now-state.startTime>3000){
+    snaps.lastBestAt=now; snaps.best={...grab(values,view,lm),dev};
   }
   if(now>=snaps.nextRand){ /* 蓄水池抽樣：整段偵測中平均隨機留下 RAND_K 張 */
     snaps.nextRand=now+randGap(); snaps.seen++;
@@ -635,7 +644,7 @@ function report(){
   const r=$("report");
   const d=state.reportAt, when=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
   reportSnaps=[];
-  const shots=[snapFig(snaps.worst,"最差狀態","worst"),snapFig(snaps.last,"最後姿態"),
+  const shots=[snapFig(snaps.best,"最佳姿態","best"),snapFig(snaps.worst,"最差狀態","worst"),snapFig(snaps.last,"最後姿態"),
     ...[...snaps.rand].sort((a,b)=>a.t-b.t).map(sn=>snapFig(sn,"隨機紀錄"))].join("");
   r.innerHTML=`<div class="rep-actions" data-html2canvas-ignore><button class="primary" id="pdfBtn">下載 PDF</button></div>
     <h2>${nick()?esc(nick())+" 的":""}本次報告（${mins} 分鐘）</h2>
@@ -647,6 +656,7 @@ function report(){
         <label><input type="checkbox" id="optBlur"${snapOpt.blur?" checked":""}> 臉部模糊</label></div>
       <div class="snaps">${shots}</div><p class="small" id="snapNote"></p>`:'<p class="small">偵測時間太短，沒有留下快照。</p>'}
     ${snaps.worst?"":'<p class="small">全程沒有出現需要注意的姿勢，很棒！</p>'}
+    ${snaps.best||!shots?"":'<p class="small">這次沒有出現各項都良好的姿勢，所以沒有「最佳姿態」照片，下次加油！</p>'}
     <p class="small">快照只存在這個頁面、不會上傳；重新偵測或關閉頁面就會消失，要留存請下載 PDF。</p>
     <h3>優先改善</h3>
     ${issues.length?`<ol>${issues.map(i=>`<li>${ADVICE[i.k]}<span class="small">（不良 ${i.pb.toFixed(0)}%）</span>${exHtml(EX_FOR[i.k])}</li>`).join("")}</ol>`
