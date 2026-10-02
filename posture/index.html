@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#1F3A5F; --paper:#FAFBFC; --line:#D9E1EA; --pencil:#F2C230;
+  --ink:#1F3A5F; --paper:#FFF8EC; --line:#EADBC4; --pencil:#F2C230;
   --good:#2E8B57; --warn:#D99A00; --bad:#D1453B; --text:#1C2530; --muted:#5B6B7C; --card:#FFFFFF;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
@@ -33,6 +33,68 @@ video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .viewtag{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.55);color:#fff;padding:3px 10px;border-radius:20px;font-size:.8rem}
 .acttag{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.55);color:#fff;padding:3px 10px;border-radius:20px;font-size:.85rem;font-weight:700;display:none}
 .banner.away{background:#5B6B7C}
+/* ===== 孩子畫面 ===== */
+.kid{position:absolute;inset:0;z-index:5;background:#BFE6FF;overflow:hidden;font-family:"Noto Sans TC",system-ui,sans-serif}
+.kid svg{position:absolute;inset:0;width:100%;height:100%}
+.stage.kidmode>.banner,.stage.kidmode>.viewtag,.stage.kidmode>.acttag,.stage.kidmode>.hint{display:none!important}
+.kid-foods{position:absolute;left:10px;right:10px;bottom:10px;display:flex;flex-wrap:wrap;justify-content:center;gap:5px;font-size:1.25rem;line-height:1}
+.kid-foods span{display:inline-flex;align-items:center;gap:2px;background:rgba(255,255,255,.85);border-radius:20px;padding:3px 8px;font-size:.95rem;font-weight:700;color:#5A3A1E}
+.kid-foods span i{font-style:normal;font-size:1.2rem}
+.kid-foods:empty::before{content:"🧺 坐好就能幫龜龜收集點心";font-size:.85rem;background:rgba(255,255,255,.85);border-radius:20px;padding:5px 10px;color:#5A3A1E;font-weight:700}
+.kid-parent{position:absolute;right:8px;top:8px;min-height:34px;padding:4px 10px;font-size:.8rem;border-radius:20px;background:rgba(255,255,255,.85);border:0;color:#1F3A5F}
+.kid-bubble{position:absolute;left:12px;right:12px;top:52px;background:#fff;color:#2B2B2B;border:3px solid #2F80ED;border-radius:20px;padding:10px 14px;
+  font-size:1.2rem;font-weight:700;line-height:1.4;text-align:center;box-shadow:0 4px 0 rgba(0,0,0,.12);opacity:0;transform:translateY(-8px) scale(.96);transition:opacity .25s,transform .25s;pointer-events:none}
+.kid-bubble.show{opacity:1;transform:none}
+.kid-bubble::after{content:"";position:absolute;left:62%;bottom:-14px;border:12px solid transparent;border-top-color:#2F80ED;border-bottom:0}
+.kid.k-bad .kid-bubble{border-color:#E8453C} .kid.k-bad .kid-bubble::after{border-top-color:#E8453C}
+.kid-pop{position:absolute;left:50%;top:45%;font-size:4rem;transform:translate(-50%,-50%) scale(0);pointer-events:none}
+.kid-pop.go{animation:kPop 1.6s ease-out forwards}
+@keyframes kPop{0%{transform:translate(-50%,-50%) scale(0)}25%{transform:translate(-50%,-50%) scale(1.3)}55%{transform:translate(-50%,-50%) scale(1)}100%{transform:translate(-160%,-560%) scale(.3);opacity:.2}}
+.kid .tb{transform-box:fill-box;transform-origin:50% 100%}
+.kid .puff{transform-box:fill-box;transform-origin:center;animation:kPuff 1.8s ease-out infinite}
+.kid .puff:nth-child(2){animation-delay:.6s} .kid .puff:nth-child(3){animation-delay:1.2s}
+@keyframes kPuff{0%{transform:translate(0,0) scale(.4);opacity:.95}100%{transform:translate(-34px,-56px) scale(1.5);opacity:0}}
+.kid.k-stop .puff{animation:none;opacity:0}
+.kid #kSiren{fill:#FF5A4E}
+.kid.k-bad #kSiren{animation:kSiren .45s steps(1) infinite}
+@keyframes kSiren{0%{fill:#FF3B30}50%{fill:#2F80ED}}
+.kid #kEyesC,.kid #kMouthO,.kid #kMouthFlat,.kid #kZzz,.kid #kStation,.kid #kGlass,.kid #kBook,.kid #kPencil{display:none}
+.kid.k-away #kEyes,.kid.k-idle.k-sleep #kEyes{display:none}
+.kid.k-away #kEyesC,.kid.k-idle.k-sleep #kEyesC,.kid.k-away #kZzz{display:inline}
+.kid.k-away #kStation,.kid.k-idle #kStation{display:inline}
+.kid.k-bad #kMouthSmile,.kid.k-warn #kMouthSmile{display:none}
+.kid.k-bad #kMouthO,.kid.k-warn #kMouthFlat{display:inline}
+.kid.k-read #kGlass,.kid.k-read #kBook,.kid.k-write #kPencil{display:inline}
+.kid.k-write #kPencil{animation:kWrite .5s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes kWrite{to{transform:rotate(14deg) translateX(3px)}}
+.kid #kTHead{transform-box:fill-box;transform-origin:0% 60%;transition:transform .4s}
+.kid.k-iss-neck #kTHead{animation:kRetract 2s ease-in-out infinite}
+@keyframes kRetract{0%,100%{transform:translateX(0)}40%,65%{transform:translateX(-16px) scale(.92)}}
+.kid.k-iss-drop #kTHead{animation:kLookUp 2s ease-in-out infinite}
+@keyframes kLookUp{0%,100%{transform:rotate(0)}40%,65%{transform:rotate(-22deg)}}
+.kid.k-eat #kTHead{animation:kEat .35s ease-in-out 4 alternate}
+@keyframes kEat{to{transform:translateX(5px) rotate(8deg)}}
+.kid #kLocoBody{transform-box:fill-box;transform-origin:20% 100%}
+.kid.k-iss-trunk #kLocoBody{animation:kLean 2.2s ease-in-out infinite}
+@keyframes kLean{0%,100%{transform:rotate(0)}35%,60%{transform:rotate(9deg)}}
+.kid.k-iss-sh #kTrain{animation:kRock 1s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+@keyframes kRock{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+.kid #kFace{transform-box:fill-box;transform-origin:center}
+.kid.k-iss-tilt #kFace{animation:kTilt 1.6s ease-in-out infinite}
+@keyframes kTilt{0%,100%{transform:rotate(0)}40%,60%{transform:rotate(-16deg)}}
+.kid.k-good #kTrain{animation:kBob .35s ease-in-out infinite alternate;transform-box:fill-box}
+@keyframes kBob{to{transform:translateY(-1.5px)}}
+.kid #kWormBody{transform-box:fill-box;transform-origin:50% 100%;transform:translateY(30px);opacity:0;transition:transform .6s,opacity .3s}
+.kid.k-break #kWormBody{transform:none;opacity:1;animation:kWiggle .7s ease-in-out infinite alternate}
+@keyframes kWiggle{to{transform:rotate(10deg)}}
+.kid #kWings ellipse{transform-box:fill-box;transform-origin:50% 100%;animation:kFlap .12s linear infinite alternate}
+@keyframes kFlap{to{transform:scaleY(.3)}}
+.kid:not(.k-good) #kWings{display:none}
+.kid #kZzz text{animation:kZ 2s ease-in-out infinite;transform-box:fill-box}
+.kid #kZzz text:nth-child(2){animation-delay:.5s} .kid #kZzz text:nth-child(3){animation-delay:1s}
+@keyframes kZ{0%{opacity:0;transform:translate(0,6px)}50%{opacity:1}100%{opacity:0;transform:translate(8px,-14px)}}
+@media (prefers-reduced-motion:reduce){.kid *{animation-duration:0s!important;animation-iteration-count:1!important}}
+.modebtn{background:#FFF1C9;border-color:#F2C230;font-weight:700}
 .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px;font-size:.95rem}
 .metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 12px}
 .m{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:10px;padding:8px 10px}
@@ -43,7 +105,7 @@ video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .nick{flex:1 1 100%;display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--muted)}
 .nick input{flex:1;min-width:0;font:inherit;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:44px}
 .nick input:focus-visible{outline:3px solid var(--pencil);outline-offset:2px}
-button,select{font:inherit;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);padding:10px 12px;min-height:44px}
+button,select{font:inherit;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--text);padding:10px 12px;min-height:44px}
 button.primary{background:var(--ink);color:#fff;border-color:var(--ink);flex:1 1 100%;font-weight:700}
 button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outline-offset:2px}
 #report{margin:0 12px 24px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:none}
@@ -124,7 +186,8 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
 <body>
 <header>
   <a href="../" style="color:var(--muted);font-size:.85rem;text-decoration:none">← 回服務首頁</a>
-  <h1>寫字姿勢即時偵測</h1>
+  <h1>🚂 嘟嘟號寫字小幫手</h1>
+  <p>寫字・閱讀姿勢即時偵測：孩子看到嘟嘟號和龜龜，家長可切換回鏡頭畫面。</p>
   <p>手機放在孩子側面約 1–1.5 公尺、與肩同高，拍到頭、肩、髖。影像只在本機運算，不上傳。</p>
   <p id="devInfo" class="small"></p>
 </header>
@@ -136,6 +199,102 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
   <div class="viewtag" id="viewtag">—</div>
   <div class="acttag" id="acttag"></div>
   <div class="hint" id="hint">按「開始偵測」開啟相機</div>
+  <div class="kid" id="kid" hidden>
+    <svg viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs><linearGradient id="kSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7CCBFF"/><stop offset="1" stop-color="#DDF3FF"/></linearGradient></defs>
+      <rect width="300" height="400" fill="url(#kSky)"/>
+      <g><circle cx="250" cy="150" r="22" fill="#FFD84D"/><circle cx="250" cy="150" r="30" fill="#FFD84D" opacity=".3"/></g>
+      <g id="kClouds" fill="#fff" opacity=".9">
+        <g><ellipse cx="60" cy="130" rx="26" ry="11"/><ellipse cx="76" cy="122" rx="16" ry="12"/></g>
+        <g><ellipse cx="190" cy="105" rx="22" ry="9"/><ellipse cx="203" cy="98" rx="13" ry="10"/></g>
+      </g>
+      <g id="kHills">
+        <path d="M0 262 Q40 212 80 240 Q120 206 170 238 Q220 200 262 236 Q284 224 300 240 V262 H0Z" fill="#8ACB6A"/>
+        <path d="M300 262 Q340 212 380 240 Q420 206 470 238 Q520 200 562 236 Q584 224 600 240 V262 H300Z" fill="#8ACB6A"/>
+      </g>
+      <rect y="258" width="300" height="142" fill="#9C6B3F"/>
+      <rect y="256" width="300" height="9" rx="4" fill="#6DBE5A"/>
+      <g id="kRocks" fill="#7E5430">
+        <ellipse cx="20" cy="330" rx="7" ry="4"/><ellipse cx="95" cy="372" rx="9" ry="5"/><ellipse cx="160" cy="340" rx="5" ry="3"/><ellipse cx="230" cy="385" rx="8" ry="4"/><ellipse cx="275" cy="350" rx="6" ry="3"/>
+        <ellipse cx="320" cy="330" rx="7" ry="4"/><ellipse cx="395" cy="372" rx="9" ry="5"/><ellipse cx="460" cy="340" rx="5" ry="3"/><ellipse cx="530" cy="385" rx="8" ry="4"/><ellipse cx="575" cy="350" rx="6" ry="3"/>
+      </g>
+      <g id="kSleepers" fill="#6B3F1D"></g>
+      <rect y="300" width="300" height="5" rx="2" fill="#8C8CA0"/>
+      <g id="kStation" transform="translate(262 258)">
+        <rect x="-3" y="-58" width="6" height="58" fill="#8A8A9A"/>
+        <rect x="-30" y="-84" width="60" height="28" rx="8" fill="#fff" stroke="#2F80ED" stroke-width="3"/>
+        <text x="0" y="-64" text-anchor="middle" font-size="13" font-weight="700" fill="#2F80ED">嘟嘟站</text>
+      </g>
+      <g transform="translate(46 368)">
+        <ellipse rx="20" ry="6" fill="#5C3B1E"/>
+        <g id="kWormBody"><path d="M0 0 q-8 -14 2 -26 q10 -12 0 -24" fill="none" stroke="#F29BA5" stroke-width="10" stroke-linecap="round"/>
+          <circle cx="-3" cy="-50" r="2" fill="#333"/><circle cx="4" cy="-49" r="2" fill="#333"/></g>
+        <ellipse cy="2" rx="20" ry="5" fill="#9C6B3F"/>
+      </g>
+      <g id="kTrain">
+        <line x1="110" y1="282" x2="136" y2="282" stroke="#3B3B4F" stroke-width="4"/>
+        <g transform="translate(64 296)">
+          <g transform="translate(-10 -36)">
+            <g id="kTHead">
+              <rect x="22" y="-20" width="16" height="11" rx="5" fill="#8CD48C"/>
+              <circle cx="42" cy="-20" r="13" fill="#8CD48C" stroke="#4E9A50" stroke-width="2"/>
+              <circle cx="46" cy="-23" r="2.8" fill="#222"/><circle cx="47" cy="-24" r="1" fill="#fff"/>
+              <path d="M42 -14 q5 4 10 0" fill="none" stroke="#2C6B2F" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="38" cy="-15" r="2.5" fill="#FF9AA2" opacity=".8"/>
+              <g id="kGlass" fill="none" stroke="#333" stroke-width="1.8"><circle cx="46" cy="-23" r="5.5"/><line x1="40.5" y1="-24" x2="32" y2="-26"/></g>
+            </g>
+            <path d="M-32 0 Q-30 -44 4 -44 Q36 -44 38 0 Z" fill="#3E8E41" stroke="#2C6B2F" stroke-width="2"/>
+            <path d="M-16 -6 L-8 -28 L12 -28 L20 -6 M-8 -28 L-14 -40 M12 -28 L18 -40 M-28 -10 L-16 -6 M34 -10 L20 -6" fill="none" stroke="#6CC070" stroke-width="2.5" stroke-linejoin="round"/>
+            <g id="kPencil"><rect x="50" y="-12" width="5" height="24" rx="1" fill="#F2C230" stroke="#B88A00"/><path d="M50 12 L52.5 18 L55 12Z" fill="#333"/></g>
+          </g>
+          <rect x="-46" y="-40" width="92" height="28" rx="7" fill="#F7B733" stroke="#D9951A" stroke-width="2"/>
+          <rect x="-40" y="-33" width="80" height="5" rx="2" fill="#FFD27A"/>
+          <g id="kBook" transform="translate(36 -48)"><rect x="-2" y="-2" width="24" height="18" rx="2" fill="#2F80ED"/><rect x="0" y="0" width="10" height="14" fill="#fff"/><rect x="10" y="0" width="10" height="14" fill="#F5F5F5"/></g>
+          <g class="wheel" transform="translate(-26 -4)"><circle r="11" fill="#444" stroke="#222" stroke-width="2"/><g class="spk" stroke="#999" stroke-width="2"><line x1="-8" x2="8"/><line y1="-8" y2="8"/></g><circle r="3.5" fill="#F2C230"/></g>
+          <g class="wheel" transform="translate(26 -4)"><circle r="11" fill="#444" stroke="#222" stroke-width="2"/><g class="spk" stroke="#999" stroke-width="2"><line x1="-8" x2="8"/><line y1="-8" y2="8"/></g><circle r="3.5" fill="#F2C230"/></g>
+        </g>
+        <g transform="translate(186 296)">
+          <g id="kLocoBody">
+            <rect x="-52" y="-24" width="128" height="14" rx="5" fill="#3B3B4F"/>
+            <rect x="-48" y="-98" width="46" height="78" rx="9" fill="#2F80ED"/>
+            <rect x="-55" y="-107" width="60" height="13" rx="6" fill="#1C5FB8"/>
+            <rect id="kSiren" x="-34" y="-119" width="18" height="13" rx="6"/>
+            <rect x="-40" y="-88" width="30" height="24" rx="6" fill="#CFE8FF"/>
+            <text x="-25" y="-38" text-anchor="middle" font-size="11" font-weight="700" fill="#fff">119</text>
+            <rect x="36" y="-96" width="16" height="26" rx="3" fill="#3B3B4F"/>
+            <rect x="32" y="-103" width="24" height="10" rx="4" fill="#3B3B4F"/>
+            <rect x="-6" y="-75" width="78" height="53" rx="24" fill="#E8453C"/>
+            <rect x="6" y="-69" width="40" height="6" rx="3" fill="#fff" opacity=".35"/>
+            <g id="kFace">
+              <g id="kEyes"><ellipse cx="22" cy="-52" rx="8" ry="10" fill="#fff" stroke="#222" stroke-width="1.5"/><ellipse cx="44" cy="-52" rx="8" ry="10" fill="#fff" stroke="#222" stroke-width="1.5"/>
+                <circle cx="24" cy="-50" r="4.2" fill="#222"/><circle cx="46" cy="-50" r="4.2" fill="#222"/><circle cx="25.5" cy="-52" r="1.4" fill="#fff"/><circle cx="47.5" cy="-52" r="1.4" fill="#fff"/></g>
+              <g id="kEyesC" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round"><path d="M15 -50 q7 5 14 0"/><path d="M37 -50 q7 5 14 0"/></g>
+              <circle cx="13" cy="-36" r="4.5" fill="#FF9AA2"/><circle cx="55" cy="-36" r="4.5" fill="#FF9AA2"/>
+              <path id="kMouthSmile" d="M25 -37 q8 9 16 0" fill="#7A1F1F" stroke="#222" stroke-width="2" stroke-linejoin="round"/>
+              <ellipse id="kMouthO" cx="33" cy="-34" rx="4.5" ry="5.5" fill="#7A1F1F" stroke="#222" stroke-width="1.5"/>
+              <line id="kMouthFlat" x1="26" y1="-35" x2="40" y2="-35" stroke="#222" stroke-width="2.5" stroke-linecap="round"/>
+            </g>
+            <path d="M74 -24 L92 -10 L74 -10 Z" fill="#F2C230"/>
+          </g>
+          <g class="wheel" transform="translate(-30 -4)"><circle r="14" fill="#444" stroke="#222" stroke-width="2"/><g class="spk" stroke="#999" stroke-width="2"><line x1="-10" x2="10"/><line y1="-10" y2="10"/></g><circle r="4.5" fill="#F2C230"/></g>
+          <g class="wheel" transform="translate(12 -4)"><circle r="12" fill="#444" stroke="#222" stroke-width="2"/><g class="spk" stroke="#999" stroke-width="2"><line x1="-9" x2="9"/><line y1="-9" y2="9"/></g><circle r="4" fill="#F2C230"/></g>
+          <g class="wheel" transform="translate(46 -4)"><circle r="12" fill="#444" stroke="#222" stroke-width="2"/><g class="spk" stroke="#999" stroke-width="2"><line x1="-9" x2="9"/><line y1="-9" y2="9"/></g><circle r="4" fill="#F2C230"/></g>
+          <g id="kZzz" fill="#1C5FB8" font-weight="700"><text x="-10" y="-124" font-size="12">Z</text><text x="0" y="-134" font-size="15">Z</text><text x="12" y="-146" font-size="18">Z</text></g>
+        </g>
+        <g fill="#fff"><circle class="puff" cx="230" cy="190" r="9"/><circle class="puff" cx="230" cy="190" r="9"/><circle class="puff" cx="230" cy="190" r="9"/></g>
+      </g>
+      <g id="kBeetle" transform="translate(170 175)">
+        <g id="kWings" fill="#fff" opacity=".7"><ellipse cx="-4" cy="-8" rx="5" ry="9"/><ellipse cx="4" cy="-8" rx="5" ry="9"/></g>
+        <path d="M9 -2 q9 -6 6 -16" fill="none" stroke="#4A2E15" stroke-width="3" stroke-linecap="round"/>
+        <ellipse rx="10" ry="7.5" fill="#5A3A1E"/><line x1="-2" y1="-7" x2="-2" y2="7" stroke="#3A230F" stroke-width="1.5"/>
+        <circle cx="8" cy="-1" r="3.5" fill="#3A230F"/><circle cx="9" cy="-2" r="1" fill="#fff"/>
+      </g>
+    </svg>
+    <div class="kid-foods" id="kidFoods"></div>
+    <div class="kid-bubble" id="kidBubble"></div>
+    <div class="kid-pop" id="kidPop"></div>
+    <button class="kid-parent" id="kidParent">📷 家長畫面</button>
+  </div>
 </div>
 
 <div class="metrics" id="metrics"></div>
@@ -154,6 +313,7 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
     <option value="beep">提醒：提示音</option>
     <option value="off">提醒：關閉</option>
   </select>
+  <button id="modeBtn" class="modebtn">📷 切換到家長畫面</button>
   <button id="testVoiceBtn">試聽語音</button>
   <button id="reportBtn">結束並產生報告</button>
 </div>
@@ -577,6 +737,121 @@ function showActTag(){
 }
 const fmtDur=ms=>{ const t=Math.round(ms/1000); return t<60?`${t} 秒`:`${Math.floor(t/60)} 分${t%60?` ${t%60} 秒`:""}`; };
 
+/* ===== 孩子畫面：救援小火車「嘟嘟號」載著烏龜「龜龜」 =====
+   坐得好 → 火車前進、甲蟲飛來飛去，每坐好 1 分鐘龜龜收到一份點心
+   姿勢不良 → 火車停下、警示燈閃，角色示範怎麼修正；離座 → 火車回車站睡覺；休息 → 蚯蚓冒出來 */
+const kid={on:true,mode:"",cls:"",speed:0,off:0,ang:0,last:0,beetle:0,pmode:"good",issue:null,
+  bubbleKey:"",bubbleUntil:0,goodMs:0,foods:{},nextFood:0,breakUntil:0,eatUntil:0,raf:0};
+const TOFU='<svg viewBox="0 0 24 24" width="1.1em" height="1.1em"><path d="M4 9l8-4 8 4v8l-8 4-8-4z" fill="#FFF8E6" stroke="#B9A274" stroke-width="1.5"/><path d="M4 9l8 4 8-4M12 13v8" fill="none" stroke="#B9A274" stroke-width="1.5"/></svg>';
+const FOODS=[{k:"banana",n:"香蕉",q:"一根",i:"🍌"},{k:"apple",n:"蘋果",q:"一顆",i:"🍎"},{k:"potato",n:"地瓜",q:"一條",i:"🍠"},
+  {k:"fries",n:"薯條",q:"一包",i:"🍟"},{k:"tofu",n:"豆腐",q:"一塊",i:TOFU},{k:"fish",n:"吳郭魚",q:"一條",i:"🐟"}];
+const REWARD_MS=60000;
+const KID_VOICE={
+  neck:["脖子往後收，像烏龜縮頭一樣","頭抬高一點，嘟嘟號才能出發喔"],
+  trunk:["身體坐直，嘟嘟號才開得動","背挺起來，火車要出發囉"],
+  sh:["兩邊肩膀放平，火車才不會歪掉","肩膀放輕鬆，左手壓好本子"],
+  tilt:["頭擺正，像火車頭一樣看正前方","頭不要歪，眼睛看前面"],
+  drop:["頭抬起來，手指離筆尖一寸","抬頭看前面，龜龜在等你"],
+  praise:["好棒，嘟嘟號出發囉","坐得真好，火車跑起來了","姿勢好漂亮，龜龜幫你拍拍手"],
+  back:["歡迎回來，嘟嘟號在等你喔","回來囉，坐好，火車要出發了"],
+  break:["休息時間到，下車去挖蚯蚓、看看遠方吧","寫了好久囉，站起來像甲蟲一樣伸伸懶腰"],
+  start:["嘟嘟號準備出發，記得坐好喔"],
+};
+const KID_READ={
+  neck:["看書時把書立起來，像龜龜一樣抬頭看","書本拿高一點，頭不要太低"],
+  drop:["書本立起來，頭抬高一點","抬頭看書，龜龜也這樣看"],
+  break:["讀了好久囉，下車去挖蚯蚓、看看遠方吧"],
+};
+const KID_TIP={neck:"🐢 學龜龜縮頭！脖子往後收、頭抬高",trunk:"🚂 嘟嘟號開不動了！背挺直才能出發",
+  sh:"⚖️ 火車歪一邊了！兩邊肩膀放平",tilt:"🙂 頭擺正，像火車頭看正前方",drop:"👀 抬頭看前面，手指離筆尖一寸"};
+const kidName=()=>nick()||"小朋友";
+(function(){ /* 枕木 */
+  let g=""; for(let x=0;x<=320;x+=20) g+=`<rect x="${x}" y="296" width="11" height="12" rx="2"/>`;
+  $("kSleepers").innerHTML=g;
+})();
+function kidSay(text,ms=5000,key=""){
+  const b=$("kidBubble"); b.textContent=text; b.classList.add("show");
+  kid.bubbleKey=key; kid.bubbleUntil=ms?performance.now()+ms:Infinity;
+}
+function kidHush(){ $("kidBubble").classList.remove("show"); kid.bubbleKey=""; kid.bubbleUntil=0; }
+function renderFoods(){
+  $("kidFoods").innerHTML=FOODS.filter(f=>kid.foods[f.k]).map(f=>`<span><i>${f.i}</i>×${kid.foods[f.k]}</span>`).join("");
+}
+function resetKid(){ Object.assign(kid,{goodMs:0,foods:{},nextFood:0,breakUntil:0,eatUntil:0,pmode:"good",issue:null}); renderFoods(); kidHush(); }
+function kidReward(){
+  const f=FOODS[kid.nextFood++%FOODS.length];
+  kid.foods[f.k]=(kid.foods[f.k]||0)+1; renderFoods();
+  if(!kid.on) return;
+  const pop=$("kidPop"); pop.innerHTML=f.i.startsWith("<")?f.i.replace(/1\.1em/g,"1em"):f.i;
+  pop.classList.remove("go"); void pop.offsetWidth; pop.classList.add("go");
+  kid.eatUntil=performance.now()+1500;
+  kidSay(`${kidName()}坐得好棒！龜龜收到${f.q}${f.n} 😋`,4500,"reward");
+  if(state.alertMode==="voice"&&performance.now()-state.lastAlert>5000) speak(withName(`坐得好棒，送龜龜${f.q}${f.n}`));
+}
+/* 由 notify() 呼叫：語音說什麼，泡泡就顯示什麼 */
+function kidEvent(key,text){
+  if(key in METRICS) return; /* 姿勢提醒由 kidTick 依狀態顯示提示 */
+  if(key==="break") kid.breakUntil=performance.now()+25000;
+  kidSay(text,key==="break"?12000:5000,key);
+}
+const IDLE_TEXT={"按「開始偵測」開啟相機":()=>"按下「開始偵測」，嘟嘟號就出發囉！","已停止":()=>`嘟嘟號回車站休息囉，${kidName()}今天辛苦了！`,
+  "載入模型中…":()=>"嘟嘟號暖身中，馬上出發…","開啟相機中…":()=>"嘟嘟號暖身中，馬上出發…"};
+function kidTick(t){
+  kid.raf=0; if(!kid.on) return;
+  const dt=Math.min(0.1,(t-(kid.last||t))/1000); kid.last=t;
+  const now=performance.now();
+  const mode=!state.running?"idle":!pres.here?"away":kid.pmode;
+  if(mode!==kid.mode){
+    if(kid.mode==="bad"&&mode==="good"&&kid.bubbleKey.startsWith("tip")) kidHush();
+    kid.mode=mode;
+  }
+  /* 泡泡內容 */
+  if(mode==="idle"){
+    const h=$("hint"), txt=h.style.display==="none"?"":h.textContent;
+    const say=IDLE_TEXT[txt]?.()||txt;
+    if(say&&$("kidBubble").textContent!==say) kidSay(say,0,"idle");
+  }else if(mode==="away"){
+    if(kid.bubbleKey!=="away") kidSay(`🚉 嘟嘟號在車站等${kidName()}回來…`,0,"away");
+  }else if(mode==="bad"&&kid.issue){
+    if(kid.bubbleKey!=="tip-"+kid.issue) kidSay(`${kidName()}，${KID_TIP[kid.issue]}`,0,"tip-"+kid.issue);
+  }else if(kid.bubbleKey==="idle"||kid.bubbleKey==="away"||kid.bubbleKey.startsWith("tip")) kidHush();
+  if(kid.bubbleUntil&&now>kid.bubbleUntil) kidHush();
+  /* 點心獎勵 */
+  if(mode==="good"){ kid.goodMs+=dt*1000; if(kid.goodMs>=REWARD_MS){ kid.goodMs=0; kidReward(); } }
+  /* 樣式狀態 */
+  const c=["kid","k-"+mode];
+  if(mode==="good"||mode==="warn") c.push("k-"+pres.act);
+  if(mode==="bad"&&kid.issue) c.push("k-iss-"+kid.issue);
+  if(mode==="idle"&&$("hint").textContent==="已停止") c.push("k-sleep");
+  if(now<kid.breakUntil) c.push("k-break");
+  if(now<kid.eatUntil) c.push("k-eat");
+  const target=mode==="good"?70:mode==="warn"?28:0;
+  kid.speed+=(target-kid.speed)*Math.min(1,dt*2.5);
+  if(kid.speed<3) c.push("k-stop");
+  const cls=c.join(" "); if(cls!==kid.cls){ $("kid").className=cls; kid.cls=cls; }
+  /* 場景捲動 */
+  kid.off+=kid.speed*dt; kid.ang+=kid.speed*dt/12*57.3;
+  $("kSleepers").setAttribute("transform",`translate(${-(kid.off%20)} 0)`);
+  $("kRocks").setAttribute("transform",`translate(${-(kid.off%300)} 0)`);
+  $("kHills").setAttribute("transform",`translate(${-((kid.off*0.3)%300)} 0)`);
+  $("kClouds").setAttribute("transform",`translate(${((t/1000*6+kid.off*0.1)%380)-60} 0)`);
+  document.querySelectorAll("#kid .spk").forEach(g=>g.setAttribute("transform",`rotate(${kid.ang%360})`));
+  /* 甲蟲：坐得好時飛來飛去，其他時候停在火車頂 */
+  kid.beetle+=dt;
+  const bx=mode==="good"?165+55*Math.sin(kid.beetle*0.9):176, by=mode==="good"?160+22*Math.sin(kid.beetle*1.8):170;
+  $("kBeetle").setAttribute("transform",`translate(${bx.toFixed(1)} ${by.toFixed(1)})`);
+  kid.raf=requestAnimationFrame(kidTick);
+}
+function setKid(on){
+  kid.on=on; $("kid").hidden=!on; $("stage").classList.toggle("kidmode",on);
+  $("modeBtn").textContent=on?"📷 切換到家長畫面":"🚂 切換到孩子畫面";
+  try{ localStorage.setItem("postureKid",on?"1":"0"); }catch{}
+  if(on&&!kid.raf){ kid.last=0; kid.mode=""; kid.raf=requestAnimationFrame(kidTick); }
+}
+$("modeBtn").onclick=()=>setKid(!kid.on);
+$("kidParent").onclick=()=>setKid(false);
+{ let on=true; try{ on=localStorage.getItem("postureKid")!=="0"; }catch{} setKid(on); }
+
 /* ===== 語音提醒 ===== */
 const VOICE={
   neck:["頭抬高一點，眼睛離本子一尺喔","脖子伸直，頭不要太低"],
@@ -619,9 +894,13 @@ const esc=t=>t.replace(/[&<>"']/g,c=>`&#${c.charCodeAt(0)};`);
 try{ $("nickInput").value=localStorage.getItem("postureNick")||""; }catch{}
 $("nickInput").addEventListener("input",()=>{ try{ localStorage.setItem("postureNick",nick()); }catch{} });
 function notify(key){
+  const read=pres.act==="read";
+  const pool=(kid.on&&read&&KID_READ[key])||(kid.on&&KID_VOICE[key])||(read&&VOICE_READ[key])||VOICE[key];
+  const text=withName(pick(pool));
+  if(kid.on) kidEvent(key,text);
   if(state.alertMode==="off") return;
   const isCorrection=key in METRICS;
-  if(state.alertMode==="voice" && speak(withName(pick(pres.act==="read"&&VOICE_READ[key]||VOICE[key])))){}
+  if(state.alertMode==="voice" && speak(text)){}
   else if(key!=="praise"&&key!=="back") beep();
   if(isCorrection) navigator.vibrate?.(300);
 }
@@ -641,6 +920,9 @@ function handleAlert(values){
   const bad=Object.keys(values).filter(k=>level(k,values[k])==="bad")
     .sort((a,c)=>severity(c,values[c])-severity(a,values[a]));
   const b=$("banner"); const now=performance.now();
+  const warn=Object.keys(values).some(k=>level(k,values[k])==="warn");
+  kid.pmode=bad.length&&state.badSince&&now-state.badSince>3000?"bad":bad.length||warn?"warn":"good";
+  kid.issue=bad[0]||null;
   if(now-state.lastBreak>BREAK_MS){ state.lastBreak=now; notify("break"); }
   if(!bad.length){
     state.badSince=null; b.style.display="none";
@@ -695,7 +977,7 @@ function loop(){
 }
 
 async function start(){
-  if(state.alertMode==="voice") speak(withName(pick(VOICE.start))); /* 需在點擊當下呼叫，iOS 才會解鎖語音 */
+  if(state.alertMode==="voice") speak(withName(pick(kid.on?KID_VOICE.start:VOICE.start))); /* 需在點擊當下呼叫，iOS 才會解鎖語音 */
   try{ state.audio ||= new AudioContext(); state.audio.resume(); }catch{}
   try{
     $("startBtn").disabled=true;
@@ -704,7 +986,7 @@ async function start(){
     await startCamera();
     $("hint").style.display="none";
     try{ await navigator.wakeLock?.request("screen"); }catch{}
-    resetStats(); resetPresence(); state.lastBreak=performance.now(); state.lastAlert=0; state.alerted=false; state.running=true; $("report").style.display="none";
+    resetStats(); resetPresence(); resetKid(); state.lastBreak=performance.now(); state.lastAlert=0; state.alerted=false; state.running=true; $("report").style.display="none";
     $("startBtn").textContent="偵測中"; loop();
   }catch(e){
     $("startBtn").disabled=false;
@@ -725,6 +1007,13 @@ function stop(){
   $("hint").style.display="flex"; $("hint").textContent="已停止";
 }
 
+function foodsHtml(){
+  const got=FOODS.filter(f=>kid.foods[f.k]);
+  if(!got.length) return "";
+  const n=got.reduce((a,f)=>a+kid.foods[f.k],0);
+  return `<h3>今日收穫 🧺</h3><p>${got.map(f=>`<span style="font-size:1.3rem">${f.i}</span> ${f.n}×${kid.foods[f.k]}`).join("　")}</p>
+    <p class="small">${esc(kidName())}坐好累積了 ${n} 分鐘，幫龜龜收集了 ${n} 份點心！（每坐好 1 分鐘得到一份）</p>`;
+}
 function timeHtml(){
   const parts=[["write","var(--ink)"],["read","var(--pencil)"],["other","var(--line)"]].map(([k,c])=>({n:ACT_SHORT[k],ms:pres.ms[k],c}));
   parts.push({n:"離座",ms:pres.awayMs,c:"var(--muted)"});
@@ -760,6 +1049,7 @@ function report(){
     <h2>${nick()?esc(nick())+" 的":""}本次報告（${mins} 分鐘）</h2>
     <p class="small">${when}</p>
     ${timeHtml()}
+    ${foodsHtml()}
     ${rows.length?rows.join(""):'<p class="small">有效資料不足，請拍攝至少 30 秒且人物完整入鏡。</p>'}
     <h3>姿勢快照</h3>
     ${shots?`<div class="snap-opts" data-html2canvas-ignore><span>照片隱私：</span>
