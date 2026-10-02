@@ -160,6 +160,17 @@ button.car{min-height:42px;cursor:pointer}
 .shapes .found{border-color:var(--good);background:color-mix(in srgb,var(--good) 18%,var(--card));position:relative}
 .shapes .found::after{content:"✔";position:absolute;top:2px;right:6px;color:var(--good);font-size:1rem;font-weight:900}
 .bigobj{font-size:4.5rem;line-height:1.1}
+/* 高矮、厚薄、拼一拼 */
+.stacks{display:inline-flex;gap:16px;justify-content:center;align-items:flex-end;padding:12px 14px 8px;border-radius:16px;background:var(--grass)}
+.stack{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;background:transparent;border:2px dashed transparent;padding:6px;min-height:0}
+.stack .tower{display:flex;flex-direction:column;font-size:1.9rem;line-height:1}
+.stack .tower .ico{display:block;margin:-4px 0}
+.stack b{font-size:.95rem;color:#fff;margin-top:4px;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.books{display:inline-flex;gap:14px;align-items:flex-end;padding:10px 8px 0;max-width:100%;border-bottom:8px solid var(--rail)}
+.books button{display:flex;flex-direction:column;align-items:center;background:transparent;border:2px dashed transparent;padding:4px;min-height:0}
+.books b{font-size:.9rem}
+.build svg{max-width:100%;height:auto}
+.build polygon{transition:transform .5s;stroke:#fff;stroke-width:3;stroke-linejoin:round}
 
 /* 烏龜賽跑 */
 .race{max-width:460px;margin:0 auto;border-radius:16px;background:var(--grass);padding:8px 8px 8px 8px;position:relative}
@@ -552,6 +563,21 @@ function gTrainLong(api) {
   api.scene.innerHTML = `<div style="display:inline-block;text-align:left">${mk(a, 0, names[0])}${mk(b, 1, names[1])}</div>`;
   api.bind(api.scene, ans, `火車頭對齊來比，${ans}比較${long ? '長' : '短'}。`);
 }
+function gTallThick(api) {
+  if (Math.random() < .5) {
+    const names = shuffle([NAME, '爸爸', '媽媽']), hs = pick([2, 3, 4, 5, 6, 7], 3), tall = Math.random() < .5;
+    const ans = names[hs.indexOf(tall ? Math.max(...hs) : Math.min(...hs))];
+    api.prompt(`大家來疊豆腐！誰疊得最${tall ? '高' : '矮'}？點一點。`);
+    api.scene.innerHTML = `<div class="stacks">${names.map((n, i) => `<button class="stack" type="button" data-v="${esc(n)}"><span class="tower">${Array.from({ length: hs[i] }, () => TOFU).join('')}</span><b>${esc(n)}</b></button>`).join('')}</div>`;
+    return api.bind(api.scene, ans, `大家都從地上開始疊，${ans}疊得最${tall ? '高' : '矮'}。`);
+  }
+  const ts = pick([12, 20, 30, 42, 54], 2), thick = Math.random() < .5, names = ['恐龍書', '火車書'], cols = ['#3D8FD6', '#E8604A'];
+  const ans = names[ts.indexOf(thick ? Math.max(...ts) : Math.min(...ts))];
+  const book = (t, c) => `<svg width="110" height="${t + 4}" viewBox="0 0 130 ${t + 4}" preserveAspectRatio="none" aria-hidden="true"><rect x="2" y="2" width="126" height="${t}" rx="4" fill="${c}"/><rect x="12" y="6" width="112" height="${t - 8}" rx="2" fill="#FFF8E7"/>${Array.from({ length: Math.floor((t - 10) / 5) }, (_, i) => `<line x1="14" x2="122" y1="${9 + i * 5}" y2="${9 + i * 5}" stroke="#D8C9A9" stroke-width="1"/>`).join('')}</svg>`;
+  api.prompt(`桌上有兩本書，哪一本比較${thick ? '厚' : '薄'}？點一點。`);
+  api.scene.innerHTML = `<div class="books">${names.map((n, i) => `<button type="button" data-v="${n}">${book(ts[i], cols[i])}<b>${n}</b></button>`).join('')}</div>`;
+  api.bind(api.scene, ans, `看書的側邊有多高，${ans}比較${thick ? '厚' : '薄'}。`);
+}
 function gWho(api) {
   const [a, b, c] = shuffle([NAME, '爸爸', '媽媽']), long = Math.random() < .5, w = long ? '長' : '短';
   api.prompt(`${a}挖到的蚯蚓比${b}的${w}，${b}挖到的又比${c}的${w}。誰挖到的蚯蚓最${w}？`);
@@ -632,23 +658,24 @@ function gTofu(api) {
   api.choose(numOpts(k, 0, 10), k, `${T} 可以分成 ${T - k} 和 ${k}，葉子下面有 ${k} 塊。`, { cars: true, cols: 4, onRight: () => { api.scene.querySelector('.leaf').classList.add('off'); api.scene.querySelector('.leafwrap').classList.add('open'); } });
 }
 function gFishSplit(api) {
-  const T = R(3, 10), a = R(1, T - 1), b = T - a;
+  const T = R(3, 10), a = Math.random() < .2 ? T : R(1, T - 1), b = T - a;
   api.prompt(`<b>${T}</b> 條吳郭魚分給兩隻小烏龜。左邊的小龜有 ${a} 條，右邊的小龜有幾條？`);
   api.scene.innerHTML = `<div class="side"><div class="who">${turtleSVG('#5DAA4F', 70)}<div class="plate">${Array.from({ length: a }, () => icon('fish')).join('')}</div></div>
     <div class="who">${turtleSVG('#3D8FD6', 70)}<div class="plate" id="rp"><span class="lid">?</span></div></div></div>`;
-  api.choose(numOpts(b, 0, 10), b, `${T} 可以分成 ${a} 和 ${b}。`, { cars: true, cols: 4, onRight: () => $('#rp').innerHTML = Array.from({ length: b }, () => icon('fish')).join('') });
+  api.choose(numOpts(b, 0, 10), b, `${T} 可以分成 ${a} 和 ${b}。${b ? '' : '右邊的小龜一條都沒有，就是 0。'}`, { cars: true, cols: 4, onRight: () => $('#rp').innerHTML = b ? Array.from({ length: b }, () => icon('fish')).join('') : '<b>0</b>' });
 }
 function gBond(api) {
-  const T = R(2, 10), a = R(1, T - 1), b = T - a, k = one(['banana', 'apple', 'yam']), f = FOODS[k];
+  const T = R(2, 10), a = Math.random() < .25 ? one([0, T]) : R(1, T - 1), b = T - a, k = one(['banana', 'apple', 'yam']), f = FOODS[k];
+  const many = n => n ? Array.from({ length: n }, () => icon(k)).join('') : '<b>（0 個）</b>';
   const bond = (top, l, r) => `<div class="bond"><div class="top ${top === '?' ? 'q2' : ''}">${top}</div><svg width="150" height="28" aria-hidden="true"><line x1="75" y1="0" x2="30" y2="28" stroke="currentColor" stroke-width="3"/><line x1="75" y1="0" x2="120" y2="28" stroke="currentColor" stroke-width="3"/></svg><div class="kids"><div class="kid">${l}</div><div class="kid ${r === '?' ? 'q2' : ''}">${r}</div></div></div>`;
   if (Math.random() < .5) {
     api.prompt(`${a} ${f.u}${f.n}和 ${b} ${f.u}${f.n}，合起來是幾${f.u}？`);
-    api.scene.innerHTML = `<div style="font-size:1.4rem;margin-bottom:6px">${Array.from({ length: a }, () => icon(k)).join('')} ＋ ${Array.from({ length: b }, () => icon(k)).join('')}</div>${bond('?', a, b)}`;
-    return api.choose(numOpts(T, 0, 10), T, `${a} 和 ${b} 合起來是 ${T}。`, { cars: true, cols: 4 });
+    api.scene.innerHTML = `<div style="font-size:1.4rem;margin-bottom:6px">${many(a)} ＋ ${many(b)}</div>${bond('?', a, b)}`;
+    return api.choose(numOpts(T, 0, 10), T, `${a} 和 ${b} 合起來是 ${T}。${a && b ? '' : '0 就是一個都沒有。'}`, { cars: true, cols: 4 });
   }
   api.prompt(`${T} 可以分成 ${a} 和幾？`);
   api.scene.innerHTML = bond(T, a, '?');
-  api.choose(numOpts(b, 0, 10), b, `${T} 可以分成 ${a} 和 ${b}。`, { cars: true, cols: 4 });
+  api.choose(numOpts(b, 0, 10), b, `${T} 可以分成 ${a} 和 ${b}。${a && b ? '' : '0 就是一個都沒有。'}`, { cars: true, cols: 4 });
 }
 
 // ===== 第 5 站：認識形狀 =====
@@ -678,8 +705,45 @@ function gFindShape(api) {
 function gFindSolid(api) {
   const k = one(Object.keys(SOLID)), n = R(2, 3), others = Object.keys(SOLID).filter(x => x !== k);
   const items = shuffle([...pick(SOLID[k], n).map(x => [k, x]), ...Array.from({ length: 8 - n }, () => { const o = one(others); return [o, one(SOLID[o])]; })]);
-  api.prompt(`找出所有<b>${k === '球' ? '像球一樣' : '像' + k.replace('形', '')}</b>的東西！`, `找出所有像${k.replace('形', '')}的東西`);
+  const ask = k === '箱子形' && Math.random() < .5 ? '可以穩穩疊高、不會滾走' : k === '球' && Math.random() < .5 ? '往哪邊推都會滾來滾去' : k === '球' ? '像球一樣' : '像' + k.replace('形', '');
+  api.prompt(`找出所有<b>${ask}</b>的東西！`, `找出所有${ask}的東西`);
   findAll(api, items.map(([s, [e, n]]) => ({ s, html: `${em(e)}<small>${n}</small>` })), c => c.s === k, `${k}：${k === '球' ? '圓圓的，往哪邊都會滾' : k === '罐子形' ? '上下是圓圓的平面，躺著會滾' : '每一面都是平平的，可以疊高'}。`);
+}
+// 拼一拼：大圖形由小圖形拼成（座標為 viewBox 內的多邊形）
+const BUILDS = [
+  { big: '正方形', piece: '三角形', w: 100, h: 100, ps: ['0,0 100,0 0,100', '100,0 100,100 0,100'] },
+  { big: '正方形', piece: '三角形', w: 100, h: 100, ps: ['0,0 100,0 50,50', '100,0 100,100 50,50', '100,100 0,100 50,50', '0,100 0,0 50,50'] },
+  { big: '正方形', piece: '正方形', w: 100, h: 100, ps: ['0,0 50,0 50,50 0,50', '50,0 100,0 100,50 50,50', '0,50 50,50 50,100 0,100', '50,50 100,50 100,100 50,100'] },
+  { big: '正方形', piece: '長方形', w: 100, h: 100, ps: ['0,0 100,0 100,50 0,50', '0,50 100,50 100,100 0,100'] },
+  { big: '長方形', piece: '正方形', w: 200, h: 100, ps: ['0,0 100,0 100,100 0,100', '100,0 200,0 200,100 100,100'] },
+  { big: '長方形', piece: '正方形', w: 300, h: 100, ps: ['0,0 100,0 100,100 0,100', '100,0 200,0 200,100 100,100', '200,0 300,0 300,100 200,100'] },
+  { big: '長方形', piece: '三角形', w: 200, h: 100, ps: ['0,0 200,0 0,100', '200,0 200,100 0,100'] },
+  { big: '三角形', piece: '三角形', w: 200, h: 100, ps: ['100,0 50,50 150,50', '50,50 0,100 100,100', '150,50 100,100 200,100', '50,50 150,50 100,100'] },
+  { big: '三角形', piece: '三角形', w: 200, h: 100, ps: ['100,0 0,100 100,100', '100,0 100,100 200,100'] },
+];
+function gBuild(api) {
+  const b = one(BUILDS), n = b.ps.length, pad = 14;
+  const cols = shuffle(['#E8604A', '#3D8FD6', '#F2B33D', '#5DAA4F', '#9B6BD3']);
+  const cx = b.w / 2, cy = b.h / 2;
+  const polys = b.ps.map((pts, i) => {
+    const xy = pts.split(' ').map(q => q.split(',').map(Number)), mx = xy.reduce((s, q) => s + q[0], 0) / xy.length, my = xy.reduce((s, q) => s + q[1], 0) / xy.length;
+    const d = Math.hypot(mx - cx, my - cy) || 1, dx = (mx - cx) / d * 12, dy = (my - cy) / d * 12;
+    return `<polygon points="${pts}" fill="${cols[i % 5]}" data-dx="${dx.toFixed(1)}" data-dy="${dy.toFixed(1)}"/>`;
+  }).join('');
+  const w = Math.min(260, b.w * 1.1);
+  api.scene.innerHTML = `<div class="build"><svg viewBox="${-pad} ${-pad} ${b.w + pad * 2} ${b.h + pad * 2}" width="${w}" role="img" aria-label="拼出來的${b.big}">${polys}</svg></div>
+    <button type="button" id="split">🔨 拆開看看</button>`;
+  let open = false;
+  $('#split').addEventListener('click', () => {
+    open = !open; sfx.pop(); $('#split').textContent = open ? '🧩 拼回去' : '🔨 拆開看看';
+    api.scene.querySelectorAll('polygon').forEach(p => p.style.transform = open ? `translate(${p.dataset.dx}px,${p.dataset.dy}px)` : '');
+  });
+  if (Math.random() < .55) {
+    api.prompt(`甲蟲用積木拼出一個${b.big}。用了幾個<b>${b.piece}</b>？`);
+    return api.choose(numOpts(n, 1, 6), n, `拆開來數，一共用了 ${n} 個${b.piece}。`, { cars: true, cols: 4 });
+  }
+  api.prompt(`這個${b.big}是用哪一種形狀拼成的？`);
+  api.choose(textOpts(['三角形', '正方形', '長方形']), b.piece, `拆開來看，是用 ${n} 個${b.piece}拼成的。`);
 }
 function gWarehouse(api) {
   const k = one(Object.keys(SOLID)), [e, n] = one(SOLID[k]);
@@ -853,10 +917,10 @@ function gPickClock(api) {
 
 const UNITS = [
   { n: 1, t: '10以內的數', st: '蚯蚓田站', ic: '🪱', games: [gDig, gLoad, gCarNum] },
-  { n: 2, t: '比長短', st: '泥巴路站', ic: '📏', games: [gWormLong, gMeasure, gTrainLong, gWho] },
+  { n: 2, t: '比長短', st: '泥巴路站', ic: '📏', games: [gWormLong, gMeasure, gTallThick, gTrainLong, gWho] },
   { n: 3, t: '順序與多少', st: '烏龜賽跑站', ic: '🐢', games: [gPassenger, gRace, gPlates] },
   { n: 4, t: '分與合', st: '豆腐店站', ic: '🍃', games: [gTofu, gFishSplit, gBond] },
-  { n: 5, t: '認識形狀', st: '甲蟲森林站', ic: '🪲', games: [gFindShape, gFindSolid, gWarehouse] },
+  { n: 5, t: '認識形狀', st: '甲蟲森林站', ic: '🪲', games: [gFindShape, gFindSolid, gBuild, gWarehouse] },
   { n: 6, t: '10以內的加法', st: '上車站', ic: '🚃', games: [gBoard, gDigMore, gAddEq] },
   { n: 7, t: '10以內的減法', st: '烏龜餐廳站', ic: '🍌', games: [gFeed, gWormCompare, gSubEq] },
   { n: 8, t: '30以內的數', st: '蚯蚓罐頭站', ic: '🫙', games: [gJar, gCarSeq, gPlace] },
