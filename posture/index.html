@@ -90,6 +90,9 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
 .snap figcaption{padding:6px 8px;font-size:.78rem;line-height:1.45}
 .snap .tag{display:inline-block;padding:0 6px;margin-right:4px;border-radius:6px;color:#fff;font-weight:700;background:var(--ink)}
 .snap .tag.worst{background:var(--bad)}
+.snap-opts{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;margin:4px 0 6px;font-size:.88rem}
+.snap-opts label{display:flex;align-items:center;gap:6px;min-height:40px;cursor:pointer}
+.snap-opts input{width:20px;height:20px;accent-color:var(--ink)}
 .lv-good{color:var(--good)} .lv-warn{color:var(--warn)} .lv-bad{color:var(--bad);font-weight:700}
 @media print{
   body>*:not(#report){display:none!important}
@@ -289,44 +292,107 @@ function resetStats(){
   for(const k in METRICS) state.stats[k]={good:0,warn:0,bad:0};
   resetSnaps();
 }
-/* ===== 姿勢快照：最差狀態、隨機抽樣、最後姿態（只存在本頁記憶體，不上傳） ===== */
-const SNAP_W=480, RAND_K=3;
+/* ===== 姿勢快照：最差狀態、隨機抽樣、最後姿態（只存在本頁記憶體，不上傳）
+   拍下時只存原始畫面與關節點，產生報告時再依選項「裁切人物」「臉部模糊」畫出照片 ===== */
+const SNAP_W=480, BASE_W=640, RAND_K=3;
 const snaps={};
 const randGap=()=>15000+Math.random()*45000; /* 每 15–60 秒抽一張候選 */
 function resetSnaps(){ Object.assign(snaps,{worst:null,last:null,rand:[],seen:0,lastValues:null,lastWorstAt:0,nextRand:performance.now()+randGap()}); }
 resetSnaps();
-function grab(values,view){
-  const w=SNAP_W, h=Math.round(w*canvas.height/canvas.width)||360;
-  const c=document.createElement("canvas"); c.width=w; c.height=h; const g=c.getContext("2d");
-  if(video.classList.contains("mirror")){ g.translate(w,0); g.scale(-1,1); }
-  g.drawImage(video,0,0,w,h); g.drawImage(canvas,0,0,w,h);
-  return {img:c.toDataURL("image/jpeg",0.8),t:performance.now()-state.startTime,values:{...values},view};
+function grab(values,view,lm){
+  const w=BASE_W, h=Math.round(w*video.videoHeight/video.videoWidth)||480;
+  const c=document.createElement("canvas"); c.width=w; c.height=h;
+  c.getContext("2d").drawImage(video,0,0,w,h);
+  return {base:c,lm:lm.map(l=>({x:l.x,y:l.y,v:l.visibility??1})),mirror:video.classList.contains("mirror"),
+    t:performance.now()-state.startTime,values:{...values},view};
 }
 function frameScore(values){
   let sc=0;
   for(const k in values){ const lv=level(k,values[k]); if(lv!=="good") sc+=(lv==="bad"?2:0.5)+Math.max(0,severity(k,values[k])); }
   return sc;
 }
-function trackSnaps(values,view){
+function trackSnaps(values,view,lm){
   const now=performance.now();
-  snaps.lastValues={values:{...values},view};
+  snaps.lastValues={values:{...values},view,lm};
   const sc=frameScore(values);
   if(sc>0&&sc>(snaps.worst?.score??0)*1.05&&now-snaps.lastWorstAt>1000&&now-state.startTime>3000){
-    snaps.lastWorstAt=now; snaps.worst={...grab(values,view),score:sc};
+    snaps.lastWorstAt=now; snaps.worst={...grab(values,view,lm),score:sc};
   }
   if(now>=snaps.nextRand){ /* 蓄水池抽樣：整段偵測中平均隨機留下 RAND_K 張 */
     snaps.nextRand=now+randGap(); snaps.seen++;
-    const shot=grab(values,view);
+    const shot=grab(values,view,lm);
     if(snaps.rand.length<RAND_K) snaps.rand.push(shot);
     else{ const j=Math.floor(Math.random()*snaps.seen); if(j<RAND_K) snaps.rand[j]=shot; }
   }
 }
+
+/* 快照隱私選項（記在本機） */
+const snapOpt={crop:true,blur:true};
+try{ Object.assign(snapOpt,JSON.parse(localStorage.getItem("postureSnapOpt")||"{}")); }catch{}
+function headCircle(pts,H){
+  const face=pts.slice(0,11).filter(q=>q.v>0.3);
+  if(!face.length) return null;
+  const cx=face.reduce((a,q)=>a+q.x,0)/face.length, cy=face.reduce((a,q)=>a+q.y,0)/face.length;
+  const spread=Math.max(...face.map(q=>Math.hypot(q.x-cx,q.y-cy)));
+  const [ls,rs,lh,rh]=[pts[11],pts[12],pts[23],pts[24]];
+  const torso=ls.v>0.5&&lh.v>0.5?Math.hypot((ls.x+rs.x-lh.x-rh.x)/2,(ls.y+rs.y-lh.y-rh.y)/2):0;
+  const r=Math.max(spread*2,torso*0.3,H*0.07);
+  return {x:cx,y:cy-r*0.1,r};
+}
+function pixelate(g,src,{x,y,r}){
+  const bx=Math.max(0,x-r), by=Math.max(0,y-r), bw=Math.min(src.width,x+r)-bx, bh=Math.min(src.height,y+r)-by;
+  if(bw<=0||bh<=0) return;
+  const t=document.createElement("canvas"), blk=Math.max(4,r/3.5);
+  t.width=Math.max(1,Math.ceil(bw/blk)); t.height=Math.max(1,Math.ceil(bh/blk));
+  t.getContext("2d").drawImage(src,bx,by,bw,bh,0,0,t.width,t.height);
+  g.save(); g.beginPath(); g.arc(x,y,r,0,Math.PI*2); g.clip();
+  g.imageSmoothingEnabled=false; g.drawImage(t,0,0,t.width,t.height,bx,by,bw,bh); g.restore();
+}
+function renderSnap(sn,opt){
+  const B=sn.base, W=B.width, H=B.height;
+  const pts=sn.lm.map(l=>({x:(sn.mirror?1-l.x:l.x)*W,y:l.y*H,v:l.v}));
+  const full=document.createElement("canvas"); full.width=W; full.height=H; const g=full.getContext("2d");
+  g.save(); if(sn.mirror){ g.translate(W,0); g.scale(-1,1); } g.drawImage(B,0,0); g.restore();
+  const head=headCircle(pts,H);
+  if(opt.blur&&head) pixelate(g,full,head);
+  /* 骨架 */
+  g.lineWidth=Math.max(2,W/160); g.strokeStyle="#F2C230"; g.lineCap="round";
+  for(const c of PoseLandmarker.POSE_CONNECTIONS||[]){
+    if(c.start>24||c.end>24) continue; const a=pts[c.start], b=pts[c.end];
+    if(a.v>0.5&&b.v>0.5){ g.beginPath(); g.moveTo(a.x,a.y); g.lineTo(b.x,b.y); g.stroke(); }
+  }
+  g.fillStyle="#fff"; g.strokeStyle="#1F3A5F"; g.lineWidth=Math.max(1.5,W/320);
+  pts.slice(0,25).forEach((q,i)=>{ if(q.v>0.5&&!(opt.blur&&i>0&&i<11)){ g.beginPath(); g.arc(q.x,q.y,Math.max(2.5,W/180),0,Math.PI*2); g.fill(); g.stroke(); } });
+  /* 裁切人物範圍 */
+  let [x0,y0,x1,y1]=[0,0,W,H];
+  if(opt.crop){
+    const vis=pts.slice(0,25).filter(q=>q.v>0.5);
+    if(head) vis.push({x:head.x-head.r,y:head.y-head.r},{x:head.x+head.r,y:head.y+head.r});
+    if(vis.length>=3){
+      x0=Math.min(...vis.map(q=>q.x)); x1=Math.max(...vis.map(q=>q.x));
+      y0=Math.min(...vis.map(q=>q.y)); y1=Math.max(...vis.map(q=>q.y));
+      const m=Math.max(x1-x0,y1-y0)*0.15;
+      x0=Math.max(0,x0-m); y0=Math.max(0,y0-m); x1=Math.min(W,x1+m); y1=Math.min(H,y1+m);
+      if(x1-x0<W*0.2||y1-y0<H*0.2) [x0,y0,x1,y1]=[0,0,W,H];
+    }
+  }
+  const out=document.createElement("canvas"); out.width=SNAP_W; out.height=Math.round(SNAP_W*(y1-y0)/(x1-x0));
+  out.getContext("2d").drawImage(full,x0,y0,x1-x0,y1-y0,0,0,out.width,out.height);
+  return out.toDataURL("image/jpeg",0.82);
+}
+const snapNote=()=>snapOpt.crop||snapOpt.blur?`照片已${[snapOpt.crop&&"裁掉背景",snapOpt.blur&&"模糊臉部"].filter(Boolean).join("、")}。`:"照片為完整畫面。";
+let reportSnaps=[];
+function refreshSnapImgs(){
+  document.querySelectorAll("#report img[data-snap]").forEach(img=>{ img.src=renderSnap(reportSnaps[img.dataset.snap],snapOpt); });
+  const n=$("snapNote"); if(n) n.textContent=snapNote();
+}
 const mmss=ms=>{ const t=Math.round(ms/1000); return `${Math.floor(t/60)}:${String(t%60).padStart(2,"0")}`; };
 function snapFig(sn,title,cls=""){
   if(!sn) return "";
+  const i=reportSnaps.push(sn)-1;
   const vals=Object.entries(sn.values).map(([k,v])=>{ const m=METRICS[k], lv=level(k,v);
     return `<span class="lv-${lv}">${m.label} ${m.unit?v.toFixed(0)+m.unit:v.toFixed(2)}${lv==="bad"?"（不良）":lv==="warn"?"（注意）":""}</span>`; }).join("<br>");
-  return `<figure class="snap"><img src="${sn.img}" alt="${title}，第 ${mmss(sn.t)}"><figcaption><span class="tag ${cls}">${title}</span>第 ${mmss(sn.t)}・${sn.view==="side"?"側面":"正面"}<br>${vals||'<span class="small">未偵測到指標</span>'}</figcaption></figure>`;
+  return `<figure class="snap"><img data-snap="${i}" alt="${title}，第 ${mmss(sn.t)}"><figcaption><span class="tag ${cls}">${title}</span>第 ${mmss(sn.t)}・${sn.view==="side"?"側面":"正面"}<br>${vals||'<span class="small">未偵測到指標</span>'}</figcaption></figure>`;
 }
 
 function level(k,v){
@@ -512,7 +578,7 @@ function loop(){
       for(const k in values) state.stats[k][level(k,values[k])]++;
       renderMetricCards(values,view);
       handleAlert(values);
-      trackSnaps(values,view);
+      trackSnaps(values,view,lm);
     }else{
       $("viewtag").textContent="找不到人";
     }
@@ -551,7 +617,7 @@ function stop(){
 }
 
 function report(){
-  if(state.running&&snaps.lastValues) snaps.last=grab(snaps.lastValues.values,snaps.lastValues.view);
+  if(state.running&&snaps.lastValues) snaps.last=grab(snaps.lastValues.values,snaps.lastValues.view,snaps.lastValues.lm);
   state.reportAt=new Date();
   stop();
   const mins=((performance.now()-state.startTime)/60000).toFixed(1);
@@ -568,6 +634,7 @@ function report(){
   issues.sort((a,b)=>b.score-a.score);
   const r=$("report");
   const d=state.reportAt, when=`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  reportSnaps=[];
   const shots=[snapFig(snaps.worst,"最差狀態","worst"),snapFig(snaps.last,"最後姿態"),
     ...[...snaps.rand].sort((a,b)=>a.t-b.t).map(sn=>snapFig(sn,"隨機紀錄"))].join("");
   r.innerHTML=`<div class="rep-actions" data-html2canvas-ignore><button class="primary" id="pdfBtn">下載 PDF</button></div>
@@ -575,7 +642,10 @@ function report(){
     <p class="small">${when}</p>
     ${rows.length?rows.join(""):'<p class="small">有效資料不足，請拍攝至少 30 秒且人物完整入鏡。</p>'}
     <h3>姿勢快照</h3>
-    ${shots?`<div class="snaps">${shots}</div>`:'<p class="small">偵測時間太短，沒有留下快照。</p>'}
+    ${shots?`<div class="snap-opts" data-html2canvas-ignore><span>照片隱私：</span>
+        <label><input type="checkbox" id="optCrop"${snapOpt.crop?" checked":""}> 只保留人物（裁掉背景）</label>
+        <label><input type="checkbox" id="optBlur"${snapOpt.blur?" checked":""}> 臉部模糊</label></div>
+      <div class="snaps">${shots}</div><p class="small" id="snapNote"></p>`:'<p class="small">偵測時間太短，沒有留下快照。</p>'}
     ${snaps.worst?"":'<p class="small">全程沒有出現需要注意的姿勢，很棒！</p>'}
     <p class="small">快照只存在這個頁面、不會上傳；重新偵測或關閉頁面就會消失，要留存請下載 PDF。</p>
     <h3>優先改善</h3>
@@ -594,6 +664,7 @@ function report(){
       <li>時間：每寫 30–40 分鐘起身休息、看遠處 5–10 分鐘。</li>
     </ul>
     <p class="small">角度為 2D 影像估算，受鏡頭位置影響，建議固定同一位置拍攝以比較前後變化；非醫療診斷，若長期駝背或歪頭請諮詢復健科或眼科。</p>`;
+  refreshSnapImgs();
   r.style.display="block"; r.scrollIntoView({behavior:"smooth"});
 }
 
@@ -805,6 +876,12 @@ async function downloadPdf(btn){
   }
 }
 $("report").addEventListener("click",e=>{ if(e.target.id==="pdfBtn") downloadPdf(e.target); });
+$("report").addEventListener("change",e=>{
+  if(e.target.id!=="optCrop"&&e.target.id!=="optBlur") return;
+  snapOpt.crop=$("optCrop").checked; snapOpt.blur=$("optBlur").checked;
+  try{ localStorage.setItem("postureSnapOpt",JSON.stringify(snapOpt)); }catch{}
+  refreshSnapImgs();
+});
 
 $("reportBtn").onclick=()=>state.frames?report():null;
 $("flipBtn").onclick=async()=>{
