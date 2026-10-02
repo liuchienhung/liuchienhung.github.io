@@ -487,6 +487,61 @@
             next.x0 > line.x0 && next.x0 - line.x1 < 6 * s;
     }
 
+    const DIGIT_RE = /^[0-9０-９]$/;
+
+    /*
+     * 標記每一欄／列開頭的題號（如「1」「(1)」「1.」，前面可以有作答括號「（　）」），
+     * 朗讀時在題號後停頓、字幕加空格，並從題號處另起一句。
+     * 沒有括號或標點的純數字，需與後面的字有明顯間距或字級不同，避免把「25顆糖果」當成題號。
+     */
+    function markQuestionNumbers(chains) {
+        chains.forEach((chain, chainIndex) => {
+            const list = chain.glyphs;
+            const following = chains[chainIndex + 1];
+            let i = 0;
+            if (list.length > 2 && isOpenBracket(list[0].ch) && isCloseBracket(list[1].ch)) i = 2;
+            const bracketed = list[i] && isOpenBracket(list[i].ch);
+            if (bracketed) i += 1;
+            const digitsFrom = i;
+            while (i < list.length && DIGIT_RE.test(list[i].ch) && i - digitsFrom < 2) i += 1;
+            if (i === digitsFrom) {
+                // 連連看、排序題的注音標號（如「˙ㄅ沒料想到」「ㄆ發現狗毛…」）
+                let k = 0;
+                while (k < list.length && '˙•·‧●'.includes(list[k].ch)) k += 1;
+                const label = list[k];
+                const after = list[k + 1];
+                if (!bracketed && label && /[ㄅ-ㄩ]/.test(label.ch) && after && CJK_RE.test(after.ch)) {
+                    label.qnumEnd = true;
+                    list[0].sentenceStart = true;
+                }
+                return;
+            }
+            if (bracketed) {
+                if (!list[i] || !isCloseBracket(list[i].ch)) return;
+                i += 1;
+            }
+            let punctuated = bracketed;
+            if (list[i] && '.．、'.includes(list[i].ch)) {
+                punctuated = true;
+                i += 1;
+            }
+            // 題號後面可能被空白隔成下一段（如橫書「1. 小明…」）
+            // 只有帶標點或括號的題號才往下一段找，避免把「有 25 顆」的數字當成題號
+            const next = list[i] || (i === list.length && punctuated && following ? following.glyphs[0] : null);
+            if (!next || !(CJK_RE.test(next.ch) || OPEN_QUOTE.includes(next.ch) || BOPOMOFO_RE.test(next.ch) ||
+                isOpenBracket(next.ch) || '…⋯'.includes(next.ch))) return;
+            const last = list[i - 1];
+            if (!punctuated) {
+                const s = Math.min(glyphSize(last), glyphSize(next));
+                const gap = chain.orientation === 'V' ? next.y0 - last.y1 : next.x0 - last.x1;
+                const sizeDiffers = Math.abs(last.size - next.size) > 0.1 * Math.max(last.size, next.size);
+                if (gap < 0.12 * s && !sizeDiffers) return;
+            }
+            last.qnumEnd = true;
+            list[0].sentenceStart = true;
+        });
+    }
+
     function markSpecialRuns(orderedGlyphs) {
         const cjk = orderedGlyphs.filter((g) => CJK_RE.test(g.ch));
         const rubyCount = cjk.filter((g) => g.kind === 'ruby' || g.kind === 'zhuyin-only').length;
@@ -514,6 +569,8 @@
         segment.forEach((g, index) => {
             // 選項 ①②③④ 各自成為一個點讀單位
             if (CIRCLED.includes(g.ch) && current.length) flush();
+            // 題號另起一句（如「…共十四分」與「1連出正確的解釋」分開）
+            if (g.sentenceStart && current.length) flush();
             current.push(g);
             const nextCh = segment[index + 1] ? segment[index + 1].ch : '';
             if (SENTENCE_END_RE.test(g.ch) && !CLOSE_QUOTE.includes(nextCh) && !'）)'.includes(nextCh)) {
@@ -577,6 +634,7 @@
             segmentEnd = Math.max(segmentEnd, endOf(line));
         });
 
+        markQuestionNumbers(ordered);
         const orderedGlyphs = segments.flat();
         markSpecialRuns(orderedGlyphs);
 
@@ -671,6 +729,16 @@
             const circled = CIRCLED.indexOf(ch);
             if (circled >= 0) {
                 parts.push(opts.display ? ` ${ch}` : `，${circled + 1}、`);
+                prev = g;
+                continue;
+            }
+            if (g.qnumEnd) {
+                // 題號與題目之間留間隔：朗讀停頓、字幕空一格
+                if ('.．、'.includes(ch)) {
+                    parts.push(opts.display ? `${ch} ` : '，');
+                } else {
+                    parts.push(opts.display ? `${ch} ` : `${ch}，`);
+                }
                 prev = g;
                 continue;
             }
