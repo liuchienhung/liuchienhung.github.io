@@ -31,6 +31,8 @@ video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .banner{position:absolute;left:10px;right:10px;top:10px;padding:8px 12px;border-radius:10px;font-weight:700;
   background:var(--bad);color:#fff;display:none;font-size:.95rem}
 .viewtag{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.55);color:#fff;padding:3px 10px;border-radius:20px;font-size:.8rem}
+.acttag{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.55);color:#fff;padding:3px 10px;border-radius:20px;font-size:.85rem;font-weight:700;display:none}
+.banner.away{background:#5B6B7C}
 .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px;font-size:.95rem}
 .metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 12px}
 .m{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:10px;padding:8px 10px}
@@ -132,6 +134,7 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
   <canvas id="canvas"></canvas>
   <div class="banner" id="banner"></div>
   <div class="viewtag" id="viewtag">—</div>
+  <div class="acttag" id="acttag"></div>
   <div class="hint" id="hint">按「開始偵測」開啟相機</div>
 </div>
 
@@ -304,7 +307,7 @@ function grab(values,view,lm){
   const c=document.createElement("canvas"); c.width=w; c.height=h;
   c.getContext("2d").drawImage(video,0,0,w,h);
   return {base:c,lm:lm.map(l=>({x:l.x,y:l.y,v:l.visibility??1})),mirror:video.classList.contains("mirror"),
-    t:performance.now()-state.startTime,values:{...values},view};
+    t:performance.now()-state.startTime,values:{...values},view,act:pres.act};
 }
 function frameScore(values){
   let sc=0;
@@ -401,7 +404,7 @@ function snapFig(sn,title,cls=""){
   const i=reportSnaps.push(sn)-1;
   const vals=Object.entries(sn.values).map(([k,v])=>{ const m=METRICS[k], lv=level(k,v);
     return `<span class="lv-${lv}">${m.label} ${m.unit?v.toFixed(0)+m.unit:v.toFixed(2)}${lv==="bad"?"（不良）":lv==="warn"?"（注意）":""}</span>`; }).join("<br>");
-  return `<figure class="snap"><img data-snap="${i}" alt="${title}，第 ${mmss(sn.t)}"><figcaption><span class="tag ${cls}">${title}</span>第 ${mmss(sn.t)}・${sn.view==="side"?"側面":"正面"}<br>${vals||'<span class="small">未偵測到指標</span>'}</figcaption></figure>`;
+  return `<figure class="snap"><img data-snap="${i}" alt="${title}，第 ${mmss(sn.t)}"><figcaption><span class="tag ${cls}">${title}</span>第 ${mmss(sn.t)}・${sn.view==="side"?"側面":"正面"}${sn.act&&sn.act!=="other"?"・"+ACT_SHORT[sn.act]:""}<br>${vals||'<span class="small">未偵測到指標</span>'}</figcaption></figure>`;
 }
 
 function level(k,v){
@@ -497,6 +500,83 @@ function compute(p,view){
   return out;
 }
 
+/* ===== 在座與活動判斷 =====
+   在座：看得到肩膀，且肩膀沒有比坐姿基準高出半個軀幹（站起來）；連續 5 秒不符合就算離座
+   活動：追蹤手（食指，看不到就用手腕）4 秒內的移動速度，以軀幹長度為單位
+         手在桌面高度、持續小幅移動 → 寫字；手幾乎不動或把書拿起來 → 閱讀；看不到手或動作很大 → 無法判斷
+   門檻為估計值，會受拍攝角度與距離影響 */
+const AWAY_MS=5000, BREAK_AWAY_MS=3*60*1000, ACT_WIN=4000, ACT_HOLD=6000;
+const WRITE_MIN=0.035, WRITE_MAX=0.6, HOLD_MAX=0.2;
+const ACT_TAG={write:"✏️ 寫字中",read:"📖 閱讀中",other:"判斷中…"};
+const ACT_SHORT={write:"寫字",read:"閱讀",other:"無法判斷"};
+const pres={};
+function resetPresence(){
+  const now=performance.now();
+  Object.assign(pres,{here:true,lastOk:now,awayStart:0,awayCount:0,awayMs:0,baseY:null,standSince:0,
+    act:"other",labels:[],hand:{},hist:{15:[],16:[]},ms:{write:0,read:0,other:0},lastT:now});
+}
+resetPresence();
+function torsoLen(p){
+  const [s,h]=p[I.lSh].v+p[I.lHip].v>=p[I.rSh].v+p[I.rHip].v?[I.lSh,I.lHip]:[I.rSh,I.rHip];
+  if(p[s].v>0.5&&p[h].v>0.5) return Math.max(20,Math.hypot(p[s].x-p[h].x,p[s].y-p[h].y));
+  return Math.max(canvas.height*0.2,Math.hypot(p[I.lSh].x-p[I.rSh].x,p[I.lSh].y-p[I.rSh].y)*1.4);
+}
+const shoulderY=p=>{ const sh=[p[I.lSh],p[I.rSh]].filter(q=>q.v>0.5); return sh.length?sh.reduce((a,q)=>a+q.y,0)/sh.length:null; };
+function seatedCheck(p,now){
+  const shY=shoulderY(p); if(shY==null) return false;
+  const T=torsoLen(p);
+  if(pres.baseY==null) pres.baseY=shY;
+  const standing=shY<pres.baseY-0.5*T;
+  if(!standing){ pres.standSince=0; pres.baseY+=(shY-pres.baseY)*0.02; }
+  else{ pres.standSince||=now; if(now-pres.standSince>60000){ pres.baseY=shY; pres.standSince=0; } } /* 站很久多半是鏡頭被移動，重新校正 */
+  return !standing;
+}
+function updatePresence(ok,now){
+  const b=$("banner");
+  if(ok){
+    pres.lastOk=now;
+    if(!pres.here){
+      const dur=now-pres.awayStart; pres.awayMs+=dur; pres.here=true;
+      if(dur>=BREAK_AWAY_MS) state.lastBreak=now; /* 離開夠久當作已休息 */
+      b.classList.remove("away"); b.style.display="none";
+      if(!tut.open) notify("back");
+    }
+  }else if(pres.here&&now-pres.lastOk>AWAY_MS){
+    pres.here=false; pres.awayStart=pres.lastOk; pres.awayCount++;
+    state.badSince=null; state.goodSince=null; pres.labels=[]; pres.act="other";
+    b.textContent=(nick()?nick()+" ":"")+"不在座位上，回來後會繼續偵測";
+    b.classList.add("away"); b.style.display="block";
+  }
+}
+function classifyAct(p,now){
+  const T=torsoLen(p), shY=shoulderY(p);
+  const hands=[];
+  for(const [w,f] of [[15,19],[16,20]]){
+    const q=p[f].v>0.5?p[f]:p[w].v>0.5?p[w]:null, h=pres.hist[w];
+    if(!q){ h.length=0; delete pres.hand[w]; continue; }
+    const o=pres.hand[w], sm=pres.hand[w]=o?{x:o.x*0.7+q.x*0.3,y:o.y*0.7+q.y*0.3}:{x:q.x,y:q.y}; /* 平滑，減少關節點抖動 */
+    if(!h.length||now-h[h.length-1].t>=250) h.push({t:now,x:sm.x,y:sm.y});
+    while(h.length&&now-h[0].t>ACT_WIN) h.shift();
+    if(h.length<5) continue;
+    let path=0; for(let i=1;i<h.length;i++) path+=Math.hypot(h[i].x-h[i-1].x,h[i].y-h[i-1].y);
+    hands.push({speed:path/T/((h[h.length-1].t-h[0].t)/1000),low:shY!=null&&sm.y>shY+0.3*T});
+  }
+  let label="other";
+  if(hands.some(h=>h.low&&h.speed>=WRITE_MIN&&h.speed<=WRITE_MAX)) label="write";
+  else if(hands.length&&hands.every(h=>h.speed<WRITE_MIN||(!h.low&&h.speed<HOLD_MAX))) label="read";
+  pres.labels.push({t:now,label});
+  while(pres.labels.length&&now-pres.labels[0].t>ACT_HOLD) pres.labels.shift();
+  const cnt={}; pres.labels.forEach(l=>cnt[l.label]=(cnt[l.label]||0)+1);
+  const [top,n]=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];
+  if(n/pres.labels.length>=0.6) pres.act=top;
+}
+function showActTag(){
+  const t=$("acttag");
+  t.textContent=pres.here?ACT_TAG[pres.act]:"🚶 不在座位";
+  t.style.display=state.running?"block":"none";
+}
+const fmtDur=ms=>{ const t=Math.round(ms/1000); return t<60?`${t} 秒`:`${Math.floor(t/60)} 分${t%60?` ${t%60} 秒`:""}`; };
+
 /* ===== 語音提醒 ===== */
 const VOICE={
   neck:["頭抬高一點，眼睛離本子一尺喔","脖子伸直，頭不要太低"],
@@ -507,6 +587,15 @@ const VOICE={
   praise:["很好，姿勢正確，繼續保持","好棒，就是這樣坐","姿勢很漂亮，加油"],
   break:["已經寫了三十分鐘，起來休息一下，看看遠方吧","寫了三十分鐘囉，站起來做十次烏龜縮頭","休息時間到，去貼牆站三十秒吧"],
   start:["開始偵測囉，記得坐好"],
+  back:["歡迎回來，記得坐好喔","回來囉，坐好繼續加油"],
+};
+/* 閱讀時改用看書的說法 */
+const VOICE_READ={
+  neck:["看書時把書立起來一點，頭不要太低","書本拿高一點，眼睛離書一尺"],
+  drop:["頭抬起來，書本可以立起來看","書不要平放太低，頭抬高一點"],
+  tilt:["頭擺正，書本放在正前方","頭不要歪，書放正再看"],
+  sh:["兩邊肩膀放平，書放在正前方","肩膀放輕鬆，不要一邊高一邊低"],
+  break:["已經讀了三十分鐘，起來休息一下，看看遠方吧","讀了三十分鐘囉，站起來做十次烏龜縮頭"],
 };
 const BREAK_MS=30*60*1000;
 const pick=a=>a[Math.floor(Math.random()*a.length)];
@@ -532,8 +621,8 @@ $("nickInput").addEventListener("input",()=>{ try{ localStorage.setItem("posture
 function notify(key){
   if(state.alertMode==="off") return;
   const isCorrection=key in METRICS;
-  if(state.alertMode==="voice" && speak(withName(pick(VOICE[key])))){}
-  else if(key!=="praise") beep();
+  if(state.alertMode==="voice" && speak(withName(pick(pres.act==="read"&&VOICE_READ[key]||VOICE[key])))){}
+  else if(key!=="praise"&&key!=="back") beep();
   if(isCorrection) navigator.vibrate?.(300);
 }
 function severity(k,v){ const m=METRICS[k]; return m.dir===1?(v-m.thr[1])/m.thr[1]:(m.thr[1]-v)/m.thr[1]; }
@@ -574,23 +663,33 @@ function loop(){
     state.lastTs=video.currentTime;
     const res=state.landmarker.detectForVideo(video,performance.now());
     ctx.clearRect(0,0,canvas.width,canvas.height);
+    const now=performance.now();
     if(res.landmarks?.length){
       const lm=res.landmarks[0];
       const p=lm.map(l=>({x:l.x*canvas.width,y:l.y*canvas.height,v:l.visibility??1}));
       const view=detectView(p);
       $("viewtag").textContent=view==="side"?"側面":"正面";
-      const values=compute(p,view);
       const du=new DrawingUtils(ctx);
       du.drawConnectors(lm,PoseLandmarker.POSE_CONNECTIONS.filter(c=>c.start<25&&c.end<25),{color:"#F2C230",lineWidth:4});
       du.drawLandmarks(lm.slice(0,25),{color:"#1F3A5F",fillColor:"#fff",radius:3});
-      state.frames++;
-      for(const k in values) state.stats[k][level(k,values[k])]++;
-      renderMetricCards(values,view);
-      handleAlert(values);
-      trackSnaps(values,view,lm);
+      const seated=seatedCheck(p,now);
+      updatePresence(seated,now);
+      if(seated){ /* 站起來或離座時不計入姿勢統計 */
+        classifyAct(p,now);
+        const values=compute(p,view);
+        state.frames++;
+        for(const k in values) state.stats[k][level(k,values[k])]++;
+        renderMetricCards(values,view);
+        handleAlert(values);
+        trackSnaps(values,view,lm);
+      }
     }else{
       $("viewtag").textContent="找不到人";
+      updatePresence(false,now);
     }
+    if(pres.here&&now-pres.lastOk<1000) pres.ms[pres.act]+=Math.min(1000,now-pres.lastT); /* 離座寬限期間不計，避免與離座時間重複 */
+    pres.lastT=now;
+    showActTag();
   }
   requestAnimationFrame(loop);
 }
@@ -605,7 +704,7 @@ async function start(){
     await startCamera();
     $("hint").style.display="none";
     try{ await navigator.wakeLock?.request("screen"); }catch{}
-    resetStats(); state.lastBreak=performance.now(); state.lastAlert=0; state.alerted=false; state.running=true; $("report").style.display="none";
+    resetStats(); resetPresence(); state.lastBreak=performance.now(); state.lastAlert=0; state.alerted=false; state.running=true; $("report").style.display="none";
     $("startBtn").textContent="偵測中"; loop();
   }catch(e){
     $("startBtn").disabled=false;
@@ -621,11 +720,22 @@ function stop(){
   if("speechSynthesis" in window) speechSynthesis.cancel();
   state.stream?.getTracks().forEach(t=>t.stop()); state.stream=null;
   $("startBtn").disabled=false; $("startBtn").textContent="重新開始偵測";
-  $("banner").style.display="none";
+  $("banner").style.display="none"; $("banner").classList.remove("away");
+  showActTag();
   $("hint").style.display="flex"; $("hint").textContent="已停止";
 }
 
+function timeHtml(){
+  const parts=[["write","var(--ink)"],["read","var(--pencil)"],["other","var(--line)"]].map(([k,c])=>({n:ACT_SHORT[k],ms:pres.ms[k],c}));
+  parts.push({n:"離座",ms:pres.awayMs,c:"var(--muted)"});
+  const tot=parts.reduce((a,x)=>a+x.ms,0); if(tot<1000) return "";
+  return `<h3>時間分配</h3>
+    <div class="bar" style="height:12px">${parts.map(x=>`<i style="width:${x.ms/tot*100}%;background:${x.c}"></i>`).join("")}</div>
+    <p class="small">${parts.filter(x=>x.ms>=1000).map(x=>`<b style="color:${x.c==="var(--line)"?"var(--muted)":x.c}">■</b> ${x.n} ${fmtDur(x.ms)}${x.n==="離座"?`（${pres.awayCount} 次）`:""}`).join("　")}</p>
+    <p class="small">寫字／閱讀由手部動作推估，僅供參考；離座時間不計入姿勢統計。</p>`;
+}
 function report(){
+  if(state.running&&!pres.here){ pres.awayMs+=performance.now()-pres.awayStart; pres.here=true; }
   if(state.running&&snaps.lastValues) snaps.last=grab(snaps.lastValues.values,snaps.lastValues.view,snaps.lastValues.lm);
   state.reportAt=new Date();
   stop();
@@ -649,6 +759,7 @@ function report(){
   r.innerHTML=`<div class="rep-actions" data-html2canvas-ignore><button class="primary" id="pdfBtn">下載 PDF</button></div>
     <h2>${nick()?esc(nick())+" 的":""}本次報告（${mins} 分鐘）</h2>
     <p class="small">${when}</p>
+    ${timeHtml()}
     ${rows.length?rows.join(""):'<p class="small">有效資料不足，請拍攝至少 30 秒且人物完整入鏡。</p>'}
     <h3>姿勢快照</h3>
     ${shots?`<div class="snap-opts" data-html2canvas-ignore><span>照片隱私：</span>
