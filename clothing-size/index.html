@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>衣服尺寸建議</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1F3A5F; --paper:#FFF8EC; --line:#EADBC4; --accent:#E07A3F; --accent-soft:#FBE3D3;
+  --good:#2E8B57; --warn:#D99A00; --bad:#D1453B; --text:#1C2530; --muted:#5B6B7C; --card:#FFFFFF; --field:#FFFDF8;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0F1722; --card:#172233; --line:#2A3A50; --text:#E6ECF3; --muted:#9AAABB; --ink:#8FB4E0; --accent-soft:#3A2A20; --field:#121C2A;
+}}
+:root[data-theme="dark"]{
+  --paper:#0F1722; --card:#172233; --line:#2A3A50; --text:#E6ECF3; --muted:#9AAABB; --ink:#8FB4E0; --accent-soft:#3A2A20; --field:#121C2A;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{height:100%} body{margin:0;min-height:100%;background:var(--paper);color:var(--text);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:16px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 40px}
+header{padding:16px 0 6px}
+header a.home{font-size:.85rem;color:var(--muted);text-decoration:none}
+h1{margin:4px 0 0;font-size:1.4rem;color:var(--ink)}
+header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+h2{font-size:1.1rem;margin:0 0 10px;color:var(--ink)}
+h3{font-size:1rem;margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+.small{font-size:.85rem;color:var(--muted)}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.seg button{flex:1 1 140px}
+button,.btn{font:inherit;min-height:40px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--text);cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+button.on{background:var(--ink);border-color:var(--ink);color:var(--paper);font-weight:700}
+button:disabled{opacity:.5;cursor:not-allowed}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 14px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.9rem;font-weight:500}
+label.f span.h{font-weight:400;font-size:.8rem;color:var(--muted)}
+input,select,textarea{font:inherit;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-height:40px;width:100%}
+textarea{min-height:90px}
+.unit{display:flex;align-items:center;gap:6px}.unit input{flex:1}.unit em{font-style:normal;color:var(--muted);font-size:.85rem}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;margin-top:10px}
+.check input{width:auto;min-height:auto;margin-top:4px}
+details{border:1px dashed var(--line);border-radius:10px;padding:8px 12px;margin-bottom:12px}
+details[open]{padding-bottom:12px}
+summary{cursor:pointer;font-weight:700;color:var(--ink)}
+/* ===== 相機 ===== */
+.stage{position:relative;margin-top:10px;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:3/4;max-height:64vh;width:100%}
+.stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.mirror{transform:scaleX(-1)}
+.stage .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#cfd8e3;text-align:center;padding:20px;font-size:.95rem}
+.chip{position:absolute;left:10px;right:10px;top:10px;padding:7px 12px;border-radius:10px;background:rgba(0,0,0,.6);color:#fff;font-weight:700;font-size:.92rem;display:none}
+.chip.ok{background:rgba(46,139,87,.9)}
+.count{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:7rem;font-weight:700;color:#fff;text-shadow:0 4px 18px rgba(0,0,0,.6);pointer-events:none}
+.status{margin-top:8px;font-size:.92rem;min-height:1.5em}
+.status.err{color:var(--bad)} .status.ok{color:var(--good)}
+.camres{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}
+.camres div{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.camres b{display:block;font-size:1.15rem;color:var(--ink)}
+.camres span{font-size:.8rem;color:var(--muted)}
+ol.tips{margin:6px 0 0;padding-left:1.3em;font-size:.9rem}
+ol.tips li{margin:2px 0}
+/* ===== 結果 ===== */
+.result{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:center}
+@media (max-width:560px){.result{grid-template-columns:1fr}}
+.big{display:flex;flex-direction:column;gap:10px}
+.big div{background:var(--accent-soft);border-radius:12px;padding:12px 14px}
+.big span{font-size:.85rem;color:var(--muted)}
+.big b{display:block;font-size:1.8rem;line-height:1.2;color:var(--accent)}
+.big small{font-size:.8rem;color:var(--muted)}
+.diagram svg{width:100%;height:auto;max-height:300px}
+.empty{color:var(--muted);font-size:.95rem;padding:10px 0}
+ul.notes{margin:10px 0 0;padding-left:1.2em;font-size:.88rem;color:var(--muted)}
+/* ===== 尺寸表 ===== */
+.tablewrap{overflow-x:auto;margin-top:10px}
+table{border-collapse:collapse;width:100%;min-width:460px;font-size:.92rem}
+th,td{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:middle}
+th{font-size:.82rem;color:var(--muted);font-weight:500}
+td input{min-height:34px;padding:4px 6px}
+td.size input{max-width:90px} td.num input{max-width:84px}
+td.v{font-size:.82rem;line-height:1.35}
+tr.best td{background:var(--accent-soft)}
+.tag{display:inline-block;padding:1px 8px;border-radius:20px;font-size:.78rem;font-weight:700;color:#fff;background:var(--good)}
+.tag.warn{background:var(--warn)} .tag.bad{background:var(--bad)}
+td button{min-height:32px;padding:2px 8px}
+.match{margin-top:12px;font-size:.98rem}
+.match b{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="home" href="../">← 回服務首頁</a>
+  <h1>👕 衣服尺寸建議：胸寬與衣長</h1>
+  <p>用相機或皮尺量身體，算出適合的衣服「胸寬」和「衣長」，再對照商品尺寸表選尺寸。影像只在本機運算，不上傳。</p>
+</header>
+
+<!-- ① 量測 -->
+<section class="card">
+  <h2>① 量測</h2>
+  <div class="seg" role="tablist">
+    <button id="modeBody" class="on" type="button">🧍 量身體</button>
+    <button id="modeGarment" type="button">👕 量一件合身的衣服</button>
+  </div>
+
+  <div id="bodyPane">
+    <details id="camBox">
+      <summary>📷 用相機量（自動算胸寬、胸圍與衣長基準）</summary>
+      <ol class="tips">
+        <li>先在下方填好<b>身高</b>，相機會用身高換算尺寸。</li>
+        <li>手機直立放在約腰部高度，人退到<b>頭到腳都入鏡</b>（約 2～3 公尺）。</li>
+        <li>穿貼身衣服、脫鞋，雙腳打開與肩同寬，<b>雙手稍微離開身體</b>（像 A 字）。</li>
+        <li>按「量正面」，倒數後站好不動；再按「量側面」側身站、雙手往前平舉（可略過）。</li>
+      </ol>
+      <div class="btns">
+        <button id="camBtn" class="primary" type="button">開啟相機</button>
+        <button id="flipBtn" type="button" hidden>切換鏡頭</button>
+        <button id="frontBtn" type="button" disabled>📏 量正面</button>
+        <button id="sideBtn" type="button" disabled>📐 量側面（選填）</button>
+      </div>
+      <div class="btns">
+        <label class="small" style="display:flex;align-items:center;gap:6px">倒數
+          <select id="delaySel" style="width:auto;min-height:34px"><option value="5">5 秒</option><option value="10" selected>10 秒</option><option value="3">3 秒</option></select>
+        </label>
+        <label class="btn small" style="display:inline-flex;align-items:center">🖼️ 上傳正面照<input id="frontFile" type="file" accept="image/*" hidden></label>
+        <label class="btn small" style="display:inline-flex;align-items:center">🖼️ 上傳側面照<input id="sideFile" type="file" accept="image/*" hidden></label>
+      </div>
+      <div class="stage" id="stage">
+        <video id="video" playsinline muted></video>
+        <canvas id="canvas"></canvas>
+        <div class="ph" id="ph">開啟相機，或上傳一張全身照片</div>
+        <div class="chip" id="chip"></div>
+        <div class="count" id="count"></div>
+      </div>
+      <div class="status" id="status" aria-live="polite"></div>
+      <div class="camres" id="camres" hidden></div>
+      <div class="match" id="camSize" hidden></div>
+    </details>
+
+    <div class="grid">
+      <label class="f">身高 *
+        <span class="unit"><input id="h" type="number" inputmode="decimal" min="70" max="220" step="0.5" placeholder="例如 165"><em>cm</em></span>
+      </label>
+      <label class="f">胸圍 *<span class="h">皮尺繞胸部最寬處一圈，放鬆呼吸</span>
+        <span class="unit"><input id="chest" type="number" inputmode="decimal" min="40" max="170" step="0.5" placeholder="例如 90"><em>cm</em></span>
+      </label>
+      <label class="f">肩頸點到胯下（選填）<span class="h">從脖子與肩膀交接處往下量到胯下；空白就用身高估算</span>
+        <span class="unit"><input id="l0" type="number" inputmode="decimal" min="25" max="90" step="0.5" placeholder="自動估算"><em>cm</em></span>
+      </label>
+    </div>
+  </div>
+
+  <div id="garmentPane" hidden>
+    <p class="small" style="margin-top:0">找一件穿起來<b>大小剛好</b>的衣服，平放拉平後量：</p>
+    <div class="grid">
+      <label class="f">胸寬<span class="h">腋下下方約 2 cm，左右兩側直線距離</span>
+        <span class="unit"><input id="gChest" type="number" inputmode="decimal" min="20" max="90" step="0.5" placeholder="例如 52"><em>cm</em></span>
+      </label>
+      <label class="f">衣長<span class="h">肩頸點（領口與肩線交接處）垂直量到下襬</span>
+        <span class="unit"><input id="gLen" type="number" inputmode="decimal" min="25" max="110" step="0.5" placeholder="例如 70"><em>cm</em></span>
+      </label>
+      <label class="f">寬度想要
+        <select id="gChestAdj"><option value="0">跟這件一樣</option><option value="2">寬鬆一點</option><option value="4">更寬鬆</option><option value="-2">合身一點</option></select>
+      </label>
+      <label class="f">長度想要
+        <select id="gLenAdj"><option value="0">跟這件一樣</option><option value="3">長一點</option><option value="6">更長</option><option value="-3">短一點</option></select>
+      </label>
+    </div>
+  </div>
+</section>
+
+<!-- ② 偏好 -->
+<section class="card">
+  <h2>② 想買的衣服</h2>
+  <div class="grid" id="prefGrid">
+    <label class="f">種類
+      <select id="type">
+        <option value="tee">T恤</option><option value="shirt">襯衫／POLO衫</option>
+        <option value="hoodie">帽T／大學T</option><option value="jacket">外套（裡面要穿衣服）</option>
+      </select>
+    </label>
+    <label class="f">版型
+      <select id="fit">
+        <option value="slim">修身（貼身）</option><option value="fit">合身</option>
+        <option value="regular" selected>標準</option><option value="loose">寬鬆</option><option value="over">Oversize（落肩大版）</option>
+      </select>
+    </label>
+    <label class="f">衣長
+      <select id="len">
+        <option value="short">短版（大約到褲頭）</option><option value="regular" selected>標準（蓋過褲頭）</option><option value="long">長版（蓋住臀部）</option>
+      </select>
+    </label>
+  </div>
+  <label class="check"><input id="grow" type="checkbox"> <span>孩子要預留成長空間（胸寬 +2 cm、衣長 +3 cm，大約可多穿一年）</span></label>
+</section>
+
+<!-- ③ 建議 -->
+<section class="card">
+  <h2>③ 建議尺寸</h2>
+  <div id="rec"><p class="empty">填入身高與胸圍（或用相機量），就會出現建議的胸寬與衣長。</p></div>
+</section>
+
+<!-- ④ 尺寸表 -->
+<section class="card">
+  <h2>④ 對照商品尺寸表</h2>
+  <p class="small" style="margin-top:0">把商品頁的尺寸表填進來（或貼上），幫你挑最適合的尺寸。下面是範例數字，請改成你要買的商品。</p>
+  <div class="grid">
+    <label class="f">套用範例
+      <select id="preset"><option value="">—</option><option value="adult">成人 T恤（XS～3XL）</option><option value="kid">兒童 T恤（90～160）</option><option value="clear">清空</option></select>
+    </label>
+    <label class="f">表中的「胸」是
+      <select id="chartKind"><option value="auto">自動判斷</option><option value="flat">胸寬（平放量單邊）</option><option value="round">胸圍（一圈）</option></select>
+    </label>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>尺寸</th><th>胸寬／胸圍 cm</th><th>衣長 cm</th><th>比較</th><th></th></tr></thead>
+      <tbody id="chartBody"></tbody>
+    </table>
+  </div>
+  <div class="btns">
+    <button id="addRow" type="button">＋ 新增一列</button>
+    <button id="pasteToggle" type="button">📋 貼上尺寸表</button>
+  </div>
+  <div id="pasteBox" hidden style="margin-top:10px">
+    <textarea id="pasteText" placeholder="直式：每列「尺寸 胸寬 衣長」&#10;S 46 67&#10;M 49 70&#10;&#10;或橫式（和商品頁一樣）：&#10;XS S M L XL&#10;胸寬 43 46 49 52 55&#10;衣長 64 67 70 73 75"></textarea>
+    <div class="btns"><button id="pasteGo" class="primary" type="button">轉成表格</button></div>
+    <p class="small">直式、橫式都可以；橫式會依「胸」「長」字樣找對應的列。貼上後請檢查表格數字。</p>
+  </div>
+  <div class="match" id="match"></div>
+</section>
+
+<p class="small" style="margin-top:16px">相機量測是用影像輪廓估算，誤差約 ±2～4 cm，量到的數字都可以直接改。有皮尺量的胸圍最準。不同品牌版型差很多，以商品尺寸表為準。</p>
+</div>
+
+<script type="module">
+const $=id=>document.getElementById(id);
+const num=id=>{ const v=parseFloat($(id).value); return Number.isFinite(v)?v:null; };
+const r1=v=>Math.round(v*10)/10;
+const esc=t=>String(t).replace(/[&<>"']/g,c=>`&#${c.charCodeAt(0)};`);
+const median=a=>{ const s=[...a].sort((x,y)=>x-y), m=s.length>>1; return s.length%2?s[m]:(s[m-1]+s[m])/2; };
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+
+/* ===================== 建議計算 =====================
+   胸寬（平量）＝（胸圍＋放鬆量）÷ 2
+   衣長＝肩頸點到胯下的長度＋款式長短的加減
+   放鬆量、加減都以成人（胸圍 92、身高 170）為準，孩子依比例縮小 */
+const TYPES={
+  tee:   {name:"T恤",       ease:0,  len:0},
+  shirt: {name:"襯衫／POLO衫",ease:2,  len:3},
+  hoodie:{name:"帽T／大學T", ease:4,  len:0},
+  jacket:{name:"外套",       ease:10, len:3},
+};
+const FITS={
+  slim:   {name:"修身",    ease:4},
+  fit:    {name:"合身",    ease:8},
+  regular:{name:"標準",    ease:12},
+  loose:  {name:"寬鬆",    ease:20},
+  over:   {name:"Oversize",ease:30},
+};
+const LENS={
+  short:  {name:"短版",off:-8},
+  regular:{name:"標準",off:7},
+  long:   {name:"長版",off:15},
+};
+/* 肩頸點到胯下 ÷ 身高：孩子腿比較短、頭比較大，比例略低 */
+const torsoRatio=h=>h<=120?0.36:h>=160?0.375:0.36+(h-120)/40*0.015;
+
+let mode="body";
+function recommend(){
+  const grow=$("grow").checked;
+  if(mode==="garment"){
+    const c=num("gChest"), l=num("gLen");
+    if(c==null||l==null) return null;
+    const cm=c+ +$("gChestAdj").value+(grow?2:0), lm=l+ +$("gLenAdj").value+(grow?3:0);
+    return {chest:[cm-1,cm+1], len:[lm-1.5,lm+1.5], from:"garment"};
+  }
+  const h=num("h"), ch=num("chest");
+  if(h==null||ch==null||h<70||ch<40) return null;
+  const t=TYPES[$("type").value], f=FITS[$("fit").value], L=LENS[$("len").value];
+  const easeScale=clamp(ch/92,0.6,1.1), lenScale=clamp(h/170,0.55,1.15);
+  const ease=(f.ease+t.ease)*easeScale;
+  const flat=(ch+ease)/2+(grow?2:0);
+  const l0In=num("l0"), l0=l0In??h*torsoRatio(h);
+  const len=l0+(L.off+t.len)*lenScale+(grow?3:0);
+  return {chest:[flat-1,flat+1], len:[len-1.5,len+1.5], ease, l0, l0Est:l0In==null, from:"body", t, f, L, ch};
+}
+
+function diagram(c,l){
+  return `<svg viewBox="0 0 240 250" role="img" aria-label="胸寬與衣長量法示意">
+  <defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--accent)"/></marker></defs>
+  <path d="M92 20 Q120 38 148 20 L196 38 L226 92 L194 108 L182 90 L182 232 L58 232 L58 90 L46 108 L14 92 L44 38 Z" fill="var(--field)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M92 20 Q120 50 148 20" fill="none" stroke="var(--ink)" stroke-width="2"/>
+  <line x1="60" y1="104" x2="180" y2="104" stroke="var(--accent)" stroke-width="2.5" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="120" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="var(--accent)">胸寬 ${c}</text>
+  <line x1="78" y1="27" x2="78" y2="230" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="5 3" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="84" y="170" font-size="13" font-weight="700" fill="var(--accent)">衣長 ${l}</text>
+  <circle cx="94" cy="22" r="4" fill="var(--accent)"/><text x="100" y="14" font-size="10" fill="var(--muted)">肩頸點</text>
+  <text x="120" y="121" text-anchor="middle" font-size="10" fill="var(--muted)">腋下下方約 2 cm</text>
+  </svg>`;
+}
+
+function renderRec(){
+  const R=recommend(); window.__rec=R;
+  if(!R){
+    $("rec").innerHTML=`<p class="empty">${mode==="garment"?"填入那件衣服的胸寬與衣長，就會出現建議尺寸。":"填入身高與胸圍（或用相機量），就會出現建議的胸寬與衣長。"}</p>`;
+    renderChart(); return;
+  }
+  const c0=Math.round(R.chest[0]), c1=Math.round(R.chest[1]), l0=Math.round(R.len[0]), l1=Math.round(R.len[1]);
+  const notes=[];
+  if(R.from==="body"){
+    notes.push(`${R.t.name}・${R.f.name}版型：胸圍 ${r1(R.ch)} cm 加上放鬆量約 ${Math.round(R.ease)} cm，再除以 2 就是平量胸寬。`);
+    notes.push(`衣長基準（肩頸點到胯下）${Math.round(R.l0)} cm${R.l0Est?"（依身高估算，用相機或皮尺量會更準）":""}；${R.L.name}衣長${R.L.off>=0?"再加":"減"}一些。`);
+    if(R.f.ease>=30) notes.push("Oversize 通常是落肩設計，肩寬會比平常大很多，看胸寬就好、不用在意肩寬。");
+  } else notes.push("以你量的那件衣服為準，依想要的寬鬆度與長度加減。");
+  if($("grow").checked) notes.push("已加上成長空間；衣長太長會蓋住屁股，袖長也記得看一下。");
+  notes.push("商品尺寸表若寫「胸圍」，數字大約是胸寬的 2 倍：建議胸圍 "+(c0*2)+"～"+(c1*2)+" cm。");
+  $("rec").innerHTML=`<div class="result">
+    <div class="big">
+      <div><span>建議胸寬（平放量單邊）</span><b>${c0}～${c1} cm</b><small>相當於衣服胸圍 ${c0*2}～${c1*2} cm</small></div>
+      <div><span>建議衣長（肩頸點到下襬）</span><b>${l0}～${l1} cm</b><small>${R.from==="body"?`下襬大約在胯下${R.len[0]+1.5-R.l0>=0?"下方 "+Math.round(R.len[0]+1.5-R.l0):"上方 "+Math.round(R.l0-R.len[0]-1.5)} cm`:"依參考衣服調整"}</small></div>
+    </div>
+    <div class="diagram">${diagram(`${c0}～${c1}`,`${l0}～${l1}`)}</div>
+  </div><ul class="notes">${notes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`;
+  renderChart();
+}
+
+/* ===================== 尺寸表 ===================== */
+const PRESETS={
+  adult:[["XS",43,64],["S",46,67],["M",49,70],["L",52,73],["XL",55,75],["2XL",58,77],["3XL",61,79]],
+  kid:[["90",30,38],["100",32,41],["110",34,44],["120",36,48],["130",39,52],["140",42,56],["150",45,60],["160",48,64]],
+};
+let chart=PRESETS.adult.map(r=>({size:r[0],chest:r[1],len:r[2]}));
+
+function chartFlat(rows){
+  /* 胸圍欄位的值大約是胸寬的兩倍；自動判斷：多數數字 ≥ 70 或明顯超過建議胸寬 1.6 倍就當胸圍 */
+  const k=$("chartKind").value;
+  if(k==="flat") return 1; if(k==="round") return 0.5;
+  const vals=rows.map(r=>r.chest).filter(Number.isFinite); if(!vals.length) return 1;
+  const m=median(vals), R=window.__rec;
+  if(R) return m>((R.chest[0]+R.chest[1])/2)*1.6?0.5:1;
+  return m>=70?0.5:1;
+}
+
+function evalRow(r,R,f){
+  if(!R||!Number.isFinite(r.chest)) return null;
+  const c=r.chest*f, [cl,ch]=R.chest, [ll,lh]=R.len;
+  const dc=c<cl?c-cl:c>ch?c-ch:0;
+  const hasL=Number.isFinite(r.len), dl=!hasL?0:r.len<ll?r.len-ll:r.len>lh?r.len-lh:0;
+  /* 太緊比太鬆糟；衣長的權重較低 */
+  const score=(dc<0?-dc*1.6:dc)+(dl<0?-dl*0.8:dl*0.4);
+  return {dc,dl,hasL,score};
+}
+function rowTag(e){
+  if(!e) return "";
+  const parts=[];
+  const t=(d,lo,hi)=>Math.abs(d)<0.5?null:d<0?`${lo} ${r1(-d)}`:`${hi} ${r1(d)}`;
+  const a=t(e.dc,"胸偏緊","胸偏鬆"), b=e.hasL?t(e.dl,"偏短","偏長"):null;
+  const cls=e.score<1?"":e.score<4?"warn":"bad";
+  const label=e.score<1?"剛好":e.score<4?"可以":"不建議";
+  return `<span class="tag ${cls}">${label}</span> ${[a,b].filter(Boolean).map(esc).join("、")}`;
+}
+
+function bestOf(){
+  const R=window.__rec, f=chartFlat(chart);
+  const evals=chart.map(r=>evalRow(r,R,f));
+  let best=-1; evals.forEach((e,i)=>{ if(e&&(best<0||e.score<evals[best].score)) best=i; });
+  return {R,f,evals,best};
+}
+function renderChart(){
+  const {R,f,evals,best}=bestOf();
+  const body=$("chartBody");
+  const focus=document.activeElement, fi=focus?.dataset?.i, fk=focus?.dataset?.k;
+  body.innerHTML=chart.map((r,i)=>`<tr class="${i===best?"best":""}">
+    <td class="size"><input data-i="${i}" data-k="size" value="${esc(r.size??"")}" aria-label="尺寸"></td>
+    <td class="num"><input data-i="${i}" data-k="chest" type="number" inputmode="decimal" step="0.5" value="${Number.isFinite(r.chest)?r.chest:""}" aria-label="胸"></td>
+    <td class="num"><input data-i="${i}" data-k="len" type="number" inputmode="decimal" step="0.5" value="${Number.isFinite(r.len)?r.len:""}" aria-label="衣長"></td>
+    <td class="v">${rowTag(evals[i])}</td>
+    <td><button type="button" data-del="${i}" aria-label="刪除">✕</button></td></tr>`).join("");
+  if(fi!=null){ const el=body.querySelector(`input[data-i="${fi}"][data-k="${fk}"]`); if(el){ el.focus(); const v=el.value; if(el.type!=="number"){ el.setSelectionRange(v.length,v.length); } } }
+  const m=$("match");
+  if(!R){ m.innerHTML=`<span class="small">先完成上面的量測，才能幫你比對尺寸表。</span>`; return; }
+  if(best<0){ m.innerHTML=`<span class="small">尺寸表還沒有數字。</span>`; return; }
+  const b=chart[best], eb=evals[best];
+  const others=evals.map((e,i)=>({e,i})).filter(o=>o.e&&o.i!==best).sort((x,y)=>x.e.score-y.e.score);
+  let txt=`建議選 <b>${esc(b.size||"（未命名）")}</b>`;
+  if(eb.score>=4) txt+=`，但這張表沒有很合適的尺寸（${rowTag(eb).replace(/<[^>]+>/g,"").trim()}），可以考慮別的商品或版型。`;
+  else{
+    const alt=others[0];
+    if(alt&&alt.e.score-eb.score<1.2){
+      const bigger=(chart[alt.i].chest??0)>(b.chest??0);
+      txt+=`；介於兩個尺寸之間，想${bigger?"寬鬆":"合身"}一點可選 <b>${esc(chart[alt.i].size||"")}</b>。`;
+    } else txt+="。";
+  }
+  if(f===0.5) txt+=`<br><span class="small">已把表中的胸圍除以 2 當胸寬比較。</span>`;
+  m.innerHTML=txt;
+  const cs=$("camSize"); if(cs&&!cs.hidden) cs.innerHTML="👕 依尺寸表："+txt;
+}
+$("chartBody").addEventListener("input",e=>{
+  const el=e.target, i=+el.dataset.i, k=el.dataset.k; if(!chart[i]) return;
+  chart[i][k]=k==="size"?el.value:(el.value===""?NaN:parseFloat(el.value));
+  save();
+});
+$("chartBody").addEventListener("change",()=>renderChart());
+$("chartBody").addEventListener("click",e=>{
+  const d=e.target.closest("[data-del]"); if(!d) return;
+  chart.splice(+d.dataset.del,1); save(); renderChart();
+});
+$("addRow").onclick=()=>{ chart.push({size:"",chest:NaN,len:NaN}); save(); renderChart(); $("chartBody").querySelector(`tr:last-child input`)?.focus(); };
+$("preset").onchange=e=>{
+  const v=e.target.value; if(!v) return;
+  chart=v==="clear"?[{size:"",chest:NaN,len:NaN}]:PRESETS[v].map(r=>({size:r[0],chest:r[1],len:r[2]}));
+  e.target.value=""; save(); renderChart();
+};
+$("chartKind").onchange=()=>{ save(); renderChart(); };
+$("pasteToggle").onclick=()=>{ $("pasteBox").hidden=!$("pasteBox").hidden; if(!$("pasteBox").hidden) $("pasteText").focus(); };
+function parseChart(text){
+  const lines=text.split(/\r?\n/).map(l=>l.trim().split(/[\s,，\t|／/]+/).filter(Boolean)).filter(t=>t.length);
+  const isNum=t=>Number.isFinite(parseFloat(t))&&/^[\d.]+(cm)?$/i.test(t);
+  /* 橫式表：一列全是尺寸名稱，下面各列是「胸寬 43 46 …」「衣長 64 67 …」 */
+  const hi=lines.findIndex(t=>t.length>=2&&t.filter(isNum).length<=t.length/2&&t.some(x=>/^(\d?X*[SML]|XXL|\d{2,3})$/i.test(x)));
+  if(hi>=0){
+    const sizes=lines[hi].filter(x=>!/尺寸|size|cm/i.test(x));
+    const data=lines.slice(hi+1).map(t=>({label:t.filter(x=>!isNum(x)).join(""),nums:t.filter(isNum).map(parseFloat)})).filter(r=>r.nums.length>=sizes.length-1&&r.nums.length>=2);
+    if(data.length){
+      const pick=re=>data.find(r=>re.test(r.label));
+      const c=pick(/胸/)||data[0], l=pick(/衣長|身長|長/)||data.find(r=>r!==c);
+      const n=Math.min(sizes.length,c.nums.length);
+      const sz=sizes.slice(sizes.length-n);
+      return sz.map((s,i)=>({size:s,chest:c.nums[c.nums.length-n+i],len:l?l.nums[l.nums.length-n+i]??NaN:NaN}));
+    }
+  }
+  const rows=[];
+  for(const toks of lines){
+    if(toks.length<2) continue;
+    const nums=toks.slice(1).map(t=>parseFloat(t)).filter(Number.isFinite);
+    if(!nums.length) continue;
+    rows.push({size:toks[0],chest:nums[0],len:nums[1]??NaN});
+  }
+  return rows;
+}
+$("pasteGo").onclick=()=>{
+  const rows=parseChart($("pasteText").value);
+  if(!rows.length){ alert("沒有讀到尺寸，請確認格式：每列「尺寸 胸寬 衣長」，或橫式「XS S M…／胸寬 43 46…／衣長 64 67…」。"); return; }
+  chart=rows; $("pasteBox").hidden=true; save(); renderChart();
+};
+
+/* ===================== 表單與儲存 ===================== */
+const FIELDS=["h","chest","l0","gChest","gLen","gChestAdj","gLenAdj","type","fit","len","delaySel"];
+function save(){
+  try{
+    const o={mode,grow:$("grow").checked,chart,chartKind:$("chartKind").value};
+    FIELDS.forEach(k=>o[k]=$(k).value);
+    localStorage.setItem("clothingSize",JSON.stringify(o));
+  }catch{}
+}
+function load(){
+  try{
+    const o=JSON.parse(localStorage.getItem("clothingSize")||"null"); if(!o) return;
+    FIELDS.forEach(k=>{ if(o[k]!=null) $(k).value=o[k]; });
+    $("grow").checked=!!o.grow;
+    if(o.chartKind) $("chartKind").value=o.chartKind;
+    if(Array.isArray(o.chart)&&o.chart.length) chart=o.chart.map(r=>({size:r.size??"",chest:r.chest??NaN,len:r.len??NaN}));
+    if(o.mode==="garment") setMode("garment",true);
+  }catch{}
+}
+function setMode(m,silent){
+  mode=m;
+  $("modeBody").classList.toggle("on",m==="body"); $("modeGarment").classList.toggle("on",m==="garment");
+  $("bodyPane").hidden=m!=="body"; $("garmentPane").hidden=m!=="garment"; $("prefGrid").hidden=m!=="body";
+  if(!silent){ save(); renderRec(); }
+}
+$("modeBody").onclick=()=>setMode("body");
+$("modeGarment").onclick=()=>setMode("garment");
+document.querySelectorAll("#bodyPane input,#garmentPane input,#garmentPane select,#prefGrid select,#grow").forEach(el=>
+  el.addEventListener("input",()=>{ save(); renderRec(); }));
+$("delaySel").onchange=save;
+load(); renderRec();
+
+/* ===================== 相機量測 =====================
+   MediaPipe Pose 取得關節點與人形輪廓（segmentation mask）：
+   - 頭頂到腳底的像素高度對應身高 → 每像素幾公分
+   - 胸部高度（肩→髖 30%～40%）輪廓寬度 → 胸部正面寬；側面同一高度 → 胸部厚度
+   - 胸圍以橢圓周長估算（人體斷面比橢圓方，再乘 1.05）；沒量側面時厚度用正面寬 × 0.72（孩子 0.8）
+   - 衣長基準：肩頸點（肩關節點往上約 3.2% 身高）到胯下（兩腿間輪廓最高點） */
+const video=$("video"), canvas=$("canvas"), ctx=canvas.getContext("2d");
+const MP="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+let PL=null, landmarker=null, runMode="VIDEO", stream=null, loopOn=false, lastVT=-1;
+const S={facing:"environment",phase:null,samples:[],reasons:{},phaseStart:0,live:null,front:null,side:null};
+const ua=navigator.userAgent;
+const MOBILE=!!(navigator.userAgentData?.mobile||/Mobi|iPhone|iPod|Android|iPad/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1));
+S.facing=MOBILE?"environment":"user";
+
+function setStatus(t,cls=""){ $("status").textContent=t; $("status").className="status "+cls; }
+let voice=null;
+function loadVoice(){ const vs=speechSynthesis.getVoices(); voice=vs.find(v=>/zh[-_]TW/i.test(v.lang))||vs.find(v=>/^zh/i.test(v.lang))||null; }
+if("speechSynthesis" in window){ loadVoice(); speechSynthesis.onvoiceschanged=loadVoice; }
+function speak(t,queue){
+  if(!("speechSynthesis" in window)) return;
+  if(!queue) speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t);
+  u.lang=voice?.lang||"zh-TW"; if(voice) u.voice=voice; u.rate=1; speechSynthesis.speak(u);
+}
+
+async function ensureModel(){
+  if(landmarker) return;
+  setStatus("載入人體偵測模型中…（第一次約需幾秒）");
+  const mod=await import(MP); PL=mod.PoseLandmarker;
+  const fileset=await mod.FilesetResolver.forVisionTasks(MP+"/wasm");
+  const opts=d=>({baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task",delegate:d},
+    runningMode:"VIDEO",numPoses:1,outputSegmentationMasks:true});
+  try{ landmarker=await PL.createFromOptions(fileset,opts("GPU")); }
+  catch{ landmarker=await PL.createFromOptions(fileset,opts("CPU")); }
+  runMode="VIDEO";
+}
+async function setRun(m){ if(runMode!==m){ await landmarker.setOptions({runningMode:m}); runMode=m; } }
+
+async function startCamera(){
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+  const size={width:{ideal:1280},height:{ideal:1280}};
+  try{ stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:S.facing},...size}}); }
+  catch(e){ if(e.name==="NotAllowedError") throw e; stream=await navigator.mediaDevices.getUserMedia({audio:false,video:true}); }
+  video.srcObject=stream; await video.play();
+  const set=stream.getVideoTracks()[0].getSettings?.()||{};
+  if(set.facingMode==="user"||set.facingMode==="environment") S.facing=set.facingMode;
+  const mir=S.facing==="user"||(!MOBILE&&set.facingMode!=="environment");
+  video.classList.toggle("mirror",mir); canvas.classList.toggle("mirror",mir);
+  canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+  video.hidden=false; $("ph").hidden=true;
+  try{ const n=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="videoinput").length; $("flipBtn").hidden=n<2&&!MOBILE; }catch{ $("flipBtn").hidden=!MOBILE; }
+}
+
+$("camBtn").onclick=async()=>{
+  const b=$("camBtn");
+  if(stream){ stopCamera(); return; }
+  b.disabled=true;
+  try{
+    await ensureModel(); await setRun("VIDEO"); await startCamera();
+    $("frontBtn").disabled=$("sideBtn").disabled=false; b.textContent="關閉相機";
+    setStatus("看畫面上方的提示調整位置，準備好就按「量正面」。");
+    loopOn=true; requestAnimationFrame(loop);
+  }catch(e){
+    setStatus(e.name==="NotAllowedError"?"沒有相機權限，請在瀏覽器設定允許使用相機，或改用「上傳照片」。":"相機或模型無法啟動："+(e.message||e),"err");
+  }
+  b.disabled=false;
+};
+$("flipBtn").onclick=async()=>{ S.facing=S.facing==="user"?"environment":"user"; try{ await startCamera(); }catch(e){ setStatus("切換鏡頭失敗："+(e.message||e),"err"); } };
+function stopCamera(){
+  loopOn=false; if(stream) stream.getTracks().forEach(t=>t.stop()); stream=null;
+  video.srcObject=null; $("camBtn").textContent="開啟相機"; $("frontBtn").disabled=$("sideBtn").disabled=true;
+  $("chip").style.display="none"; cancelPhase();
+}
+
+function loop(){
+  if(!loopOn) return;
+  if(video.readyState>=2&&video.currentTime!==lastVT){
+    lastVT=video.currentTime;
+    try{
+      const res=landmarker.detectForVideo(video,performance.now());
+      handle(res,video.videoWidth,video.videoHeight,null);
+    }catch(e){ console.warn(e); }
+  }
+  requestAnimationFrame(loop);
+}
+
+/* 取出 mask 與關節點，計算一張畫面的量測值 */
+function handle(res,W,H,bgImage){
+  const lm=res.landmarks?.[0], mask=res.segmentationMasks?.[0];
+  let out={reason:"畫面中沒有偵測到人"};
+  let M=null, mw=W, mh=H;
+  if(mask){ M=mask.getAsFloat32Array(); mw=mask.width; mh=mask.height; }
+  const view=S.phase?.view||(S.pendingView)||"front";
+  if(lm&&M){
+    const hcm=num("h");
+    out=!hcm||hcm<70?{reason:"請先在下方填入身高"}:measure(lm,M,mw,mh,hcm,view);
+  }
+  draw(lm,M,mw,mh,out,bgImage);
+  res.segmentationMasks?.forEach(m=>m.close?.());
+  S.live=out;
+  const chip=$("chip"); chip.style.display="block";
+  chip.className="chip"+(out.reason?"":" ok");
+  chip.textContent=out.reason||(view==="side"?"✓ 側面位置可以，站好不動":"✓ 位置可以，站好不動");
+  if(S.phase&&S.phase.collecting){
+    if(out.reason) S.reasons[out.reason]=(S.reasons[out.reason]||0)+1; else S.samples.push(out);
+    const el=performance.now()-S.phaseStart;
+    if(S.samples.length>=15||el>6000) finishPhase();
+  }
+  return out;
+}
+
+function measure(lm,M,w,h,hcm,view){
+  const P=i=>({x:lm[i].x*w,y:lm[i].y*h,v:lm[i].visibility??1});
+  const at=(x,y)=>{ x=Math.round(x); y=Math.round(y); return x>=0&&x<w&&y>=0&&y<h&&M[y*w+x]>0.5; };
+  const nose=P(0), lS=P(11), rS=P(12), lH=P(23), rH=P(24), lK=P(25), rK=P(26), lA=P(27), rA=P(28);
+  const vis=p=>p.v>0.5;
+  if(!vis(nose)) return {reason:"看不到頭部，請讓全身入鏡"};
+  if(!(vis(lA)||vis(rA))) return {reason:"看不到腳，請退後讓頭到腳都入鏡"};
+  if(!(vis(lS)||vis(rS))||!(vis(lH)||vis(rH))) return {reason:"看不到肩膀或臀部，請站在畫面中間"};
+  const shY=(lS.y+rS.y)/2, hipY=(lH.y+rH.y)/2, torso=hipY-shY;
+  if(torso<h*0.06) return {reason:"離太遠了，請靠近一點"};
+  const shW=Math.abs(lS.x-rS.x);
+  const ratio=shW/torso;
+  if(view==="front"&&ratio<0.45) return {reason:"請面向鏡頭站正"};
+  if(view==="side"&&ratio>0.35) return {reason:"請轉 90 度側身站"};
+  /* 要站直：腳踝不能離髖部太遠（弓箭步、蹲下都會讓身高換算失準） */
+  const hx=[lH,rH].filter(vis).reduce((a,p)=>a+p.x,0)/[lH,rH].filter(vis).length;
+  if([lA,rA].filter(vis).some(p=>Math.abs(p.x-hx)>torso*(view==="front"?0.75:0.6))) return {reason:"請站直，雙腳打開與肩同寬就好"};
+
+  /* 頭頂：鼻子附近欄位，由上往下找第一個人形像素 */
+  const band=Math.max(6,(view==="front"?shW*0.35:torso*0.15));
+  let top=-1;
+  for(let y=0;y<nose.y&&top<0;y++) for(let x=nose.x-band;x<=nose.x+band;x+=2) if(at(x,y)){ top=y; break; }
+  if(top<0) return {reason:"找不到頭頂輪廓，請換個背景單純的位置"};
+  if(top<=2) return {reason:"頭頂太靠近畫面上緣，請往後退或把手機放低"};
+  /* 腳底：腳踝附近欄位，由下往上找最後一個人形像素 */
+  const ax=[lA,rA].filter(vis).map(p=>p.x), fb=view==="front"?shW*0.4:torso*0.35;
+  const x0=Math.min(...ax)-fb, x1=Math.max(...ax)+fb, ankY=Math.max(...[lA,rA].filter(vis).map(p=>p.y));
+  let bottom=-1;
+  for(let y=h-1;y>ankY&&bottom<0;y--) for(let x=x0;x<=x1;x+=2) if(at(x,y)){ bottom=y; break; }
+  if(bottom<0) bottom=ankY+torso*0.08;
+  if(bottom>=h-3) return {reason:"腳太靠近畫面下緣，請往後退一點"};
+  const pxH=bottom-top;
+  if(pxH<h*0.4) return {reason:"人太小了，請靠近一點（頭到腳仍要入鏡）"};
+  const scale=hcm/pxH;
+
+  /* 胸部高度的輪廓寬度（取包含軀幹中線的那一段） */
+  const vS=[lS,rS].filter(vis), vH=[lH,rH].filter(vis);
+  const cxS=vS.reduce((a,p)=>a+p.x,0)/vS.length, cxH=vH.reduce((a,p)=>a+p.x,0)/vH.length;
+  const widths=[]; let seg=null;
+  for(let f=0.30;f<=0.401;f+=0.02){
+    const y=shY+torso*f, cx=cxS+(cxH-cxS)*f;
+    if(!at(cx,y)) continue;
+    let l=Math.round(cx), r=l; while(at(l-1,y)) l--; while(at(r+1,y)) r++;
+    widths.push(r-l+1); if(Math.abs(f-0.34)<0.011) seg={y,l,r};
+  }
+  if(widths.length<3) return {reason:"胸部輪廓不清楚，請穿和背景顏色不同的衣服"};
+  const wpx=median(widths);
+  if(view==="front"){
+    if(wpx>shW*1.32) return {reason:"手臂請稍微離開身體（像 A 字），不要貼著身體"};
+    if(wpx<shW*0.55) return {reason:"胸部輪廓太窄，請面向鏡頭站正"};
+  } else {
+    const d=wpx*scale; if(d<8||d>50) return {reason:"側面輪廓不清楚，雙手往前平舉、側身站好"};
+  }
+  const out={scale,width:wpx*scale,top,bottom,seg,view};
+  if(view==="front"){
+    const snpY=shY-0.032*hcm/scale;
+    /* 胯下：兩膝中點往上找第一個人形像素；雙腳併攏找不到就用髖關節點往下推估 */
+    let crotch=null, gap=false;
+    if(vis(lK)&&vis(rK)){
+      const kx=(lK.x+rK.x)/2, ky=Math.min(lK.y,rK.y);
+      if(!at(kx,ky)) for(let y=ky;y>hipY;y--) if(at(kx,y)){ crotch=y; gap=true; break; }
+    }
+    if(crotch==null) crotch=hipY+0.055*hcm/scale;
+    out.snpY=snpY; out.crotchY=crotch; out.gap=gap; out.l0=(crotch-snpY)*scale;
+    if(out.l0<0.25*hcm||out.l0>0.5*hcm) return {reason:"姿勢不太對，請站直、雙腳打開與肩同寬"};
+  }
+  return out;
+}
+
+function draw(lm,M,mw,mh,out,bg){
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  if(bg) ctx.drawImage(bg,0,0,W,H);
+  if(M){
+    const off=draw.off||(draw.off=document.createElement("canvas"));
+    if(off.width!==mw||off.height!==mh){ off.width=mw; off.height=mh; draw.img=off.getContext("2d").createImageData(mw,mh); }
+    const d=draw.img.data, ok=!out.reason;
+    for(let i=0,j=0;i<M.length;i++,j+=4){
+      if(M[i]>0.5){ d[j]=ok?46:224; d[j+1]=ok?139:122; d[j+2]=ok?87:63; d[j+3]=80; } else d[j+3]=0;
+    }
+    off.getContext("2d").putImageData(draw.img,0,0);
+    ctx.drawImage(off,0,0,W,H);
+  }
+  if(!out||out.reason) return;
+  const sx=W/mw, sy=H/mh, lw=Math.max(2,W/250);
+  ctx.lineWidth=lw; ctx.font=`bold ${Math.max(14,W/32)}px "Noto Sans TC",sans-serif`;
+  const hline=(y,c,x0=0,x1=mw)=>{ ctx.strokeStyle=c; ctx.beginPath(); ctx.moveTo(x0*sx,y*sy); ctx.lineTo(x1*sx,y*sy); ctx.stroke(); };
+  ctx.setLineDash([lw*3,lw*2]); hline(out.top,"#ffffff"); hline(out.bottom,"#ffffff"); ctx.setLineDash([]);
+  if(out.seg){ ctx.lineWidth=lw*1.6; hline(out.seg.y,"#F2C230",out.seg.l,out.seg.r); ctx.lineWidth=lw; }
+  if(out.snpY!=null){ hline(out.snpY,"#E07A3F"); hline(out.crotchY,"#E07A3F"); }
+}
+
+/* ===== 倒數與收集 ===== */
+let cdTimer=null;
+function cancelPhase(){ clearInterval(cdTimer); cdTimer=null; S.phase=null; $("count").style.display="none"; }
+function beginPhase(view){
+  if(!num("h")){ setStatus("請先在下方填入身高，再開始量測。","err"); $("h").focus(); return; }
+  cancelPhase();
+  S.phase={view,collecting:false}; S.samples=[]; S.reasons={};
+  let n=+$("delaySel").value;
+  const say=view==="front"?"面向鏡頭站好，雙腳與肩同寬，雙手稍微張開":"轉九十度側身，雙手往前平舉";
+  speak(say); setStatus(say+"，倒數後保持不動。");
+  const c=$("count"); c.style.display="flex"; c.textContent=n;
+  cdTimer=setInterval(()=>{
+    n--;
+    if(n>0){ c.textContent=n; if(n<=3) speak(String(n)); return; }
+    clearInterval(cdTimer); cdTimer=null; c.textContent="📏"; speak("不要動");
+    S.phase.collecting=true; S.phaseStart=performance.now();
+  },1000);
+}
+$("frontBtn").onclick=()=>beginPhase("front");
+$("sideBtn").onclick=()=>beginPhase("side");
+
+function finishPhase(){
+  const ph=S.phase; if(!ph) return;
+  const smp=S.samples; $("count").style.display="none"; S.phase=null;
+  if(smp.length<5){
+    const top=Object.entries(S.reasons).sort((a,b)=>b[1]-a[1])[0];
+    speak("沒有量好，再試一次");
+    setStatus("沒有量好："+(top?top[0]:"偵測不到人")+"。調整後再按一次。","err"); return;
+  }
+  speak(ph.view==="front"?"正面量好了":"側面量好了");
+  saveMeasure(ph.view,smp);
+}
+function saveMeasure(view,smp){
+  const m={width:median(smp.map(s=>s.width)),n:smp.length};
+  if(view==="front"){ m.l0=median(smp.map(s=>s.l0)); m.gap=smp.filter(s=>s.gap).length>=smp.length/2; S.front=m; }
+  else S.side=m;
+  applyCam();
+}
+/* 橢圓周長（Ramanujan）× 1.05 */
+function chestCirc(w,d){ const a=w/2,b=d/2; return Math.PI*(3*(a+b)-Math.sqrt((3*a+b)*(a+3*b)))*1.05; }
+function applyCam(){
+  const F=S.front, D=S.side, hcm=num("h")||160;
+  if(!F){ setStatus("側面量好了，再量正面就能算出胸圍。","ok"); renderCam(); return; }
+  const depth=D?.width??F.width*(hcm<140?0.8:0.72);
+  const circ=chestCirc(F.width,depth);
+  $("chest").value=r1(circ); $("l0").value=r1(F.l0);
+  save(); renderRec(); renderCam(circ,depth);
+  const cs=$("camSize"); cs.hidden=false; renderChart();
+  const {best,evals}=bestOf();
+  if(best>=0) speak(`建議選 ${chart[best].size} 號`+(evals[best].score>=4?"，但這張尺寸表沒有很合適的":""),true);
+  setStatus(`量測完成，已填入胸圍與衣長基準${D?"":"（沒量側面，胸部厚度用估計值；量側面會更準）"}。數字可直接修改。`,"ok");
+}
+function renderCam(circ,depth){
+  const F=S.front, D=S.side, box=$("camres"); box.hidden=false;
+  const cell=(v,l)=>`<div><b>${v}</b><span>${l}</span></div>`;
+  box.innerHTML=[
+    F?cell(r1(F.width)+" cm","胸部正面寬"):"",
+    D?cell(r1(D.width)+" cm","胸部厚度（側面）"):(F?cell("≈ "+r1(depth)+" cm","胸部厚度（估計）"):""),
+    F?cell(r1(circ)+" cm","估算胸圍"):"",
+    F?cell(r1(F.l0)+" cm","肩頸點到胯下"+(F.gap?"":"（雙腳併攏，估計）")):"",
+  ].join("");
+}
+
+/* ===== 上傳照片 ===== */
+async function fromPhoto(file,view){
+  if(!file) return;
+  if(!num("h")){ setStatus("請先在下方填入身高，再上傳照片。","err"); $("h").focus(); return; }
+  try{
+    await ensureModel();
+    if(stream) stopCamera();
+    const img=await createImageBitmap(file,{imageOrientation:"from-image"}).catch(async()=>{
+      const u=URL.createObjectURL(file), el=new Image(); el.src=u; await el.decode(); return el; });
+    const k=Math.min(1,1280/Math.max(img.width,img.height));
+    const c=document.createElement("canvas"); c.width=Math.round(img.width*k); c.height=Math.round(img.height*k);
+    c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    canvas.width=c.width; canvas.height=c.height; canvas.classList.remove("mirror");
+    video.hidden=true; $("ph").hidden=true;
+    await setRun("IMAGE");
+    S.pendingView=view;
+    const out=handle(landmarker.detect(c),c.width,c.height,c);
+    S.pendingView=null;
+    if(out.reason){ setStatus("這張照片量不到："+out.reason,"err"); return; }
+    saveMeasure(view,[out]);
+  }catch(e){ setStatus("照片處理失敗："+(e.message||e),"err"); }
+}
+$("frontFile").onchange=e=>{ fromPhoto(e.target.files[0],"front"); e.target.value=""; };
+$("sideFile").onchange=e=>{ fromPhoto(e.target.files[0],"side"); e.target.value=""; };
+$("camBtn").addEventListener("click",()=>{ if(runMode==="IMAGE"&&landmarker) setRun("VIDEO"); },{capture:true});
+</script>
+</body>
+</html>
