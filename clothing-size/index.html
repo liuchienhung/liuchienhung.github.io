@@ -212,7 +212,7 @@ td button{min-height:32px;padding:2px 8px}
   <p class="small" style="margin-top:0">把商品頁的尺寸表填進來（或貼上），幫你挑最適合的尺寸。下面是範例數字，請改成你要買的商品。</p>
   <div class="grid">
     <label class="f">套用範例
-      <select id="preset"><option value="">—</option><option value="adult">成人 T恤（XS～3XL）</option><option value="kid">兒童 T恤（90～160）</option><option value="clear">清空</option></select>
+      <select id="preset"><option value="">—</option><option value="adult">成人 T恤（XS～3XL，LOGOless）</option><option value="kidLogo">兒童 T恤（110～150，LOGOless）</option><option value="kid">兒童 T恤（90～160，一般範例）</option><option value="clear">清空</option></select>
     </label>
     <label class="f">表中的「胸」是
       <select id="chartKind"><option value="auto">自動判斷</option><option value="flat">胸寬（平放量單邊）</option><option value="round">胸圍（一圈）</option></select>
@@ -334,6 +334,7 @@ function renderRec(){
 /* ===================== 尺寸表 ===================== */
 const PRESETS={
   adult:[["XS",43,64],["S",46,67],["M",49,70],["L",52,73],["XL",55,75],["2XL",58,77],["3XL",61,79]],
+  kidLogo:[["110",33,45],["120",36,48],["130",38,51],["140",41,54],["150",43,58]],
   kid:[["90",30,38],["100",32,41],["110",34,44],["120",36,48],["130",39,52],["140",42,56],["150",45,60],["160",48,64]],
 };
 let chart=PRESETS.adult.map(r=>({size:r[0],chest:r[1],len:r[2]}));
@@ -424,9 +425,10 @@ function parseChart(text){
   const lines=text.split(/\r?\n/).map(l=>l.trim().split(/[\s,，\t|／/]+/).filter(Boolean)).filter(t=>t.length);
   const isNum=t=>Number.isFinite(parseFloat(t))&&/^[\d.]+(cm)?$/i.test(t);
   /* 橫式表：一列全是尺寸名稱，下面各列是「胸寬 43 46 …」「衣長 64 67 …」 */
-  const hi=lines.findIndex(t=>t.length>=2&&t.filter(isNum).length<=t.length/2&&t.some(x=>/^(\d?X*[SML]|XXL|\d{2,3})$/i.test(x)));
+  const ci=lines.findIndex(t=>/胸/.test(t[0])&&t.slice(1).some(isNum));
+  const hi=ci>0?ci-1:lines.findIndex(t=>t.length>=2&&t.filter(isNum).length<=t.length/2&&t.some(x=>/^(\d?X*[SML]|XXL|\d{2,3}(cm)?)$/i.test(x)));
   if(hi>=0){
-    const sizes=lines[hi].filter(x=>!/尺寸|size|cm/i.test(x));
+    const sizes=lines[hi].filter(x=>!/^(尺寸|尺碼|size|cm|單位.*)$/i.test(x)).map(x=>x.replace(/cm$/i,''));
     const data=lines.slice(hi+1).map(t=>({label:t.filter(x=>!isNum(x)).join(""),nums:t.filter(isNum).map(parseFloat)})).filter(r=>r.nums.length>=sizes.length-1&&r.nums.length>=2);
     if(data.length){
       const pick=re=>data.find(r=>re.test(r.label));
