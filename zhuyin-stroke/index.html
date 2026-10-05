@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>注音筆順小火車</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FFF7E8; --card:#FFFFFF; --line:#EED9B7; --text:#2B2620; --muted:#7A6B58;
+  --ink:#D9532E; --ink2:#2C7DA0; --sun:#FFC83D; --good:#2E9E5B; --bad:#D9483B;
+  --grid:#E9A0A0; --frame:#D9483B; --sheet:#FFFDF6;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#1B1915; --card:#26231D; --line:#3D372D; --text:#F3EDE3; --muted:#B5A891; --ink:#FF8A63; --ink2:#6CC0E0;
+}}
+:root[data-theme="dark"]{
+  --paper:#1B1915; --card:#26231D; --line:#3D372D; --text:#F3EDE3; --muted:#B5A891; --ink:#FF8A63; --ink2:#6CC0E0;
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;min-height:100%}
+body{background:var(--paper);color:var(--text);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.5;
+  padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+.wrap{max-width:760px;margin:0 auto;padding:10px 16px 32px}
+button{font:inherit;color:inherit;cursor:pointer;border:2px solid var(--line);background:var(--card);border-radius:16px;padding:10px 14px;min-height:48px;touch-action:manipulation}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+button.primary{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:700}
+button:disabled{opacity:.4;cursor:default}
+a{color:var(--ink2)}
+[hidden]{display:none!important}
+h2{font-size:1.1rem;margin:18px 0 8px}
+.small{font-size:.85rem;color:var(--muted)}
+
+/* ===== 頂部 ===== */
+.top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.top h1{margin:0;font-size:clamp(1rem,4.6vw,1.25rem);color:var(--ink);flex:1;line-height:1.25}
+.top .ib{min-width:48px;padding:6px 10px;font-size:1.3rem}
+.top a{font-size:.85rem;text-decoration:none}
+
+/* ===== 龜龜 ===== */
+.pet{display:flex;align-items:center;gap:14px;background:linear-gradient(160deg,#D9F3FF,#C8F0C0);color:#2B2620;border-radius:22px;padding:12px 16px;border:3px solid #9ED98A}
+.pet .tt{line-height:1;cursor:pointer;user-select:none;background:none;border:0;padding:0;min-height:0}
+.pet .tt.jump{animation:jump .6s}
+.pet .info{flex:1;min-width:0}
+.pet .nm{font-weight:900;font-size:1.1rem}
+.pet .say{font-size:.9rem;color:#4A5A3A}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.chip{background:#fff;border-radius:20px;padding:2px 10px;font-size:.85rem;font-weight:700;border:2px solid #E7E0C9;color:#2B2620}
+.how{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:12px 0 0;font-size:.85rem;color:var(--muted)}
+.how b{color:var(--text)}
+
+/* ===== 車站與符號 ===== */
+.stn{margin:16px 0 0}
+.stn h2{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.stn h2 .no{background:var(--ink2);color:#fff;border-radius:12px;padding:0 10px;font-size:.9rem}
+.stn h2 .prog{margin-left:auto;font-size:.85rem;color:var(--muted);font-weight:500}
+.syms{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.sbtn{display:flex;flex-direction:column;align-items:center;gap:0;padding:8px 4px 6px;border-width:3px;border-radius:18px;position:relative}
+.sbtn .s{font-size:2.4rem;font-weight:900;line-height:1.15;color:var(--ink)}
+.sbtn .w{font-size:.78rem;color:var(--muted);white-space:nowrap}
+.sbtn .st{font-size:.8rem;letter-spacing:1px}
+.sbtn .st .off{filter:grayscale(1);opacity:.3}
+.sbtn.full{border-color:#9ED98A;background:color-mix(in srgb,#9ED98A 16%,var(--card))}
+
+/* ===== 練習畫面 ===== */
+.gtop{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.gtop .who{flex:1;display:flex;align-items:center;gap:10px;min-width:0}
+.gtop .big{font-size:2.2rem;font-weight:900;color:var(--ink);line-height:1}
+.gtop .wd{font-size:.9rem;color:var(--muted);line-height:1.3}
+.speak{border-radius:50%;width:56px;height:56px;min-height:0;font-size:1.6rem;padding:0;background:var(--sun);border-color:#E3A90B;color:#2B2620;flex:0 0 auto}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+.modes button{padding:6px 4px;font-weight:700;font-size:.95rem;border-width:3px;line-height:1.25}
+.modes button .st{display:block;font-size:.75rem;font-weight:500;opacity:.8}
+.modes button.on{border-color:var(--ink);background:color-mix(in srgb,var(--ink) 12%,var(--card))}
+
+.stage{display:flex;flex-direction:column;align-items:center}
+.board{position:relative;width:min(100%,62vh,560px);aspect-ratio:1;border-radius:18px;background:var(--sheet);box-shadow:0 3px 0 var(--line);touch-action:none;user-select:none;-webkit-user-select:none}
+.board svg{display:block;width:100%;height:100%;touch-action:none}
+.board.shake{animation:shake .4s}
+.say-bar{display:flex;align-items:center;gap:10px;width:100%;margin:10px 0 6px;background:var(--card);border:2px solid var(--line);border-radius:18px;padding:8px 12px;min-height:58px}
+.say-bar .hp{font-size:2rem;line-height:1}
+.say-bar .tx{flex:1;font-weight:700}
+.say-bar.ok{border-color:var(--good)} .say-bar.no{border-color:var(--bad)}
+.strokes{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:2px 0 8px}
+.strokes span{border:2px solid var(--line);border-radius:14px;padding:2px 10px;font-size:.9rem;background:var(--card)}
+.strokes span b{color:var(--ink2)}
+.strokes span.on{border-color:var(--ink);background:color-mix(in srgb,var(--ink) 12%,var(--card));font-weight:700}
+.strokes span.ok{border-color:var(--good);color:var(--good)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+
+/* SVG 田字格與筆畫 */
+.g-frame{fill:none;stroke:var(--frame);stroke-width:22}
+.g-mid{fill:none;stroke:var(--grid);stroke-width:12;stroke-dasharray:60 45}
+.ghost path{fill:#E6DED0}
+.ghost.faint path{fill:#EFE9DE}
+.done path{animation:pop .45s}
+.guide-line{fill:none;stroke:#2C7DA0;stroke-width:34;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:70 60;animation:march 1s linear infinite}
+.ink{fill:none;stroke:#3B3B3B;stroke-width:120;stroke-linecap:round;stroke-linejoin:round;opacity:.82}
+.ink.bad{stroke:var(--bad);transition:opacity .5s;opacity:0}
+.emo{font-size:300px;text-anchor:middle;dominant-baseline:central;pointer-events:none;font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif}
+.startdot{fill:#2E9E5B;stroke:#fff;stroke-width:22}
+.startno{fill:#fff;font-size:150px;font-weight:900;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.bob{animation:bob 1.2s ease-in-out infinite}
+
+/* ===== 獎勵 ===== */
+.overlay{position:fixed;inset:0;background:rgba(30,25,15,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.reward{background:var(--card);border-radius:26px;padding:20px 18px;max-width:420px;width:100%;text-align:center;border:4px solid var(--sun)}
+.reward .scene{font-size:3.6rem;line-height:1.2}
+.reward .scene .food{display:inline-block;animation:eat 1.6s forwards}
+.reward .stars{font-size:2.2rem;letter-spacing:4px}
+.reward .stars .off{filter:grayscale(1);opacity:.3}
+.reward h3{margin:6px 0;font-size:1.3rem}
+.reward .acts{margin-top:12px}
+.confetti{position:fixed;top:-60px;font-size:2rem;pointer-events:none;z-index:30;animation:fall linear forwards}
+
+/* ===== 設定、貼紙 ===== */
+dialog{border:3px solid var(--line);border-radius:22px;background:var(--card);color:var(--text);max-width:min(520px,calc(100vw - 32px));width:100%;padding:16px}
+dialog::backdrop{background:rgba(30,25,15,.5)}
+dialog h3{margin:0 0 10px}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+.row label{font-weight:700}
+.row input[type=text]{font:inherit;padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:var(--paper);color:var(--text);min-height:44px;flex:1;min-width:120px}
+.pickers{display:flex;gap:6px;flex-wrap:wrap}
+.pickers button{font-size:1rem;padding:6px 10px;min-height:44px}
+.pickers button.on{border-color:var(--ink);background:color-mix(in srgb,var(--ink) 12%,var(--card));font-weight:700}
+.stickers{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
+.stickers div{text-align:center;border:2px solid var(--line);border-radius:14px;padding:6px 2px;font-size:.75rem}
+.stickers div .e{font-size:1.8rem;display:block;line-height:1.2}
+.stickers div.off{opacity:.35;filter:grayscale(1)}
+
+/* ===== 列印練習單 ===== */
+#sheet{display:none}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff;color:#000}
+  body > .wrap,dialog,.overlay{display:none!important}
+  #sheet{display:block}
+  #sheet h1{font-size:16pt;margin:0 0 4mm}
+  .prow{display:flex;gap:2mm;align-items:center;margin-bottom:3mm;break-inside:avoid}
+  .prow .lab{width:14mm;font-size:9pt;text-align:center}
+  .prow .lab b{display:block;font-size:20pt}
+  .prow svg{width:18mm;height:18mm}
+  .g-frame{stroke:#D9483B}
+  .g-mid{stroke:#E9A0A0}
+}
+
+@keyframes jump{0%,100%{transform:translateY(0)}40%{transform:translateY(-18px) rotate(-8deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes pop{0%{opacity:.2}60%{opacity:1}100%{opacity:1}}
+@keyframes march{to{stroke-dashoffset:-130}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-40px)}}
+@keyframes eat{0%{transform:translateX(0)}70%{transform:translateX(-70px) scale(.8)}100%{transform:translateX(-80px) scale(0);opacity:0}}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a href="../" title="回首頁">🏠 首頁</a>
+    <h1 id="title">✏️ 注音筆順小火車</h1>
+    <button class="ib" id="stickerBtn" title="貼紙本" aria-label="貼紙本">📒</button>
+    <button class="ib" id="setBtn" title="家長設定" aria-label="家長設定">⚙️</button>
+  </header>
+
+  <!-- ===== 首頁 ===== -->
+  <section id="home">
+    <div class="pet">
+      <button class="tt" id="petT" aria-label="摸摸龜龜">🐢</button>
+      <div class="info">
+        <div class="nm" id="petName">龜龜</div>
+        <div class="say" id="petSay"></div>
+        <div class="chips" id="petChips"></div>
+      </div>
+    </div>
+    <div class="how"><span>👀 <b>看筆順</b>：小火車開一遍</span><span>→ ✍️ <b>描描看</b>：沿著箭頭描</span><span>→ 🌟 <b>自己寫</b>：空白田字格</span></div>
+    <div id="stations"></div>
+    <p class="small" style="margin-top:18px">筆順依教育部「國字標準字體筆順學習網」的注音符號筆順（資料經 g0v zh-stroke-data 整理）。車站分組依康軒首冊課次，可在「注音小火車大冒險」一起複習。</p>
+  </section>
+
+  <!-- ===== 練習 ===== -->
+  <section id="practice" hidden>
+    <div class="gtop">
+      <button id="backBtn" aria-label="回車站">⬅</button>
+      <div class="who"><span class="big" id="pSym">ㄅ</span><span class="wd" id="pWord"></span></div>
+      <button class="speak" id="sayBtn" aria-label="聽讀音">🔊</button>
+    </div>
+    <div class="modes" id="modes">
+      <button data-m="watch">👀 看筆順<span class="st">小火車示範</span></button>
+      <button data-m="trace">✍️ 描描看<span class="st" id="mTrace">★</span></button>
+      <button data-m="write">🌟 自己寫<span class="st" id="mWrite">★★</span></button>
+    </div>
+    <div class="stage">
+      <div class="board" id="board">
+        <svg id="pad" viewBox="-140 -140 2330 2330" aria-label="田字格">
+          <defs id="defs"></defs>
+          <rect class="g-frame" x="-110" y="-110" width="2270" height="2270" rx="40"/>
+          <line class="g-mid" x1="1025" y1="-110" x2="1025" y2="2160"/>
+          <line class="g-mid" x1="-110" y1="1025" x2="2160" y2="1025"/>
+          <g id="ghost" class="ghost"></g>
+          <g id="done" class="done"></g>
+          <g id="anim"></g>
+          <g id="guide"></g>
+          <g id="inkG"></g>
+          <g id="fx"></g>
+        </svg>
+      </div>
+      <div class="say-bar" id="sayBar"><span class="hp" id="hpE">🚂</span><span class="tx" id="sayTx"></span></div>
+      <div class="strokes" id="strokeList"></div>
+      <div class="acts">
+        <button id="replayBtn">▶ 再看一次</button>
+        <button id="clearBtn">↺ 重寫</button>
+        <button id="printBtn">🖨️ 列印練習單</button>
+        <button id="nextBtn" class="primary">下一個 ➡</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===== 獎勵 ===== -->
+<div class="overlay" id="reward" hidden>
+  <div class="reward" role="dialog" aria-modal="true" aria-labelledby="rwTitle">
+    <div class="scene"><span class="tt">🐢</span> <span class="food" id="rwFood">🍌</span></div>
+    <h3 id="rwTitle">寫好了！</h3>
+    <div class="stars" id="rwStars"></div>
+    <p id="rwMsg"></p>
+    <div class="acts">
+      <button id="rwAgain">↺ 再寫一次</button>
+      <button id="rwNext" class="primary">下一個 ➡</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 貼紙本 ===== -->
+<dialog id="stickerDlg">
+  <h3>📒 貼紙本</h3>
+  <p class="small">每個注音拿到 3 顆星，就能得到一張貼紙。</p>
+  <div class="stickers" id="stickers"></div>
+  <div class="row" style="justify-content:flex-end"><button id="stickerClose">關閉</button></div>
+</dialog>
+
+<!-- ===== 家長設定 ===== -->
+<dialog id="setDlg">
+  <h3>⚙️ 家長設定</h3>
+  <div class="row"><label for="kidName">小朋友名字</label><input type="text" id="kidName" maxlength="10"></div>
+  <div class="row"><label>帶路的小幫手</label><div class="pickers" id="helperPick"></div></div>
+  <div class="row"><label>描描看時田字格</label><div class="pickers" id="ghostPick">
+    <button data-v="ghost">顯示淡淡的字</button><button data-v="none">只顯示箭頭</button></div></div>
+  <div class="row"><label>自己寫時</label><div class="pickers" id="hintPick">
+    <button data-v="2">寫錯 2 次給提示</button><button data-v="1">寫錯 1 次給提示</button><button data-v="0">不給提示</button></div></div>
+  <div class="row"><label><input type="checkbox" id="voiceOn"> 念出筆畫名稱</label><label><input type="checkbox" id="sfxOn"> 音效</label></div>
+  <div class="row"><button id="resetBtn">清除星星與貼紙</button></div>
+  <p class="small">判斷方式：每一筆要從起點附近開始、照方向寫到終點附近，並大致沿著筆畫走。紀錄只存在這台裝置的瀏覽器。</p>
+  <div class="row" style="justify-content:flex-end"><button id="setClose" class="primary">完成</button></div>
+</dialog>
+
+<div id="sheet"></div>
+
+<script src="strokes.js"></script>
+<script>
+// ===== 資料 =====
+// 車站分組依康軒首冊課次（與 kangxuan-chinese 相同）
+const STATIONS = [
+  { n: 1, title: '貓咪',       syms: 'ㄅㄆㄇㄉㄧㄠ' },
+  { n: 2, title: '鵝寶寶',     syms: 'ㄊㄋㄜㄨ' },
+  { n: 3, title: '河馬和河狸', syms: 'ㄏㄌㄈㄚㄛ' },
+  { n: 4, title: '',           syms: 'ㄍㄎㄞㄟ' },
+  { n: 5, title: '',           syms: 'ㄐㄑㄒㄩㄝ' },
+  { n: 6, title: '',           syms: 'ㄓㄔㄕㄖㄡ' },
+  { n: 7, title: '',           syms: 'ㄗㄘㄙㄢㄣ' },
+  { n: 8, title: '',           syms: 'ㄤㄥㄦ' },
+];
+const ORDER = STATIONS.flatMap(s => [...s.syms]);
+// 朗讀用字、代表詞、代表圖（大寶喜歡的：烏龜、火車、甲蟲、蚯蚓、香蕉、薯條…）
+const SYMBOLS = {
+  'ㄅ':['波','包子','🥟'], 'ㄆ':['坡','葡萄','🍇'], 'ㄇ':['摸','貓','🐱'], 'ㄈ':['佛','飛機','✈️'],
+  'ㄉ':['得','刀子','🔪'], 'ㄊ':['特','兔子','🐰'], 'ㄋ':['訥','泥土','🟫'], 'ㄌ':['勒','鹿','🦌'],
+  'ㄍ':['哥','烏龜','🐢'], 'ㄎ':['科','褲子','👖'], 'ㄏ':['喝','火車','🚂'],
+  'ㄐ':['基','甲蟲','🪲'], 'ㄑ':['欺','蚯蚓','🪱'], 'ㄒ':['希','香蕉','🍌'],
+  'ㄓ':['知','豬','🐷'], 'ㄔ':['吃','車子','🚃'], 'ㄕ':['詩','薯條','🍟'], 'ㄖ':['日','太陽','☀️'],
+  'ㄗ':['資','嘴巴','👄'], 'ㄘ':['疵','草','🌿'], 'ㄙ':['思','雨傘','☂️'],
+  'ㄚ':['阿','馬','🐴'], 'ㄛ':['喔','公雞喔喔','🐓'], 'ㄜ':['婀','鵝','🦢'], 'ㄝ':['欸','葉子','🍃'],
+  'ㄞ':['哀','大海','🌊'], 'ㄟ':['誒','杯子','🥛'], 'ㄠ':['凹','豹','🐆'], 'ㄡ':['歐','猴子','🐒'],
+  'ㄢ':['安','山','⛰️'], 'ㄣ':['恩','門','🚪'], 'ㄤ':['骯','羊','🐑'], 'ㄥ':['鞥','燈','💡'],
+  'ㄦ':['兒','耳朵','👂'], 'ㄧ':['衣','衣服','👕'], 'ㄨ':['烏','房屋','🏠'], 'ㄩ':['迂','魚','🐟'],
+};
+// 筆畫名稱（順序同教育部筆順）
+const STROKE_NAMES = {
+  'ㄅ':['撇橫折鉤'], 'ㄆ':['撇橫撇','捺'], 'ㄇ':['豎','橫折'], 'ㄈ':['橫','豎折'],
+  'ㄉ':['撇橫折鉤','撇'], 'ㄊ':['橫','撇折','點'], 'ㄋ':['橫撇橫折鉤'], 'ㄌ':['撇橫折鉤','撇'],
+  'ㄍ':['撇點','撇點'], 'ㄎ':['橫','撇橫折鉤'], 'ㄏ':['橫','豎撇'],
+  'ㄐ':['豎提','豎'], 'ㄑ':['撇點'], 'ㄒ':['橫','豎'],
+  'ㄓ':['豎折','豎','豎','橫'], 'ㄔ':['撇','撇','豎'], 'ㄕ':['橫折','橫','豎撇'], 'ㄖ':['豎','橫折鉤','點','橫'],
+  'ㄗ':['橫折鉤','豎'], 'ㄘ':['橫','豎橫折撇'], 'ㄙ':['撇折','點'],
+  'ㄚ':['點','撇','豎'], 'ㄛ':['橫','豎彎'], 'ㄜ':['橫','豎彎'], 'ㄝ':['橫','豎','豎彎'],
+  'ㄞ':['橫','撇橫折撇','撇'], 'ㄟ':['橫折捺'], 'ㄠ':['撇點','撇折','點'], 'ㄡ':['橫撇','捺'],
+  'ㄢ':['橫折','撇橫折撇'], 'ㄣ':['豎橫折撇'], 'ㄤ':['橫','撇','豎彎'], 'ㄥ':['撇折'],
+  'ㄦ':['撇','豎彎'], 'ㄧ':['橫'], 'ㄨ':['撇','捺'], 'ㄩ':['豎折','豎鉤'],
+};
+const HELPERS = {
+  train:  { e: '🚂', name: '嘟嘟號', go: '開', sound: 'toot' },
+  beetle: { e: '🪲', name: '甲蟲',   go: '飛', sound: 'buzz' },
+  turtle: { e: '🐢', name: '龜龜',   go: '爬', sound: 'pop' },
+  worm:   { e: '🪱', name: '蚯蚓',   go: '鑽', sound: 'dig' },
+};
+const FOODS = [['🍌','香蕉'],['🍎','蘋果'],['🍠','地瓜'],['🍟','薯條'],['🥔','馬鈴薯'],['🐟','吳郭魚'],['🪱','蚯蚓']];
+const STROKE_COLORS = ['#E8443A','#F0A21A','#3BA55C','#2C7DA0','#8A5CD0'];
+const CN_NUM = ['一','二','三','四','五'];
+
+// ===== 工具 =====
+const $ = s => document.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+const one = a => a[Math.floor(Math.random() * a.length)];
+const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem('zs1:' + k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('zs1:' + k, JSON.stringify(v)); } catch {} },
+};
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+function polyLen(pts) { let L = 0; for (let i = 1; i < pts.length; i++) L += dist(pts[i - 1], pts[i]); return L; }
+// 沿折線等距取樣
+function resample(pts, n) {
+  if (pts.length < 2) return pts.map(p => [...p]);
+  const L = polyLen(pts), step = L / (n - 1), out = [[...pts[0]]];
+  let acc = 0, i = 1, prev = pts[0];
+  for (let k = 1; k < n - 1; k++) {
+    const target = k * step;
+    while (i < pts.length) {
+      const d = dist(prev, pts[i]);
+      if (acc + d >= target) { const t = (target - acc) / d; prev = [prev[0] + (pts[i][0] - prev[0]) * t, prev[1] + (pts[i][1] - prev[1]) * t]; acc = target; break; }
+      acc += d; prev = pts[i]; i++;
+    }
+    out.push([...prev]);
+  }
+  out.push([...pts[pts.length - 1]]);
+  return out;
+}
+function segDist(p, a, b) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy;
+  const t = L2 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2)) : 0;
+  return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
+}
+function distToPoly(p, pts) { let m = Infinity; for (let i = 1; i < pts.length; i++) m = Math.min(m, segDist(p, pts[i - 1], pts[i])); return m; }
+const polyD = pts => 'M' + pts.map(p => p[0] + ' ' + p[1]).join('L');
+
+// ===== 設定與紀錄 =====
+let NAME = store.get('name', '大寶') || '大寶';
+let helperKey = store.get('helper', 'train');
+let ghostMode = store.get('ghost', 'ghost');
+let hintAfter = store.get('hint', 2);
+let voiceOn = store.get('voice', true);
+let sfxOn = store.get('sfx', true);
+const H = () => HELPERS[helperKey] || HELPERS.train;
+const starsOf = s => (store.get('stars', {})[s]) || 0;
+function setStars(s, n) { const all = store.get('stars', {}); if (n > (all[s] || 0)) { all[s] = n; store.set('stars', all); return true; } return false; }
+const totalStars = () => Object.values(store.get('stars', {})).reduce((a, b) => a + b, 0);
+const fullCount = () => Object.values(store.get('stars', {})).filter(v => v >= 3).length;
+
+// ===== 語音 =====
+let zhVoice = null;
+function loadVoice() {
+  if (!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  zhVoice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh/i.test(v.lang)) || null;
+}
+if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  speak.last = u;
+  u.lang = 'zh-TW'; u.rate = 0.85; u.pitch = 1.1; if (zhVoice) u.voice = zhVoice;
+  speechSynthesis.speak(u);
+}
+const saySymbol = s => speak(`${SYMBOLS[s][0]}，${SYMBOLS[s][1]}的${SYMBOLS[s][0]}`);
+
+// ===== 音效（Web Audio 合成） =====
+const SFX = {
+  ctx: null,
+  get() {
+    if (!sfxOn) return null;
+    if (!this.ctx) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; this.ctx = new C(); }
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    return this.ctx;
+  },
+  tone(f, dur, type = 'sine', vol = .25, when = 0, f2) {
+    const c = this.get(); if (!c) return;
+    const t = c.currentTime + when, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + .02);
+  },
+  noise(dur, vol = .4, when = 0, freq = 600) {
+    const c = this.get(); if (!c) return;
+    const t = c.currentTime + when, len = Math.floor(c.sampleRate * dur), buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const s = c.createBufferSource(), fl = c.createBiquadFilter(), g = c.createGain();
+    s.buffer = buf; fl.type = 'lowpass'; fl.frequency.value = freq; g.gain.value = vol;
+    s.connect(fl).connect(g).connect(c.destination); s.start(t);
+  },
+  ding() { this.tone(880, .15, 'sine', .3); this.tone(1320, .25, 'sine', .3, .1); },
+  boop() { this.tone(260, .3, 'triangle', .3, 0, 140); },
+  pop() { this.tone(500, .1, 'sine', .25, 0, 900); },
+  dig() { this.noise(.18, .6, 0, 500); },
+  buzz() { this.tone(180, .35, 'sawtooth', .06, 0, 240); },
+  chomp() { this.noise(.07, .5, 0, 1500); this.noise(.07, .5, .14, 1500); },
+  toot() { [0, .45].forEach(w => { this.tone(587, .35, 'square', .08, w); this.tone(740, .35, 'square', .08, w); }); },
+  fanfare() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, .22, 'triangle', .28, i * .13)); },
+};
+
+// ===== 首頁 =====
+function turtleSize() { return Math.min(2.4 + totalStars() * 0.025, 5); }
+function renderHome() {
+  $('#title').textContent = `✏️ ${NAME}的注音筆順小火車`;
+  document.title = `${NAME}的注音筆順小火車`;
+  const ts = totalStars(), full = fullCount();
+  $('#petT').style.fontSize = turtleSize() + 'rem';
+  $('#petName').textContent = '龜龜';
+  $('#petSay').textContent = ts === 0
+    ? `${NAME}，我們一起寫注音！每寫好一個，龜龜就有點心吃喔～`
+    : one([`${NAME}寫得好棒，龜龜吃得飽飽的！`, `今天要寫哪一個注音呢？`, `寫完 3 顆星，就能拿到貼紙喔！`, `${H().name}在車站等你出發～`]);
+  $('#petChips').innerHTML = `<span class="chip">⭐ ${ts} / ${ORDER.length * 3}</span><span class="chip">📒 貼紙 ${full} / ${ORDER.length}</span>`;
+  $('#stations').innerHTML = STATIONS.map(st => {
+    const got = [...st.syms].reduce((a, s) => a + starsOf(s), 0);
+    return `<div class="stn"><h2><span class="no">第${st.n}站</span>${esc(st.title || [...st.syms].join(''))}<span class="prog">⭐ ${got}/${st.syms.length * 3}</span></h2>
+      <div class="syms">${[...st.syms].map(s => {
+        const n = starsOf(s);
+        return `<button class="sbtn${n >= 3 ? ' full' : ''}" data-s="${s}" aria-label="${s}，${SYMBOLS[s][1]}，${n} 顆星">
+          <span class="s">${s}</span><span class="w">${SYMBOLS[s][2]} ${SYMBOLS[s][1]}</span>
+          <span class="st">${[1, 2, 3].map(i => `<span class="${i <= n ? '' : 'off'}">⭐</span>`).join('')}</span></button>`;
+      }).join('')}</div></div>`;
+  }).join('');
+}
+$('#stations').addEventListener('click', e => { const b = e.target.closest('.sbtn'); if (b) openSym(b.dataset.s); });
+$('#petT').addEventListener('click', () => {
+  const t = $('#petT'); t.classList.remove('jump'); void t.offsetWidth; t.classList.add('jump');
+  SFX.pop(); $('#petSay').textContent = one(['嘻嘻，好癢！', `${NAME}最棒了！`, '我想吃香蕉～', '我們去寫注音吧！']);
+});
+
+// ===== 練習 =====
+const P = { sym: null, strokes: [], mode: 'watch', idx: 0, miss: 0, totalMiss: 0, busy: false, token: 0, food: FOODS[0] };
+const svg = $('#pad');
+const G = { ghost: $('#ghost'), done: $('#done'), anim: $('#anim'), guide: $('#guide'), ink: $('#inkG'), fx: $('#fx'), defs: $('#defs') };
+
+function openSym(s) {
+  P.sym = s;
+  P.strokes = ZHUYIN_STROKES[s].map(([d, t], i) => ({ d, t, name: STROKE_NAMES[s][i] || '', len: polyLen(t) }));
+  $('#home').hidden = true; $('#practice').hidden = false;
+  $('#pSym').textContent = s;
+  $('#pWord').innerHTML = `${SYMBOLS[s][2]} ${esc(SYMBOLS[s][1])}的「${s}」<br>共 ${P.strokes.length} 筆`;
+  G.defs.innerHTML = '';
+  P.strokes.forEach((st, i) => { const cp = el('clipPath', { id: 'cp' + i }, G.defs); el('path', { d: st.d }, cp); });
+  window.scrollTo({ top: 0 });
+  saySymbol(s);
+  setMode(starsOf(s) === 0 ? 'watch' : starsOf(s) === 1 ? 'trace' : 'write', true);
+}
+function backHome() { stopAnim(); speechSynthesis?.cancel?.(); $('#practice').hidden = true; $('#home').hidden = false; renderHome(); }
+$('#backBtn').addEventListener('click', backHome);
+$('#sayBtn').addEventListener('click', () => saySymbol(P.sym));
+
+function renderModes() {
+  const n = starsOf(P.sym);
+  for (const b of $('#modes').children) b.classList.toggle('on', b.dataset.m === P.mode);
+  $('#mTrace').textContent = n >= 1 ? '✅ 完成' : '拿 ⭐';
+  $('#mWrite').textContent = n >= 3 ? '✅ ⭐⭐⭐' : n >= 2 ? '✅ 再拚 ⭐⭐⭐' : '拿 ⭐⭐⭐';
+}
+$('#modes').addEventListener('click', e => { const b = e.target.closest('button'); if (b) setMode(b.dataset.m, true); });
+
+function say(text, cls = '', speakIt = false) {
+  $('#sayBar').className = 'say-bar ' + cls;
+  $('#hpE').textContent = H().e;
+  $('#sayTx').textContent = text;
+  if (speakIt && voiceOn) speak(text.replace(/[①-⑨]/g, ''));
+}
+function renderStrokeList() {
+  $('#strokeList').innerHTML = P.strokes.map((st, i) =>
+    `<span class="${P.mode !== 'watch' && i < P.idx ? 'ok' : (P.mode !== 'watch' && i === P.idx ? 'on' : '')}"><b>${i + 1}</b> ${esc(st.name)}</span>`).join('');
+}
+function clearBoard() {
+  stopAnim();
+  G.done.innerHTML = ''; G.anim.innerHTML = ''; G.guide.innerHTML = ''; G.ink.innerHTML = ''; G.fx.innerHTML = '';
+}
+function drawGhost() {
+  G.ghost.innerHTML = '';
+  G.ghost.classList.toggle('faint', P.mode === 'write');
+  const show = P.mode === 'watch' || (P.mode === 'trace' && ghostMode === 'ghost');
+  if (!show) return;
+  P.strokes.forEach(st => el('path', { d: st.d }, G.ghost));
+}
+function fillStroke(i) { el('path', { d: P.strokes[i].d, fill: STROKE_COLORS[i % STROKE_COLORS.length] }, G.done); }
+
+function setMode(m, fresh) {
+  P.mode = m; P.idx = 0; P.miss = 0; P.totalMiss = 0; P.food = one(FOODS);
+  P.token++;
+  clearBoard(); drawGhost(); renderModes(); renderStrokeList();
+  $('#clearBtn').hidden = m === 'watch';
+  $('#replayBtn').textContent = m === 'watch' ? '▶ 再看一次' : '💡 看這一筆';
+  if (m === 'watch') playAll();
+  else if (m === 'trace') { showGuide(0); say(`換${NAME}描描看！從綠色的 1 號出發，跟著箭頭${H().go}到${P.food[1]}那裡。`, '', fresh); }
+  else { say(`${NAME}自己寫寫看！第一筆是「${P.strokes[0].name}」。`, '', fresh); }
+}
+
+// --- 示範動畫：小幫手沿著筆順軌跡走，筆畫跟在後面長出來 ---
+let rafId = 0;
+function stopAnim() { cancelAnimationFrame(rafId); rafId = 0; G.anim.innerHTML = ''; }
+function animateStroke(i, token, speed = 1) {
+  return new Promise(resolve => {
+    const st = P.strokes[i];
+    const g = el('g', { 'clip-path': `url(#cp${i})` }, G.anim);
+    const p = el('path', { d: polyD(st.t), fill: 'none', stroke: STROKE_COLORS[i % STROKE_COLORS.length], 'stroke-width': 330, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, g);
+    const L = p.getTotalLength();
+    p.style.strokeDasharray = `${L} ${L + 400}`; p.style.strokeDashoffset = L; p.style.visibility = 'hidden';
+    const rider = el('text', { class: 'emo' }, G.anim); rider.textContent = H().e;
+    const dur = Math.max(650, L / 1.5) / speed;
+    let t0 = null;
+    const tick = now => {
+      if (token !== P.token) { resolve(false); return; }
+      if (t0 == null) t0 = now;
+      const k = Math.min(1, (now - t0) / dur), e = k < .5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+      p.style.visibility = 'visible'; p.style.strokeDashoffset = L * (1 - e);
+      const pt = p.getPointAtLength(L * e);
+      rider.setAttribute('x', pt.x); rider.setAttribute('y', pt.y - 150);
+      if (k < 1) rafId = requestAnimationFrame(tick);
+      else { g.remove(); rider.remove(); resolve(true); }
+    };
+    rafId = requestAnimationFrame(tick);
+  });
+}
+async function playAll() {
+  const token = ++P.token;
+  clearBoard(); drawGhost();
+  say(`看${H().name}怎麼寫「${P.sym}」：一共 ${P.strokes.length} 筆。`, '', false);
+  if (voiceOn) speak(`${SYMBOLS[P.sym][0]}，一共${CN_NUM[P.strokes.length - 1]}筆`);
+  await sleep(1300);
+  for (let i = 0; i < P.strokes.length; i++) {
+    if (token !== P.token) return;
+    $('#strokeList').querySelectorAll('span').forEach((s, j) => s.className = j === i ? 'on' : j < i ? 'ok' : '');
+    say(`第 ${i + 1} 筆：${P.strokes[i].name}`, '', false);
+    if (voiceOn) speak(`第${CN_NUM[i]}筆，${P.strokes[i].name}`);
+    SFX[H().sound]?.();
+    if (!await animateStroke(i, token)) return;
+    fillStroke(i);
+    await sleep(450);
+  }
+  if (token !== P.token) return;
+  $('#strokeList').querySelectorAll('span').forEach(s => s.className = 'ok');
+  SFX.ding();
+  say(`看完了！換${NAME}描描看吧 👉 按「✍️ 描描看」`, 'ok', true);
+}
+// 描寫／自己寫時示範目前這一筆
+async function demoCurrent() {
+  if (P.idx >= P.strokes.length) return;
+  const token = ++P.token;
+  G.ink.innerHTML = '';
+  if (voiceOn) speak(`第${CN_NUM[P.idx]}筆，${P.strokes[P.idx].name}`);
+  await animateStroke(P.idx, token, .8);
+  if (token === P.token) showGuide(P.idx, true);
+}
+$('#replayBtn').addEventListener('click', () => { SFX.pop(); P.mode === 'watch' ? playAll() : demoCurrent(); });
+$('#clearBtn').addEventListener('click', () => setMode(P.mode === 'watch' ? 'trace' : P.mode, false));
+
+// --- 提示：虛線箭頭、起點、小幫手與終點的食物 ---
+function showGuide(i, force = false) {
+  G.guide.innerHTML = '';
+  if (i >= P.strokes.length) return;
+  if (P.mode === 'write' && !force) return;
+  const st = P.strokes[i], s = st.t[0], e = st.t[st.t.length - 1];
+  el('path', { class: 'guide-line', d: polyD(st.t), 'marker-end': 'url(#arrow)' }, G.guide);
+  ensureArrow();
+  // 終點：好吃的食物
+  const f = el('text', { class: 'emo', x: e[0], y: e[1], 'font-size': 210, opacity: .9 }, G.guide); f.textContent = P.food[0];
+  // 起點：綠色車站與號碼
+  el('circle', { class: 'startdot', cx: s[0], cy: s[1], r: 115 }, G.guide);
+  const no = el('text', { class: 'startno', x: s[0], y: s[1] + 8 }, G.guide); no.textContent = i + 1;
+  // 小幫手在起點旁等著
+  const dx = s[0] > 1500 ? -230 : 230, dy = s[1] < 300 ? 170 : -170;
+  const h = el('g', { class: 'bob' }, G.guide);
+  const ht = el('text', { class: 'emo', x: s[0] + dx, y: s[1] + dy, 'font-size': 240 }, h); ht.textContent = H().e;
+}
+function ensureArrow() {
+  if ($('#arrow')) return;
+  const m = el('marker', { id: 'arrow', viewBox: '0 0 10 10', refX: 5, refY: 5, markerWidth: 3.2, markerHeight: 3.2, orient: 'auto-start-reverse' }, G.defs);
+  el('path', { d: 'M0 0L10 5L0 10Z', fill: '#2C7DA0' }, m);
+}
+
+// --- 手寫輸入 ---
+let drawing = null;
+function svgPoint(ev) {
+  const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+  const q = pt.matrixTransform(svg.getScreenCTM().inverse());
+  return [Math.round(q.x), Math.round(q.y)];
+}
+svg.addEventListener('pointerdown', ev => {
+  if (P.mode === 'watch') { setMode('trace', true); return; }
+  if (P.idx >= P.strokes.length || drawing) return;
+  if (P.busy) { stopAnim(); P.token++; P.busy = false; showGuide(P.idx, P.mode === 'write' && P.miss >= hintAfter && hintAfter > 0); }
+  ev.preventDefault();
+  svg.setPointerCapture(ev.pointerId);
+  SFX.get();
+  const p = svgPoint(ev);
+  drawing = { id: ev.pointerId, pts: [p], path: el('path', { class: 'ink', d: polyD([p, p]) }, G.ink) };
+});
+svg.addEventListener('pointermove', ev => {
+  if (!drawing || ev.pointerId !== drawing.id) return;
+  const evs = ev.getCoalescedEvents ? ev.getCoalescedEvents() : [ev];
+  for (const e of evs.length ? evs : [ev]) {
+    const p = svgPoint(e);
+    if (dist(p, drawing.pts[drawing.pts.length - 1]) > 12) drawing.pts.push(p);
+  }
+  drawing.path.setAttribute('d', polyD(drawing.pts.length > 1 ? drawing.pts : [drawing.pts[0], drawing.pts[0]]));
+});
+const endDraw = ev => {
+  if (!drawing || ev.pointerId !== drawing.id) return;
+  const d = drawing; drawing = null;
+  judge(d.pts, d.path);
+};
+svg.addEventListener('pointerup', endDraw);
+svg.addEventListener('pointercancel', ev => { if (drawing && ev.pointerId === drawing.id) { drawing.path.remove(); drawing = null; } });
+
+// 判斷一筆：起點、終點、方向與是否沿著筆畫
+function check(pts, st) {
+  const T = resample(st.t, 40);
+  const L = st.len;
+  const tolS = Math.min(400, Math.max(240, L * .45)), tolE = Math.min(440, Math.max(260, L * .5));
+  if (pts.length < 2 || polyLen(pts) < Math.min(180, L * .35)) return 'short';
+  const U = resample(pts, 40), u0 = U[0], u1 = U[U.length - 1], t0 = T[0], t1 = T[T.length - 1];
+  if (dist(u0, t1) < tolE && dist(u1, t0) < tolS && dist(u0, t0) > tolS) return 'reverse';
+  const avg = U.reduce((a, p) => a + distToPoly(p, T), 0) / U.length;
+  const cover = T.filter(p => distToPoly(p, U) < 330).length / T.length;
+  if (avg > 280 || cover < .7 || polyLen(pts) > L * 1.8 + 400) return 'off';
+  if (dist(u0, t0) > tolS) return 'start';
+  if (dist(u1, t1) > tolE) return polyLen(pts) < L * .8 ? 'shortend' : 'end';
+  return 'ok';
+}
+async function judge(pts, path) {
+  const st = P.strokes[P.idx];
+  const r = check(pts, st);
+  if (r === 'ok') {
+    path.remove();
+    fillStroke(P.idx);
+    P.idx++; P.miss = 0;
+    renderStrokeList();
+    if (P.idx >= P.strokes.length) { G.guide.innerHTML = ''; finish(); return; }
+    SFX.ding(); SFX[H().sound]?.();
+    P.food = one(FOODS);
+    const praise = one(['好棒！', '寫得好漂亮！', '對了！', `${H().name}${H().go}到了！`]);
+    say(`${praise}第 ${P.idx + 1} 筆是「${P.strokes[P.idx].name}」。`, 'ok', voiceOn);
+    showGuide(P.idx, false);
+    return;
+  }
+  // 寫錯
+  P.miss++; P.totalMiss++;
+  SFX.boop();
+  path.classList.add('bad');
+  setTimeout(() => path.remove(), 600);
+  const b = $('#board'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+  const msg = {
+    reverse: `方向反了喔！從綠色的 ${P.idx + 1} 號開始寫。`,
+    start: `起點不對喔，第 ${P.idx + 1} 筆從${P.mode === 'trace' ? '綠色的號碼' : '這一筆的頭'}開始。`,
+    end: '再寫到終點一點點就好了！',
+    shortend: '還沒寫完喔，要寫到最後面！',
+    off: `沒有沿著筆畫走喔，再試一次「${st.name}」。`,
+    short: '太短了，用手指慢慢畫長一點。',
+  }[r];
+  say(msg, 'no', voiceOn);
+  if (P.mode === 'trace' && P.miss >= 2) { P.busy = true; await demoCurrent(); P.busy = false; }
+  else if (P.mode === 'write' && hintAfter > 0 && P.miss >= hintAfter) {
+    showGuide(P.idx, true);
+    if (P.miss >= hintAfter + 1) { P.busy = true; await demoCurrent(); P.busy = false; }
+  }
+}
+
+// ===== 完成與獎勵 =====
+function finish() {
+  const before = starsOf(P.sym);
+  const got = P.mode === 'trace' ? 1 : (P.totalMiss === 0 ? 3 : 2);
+  setStars(P.sym, got);
+  SFX.fanfare(); setTimeout(() => SFX.chomp(), 900);
+  confetti();
+  $('#rwFood').textContent = P.food[0];
+  $('#rwFood').style.animation = 'none'; void $('#rwFood').offsetWidth; $('#rwFood').style.animation = '';
+  $('#rwStars').innerHTML = [1, 2, 3].map(i => `<span class="${i <= got ? '' : 'off'}">⭐</span>`).join('');
+  $('#rwTitle').textContent = P.mode === 'trace' ? `${NAME}描好「${P.sym}」了！` : `${NAME}自己寫出「${P.sym}」了！`;
+  let msg = `龜龜吃到了${P.food[1]}，好好吃！`;
+  if (P.mode === 'trace') msg += '接下來試試「🌟 自己寫」，可以拿到更多星星！';
+  else if (got === 3) msg += before < 3 ? `一次都沒寫錯！得到 ${SYMBOLS[P.sym][2]} 貼紙！` : '一次都沒寫錯，太厲害了！';
+  else msg += `寫錯 ${P.totalMiss} 次，再寫一次不寫錯就有 3 顆星和貼紙喔！`;
+  $('#rwMsg').textContent = msg;
+  $('#rwNext').textContent = P.mode === 'trace' ? '🌟 自己寫' : '下一個 ➡';
+  $('#rwNext').dataset.act = P.mode === 'trace' ? 'write' : 'next';
+  $('#reward').hidden = false;
+  $('#rwNext').focus();
+  speak(`${NAME}好棒！龜龜吃到了${P.food[1]}`);
+  renderModes();
+}
+function confetti() {
+  const items = ['⭐', '🍌', '🍎', '🪲', '🪱', '🍟', '🚂', '🐢'];
+  for (let i = 0; i < 18; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti'; c.textContent = one(items);
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.animationDuration = (1.8 + Math.random() * 1.8) + 's';
+    c.style.animationDelay = Math.random() * .6 + 's';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 4500);
+  }
+}
+$('#rwAgain').addEventListener('click', () => { $('#reward').hidden = true; setMode(P.mode, false); });
+$('#rwNext').addEventListener('click', () => {
+  $('#reward').hidden = true;
+  if ($('#rwNext').dataset.act === 'write') setMode('write', true); else nextSym();
+});
+function nextSym() { const i = ORDER.indexOf(P.sym); openSym(ORDER[(i + 1) % ORDER.length]); }
+$('#nextBtn').addEventListener('click', nextSym);
+
+// ===== 列印練習單（田字格） =====
+function cellSVG(sym, upto, mode) {
+  // mode: 'step' 筆順分解（前面的筆畫黑、這一筆紅）、'trace' 淡淡的字、'empty' 空格
+  const strokes = ZHUYIN_STROKES[sym];
+  let inner = '';
+  if (mode === 'step') strokes.slice(0, upto + 1).forEach(([d], i) => { inner += `<path d="${d}" fill="${i === upto ? '#D9483B' : '#333'}"/>`; });
+  if (mode === 'trace') strokes.forEach(([d]) => { inner += `<path d="${d}" fill="#D8D8D8"/>`; });
+  return `<svg viewBox="-140 -140 2330 2330"><rect class="g-frame" x="-110" y="-110" width="2270" height="2270"/>
+    <line class="g-mid" x1="1025" y1="-110" x2="1025" y2="2160"/><line class="g-mid" x1="-110" y1="1025" x2="2160" y2="1025"/>${inner}</svg>`;
+}
+function printSheet(syms) {
+  const rows = syms.map(s => {
+    const n = ZHUYIN_STROKES[s].length;
+    const cells = [];
+    for (let i = 0; i < n; i++) cells.push(cellSVG(s, i, 'step'));
+    for (let i = 0; i < 3; i++) cells.push(cellSVG(s, 0, 'trace'));
+    while (cells.length < 9) cells.push(cellSVG(s, 0, 'empty'));
+    return `<div class="prow"><div class="lab"><b>${s}</b>${SYMBOLS[s][1]}<br>${n} 筆</div>${cells.join('')}</div>`;
+  });
+  $('#sheet').innerHTML = `<h1>${esc(NAME)}的注音筆順練習　姓名：＿＿＿＿　日期：＿＿＿＿</h1>${rows.join('')}`;
+  window.print();
+}
+$('#printBtn').addEventListener('click', () => {
+  const st = STATIONS.find(x => x.syms.includes(P.sym));
+  printSheet([...st.syms]);
+});
+
+// ===== 貼紙本 =====
+$('#stickerBtn').addEventListener('click', () => {
+  $('#stickers').innerHTML = ORDER.map(s => `<div class="${starsOf(s) >= 3 ? '' : 'off'}"><span class="e">${SYMBOLS[s][2]}</span>${s} ${esc(SYMBOLS[s][1])}</div>`).join('');
+  $('#stickerDlg').showModal();
+});
+$('#stickerClose').addEventListener('click', () => $('#stickerDlg').close());
+
+// ===== 家長設定 =====
+function renderSettings() {
+  $('#kidName').value = NAME;
+  $('#helperPick').innerHTML = Object.entries(HELPERS).map(([k, h]) => `<button data-v="${k}" class="${k === helperKey ? 'on' : ''}">${h.e} ${h.name}</button>`).join('');
+  for (const b of $('#ghostPick').children) b.classList.toggle('on', b.dataset.v === ghostMode);
+  for (const b of $('#hintPick').children) b.classList.toggle('on', +b.dataset.v === hintAfter);
+  $('#voiceOn').checked = voiceOn; $('#sfxOn').checked = sfxOn;
+}
+$('#setBtn').addEventListener('click', () => { renderSettings(); $('#setDlg').showModal(); });
+$('#helperPick').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; helperKey = b.dataset.v; store.set('helper', helperKey); renderSettings(); SFX[H().sound]?.(); });
+$('#ghostPick').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; ghostMode = b.dataset.v; store.set('ghost', ghostMode); renderSettings(); });
+$('#hintPick').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; hintAfter = +b.dataset.v; store.set('hint', hintAfter); renderSettings(); });
+$('#voiceOn').addEventListener('change', e => { voiceOn = e.target.checked; store.set('voice', voiceOn); });
+$('#sfxOn').addEventListener('change', e => { sfxOn = e.target.checked; store.set('sfx', sfxOn); });
+$('#resetBtn').addEventListener('click', () => { if (confirm('確定要清除所有星星與貼紙嗎？')) { store.set('stars', {}); renderHome(); } });
+$('#setClose').addEventListener('click', () => {
+  NAME = $('#kidName').value.trim() || '大寶'; store.set('name', NAME);
+  $('#setDlg').close();
+  if (!$('#practice').hidden) { drawGhost(); showGuide(P.idx, false); $('#hpE').textContent = H().e; } else renderHome();
+});
+
+renderHome();
+// 網址帶 #ㄅ 可直接開啟該符號
+const hashSym = decodeURIComponent(location.hash.slice(1));
+if (ZHUYIN_STROKES[hashSym]) openSym(hashSym);
+</script>
+</body>
+</html>
