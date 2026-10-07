@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>YouTube 播放清單轉網址</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1F3A5F; --paper:#FFF8EC; --line:#EADBC4; --accent:#D1453B; --accent-soft:#FBE3D3;
+  --good:#2E8B57; --warn:#D99A00; --bad:#D1453B; --text:#1C2530; --muted:#5B6B7C; --card:#FFFFFF; --field:#FFFDF8;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0F1722; --card:#172233; --line:#2A3A50; --text:#E6ECF3; --muted:#9AAABB; --ink:#8FB4E0; --accent-soft:#3A2A20; --field:#121C2A;
+}}
+:root[data-theme="dark"]{
+  --paper:#0F1722; --card:#172233; --line:#2A3A50; --text:#E6ECF3; --muted:#9AAABB; --ink:#8FB4E0; --accent-soft:#3A2A20; --field:#121C2A;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{height:100%} body{margin:0;min-height:100%;background:var(--paper);color:var(--text);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:16px;line-height:1.55}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 40px}
+header{padding:16px 0 6px}
+header a.home{font-size:.85rem;color:var(--muted);text-decoration:none}
+h1{margin:4px 0 0;font-size:1.4rem;color:var(--ink)}
+header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+h2{font-size:1.1rem;margin:0 0 10px;color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+.small{font-size:.85rem;color:var(--muted)}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.seg button{flex:1 1 140px}
+button,.btn{font:inherit;min-height:40px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--text);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+button.on{background:var(--ink);border-color:var(--ink);color:var(--paper);font-weight:700}
+button:disabled{opacity:.5;cursor:not-allowed}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px 14px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.9rem;font-weight:500}
+input,select,textarea{font:inherit;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-height:40px;width:100%}
+textarea{min-height:110px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.85rem}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;margin-top:10px}
+.check input{width:auto;min-height:auto;margin-top:4px}
+ol.steps{margin:6px 0 0;padding-left:1.4em}
+ol.steps li{margin:4px 0}
+a.bm{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:999px;background:var(--accent);color:#fff;font-weight:700;text-decoration:none;cursor:grab;border:2px dashed rgba(255,255,255,.6)}
+code{background:var(--accent-soft);padding:1px 5px;border-radius:5px;font-size:.85em;word-break:break-all}
+.msg{margin-top:10px;font-size:.9rem;min-height:1.4em}
+.msg.ok{color:var(--good)} .msg.err{color:var(--bad)}
+.summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin-bottom:6px}
+.summary strong{font-size:1.05rem;color:var(--ink)}
+.list{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:10px}
+.list label{display:grid;grid-template-columns:auto 2.6em 1fr;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);font-size:.88rem;cursor:pointer}
+.list label:last-child{border-bottom:0}
+.list input{width:auto;min-height:auto}
+.list .n{color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.list .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.list .t small{color:var(--muted);margin-left:6px}
+.batch{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px}
+.batch-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;font-weight:700;font-size:.92rem}
+.batch-head button{min-height:34px;padding:4px 12px}
+.batch-head button.done{background:var(--good);border-color:var(--good);color:#fff}
+details{border:1px dashed var(--line);border-radius:10px;padding:8px 12px;margin-top:12px}
+summary{cursor:pointer;font-weight:700;color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="home" href="../">← 回服務首頁</a>
+  <h1>▶️ YouTube 播放清單轉網址清單</h1>
+  <p>把整個播放清單一鍵轉成一行一個的影片網址，直接貼進 Gemini Notebook（NotebookLM）當來源。全部在瀏覽器裡處理，不經過任何伺服器。</p>
+</header>
+
+<!-- ① 取得影片 -->
+<section class="card">
+  <h2>① 取得播放清單裡的影片</h2>
+  <div class="seg" role="tablist">
+    <button id="tabBm" class="on" type="button" data-pane="paneBm">⭐ 一鍵書籤（推薦）</button>
+    <button id="tabPaste" type="button" data-pane="panePaste">📋 貼上文字</button>
+    <button id="tabApi" type="button" data-pane="paneApi">🔑 YouTube API</button>
+  </div>
+
+  <div id="paneBm">
+    <p class="small" style="margin-top:0">YouTube 不允許其他網站直接讀取播放清單，所以用「書籤小工具」在 YouTube 頁面上幫你收集：</p>
+    <ol class="steps">
+      <li>把下面這顆按鈕<strong>拖曳到瀏覽器的書籤列</strong>（手機或無法拖曳時，見下方「手動建立書籤」）：<br>
+        <a id="bookmarklet" class="bm" href="#" title="拖曳到書籤列">▶ 播放清單轉網址</a></li>
+      <li>打開 YouTube 播放清單頁（網址含 <code>list=</code>，例如 <code>youtube.com/playlist?list=…</code>，或正在播放清單中的影片頁）。</li>
+      <li>點一下書籤。它會自動往下捲動載入全部影片，完成後跳出視窗，按「複製全部網址」就能貼進 Gemini；或按「在轉換工具開啟」回到這頁做分批、挑選。</li>
+    </ol>
+    <details>
+      <summary>手動建立書籤（手機／拖曳不了時）</summary>
+      <p class="small">新增任一書籤，把書籤的「網址」改成下面這段文字（整段複製）：</p>
+      <textarea id="bmCode" readonly></textarea>
+      <div class="btns"><button id="copyBm" type="button">複製書籤程式碼</button></div>
+      <p class="small">手機 Chrome：打開 YouTube 播放清單後，在網址列輸入書籤名稱，點選書籤建議即可執行。</p>
+    </details>
+  </div>
+
+  <div id="panePaste" hidden>
+    <p class="small" style="margin-top:0">貼上任何含有 YouTube 影片網址的文字，會自動抓出所有影片（自動去除重複、保留順序）。例如：</p>
+    <ul class="small" style="margin:0 0 8px;padding-left:1.2em">
+      <li>在播放清單頁全選（Ctrl/⌘+A）複製後貼上，或把多個影片網址一次貼上</li>
+      <li>在播放清單頁按右鍵「檢視網頁原始碼」整頁貼上（可能混入推薦影片，貼上後可在下方取消勾選）</li>
+    </ul>
+    <textarea id="pasteBox" placeholder="https://www.youtube.com/watch?v=xxxxxxxxxxx&#10;https://youtu.be/yyyyyyyyyyy&#10;…"></textarea>
+    <div class="btns"><button id="parseBtn" class="primary" type="button">抓出影片網址</button><button id="clearPaste" type="button">清空</button></div>
+  </div>
+
+  <div id="paneApi" hidden>
+    <p class="small" style="margin-top:0">有 YouTube Data API v3 金鑰的話，貼上播放清單網址就能直接讀出全部影片與標題（公開或不公開的清單都可以）。</p>
+    <div class="grid">
+      <label class="f" style="grid-column:1/-1">播放清單網址或 ID<input id="plUrl" placeholder="https://www.youtube.com/playlist?list=PL…" autocomplete="off"></label>
+      <label class="f" style="grid-column:1/-1">API 金鑰<input id="apiKey" type="password" placeholder="AIza…" autocomplete="off"></label>
+    </div>
+    <label class="check"><input id="rememberKey" type="checkbox"> 在這台裝置記住金鑰（只存在你的瀏覽器）</label>
+    <div class="btns"><button id="apiBtn" class="primary" type="button">讀取播放清單</button></div>
+    <details>
+      <summary>怎麼取得 API 金鑰？</summary>
+      <ol class="steps small">
+        <li>到 Google Cloud Console 建立專案，啟用「YouTube Data API v3」。</li>
+        <li>在「憑證」建立 API 金鑰；建議限制只能用 YouTube Data API v3，並把網站限制設為本站網址。</li>
+        <li>每讀 50 部影片約用 1 單位配額，每日免費 10,000 單位，個人使用綽綽有餘。</li>
+      </ol>
+    </details>
+  </div>
+  <div id="srcMsg" class="msg" role="status"></div>
+</section>
+
+<!-- ② 輸出 -->
+<section class="card" id="outCard" hidden>
+  <h2>② 複製網址，貼進 Gemini Notebook</h2>
+  <div class="summary"><strong id="plTitle"></strong><span class="small" id="countInfo"></span></div>
+
+  <div class="grid">
+    <label class="f">網址格式
+      <select id="optStyle">
+        <option value="watch">youtube.com/watch?v=…</option>
+        <option value="short">youtu.be/…</option>
+      </select></label>
+    <label class="f">內容
+      <select id="optFormat">
+        <option value="url">只有網址（貼 Gemini 用）</option>
+        <option value="title">標題＋網址（自己看）</option>
+        <option value="md">Markdown 連結</option>
+      </select></label>
+    <label class="f">分隔方式
+      <select id="optSep">
+        <option value="nl">每行一個</option>
+        <option value="space">空白隔開</option>
+      </select></label>
+    <label class="f">每批幾個
+      <select id="optBatch">
+        <option value="0">全部一批</option>
+        <option value="50" selected>50 個</option>
+        <option value="25">25 個</option>
+        <option value="10">10 個</option>
+      </select></label>
+  </div>
+  <p class="small">Gemini Notebook／NotebookLM：「新增來源」→ 選「YouTube」或「網站」→ 貼上網址（可一次貼多個，用空白或換行分隔）。每個筆記本的來源數有上限（如免費版 50 個），清單很長時可分批貼到不同筆記本。</p>
+
+  <div id="batches"></div>
+  <div class="btns">
+    <button id="copyAll" class="primary" type="button">複製全部</button>
+    <button id="downloadTxt" type="button">下載 .txt</button>
+  </div>
+
+  <details>
+    <summary>挑選要哪些影片（<span id="pickInfo"></span>）</summary>
+    <div class="btns"><button id="selAll" type="button">全選</button><button id="selNone" type="button">全不選</button><button id="selDeleted" type="button">取消私人／已刪除影片</button></div>
+    <div class="list" id="list"></div>
+  </details>
+</section>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const TOOL_URL = location.origin + location.pathname;
+let state = { title: '', items: [] }; // items: {id, title, on}
+
+/* ---------- 書籤小工具（在 YouTube 頁面上執行） ---------- */
+// 注意：YouTube 啟用 Trusted Types，這段只能用 DOM API，不能用 innerHTML。
+function bookmarkletMain(toolUrl) {
+  if (!/(^|\.)youtube\.com$/.test(location.hostname)) {
+    alert('請先打開 YouTube 播放清單頁，再點這個書籤。');
+    return;
+  }
+  if (document.getElementById('__ytpl2url')) return;
+  const box = document.createElement('div');
+  box.id = '__ytpl2url';
+  box.style.cssText = 'position:fixed;z-index:2147483647;right:16px;top:16px;width:min(440px,calc(100vw - 32px));background:#fff;color:#1c2530;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35);padding:16px;font:15px/1.5 system-ui,sans-serif';
+  const head = document.createElement('div');
+  head.style.cssText = 'font-weight:700;font-size:16px;margin-bottom:6px';
+  head.textContent = '▶ 播放清單轉網址';
+  const info = document.createElement('div');
+  info.textContent = '正在載入影片…';
+  const ta = document.createElement('textarea');
+  ta.readOnly = true;
+  ta.style.cssText = 'display:none;width:100%;height:180px;margin-top:8px;font:12px/1.4 monospace;border:1px solid #ccc;border-radius:8px;padding:6px;color:#1c2530;background:#fafafa';
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:10px';
+  const mk = (txt, primary) => {
+    const b = document.createElement('button');
+    b.textContent = txt;
+    b.style.cssText = 'font:inherit;font-size:14px;padding:6px 12px;border-radius:8px;cursor:pointer;border:1px solid ' + (primary ? '#d1453b;background:#d1453b;color:#fff;font-weight:700' : '#ccc;background:#f4f4f4;color:#1c2530');
+    row.appendChild(b);
+    return b;
+  };
+  const bStop = mk('停止，用目前結果', false);
+  const bCopy = mk('複製全部網址', true);
+  const bOpen = mk('在轉換工具開啟', false);
+  const bClose = mk('關閉', false);
+  bCopy.style.display = bOpen.style.display = 'none';
+  box.append(head, info, ta, row);
+  document.body.appendChild(box);
+
+  let stopped = false;
+  bStop.onclick = () => { stopped = true; };
+  bClose.onclick = () => { stopped = true; box.remove(); };
+
+  const listId = new URLSearchParams(location.search).get('list');
+  const titleOf = a => {
+    const r = a.closest('ytd-playlist-video-renderer,ytd-playlist-panel-video-renderer,ytm-playlist-video-renderer');
+    const s = r && r.querySelector('#video-title,h4,.media-item-headline');
+    return ((s && (s.getAttribute('title') || s.textContent)) || a.getAttribute('title') || a.textContent || '').replace(/\s+/g, ' ').trim();
+  };
+  const collect = () => {
+    const out = new Map();
+    let as = [...document.querySelectorAll('ytd-playlist-video-renderer a#video-title,ytd-playlist-panel-video-renderer a#wc-endpoint,ytm-playlist-video-renderer a[href*="watch?v="]')];
+    if (!as.length) as = [...document.querySelectorAll('a[href*="watch?v="]')].filter(a => !listId || a.href.includes('list=' + listId));
+    for (const a of as) {
+      const m = (a.href || '').match(/[?&]v=([\w-]{11})/);
+      if (m && !out.has(m[1])) out.set(m[1], titleOf(a));
+    }
+    return out;
+  };
+  const scrollMore = () => {
+    const panel = document.querySelector('ytd-playlist-panel-renderer #items');
+    if (location.pathname !== '/playlist' && panel) { panel.scrollTop = panel.scrollHeight; return; }
+    window.scrollBy(0, -200);
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    const more = document.querySelector('ytd-playlist-video-list-renderer ytd-continuation-item-renderer, ytd-continuation-item-renderer');
+    if (more) more.scrollIntoView({ block: 'end' });
+  };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const copyText = text => {
+    const fallback = () => { ta.focus(); ta.select(); try { document.execCommand('copy'); } catch (e) {} };
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).catch(fallback);
+    fallback();
+    return Promise.resolve();
+  };
+
+  (async () => {
+    const startY = window.scrollY;
+    let last = -1, same = 0;
+    for (let i = 0; i < 400 && !stopped; i++) {
+      const n = collect().size;
+      info.textContent = '正在載入影片…已找到 ' + n + ' 部（自動往下捲動中）';
+      const pending = document.querySelector('ytd-continuation-item-renderer');
+      if (n === last) same++; else same = 0;
+      if (same >= (pending ? 8 : 3)) break;
+      last = n;
+      scrollMore();
+      await sleep(900);
+    }
+    window.scrollTo(0, startY);
+    if (!document.body.contains(box)) return;
+    const found = collect();
+    const items = [...found].map(([id, t]) => [id, t]);
+    bStop.style.display = 'none';
+    if (!items.length) {
+      info.textContent = '找不到影片。請確認目前是播放清單頁（網址含 list=），再試一次。';
+      return;
+    }
+    const title = document.title.replace(/^\(\d+\)\s*/, '').replace(/\s*-\s*YouTube\s*$/, '');
+    const urls = items.map(x => 'https://www.youtube.com/watch?v=' + x[0]).join('\n');
+    info.textContent = '「' + title + '」共 ' + items.length + ' 部影片';
+    ta.value = urls;
+    ta.style.display = 'block';
+    bCopy.style.display = bOpen.style.display = '';
+    bCopy.onclick = () => copyText(urls).then(() => { bCopy.textContent = '✓ 已複製 ' + items.length + ' 個網址'; });
+    bOpen.onclick = () => window.open(toolUrl + '#d=' + encodeURIComponent(JSON.stringify({ t: title, v: items })), '_blank');
+  })();
+}
+
+const bmCode = 'javascript:' + encodeURIComponent('(' + bookmarkletMain.toString() + ')(' + JSON.stringify(TOOL_URL) + ');void 0');
+$('bookmarklet').href = bmCode;
+$('bookmarklet').addEventListener('click', e => {
+  e.preventDefault();
+  setMsg('請把這顆按鈕「拖曳」到書籤列，再到 YouTube 播放清單頁點書籤。', '');
+});
+$('bmCode').value = bmCode;
+$('copyBm').onclick = () => copy(bmCode).then(() => setMsg('已複製書籤程式碼。', 'ok'));
+
+/* ---------- 分頁 ---------- */
+document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.seg button').forEach(x => {
+    x.classList.toggle('on', x === b);
+    $(x.dataset.pane).hidden = x !== b;
+  });
+  setMsg('', '');
+}));
+
+/* ---------- 工具 ---------- */
+function setMsg(text, cls) {
+  const m = $('srcMsg');
+  m.textContent = text;
+  m.className = 'msg' + (cls ? ' ' + cls : '');
+}
+function copy(text) {
+  const fallback = () => {
+    const t = document.createElement('textarea');
+    t.value = text;
+    t.style.position = 'fixed'; t.style.opacity = '0';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    t.remove();
+  };
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text).catch(fallback);
+  fallback();
+  return Promise.resolve();
+}
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
+};
+const isDeadTitle = t => /^(\[?(private|deleted) video\]?|私人影片|已刪除的影片|\[私人影片\]|\[已刪除的影片\])$/i.test((t || '').trim());
+
+function setItems(title, list) {
+  const seen = new Set();
+  state.title = title || '';
+  state.items = [];
+  for (const [id, t] of list) {
+    if (!/^[\w-]{11}$/.test(id) || seen.has(id)) continue;
+    seen.add(id);
+    state.items.push({ id, title: t || '', on: true });
+  }
+  renderList();
+  render();
+  $('outCard').hidden = !state.items.length;
+  if (state.items.length) $('outCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ---------- 貼上解析 ---------- */
+function extractIds(text) {
+  const ids = [];
+  const re = /(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:[^\s"'<>]*?&(?:amp;)?)?v=|shorts\/|embed\/|live\/|v\/)|youtu\.be\/|"videoId"\s*:\s*"|\\"videoId\\"\s*:\s*\\")([\w-]{11})(?![\w-])/g;
+  let m;
+  while ((m = re.exec(text))) ids.push(m[1]);
+  for (const line of text.split(/\r?\n/)) {
+    const s = line.trim();
+    if (/^[\w-]{11}$/.test(s)) ids.push(s);
+  }
+  return ids;
+}
+$('parseBtn').onclick = () => {
+  const ids = extractIds($('pasteBox').value);
+  if (!ids.length) { setMsg('沒有找到 YouTube 影片網址。', 'err'); return; }
+  setItems('', ids.map(id => [id, '']));
+  setMsg('找到 ' + state.items.length + ' 部影片。', 'ok');
+};
+$('clearPaste').onclick = () => { $('pasteBox').value = ''; setMsg('', ''); };
+
+/* ---------- YouTube Data API ---------- */
+const savedKey = store.get('ytpl2url.key');
+if (savedKey) { $('apiKey').value = savedKey; $('rememberKey').checked = true; }
+function parseListId(s) {
+  s = (s || '').trim();
+  const m = s.match(/[?&]list=([\w-]+)/);
+  if (m) return m[1];
+  return /^[\w-]{10,}$/.test(s) ? s : '';
+}
+$('apiBtn').onclick = async () => {
+  const listId = parseListId($('plUrl').value);
+  const key = $('apiKey').value.trim();
+  if (!listId) { setMsg('請貼上含有 list= 的播放清單網址，或播放清單 ID。', 'err'); return; }
+  if (!key) { setMsg('請輸入 API 金鑰。', 'err'); return; }
+  store.set('ytpl2url.key', $('rememberKey').checked ? key : null);
+  const btn = $('apiBtn');
+  btn.disabled = true;
+  try {
+    const base = 'https://www.googleapis.com/youtube/v3/';
+    const get = async url => {
+      const r = await fetch(url);
+      const j = await r.json();
+      if (!r.ok) throw new Error((j.error && j.error.message) || ('HTTP ' + r.status));
+      return j;
+    };
+    let title = '';
+    try {
+      const p = await get(base + 'playlists?part=snippet&id=' + encodeURIComponent(listId) + '&key=' + encodeURIComponent(key));
+      title = p.items && p.items[0] ? p.items[0].snippet.title : '';
+    } catch (e) { /* 標題拿不到不影響 */ }
+    const list = [];
+    let token = '';
+    do {
+      setMsg('讀取中…已取得 ' + list.length + ' 部', '');
+      const j = await get(base + 'playlistItems?part=snippet&maxResults=50&playlistId=' + encodeURIComponent(listId) + '&key=' + encodeURIComponent(key) + (token ? '&pageToken=' + token : ''));
+      for (const it of j.items || []) {
+        const sn = it.snippet || {};
+        if (sn.resourceId && sn.resourceId.videoId) list.push([sn.resourceId.videoId, sn.title || '']);
+      }
+      token = j.nextPageToken || '';
+    } while (token && list.length < 20000);
+    if (!list.length) throw new Error('播放清單是空的，或是私人清單。');
+    setItems(title, list);
+    setMsg('讀取完成，共 ' + state.items.length + ' 部影片。', 'ok');
+  } catch (e) {
+    setMsg('讀取失敗：' + e.message, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+/* ---------- 輸出 ---------- */
+function urlOf(id) {
+  return $('optStyle').value === 'short' ? 'https://youtu.be/' + id : 'https://www.youtube.com/watch?v=' + id;
+}
+function lineOf(it, n) {
+  const u = urlOf(it.id);
+  const t = it.title || ('影片 ' + n);
+  switch ($('optFormat').value) {
+    case 'title': return n + '. ' + t + '\n' + u;
+    case 'md': return '- [' + t.replace(/([\[\]])/g, '\\$1') + '](' + u + ')';
+    default: return u;
+  }
+}
+function joinLines(lines) {
+  if ($('optFormat').value !== 'url') return lines.join('\n');
+  return lines.join($('optSep').value === 'space' ? ' ' : '\n');
+}
+function selected() { return state.items.filter(x => x.on); }
+function allText() { return joinLines(selected().map((it, i) => lineOf(it, i + 1))); }
+
+function render() {
+  const sel = selected();
+  $('plTitle').textContent = state.title || '影片清單';
+  $('countInfo').textContent = '已選 ' + sel.length + ' / ' + state.items.length + ' 部';
+  $('pickInfo').textContent = '已選 ' + sel.length + ' / ' + state.items.length;
+  $('optSep').disabled = $('optFormat').value !== 'url';
+  const size = +$('optBatch').value || sel.length || 1;
+  const wrap = $('batches');
+  wrap.textContent = '';
+  for (let s = 0; s < sel.length; s += size) {
+    const chunk = sel.slice(s, s + size);
+    const text = joinLines(chunk.map((it, i) => lineOf(it, s + i + 1)));
+    const box = document.createElement('div');
+    box.className = 'batch';
+    const head = document.createElement('div');
+    head.className = 'batch-head';
+    const label = document.createElement('span');
+    label.textContent = sel.length > size ? '第 ' + (s / size + 1) + ' 批：第 ' + (s + 1) + '～' + (s + chunk.length) + ' 部' : '共 ' + chunk.length + ' 部';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = '複製這批';
+    b.onclick = () => copy(text).then(() => { b.textContent = '✓ 已複製'; b.classList.add('done'); });
+    head.append(label, b);
+    const ta = document.createElement('textarea');
+    ta.readOnly = true;
+    ta.value = text;
+    ta.rows = Math.min(8, chunk.length * ($('optFormat').value === 'title' ? 2 : 1) + 1);
+    ta.addEventListener('focus', () => ta.select());
+    box.append(head, ta);
+    wrap.appendChild(box);
+  }
+  $('copyAll').disabled = $('downloadTxt').disabled = !sel.length;
+}
+function renderList() {
+  const list = $('list');
+  list.textContent = '';
+  state.items.forEach((it, i) => {
+    const row = document.createElement('label');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = it.on;
+    cb.onchange = () => { it.on = cb.checked; render(); };
+    const n = document.createElement('span');
+    n.className = 'n';
+    n.textContent = i + 1;
+    const t = document.createElement('span');
+    t.className = 't';
+    t.textContent = it.title || it.id;
+    if (it.title) { const sm = document.createElement('small'); sm.textContent = it.id; t.appendChild(sm); }
+    t.title = it.title || it.id;
+    row.append(cb, n, t);
+    list.appendChild(row);
+  });
+}
+['optStyle', 'optFormat', 'optSep', 'optBatch'].forEach(id => $(id).addEventListener('change', () => {
+  store.set('ytpl2url.' + id, $(id).value);
+  render();
+}));
+['optStyle', 'optFormat', 'optSep', 'optBatch'].forEach(id => {
+  const v = store.get('ytpl2url.' + id);
+  if (v && [...$(id).options].some(o => o.value === v)) $(id).value = v;
+});
+const setAll = fn => { state.items.forEach(x => { x.on = fn(x); }); renderList(); render(); };
+$('selAll').onclick = () => setAll(() => true);
+$('selNone').onclick = () => setAll(() => false);
+$('selDeleted').onclick = () => setAll(x => x.on && !isDeadTitle(x.title));
+$('copyAll').onclick = () => copy(allText()).then(() => {
+  $('copyAll').textContent = '✓ 已複製 ' + selected().length + ' 部';
+  setTimeout(() => { $('copyAll').textContent = '複製全部'; }, 2000);
+});
+$('downloadTxt').onclick = () => {
+  const blob = new Blob([allText() + '\n'], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (state.title || 'youtube-playlist').replace(/[\\/:*?"<>|]+/g, '_') + '.txt';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+/* ---------- 從書籤帶過來的資料 ---------- */
+function loadFromHash() {
+  const m = location.hash.match(/^#d=(.+)$/);
+  if (!m) return;
+  try {
+    const d = JSON.parse(decodeURIComponent(m[1]));
+    setItems(d.t || '', Array.isArray(d.v) ? d.v : []);
+    setMsg('已從 YouTube 帶入 ' + state.items.length + ' 部影片。', 'ok');
+  } catch (e) {
+    setMsg('帶入的資料格式不正確，請重新在 YouTube 點一次書籤。', 'err');
+  }
+  history.replaceState(null, '', location.pathname + location.search);
+}
+window.addEventListener('hashchange', loadFromHash);
+loadFromHash();
+})();
+</script>
+</body>
+</html>
