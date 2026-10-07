@@ -109,6 +109,12 @@
     - **對照尺寸表**：可直接編輯、套用範例（成人 XS～3XL 與兒童 110～150 為 LOGOless T恤尺寸表），或貼上直式（每列「尺寸 胸寬 衣長」）與橫式（商品頁常見的「XS S M…／胸寬 43 46…／衣長 64 67…」，兒童表的「110cm 120cm…」也可以）尺寸表；自動判斷是胸寬或胸圍，標示每個尺寸偏緊／偏鬆／偏短／偏長，相機量完立即顯示並念出建議尺寸
     - 影像只在瀏覽器本機運算不上傳；輸入的數字與尺寸表記在瀏覽器
 
+* **YouTube 播放清單轉網址**（`youtube-playlist/`）：獨立靜態頁面，把播放清單轉成一行一個的影片網址，直接貼進 Gemini Notebook（NotebookLM）
+    - **⭐ 一鍵書籤**：把按鈕拖到書籤列，在 YouTube 播放清單頁（或播放清單中的影片頁）點一下，自動捲動載入全部影片，彈出視窗可直接複製全部網址，或帶回工具頁處理（只用 DOM API，相容 YouTube 的 Trusted Types）
+    - **📋 貼上文字**：從任何文字（多個網址、頁面全選複製、網頁原始碼）擷取 `watch?v=`、`youtu.be/`、`shorts/`、`embed/` 等影片 ID，去除重複並保留順序
+    - **🔑 YouTube API**：輸入播放清單網址與 YouTube Data API v3 金鑰直接讀出全部影片與標題（金鑰可選擇記在瀏覽器）
+    - **輸出**：youtube.com／youtu.be 網址格式、只有網址／標題＋網址／Markdown、換行或空白分隔、每批 50／25／10 個分批複製（配合筆記本來源上限）、挑選影片、取消私人／已刪除影片、下載 .txt
+
 ## 檔案結構
 
 ```
@@ -131,6 +137,8 @@ quiz-app/
 │   └── index.html      # 數學小火車（翰林一上）
 ├── clothing-size/
 │   └── index.html      # 衣服尺寸建議（相機量胸寬・衣長、對照尺寸表）
+├── youtube-playlist/
+│   └── index.html      # YouTube 播放清單轉網址（貼進 Gemini Notebook）
 ├── tools/
 │   └── generate-ai-planner-questions.js # AI題庫重建腳本
 └── README.md           # 使用說明
