@@ -276,7 +276,7 @@ class QuizApp {
         );
         const totalQuestions = singleCount + multiCount + aiSingleCount + aiMultiCount;
 
-        if (this.liveServiceCount) this.liveServiceCount.textContent = '9';
+        if (this.liveServiceCount) this.liveServiceCount.textContent = '11';
         if (this.subjectTotalCount) this.subjectTotalCount.textContent = subjectCount.toString();
         if (this.questionTotalCount) this.questionTotalCount.textContent = totalQuestions.toString();
         if (this.cardSubjectCount) this.cardSubjectCount.textContent = subjectCount.toString();
