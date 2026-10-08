@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>屏東市道路即時影像</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1F3A5F; --paper:#FFF8EC; --line:#EADBC4; --accent:#D1453B; --accent-soft:#FBE3D3;
+  --good:#2E8B57; --warn:#D99A00; --bad:#D1453B; --text:#1C2530; --muted:#5B6B7C; --card:#FFFFFF; --field:#FFFDF8;
+  --screen:#0B1118;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#0F1722; --card:#172233; --line:#2A3A50; --text:#E6ECF3; --muted:#9AAABB; --ink:#8FB4E0; --accent-soft:#3A2A20; --field:#121C2A;
+}}
+:root[data-theme="dark"]{
+  --paper:#0F1722; --card:#172233; --line:#2A3A50; --text:#E6ECF3; --muted:#9AAABB; --ink:#8FB4E0; --accent-soft:#3A2A20; --field:#121C2A;
+}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none!important}
+html{height:100%} body{margin:0;min-height:100%;background:var(--paper);color:var(--text);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;font-size:16px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 40px}
+header{padding:16px 0 6px}
+header a.home{font-size:.85rem;color:var(--muted);text-decoration:none}
+h1{margin:4px 0 0;font-size:1.4rem;color:var(--ink)}
+header p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+h2{font-size:1.05rem;margin:0 0 10px;color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px}
+.small{font-size:.85rem;color:var(--muted)}
+button,.btn{font:inherit;min-height:40px;padding:6px 14px;border-radius:10px;border:1px solid var(--line);background:var(--field);color:var(--text);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+button.on{background:var(--ink);border-color:var(--ink);color:var(--paper);font-weight:700}
+button:disabled{opacity:.5;cursor:not-allowed}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+input,select{font:inherit;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-height:40px;width:100%}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.88rem;font-weight:500}
+.check{display:inline-flex;gap:6px;align-items:center;font-size:.9rem;cursor:pointer}
+.check input{width:auto;min-height:auto;margin:0}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 14px;align-items:end}
+.filters>*{min-width:0}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 auto;min-height:36px;padding:4px 10px;font-size:.9rem}
+.sources{display:flex;flex-wrap:wrap;gap:6px 14px;min-height:40px;align-items:center}
+.status{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:10px;font-size:.85rem}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);background:var(--field);font-size:.8rem;white-space:nowrap}
+.chip.ok{border-color:var(--good);color:var(--good)} .chip.err{border-color:var(--bad);color:var(--bad)} .chip.wait{color:var(--muted)}
+.msg{margin-top:8px;font-size:.9rem}
+.msg.err{color:var(--bad)}
+.summary{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-top:16px}
+.summary strong{color:var(--ink)}
+.cams{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:10px}
+.cam{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.screen{position:relative;aspect-ratio:16/9;background:var(--screen);overflow:hidden}
+.screen img,.screen video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:transparent}
+.screen .ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#9AAABB;font-size:.85rem;text-align:center;padding:10px}
+.screen .ph a{color:#FFD9A8}
+.screen .live{position:absolute;left:8px;top:8px;background:rgba(209,69,59,.9);color:#fff;font-size:.72rem;font-weight:700;padding:1px 7px;border-radius:6px;z-index:2}
+.cam .info{padding:9px 12px 4px;flex:1}
+.cam .name{font-weight:700;font-size:.95rem;line-height:1.35}
+.cam .meta{display:flex;flex-wrap:wrap;gap:4px 6px;margin-top:5px}
+.cam .acts{display:flex;gap:6px;padding:8px 12px 12px}
+.cam .acts button,.cam .acts a{min-height:34px;padding:3px 10px;font-size:.85rem}
+.cam .acts .fav.on{background:var(--warn);border-color:var(--warn);color:#fff}
+.more{display:flex;justify-content:center;margin-top:14px}
+#map{height:min(70vh,620px);border-radius:14px;border:1px solid var(--line);margin-top:10px;z-index:0}
+.empty{padding:30px 10px;text-align:center;color:var(--muted)}
+details{border:1px dashed var(--line);border-radius:10px;padding:8px 12px;margin-top:12px}
+summary{cursor:pointer;font-weight:700;color:var(--ink)}
+code{background:var(--accent-soft);padding:1px 5px;border-radius:5px;font-size:.85em;word-break:break-all}
+ul.links{margin:6px 0 0;padding-left:1.3em} ul.links li{margin:3px 0}
+a{color:var(--ink)}
+/* 放大檢視 */
+.modal{position:fixed;inset:0;background:rgba(5,10,16,.86);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-box{width:min(1100px,100%);background:var(--card);border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px}
+.modal-head strong{color:var(--ink)}
+.modal .screen{aspect-ratio:16/9;max-height:calc(100vh - 160px);margin:0 auto}
+.modal-foot{display:flex;flex-wrap:wrap;gap:8px;padding:10px 14px;justify-content:space-between;align-items:center}
+.leaflet-popup-content{margin:10px 12px;font-family:inherit}
+.pop-name{font-weight:700;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="home" href="../">← 回服務首頁</a>
+  <h1>📹 屏東市道路即時影像</h1>
+  <p>集中看屏東市各路口、省道、國道的即時路況攝影機畫面。資料來自交通部 TDX 運輸資料流通服務（屏東縣市區道路、公路局省道、高公局國道），在瀏覽器裡直接讀取，不經過其他伺服器。</p>
+</header>
+
+<section class="card">
+  <div class="filters">
+    <div>
+      <div class="small" style="margin-bottom:4px">範圍</div>
+      <div class="seg" id="area-seg">
+        <button data-area="city">屏東市</button>
+        <button data-area="near">屏東市＋周邊 8 公里</button>
+        <button data-area="county">全屏東縣</button>
+      </div>
+    </div>
+    <div>
+      <div class="small" style="margin-bottom:4px">來源</div>
+      <div class="sources" id="src-box"></div>
+    </div>
+    <label class="f">搜尋路名或地點
+      <input id="q" type="search" placeholder="例如：自由路、台1線、民生路">
+    </label>
+    <div>
+      <div class="small" style="margin-bottom:4px">顯示方式</div>
+      <div class="seg" id="view-seg">
+        <button data-view="grid">🎞️ 影像牆</button>
+        <button data-view="map">🗺️ 地圖</button>
+      </div>
+    </div>
+  </div>
+  <div class="btns">
+    <label class="check"><input id="fav-only" type="checkbox"> 只看收藏 ⭐</label>
+    <label class="check" style="margin-left:8px">快照每
+      <select id="refresh" style="width:auto;min-height:32px;padding:2px 6px">
+        <option value="5">5</option><option value="10">10</option><option value="30">30</option><option value="60">60</option>
+      </select> 秒更新</label>
+    <button id="reload" style="margin-left:auto">🔄 重新抓取攝影機清單</button>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="msg" id="msg"></div>
+
+  <details id="key-box">
+    <summary>🔑 TDX 金鑰（選填，畫面抓不到時再設定）</summary>
+    <p class="small">不填金鑰也能用，但 TDX 對未登入的連線每天有呼叫次數限制。若出現「次數已用完」或「需要金鑰」，可到 <a href="https://tdx.transportdata.tw/register" target="_blank" rel="noopener">TDX 運輸資料流通服務</a> 免費註冊，在「會員中心 › 資料服務 › API 金鑰」取得 Client ID 與 Client Secret 填在這裡。攝影機清單會在瀏覽器暫存 6 小時，平常一天只會呼叫幾次。</p>
+    <div class="filters">
+      <label class="f">Client ID<input id="cid" autocomplete="off"></label>
+      <label class="f">Client Secret<input id="csec" type="password" autocomplete="off"></label>
+    </div>
+    <div class="btns">
+      <label class="check"><input id="remember" type="checkbox" checked> 記在這台裝置的瀏覽器</label>
+      <button id="save-key" class="primary">儲存並重新抓取</button>
+      <button id="clear-key">清除金鑰</button>
+    </div>
+  </details>
+</section>
+
+<div class="summary">
+  <div id="count" class="small"></div>
+  <div class="small">點畫面可放大看即時串流；看不到時按「↗ 原始畫面」。</div>
+</div>
+
+<div id="grid-view">
+  <div class="cams" id="cams"></div>
+  <div class="more"><button id="more" hidden>顯示更多攝影機</button></div>
+</div>
+<div id="map-view" hidden><div id="map"></div></div>
+
+<section class="card">
+  <h2>說明與其他官方路況網站</h2>
+  <ul class="links small">
+    <li><strong>縣市道路</strong>：屏東縣政府提供給 TDX 的市區路口攝影機。<strong>省道</strong>：交通部公路局（台1線、台3線、台24線、台27線、台88線等）。<strong>國道</strong>：高速公路局（國道3號）。</li>
+    <li>「屏東市」範圍是依座標框出屏東市區的大略範圍；「全屏東縣」用縣界的近似範圍篩選省道與國道，邊界附近可能多出或少掉幾支。</li>
+    <li>畫面由各管理機關的攝影機直接提供；鏡頭維修、斷線或機關不允許其他網頁內嵌時會顯示「目前無法顯示」，可改按「↗ 原始畫面」開新分頁看。</li>
+    <li>同一個網站的串流一次只能開幾條連線，所以影像牆只播放畫面上看得到的攝影機，捲走就會停止。</li>
+    <li>官方網站：<a href="https://168.thb.gov.tw/" target="_blank" rel="noopener">公路局 168 智慧化省道即時資訊服務網</a>、<a href="https://1968.freeway.gov.tw/" target="_blank" rel="noopener">高速公路局 1968 路況</a>、<a href="https://www.pthg.gov.tw/" target="_blank" rel="noopener">屏東縣政府</a>。</li>
+  </ul>
+</section>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="modal-box">
+    <div class="modal-head"><strong id="m-name"></strong><button id="m-close" aria-label="關閉">✕</button></div>
+    <div class="screen" id="m-screen"></div>
+    <div class="modal-foot"><span class="small" id="m-meta"></span><a class="btn" id="m-open" target="_blank" rel="noopener">↗ 原始畫面</a></div>
+  </div>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+const API = 'https://tdx.transportdata.tw/api/basic/v2/Road/Traffic/CCTV/';
+const TOKEN_URL = 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token';
+const SOURCES = [
+  { key: 'City', path: 'City/PingtungCounty', label: '縣市道路' },
+  { key: 'Highway', path: 'Highway', label: '省道' },
+  { key: 'Freeway', path: 'Freeway', label: '國道' }
+];
+const CACHE_MS = 6 * 3600 * 1000;
+const PAGE = 12;
+const CENTER = { lat: 22.6727, lon: 120.4884 }; // 屏東火車站一帶
+const NEAR_KM = 8;
+// 屏東市的大略範圍（含歸來、海豐、崇蘭、大連一帶）
+const CITY_BOX = { s: 22.625, n: 22.715, w: 120.440, e: 120.545 };
+// 屏東縣界的近似多邊形 [lon, lat]
+const COUNTY = [
+  [120.62, 22.92], [120.80, 22.90], [120.82, 22.70], [120.76, 22.55], [120.78, 22.40],
+  [120.86, 22.30], [120.91, 22.17], [120.91, 21.97], [120.85, 21.88], [120.73, 21.92],
+  [120.69, 22.04], [120.66, 22.20], [120.60, 22.33], [120.50, 22.42], [120.42, 22.47],
+  [120.43, 22.56], [120.44, 22.66], [120.47, 22.74], [120.52, 22.82], [120.58, 22.90]
+];
+const DIRS = { N: '北上', S: '南下', E: '東向', W: '西向', O: '外環', I: '內環', NE: '東北向', NW: '西北向', SE: '東南向', SW: '西南向' };
+
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* 無痕或已滿時略過 */ } },
+  del(k) { try { localStorage.removeItem(k); } catch (e) { /* 略過 */ } }
+};
+
+const state = Object.assign({
+  area: 'city', view: 'grid', q: '', favOnly: false, refresh: 10,
+  src: { City: true, Highway: true, Freeway: true }
+}, store.get('ptcam.prefs', {}));
+let favs = new Set(store.get('ptcam.favs', []));
+let key = store.get('ptcam.key', null) || { id: '', secret: '' };
+let token = null;
+const lists = {};      // 各來源整理後的攝影機
+const srcStatus = {};  // 各來源讀取狀態
+let shown = PAGE;
+let filtered = [];
+
+function savePrefs() { store.set('ptcam.prefs', { area: state.area, view: state.view, refresh: state.refresh, src: state.src, favOnly: state.favOnly }); }
+
+/* ---------- TDX 讀取 ---------- */
+async function getToken() {
+  if (!key.id || !key.secret) return null;
+  if (token && token.exp > Date.now() + 60000) return token.value;
+  const body = new URLSearchParams({ grant_type: 'client_credentials', client_id: key.id, client_secret: key.secret });
+  const res = await fetch(TOKEN_URL, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+  if (!res.ok) throw new Error('金鑰驗證失敗（' + res.status + '），請確認 Client ID／Secret');
+  const j = await res.json();
+  token = { value: j.access_token, exp: Date.now() + (j.expires_in || 3600) * 1000 };
+  return token.value;
+}
+
+async function fetchSource(src, force) {
+  const ck = 'ptcam.cache.' + src.key;
+  const cached = store.get(ck, null);
+  if (!force && cached && Date.now() - cached.t < CACHE_MS && Array.isArray(cached.list)) {
+    lists[src.key] = cached.list;
+    srcStatus[src.key] = { ok: true, text: cached.list.length + ' 支（暫存）' };
+    return;
+  }
+  srcStatus[src.key] = { wait: true, text: '讀取中…' };
+  renderStatus();
+  try {
+    const headers = { Accept: 'application/json' };
+    const tk = await getToken();
+    if (tk) headers.Authorization = 'Bearer ' + tk;
+    const res = await fetch(API + src.path + '?$format=JSON', { headers });
+    if (!res.ok) {
+      const why = res.status === 429 ? '今日免金鑰次數已用完，請設定 TDX 金鑰'
+        : (res.status === 401 || res.status === 403) ? '需要 TDX 金鑰'
+        : '伺服器回應 ' + res.status;
+      throw new Error(why);
+    }
+    const data = await res.json();
+    const raw = Array.isArray(data) ? data : (data.CCTVs || data.CCTV || []);
+    const list = raw.map((r) => normalize(r, src.key)).filter((c) => c.stream || c.image);
+    lists[src.key] = list;
+    store.set(ck, { t: Date.now(), list });
+    srcStatus[src.key] = { ok: true, text: list.length + ' 支' };
+  } catch (e) {
+    if (cached && Array.isArray(cached.list)) {
+      lists[src.key] = cached.list;
+      srcStatus[src.key] = { err: true, text: '更新失敗，沿用舊資料', detail: errText(e) };
+    } else {
+      lists[src.key] = [];
+      srcStatus[src.key] = { err: true, text: '讀取失敗', detail: errText(e) };
+    }
+  }
+}
+
+function errText(e) {
+  return e instanceof TypeError ? '無法連線到 TDX（網路中斷或被瀏覽器擋下）' : (e.message || String(e));
+}
+
+function pick(...vals) { for (const v of vals) { if (v != null && String(v).trim() !== '') return String(v).trim(); } return ''; }
+function num(v) { const n = parseFloat(v); return Number.isFinite(n) && n !== 0 ? n : null; }
+
+function normalize(r, srcKey) {
+  const sec = r.RoadSection || {};
+  const section = sec.Start || sec.End ? [sec.Start, sec.End].filter(Boolean).join('－') : '';
+  const mile = pick(r.LocationMile);
+  const road = pick(r.RoadName, r.RoadID);
+  const desc = pick(r.SurveillanceDescription, r.CCTVName, r.Description, r.LocationDescription);
+  let name = desc;
+  if (!name) name = [road, mile, section ? '（' + section + '）' : ''].filter(Boolean).join(' ');
+  if (!name) name = pick(r.CCTVID, '攝影機');
+  return {
+    k: srcKey + ':' + pick(r.CCTVID, name),
+    src: srcKey,
+    name,
+    road,
+    mile,
+    section,
+    dir: DIRS[pick(r.RoadDirection).toUpperCase()] || pick(r.RoadDirection),
+    lat: num(r.PositionLat),
+    lon: num(r.PositionLon),
+    stream: pick(r.VideoStreamURL),
+    image: pick(r.VideoImageURL)
+  };
+}
+
+/* ---------- 篩選 ---------- */
+function distKm(lat, lon) {
+  const R = 6371, rad = Math.PI / 180;
+  const dLat = (lat - CENTER.lat) * rad, dLon = (lon - CENTER.lon) * rad;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(CENTER.lat * rad) * Math.cos(lat * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function inPoly(lon, lat, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function inArea(c) {
+  if (c.lat == null || c.lon == null) {
+    // 沒有座標：縣市道路資料本來就屬於屏東縣，看名稱判斷是不是屏東市
+    if (c.src !== 'City') return false;
+    return state.area !== 'city' || /屏東市|屏市/.test(c.name);
+  }
+  if (state.area === 'city') return c.lat >= CITY_BOX.s && c.lat <= CITY_BOX.n && c.lon >= CITY_BOX.w && c.lon <= CITY_BOX.e;
+  if (state.area === 'near') return distKm(c.lat, c.lon) <= NEAR_KM;
+  return c.src === 'City' || inPoly(c.lon, c.lat, COUNTY);
+}
+
+function applyFilter() {
+  const q = state.q.trim().toLowerCase().replace(/台/g, '臺');
+  const all = [];
+  for (const s of SOURCES) if (state.src[s.key] && lists[s.key]) all.push(...lists[s.key]);
+  filtered = all.filter((c) => {
+    if (state.favOnly && !favs.has(c.k)) return false;
+    if (!inArea(c)) return false;
+    if (q) {
+      const hay = (c.name + ' ' + c.road + ' ' + c.section + ' ' + c.mile).toLowerCase().replace(/台/g, '臺');
+      if (!q.split(/\s+/).every((w) => hay.includes(w))) return false;
+    }
+    return true;
+  });
+  filtered.forEach((c) => { c.d = c.lat != null && c.lon != null ? distKm(c.lat, c.lon) : 999; });
+  filtered.sort((a, b) => (favs.has(b.k) - favs.has(a.k)) || a.d - b.d || a.name.localeCompare(b.name, 'zh-Hant'));
+}
+
+/* ---------- 影像播放 ---------- */
+const isHls = (u) => /\.m3u8(\?|#|$)/i.test(u);
+function bust(u) { return u + (u.includes('?') ? '&' : '?') + '_t=' + Date.now(); }
+let hlsLoader = null;
+function loadHls() {
+  if (!hlsLoader) {
+    hlsLoader = new Promise((ok, fail) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js';
+      s.onload = () => ok(window.Hls); s.onerror = fail;
+      document.head.appendChild(s);
+    });
+  }
+  return hlsLoader;
+}
+
+function placeholder(box, text, cam) {
+  const ph = document.createElement('div');
+  ph.className = 'ph';
+  ph.textContent = text;
+  if (cam) {
+    const a = document.createElement('a');
+    a.href = cam.stream || cam.image; a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = '↗ 開新分頁看原始畫面';
+    a.addEventListener('click', (e) => e.stopPropagation());
+    ph.appendChild(a);
+  }
+  box.appendChild(ph);
+  return ph;
+}
+
+// big = 放大檢視：優先播放串流；影像牆優先用快照（較省流量）
+function mount(box, cam, big) {
+  unmount(box);
+  const loading = placeholder(box, '畫面載入中…');
+  const live = document.createElement('span');
+  live.className = 'live'; live.textContent = 'LIVE';
+  const fail = () => { unmount(box); placeholder(box, '目前無法顯示這支攝影機的畫面（維修中或不允許內嵌）', cam); };
+  const useSnapshot = cam.image && (!big || !cam.stream);
+
+  if (!useSnapshot && isHls(cam.stream)) {
+    const v = document.createElement('video');
+    v.muted = true; v.autoplay = true; v.playsInline = true; v.controls = !!big;
+    v.addEventListener('playing', () => loading.remove());
+    v.addEventListener('error', fail);
+    box.append(v, live);
+    if (v.canPlayType('application/vnd.apple.mpegurl')) { v.src = cam.stream; }
+    else {
+      loadHls().then((Hls) => {
+        if (!box.contains(v)) return;
+        if (!Hls || !Hls.isSupported()) return fail();
+        const h = new Hls();
+        h.on(Hls.Events.ERROR, (_, d) => { if (d.fatal) fail(); });
+        h.loadSource(cam.stream); h.attachMedia(v);
+        box._hls = h;
+      }).catch(fail);
+    }
+    return;
+  }
+
+  const img = document.createElement('img');
+  img.alt = cam.name;
+  img.referrerPolicy = 'no-referrer';
+  img.addEventListener('load', () => loading.remove());
+  img.addEventListener('error', fail);
+  box.append(img, live);
+  if (useSnapshot) {
+    live.textContent = '快照';
+    img.src = bust(cam.image);
+    box._timer = setInterval(() => {
+      if (document.hidden) return;
+      const next = new Image();
+      next.referrerPolicy = 'no-referrer';
+      next.onload = () => { if (box.contains(img)) img.src = next.src; };
+      next.src = bust(cam.image);
+    }, state.refresh * 1000);
+  } else {
+    img.src = cam.stream; // MJPEG 串流
+    // MJPEG 有些瀏覽器不觸發 load，等到有尺寸就拿掉「載入中」
+    box._timer = setInterval(() => { if (img.naturalWidth) { loading.remove(); clearInterval(box._timer); } }, 500);
+  }
+}
+
+function unmount(box) {
+  if (box._timer) { clearInterval(box._timer); box._timer = null; }
+  if (box._hls) { box._hls.destroy(); box._hls = null; }
+  box.querySelectorAll('img').forEach((i) => { i.removeAttribute('src'); i.src = 'data:,'; });
+  box.querySelectorAll('video').forEach((v) => { v.pause(); v.removeAttribute('src'); v.load(); });
+  box.textContent = '';
+}
+
+// 只播放看得到的攝影機（同一主機的串流連線數有限）
+const io = new IntersectionObserver((entries) => {
+  for (const en of entries) {
+    const box = en.target;
+    if (en.isIntersecting) { if (!box._on) { box._on = true; mount(box, box._cam, false); } }
+    else if (box._on) { box._on = false; unmount(box); placeholder(box, '捲回來繼續播放'); }
+  }
+}, { rootMargin: '120px' });
+
+/* ---------- 畫面 ---------- */
+function chip(text, cls) { const s = document.createElement('span'); s.className = 'chip' + (cls ? ' ' + cls : ''); s.textContent = text; return s; }
+function srcLabel(k) { return (SOURCES.find((s) => s.key === k) || {}).label || k; }
+function metaText(c) {
+  return [srcLabel(c.src), c.road && c.road !== c.name ? c.road : '', c.mile && !c.name.includes(c.mile) ? c.mile : '', c.dir, c.d < 999 ? '距屏東車站 ' + c.d.toFixed(1) + ' km' : ''].filter(Boolean).join('・');
+}
+
+function toggleFav(c, btn) {
+  if (favs.has(c.k)) favs.delete(c.k); else favs.add(c.k);
+  store.set('ptcam.favs', [...favs]);
+  if (btn) { btn.classList.toggle('on', favs.has(c.k)); btn.textContent = favs.has(c.k) ? '★ 已收藏' : '☆ 收藏'; }
+}
+
+function camCard(c) {
+  const el = document.createElement('article');
+  el.className = 'cam';
+  const box = document.createElement('div');
+  box.className = 'screen'; box._cam = c; box.style.cursor = 'zoom-in';
+  placeholder(box, '準備播放…');
+  box.addEventListener('click', () => openModal(c));
+  const info = document.createElement('div'); info.className = 'info';
+  const nm = document.createElement('div'); nm.className = 'name'; nm.textContent = c.name;
+  const meta = document.createElement('div'); meta.className = 'meta';
+  meta.appendChild(chip(srcLabel(c.src)));
+  if (c.road && c.road !== c.name && !c.name.includes(c.road)) meta.appendChild(chip(c.road));
+  if (c.dir) meta.appendChild(chip(c.dir));
+  if (c.d < 999) meta.appendChild(chip(c.d.toFixed(1) + ' km'));
+  info.append(nm, meta);
+  const acts = document.createElement('div'); acts.className = 'acts';
+  const fav = document.createElement('button'); fav.className = 'fav' + (favs.has(c.k) ? ' on' : '');
+  fav.textContent = favs.has(c.k) ? '★ 已收藏' : '☆ 收藏';
+  fav.addEventListener('click', () => toggleFav(c, fav));
+  const big = document.createElement('button'); big.textContent = '⤢ 放大'; big.addEventListener('click', () => openModal(c));
+  const open = document.createElement('a'); open.className = 'btn'; open.textContent = '↗ 原始畫面';
+  open.href = c.stream || c.image; open.target = '_blank'; open.rel = 'noopener';
+  acts.append(fav, big, open);
+  el.append(box, info, acts);
+  io.observe(box);
+  return el;
+}
+
+function clearGrid() {
+  $('cams').querySelectorAll('.screen').forEach((b) => { io.unobserve(b); unmount(b); });
+  $('cams').textContent = '';
+}
+
+function renderGrid() {
+  clearGrid();
+  const wrap = $('cams');
+  if (!filtered.length) {
+    const d = document.createElement('div'); d.className = 'empty';
+    const loadingAny = SOURCES.some((s) => state.src[s.key] && srcStatus[s.key] && srcStatus[s.key].wait);
+    d.textContent = loadingAny ? '正在讀取攝影機清單…'
+      : state.favOnly ? '還沒有收藏的攝影機，在畫面下方按「☆ 收藏」就會出現在這裡。'
+      : '這個範圍沒有找到攝影機，試試「屏東市＋周邊」或勾選其他來源。';
+    wrap.appendChild(d);
+  }
+  filtered.slice(0, shown).forEach((c) => wrap.appendChild(camCard(c)));
+  $('more').hidden = filtered.length <= shown;
+  $('more').textContent = '顯示更多攝影機（還有 ' + Math.max(0, filtered.length - shown) + ' 支）';
+}
+
+function renderStatus() {
+  const box = $('status'); box.textContent = '';
+  const errs = [];
+  for (const s of SOURCES) {
+    if (!state.src[s.key]) continue;
+    const st = srcStatus[s.key] || { wait: true, text: '等待中' };
+    box.appendChild(chip(s.label + '：' + st.text, st.ok ? 'ok' : st.err ? 'err' : 'wait'));
+    if (st.err && st.detail) errs.push(s.label + '：' + st.detail);
+  }
+  $('msg').className = 'msg' + (errs.length ? ' err' : '');
+  $('msg').textContent = errs.join('　');
+  if (errs.some((e) => /金鑰/.test(e))) $('key-box').open = true;
+}
+
+function renderCount() {
+  const area = { city: '屏東市', near: '屏東市＋周邊 8 公里', county: '全屏東縣' }[state.area];
+  $('count').innerHTML = '';
+  const s = document.createElement('strong'); s.textContent = filtered.length;
+  $('count').append(area + '共 ', s, ' 支攝影機' + (state.favOnly ? '（只看收藏）' : ''));
+}
+
+function render(resetPage) {
+  if (resetPage) shown = PAGE;
+  applyFilter();
+  renderStatus();
+  renderCount();
+  if (state.view === 'grid') renderGrid(); else { clearGrid(); renderMap(); }
+}
+
+/* ---------- 地圖 ---------- */
+let map = null, layer = null, leafletLoader = null;
+function loadLeaflet() {
+  if (!leafletLoader) {
+    leafletLoader = new Promise((ok, fail) => {
+      const css = document.createElement('link');
+      css.rel = 'stylesheet'; css.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+      document.head.appendChild(css);
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';
+      s.onload = () => ok(window.L); s.onerror = fail;
+      document.head.appendChild(s);
+    });
+  }
+  return leafletLoader;
+}
+const SRC_COLOR = { City: '#D1453B', Highway: '#2E7BD6', Freeway: '#2E8B57' };
+async function renderMap() {
+  let L;
+  try { L = await loadLeaflet(); } catch (e) { $('map').textContent = '地圖元件載入失敗，請改用影像牆。'; return; }
+  if (!map) {
+    map = L.map('map').setView([CENTER.lat, CENTER.lon], 13);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+    layer = L.layerGroup().addTo(map);
+  }
+  setTimeout(() => map.invalidateSize(), 50);
+  layer.clearLayers();
+  const pts = [];
+  for (const c of filtered) {
+    if (c.lat == null || c.lon == null) continue;
+    pts.push([c.lat, c.lon]);
+    const m = L.circleMarker([c.lat, c.lon], { radius: 7, weight: 2, color: '#fff', fillColor: SRC_COLOR[c.src] || '#555', fillOpacity: .95 });
+    const pop = document.createElement('div');
+    const nm = document.createElement('div'); nm.className = 'pop-name'; nm.textContent = c.name;
+    const meta = document.createElement('div'); meta.className = 'small'; meta.textContent = metaText(c);
+    const b = document.createElement('button'); b.className = 'primary'; b.textContent = '▶ 看即時畫面'; b.style.marginTop = '8px';
+    b.addEventListener('click', () => openModal(c));
+    pop.append(nm, meta, b);
+    m.bindPopup(pop).bindTooltip(c.name);
+    m.addTo(layer);
+  }
+  if (pts.length > 1) map.fitBounds(pts, { padding: [24, 24], maxZoom: 15 });
+  else if (pts.length === 1) map.setView(pts[0], 15);
+}
+
+/* ---------- 放大檢視 ---------- */
+let modalCam = null;
+function openModal(c) {
+  modalCam = c;
+  $('m-name').textContent = c.name;
+  $('m-meta').textContent = metaText(c);
+  $('m-open').href = c.stream || c.image;
+  $('modal').hidden = false;
+  mount($('m-screen'), c, true);
+}
+function closeModal() { unmount($('m-screen')); $('modal').hidden = true; modalCam = null; }
+$('m-close').addEventListener('click', closeModal);
+$('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalCam) closeModal(); });
+
+/* ---------- 控制項 ---------- */
+function syncButtons() {
+  document.querySelectorAll('#area-seg button').forEach((b) => b.classList.toggle('on', b.dataset.area === state.area));
+  document.querySelectorAll('#view-seg button').forEach((b) => b.classList.toggle('on', b.dataset.view === state.view));
+  $('grid-view').hidden = state.view !== 'grid';
+  $('map-view').hidden = state.view !== 'map';
+}
+$('area-seg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; state.area = b.dataset.area; savePrefs(); syncButtons(); render(true); });
+$('view-seg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; state.view = b.dataset.view; savePrefs(); syncButtons(); render(true); });
+let qTimer = null;
+$('q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = $('q').value; render(true); }, 250); });
+$('fav-only').checked = !!state.favOnly;
+$('fav-only').addEventListener('change', () => { state.favOnly = $('fav-only').checked; savePrefs(); render(true); });
+$('refresh').value = String(state.refresh);
+$('refresh').addEventListener('change', () => { state.refresh = +$('refresh').value; savePrefs(); render(false); });
+$('more').addEventListener('click', () => { shown += PAGE; renderGrid(); });
+
+const srcBox = $('src-box');
+for (const s of SOURCES) {
+  const l = document.createElement('label'); l.className = 'check';
+  const i = document.createElement('input'); i.type = 'checkbox'; i.checked = state.src[s.key] !== false;
+  i.addEventListener('change', async () => {
+    state.src[s.key] = i.checked; savePrefs();
+    if (i.checked && !lists[s.key]) { render(true); await fetchSource(s, false); }
+    render(true);
+  });
+  const dot = document.createElement('span'); dot.style.cssText = 'width:10px;height:10px;border-radius:50%;display:inline-block;background:' + SRC_COLOR[s.key];
+  l.append(i, dot, document.createTextNode(s.label));
+  srcBox.appendChild(l);
+}
+
+$('cid').value = key.id || ''; $('csec').value = key.secret || '';
+$('save-key').addEventListener('click', () => {
+  key = { id: $('cid').value.trim(), secret: $('csec').value.trim() };
+  token = null;
+  if ($('remember').checked) store.set('ptcam.key', key); else store.del('ptcam.key');
+  loadAll(true);
+});
+$('clear-key').addEventListener('click', () => { key = { id: '', secret: '' }; token = null; $('cid').value = ''; $('csec').value = ''; store.del('ptcam.key'); });
+$('reload').addEventListener('click', () => loadAll(true));
+
+async function loadAll(force) {
+  $('reload').disabled = true;
+  const active = SOURCES.filter((s) => state.src[s.key]);
+  active.forEach((s) => { if (force || !lists[s.key]) srcStatus[s.key] = { wait: true, text: '讀取中…' }; });
+  render(true);
+  // 依序讀取，避免同時大量呼叫被限流
+  for (const s of active) { await fetchSource(s, force); render(false); }
+  $('reload').disabled = false;
+}
+
+syncButtons();
+loadAll(false);
+})();
+</script>
+</body>
+</html>
