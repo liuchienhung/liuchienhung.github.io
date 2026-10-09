@@ -83,6 +83,27 @@ a{color:var(--ink)}
 .modal-foot{display:flex;flex-wrap:wrap;gap:8px;padding:10px 14px;justify-content:space-between;align-items:center}
 .leaflet-popup-content{margin:10px 12px;font-family:inherit}
 .pop-name{font-weight:700;margin-bottom:6px}
+/* 路線＋天氣 */
+body.route-mode .not-route{display:none!important}
+.routes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:14px}
+.route{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;text-align:left;font:inherit;color:var(--text);display:block;width:100%}
+.route.sel{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink) inset}
+.route .rt{font-weight:700;color:var(--ink)}
+.route .rv{font-size:1.05rem;font-weight:700;margin:6px 0 2px}
+.rv.good{color:var(--good)} .rv.warn{color:var(--warn)} .rv.bad{color:#2E7BD6}
+.verdict{font-size:1.15rem;font-weight:700;margin:0 0 4px}
+.timeline{display:flex;gap:4px;overflow-x:auto;padding:4px 0 2px;margin-top:8px}
+.timeline button{flex:0 0 auto;min-width:54px;min-height:56px;padding:4px 6px;flex-direction:column;gap:0;font-size:.78rem;line-height:1.25}
+.timeline button b{font-size:.95rem}
+.timeline button.best{outline:2px solid var(--good);outline-offset:-2px}
+.timeline .t0{background:rgba(46,139,87,.14)} .timeline .t1{background:rgba(217,154,0,.18)} .timeline .t2{background:rgba(46,123,214,.22)}
+.timeline button.on{background:var(--ink);color:var(--paper)}
+.pts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:10px}
+.pt{border:1px solid var(--line);border-radius:10px;padding:6px 9px;font-size:.84rem;background:var(--field)}
+.pt b{display:block;color:var(--ink)}
+#route-map{height:min(60vh,520px);border-radius:14px;border:1px solid var(--line);margin-top:14px;z-index:0}
+#route-map.picking{cursor:crosshair}
+.radar{display:block;max-width:100%;max-height:520px;margin:8px auto 0;border-radius:10px}
 </style>
 </head>
 <body>
@@ -90,12 +111,12 @@ a{color:var(--ink)}
 <header>
   <a class="home" href="../">← 回服務首頁</a>
   <h1>📹 屏東市道路即時影像</h1>
-  <p>集中看屏東市各路口、省道、國道的即時路況攝影機畫面。資料來自交通部 TDX 運輸資料流通服務（屏東縣市區道路、公路局省道、高公局國道），在瀏覽器裡直接讀取，不經過其他伺服器。</p>
+  <p>集中看屏東市各路口、省道、國道的即時路況攝影機畫面，也能在「🚗 路線＋天氣」查出門路線沿路會不會下雨。資料來自交通部 TDX 運輸資料流通服務（屏東縣市區道路、公路局省道、高公局國道），在瀏覽器裡直接讀取，不經過其他伺服器。</p>
 </header>
 
 <section class="card">
   <div class="filters">
-    <div>
+    <div class="not-route">
       <div class="small" style="margin-bottom:4px">範圍</div>
       <div class="seg" id="area-seg">
         <button data-area="city">屏東市</button>
@@ -103,11 +124,11 @@ a{color:var(--ink)}
         <button data-area="county">全屏東縣</button>
       </div>
     </div>
-    <div>
+    <div class="not-route">
       <div class="small" style="margin-bottom:4px">來源</div>
       <div class="sources" id="src-box"></div>
     </div>
-    <label class="f">搜尋路名或地點
+    <label class="f not-route">搜尋路名或地點
       <input id="q" type="search" placeholder="例如：自由路、台1線、民生路">
     </label>
     <div>
@@ -115,11 +136,12 @@ a{color:var(--ink)}
       <div class="seg" id="view-seg">
         <button data-view="grid">🎞️ 影像牆</button>
         <button data-view="map">🗺️ 地圖</button>
+        <button data-view="route">🚗 路線＋天氣</button>
       </div>
     </div>
   </div>
   <div class="btns">
-    <label class="check"><input id="fav-only" type="checkbox"> 只看收藏 ⭐</label>
+    <label class="check not-route"><input id="fav-only" type="checkbox"> 只看收藏 ⭐</label>
     <label class="check" style="margin-left:8px">快照每
       <select id="refresh" style="width:auto;min-height:32px;padding:2px 6px">
         <option value="5">5</option><option value="10">10</option><option value="30">30</option><option value="60">60</option>
@@ -144,7 +166,7 @@ a{color:var(--ink)}
   </details>
 </section>
 
-<div class="summary">
+<div class="summary not-route">
   <div id="count" class="small"></div>
   <div class="small">點畫面可放大看即時串流；看不到時按「↗ 原始畫面」。</div>
 </div>
@@ -154,6 +176,57 @@ a{color:var(--ink)}
   <div class="more"><button id="more" hidden>顯示更多攝影機</button></div>
 </div>
 <div id="map-view" hidden><div id="map"></div></div>
+
+<div id="route-view" hidden>
+  <section class="card">
+    <h2>🚗 出門前看：沿路會不會下雨、路況如何</h2>
+    <div class="filters">
+      <label class="f">起點<select id="r-from"></select></label>
+      <label class="f">終點<select id="r-to"></select></label>
+      <label class="f">出發時間<select id="r-depart"></select></label>
+    </div>
+    <div class="btns">
+      <button id="r-swap">⇅ 回程（起終點互換）</button>
+      <button id="r-pick-from">📍 地圖上點起點</button>
+      <button id="r-pick-to">📍 地圖上點終點</button>
+      <button id="r-here">🧭 現在位置當起點</button>
+      <button id="r-go" class="primary">🔄 重新查詢</button>
+    </div>
+    <div class="msg" id="r-msg"></div>
+    <p class="small" id="r-places"></p>
+  </section>
+
+  <section class="card" id="r-sum" hidden>
+    <p class="verdict" id="r-verdict"></p>
+    <div class="small" id="r-verdict-sub"></div>
+    <div class="small" style="margin-top:10px">接下來 12 小時出發，沿路最高降雨機率（點一下改出發時間，綠框是最好的時間）：</div>
+    <div class="timeline" id="r-timeline"></div>
+  </section>
+
+  <div class="routes" id="r-list"></div>
+
+  <section class="card" id="r-detail" hidden>
+    <h2 id="r-detail-title"></h2>
+    <div class="small">每一段預計經過的時間與當時的天氣預報：</div>
+    <div class="pts" id="r-pts"></div>
+  </section>
+
+  <div id="route-map"></div>
+
+  <div class="summary"><strong id="r-cams-title">沿線攝影機</strong><span class="small">依離起點遠近排列，點畫面放大</span></div>
+  <div class="cams" id="route-cams"></div>
+
+  <section class="card">
+    <h2>🛰️ 中央氣象署雷達回波（約每 10 分鐘更新）</h2>
+    <img class="radar" id="r-radar" alt="中央氣象署雷達回波圖" referrerpolicy="no-referrer">
+    <p class="small" id="r-radar-fail" hidden>雷達圖無法在這裡顯示，請直接開官網看。</p>
+    <ul class="links small">
+      <li>降雨預報來自 <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> 的數值模式（每點約數公里解析度），路線來自 OpenStreetMap 的 OSRM 路線規劃，行車時間不含塞車與紅燈，僅供出門前參考。</li>
+      <li>官方預報：<a href="https://www.cwa.gov.tw/V8/C/W/County/County.html?CID=10013" target="_blank" rel="noopener">中央氣象署 屏東縣天氣預報</a>、<a href="https://www.cwa.gov.tw/V8/C/W/OBS_Radar.html" target="_blank" rel="noopener">雷達回波</a>、<a href="https://www.cwa.gov.tw/V8/C/P/Rainfall/Rainfall_10Min_County.html" target="_blank" rel="noopener">即時雨量</a>。</li>
+      <li>起點、終點的預設位置是依地址估的大略位置，若不準可按「地圖上點起點／終點」修正，會記在這台裝置。</li>
+    </ul>
+  </section>
+</div>
 
 <section class="card">
   <h2>說明與其他官方路況網站</h2>
@@ -450,7 +523,7 @@ const io = new IntersectionObserver((entries) => {
 function chip(text, cls) { const s = document.createElement('span'); s.className = 'chip' + (cls ? ' ' + cls : ''); s.textContent = text; return s; }
 function srcLabel(k) { return (SOURCES.find((s) => s.key === k) || {}).label || k; }
 function metaText(c) {
-  return [srcLabel(c.src), c.road && c.road !== c.name ? c.road : '', c.mile && !c.name.includes(c.mile) ? c.mile : '', c.dir, c.d < 999 ? '距屏東車站 ' + c.d.toFixed(1) + ' km' : ''].filter(Boolean).join('・');
+  return [srcLabel(c.src), c.road && c.road !== c.name ? c.road : '', c.mile && !c.name.includes(c.mile) ? c.mile : '', c.dir, c.along != null ? '離起點 ' + c.along.toFixed(1) + ' km' : c.d < 999 ? '距屏東車站 ' + c.d.toFixed(1) + ' km' : ''].filter(Boolean).join('・');
 }
 
 function toggleFav(c, btn) {
@@ -472,7 +545,8 @@ function camCard(c) {
   meta.appendChild(chip(srcLabel(c.src)));
   if (c.road && c.road !== c.name && !c.name.includes(c.road)) meta.appendChild(chip(c.road));
   if (c.dir) meta.appendChild(chip(c.dir));
-  if (c.d < 999) meta.appendChild(chip(c.d.toFixed(1) + ' km'));
+  if (c.along != null) meta.appendChild(chip('離起點 ' + c.along.toFixed(1) + ' km'));
+  else if (c.d < 999) meta.appendChild(chip(c.d.toFixed(1) + ' km'));
   info.append(nm, meta);
   const acts = document.createElement('div'); acts.className = 'acts';
   const fav = document.createElement('button'); fav.className = 'fav' + (favs.has(c.k) ? ' on' : '');
@@ -487,9 +561,10 @@ function camCard(c) {
   return el;
 }
 
-function clearGrid() {
-  $('cams').querySelectorAll('.screen').forEach((b) => { io.unobserve(b); unmount(b); });
-  $('cams').textContent = '';
+function clearGrid(el) {
+  el = el || $('cams');
+  el.querySelectorAll('.screen').forEach((b) => { io.unobserve(b); unmount(b); });
+  el.textContent = '';
 }
 
 function renderGrid() {
@@ -534,7 +609,9 @@ function render(resetPage) {
   applyFilter();
   renderStatus();
   renderCount();
-  if (state.view === 'grid') renderGrid(); else { clearGrid(); renderMap(); }
+  if (state.view === 'grid') renderGrid();
+  else if (state.view === 'map') { clearGrid(); renderMap(); }
+  else { clearGrid(); renderRouteCams(); }
 }
 
 /* ---------- 地圖 ---------- */
@@ -597,15 +674,488 @@ $('m-close').addEventListener('click', closeModal);
 $('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeModal(); });
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalCam) closeModal(); });
 
+/* ---------- 路線＋天氣 ---------- */
+// 預設位置依地址估計（大略），開啟時會試著用 OpenStreetMap 校正，也可以在地圖上點選修正
+const PLACES = {
+  yuying: { name: '東寧國小育英分校', addr: '內埔鄉育文路73號', lat: 22.6065, lon: 120.5620, q: ['育英分校', '育英國小'] },
+  ptch: { name: '屏東基督教醫院（大連路總院）', addr: '屏東市大連路60號', lat: 22.6790, lon: 120.5013, q: ['屏東基督教醫院', '屏基'] },
+  ptchRg: { name: '屏基瑞光院區', addr: '屏東市建豐路2巷113號', lat: 22.6575, lon: 120.5110, q: ['屏基瑞光院區', '屏東基督教醫院 瑞光'] }
+};
+const OSRM = 'https://router.project-osrm.org/route/v1/driving/';
+const METEO = 'https://api.open-meteo.com/v1/forecast';
+const RADAR = 'https://www.cwa.gov.tw/Data/radar/CV1_3600.png';
+const NEAR_ROUTE_M = 350;
+const DEPARTS = [0, 30, 60, 90, 120, 180, 240, 300, 360, 480, 600, 720];
+const RAIN_COLOR = { good: '#2E8B57', warn: '#D99A00', bad: '#2E7BD6' };
+const LETTERS = 'ABCDE';
+
+const rs = Object.assign({ from: 'yuying', to: 'ptch', depart: 0, sel: 0, custom: { from: null, to: null } }, store.get('ptcam.route', {}));
+let routes = [];        // 目前的路線結果
+let wx = {};            // 天氣：點的 key → 預報
+let wxAt = 0;
+let routeKey = '';
+let picking = null;     // 'from' | 'to'
+let rmap = null, rlayer = null;
+let radarTimer = null;
+
+function saveRoute() { store.set('ptcam.route', { from: rs.from, to: rs.to, depart: rs.depart, sel: rs.sel, custom: rs.custom }); }
+
+function km(aLat, aLon, bLat, bLon) {
+  const R = 6371, rad = Math.PI / 180;
+  const dLat = (bLat - aLat) * rad, dLon = (bLon - aLon) * rad;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(aLat * rad) * Math.cos(bLat * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+function place(k, which) {
+  if (k === 'custom') return rs.custom[which] ? Object.assign({ name: which === 'from' ? '自訂起點' : '自訂終點' }, rs.custom[which]) : null;
+  const p = PLACES[k];
+  if (!p) return null;
+  const g = store.get('ptcam.geo.' + k, null);
+  return g && g.lat != null ? Object.assign({}, p, { lat: g.lat, lon: g.lon, fixed: true }) : p;
+}
+
+// 用 OpenStreetMap 地名搜尋校正預設地點（只接受離估計位置 3 公里內的結果）
+async function refinePlaces() {
+  for (const k of Object.keys(PLACES)) {
+    const had = store.get('ptcam.geo.' + k, null);
+    if (had && (had.lat != null || Date.now() - had.t < 7 * 86400000)) continue; // 找不到的一週內不再查
+    const p = PLACES[k];
+    let found = false;
+    for (const q of p.q) {
+      try {
+        const u = 'https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=tw&limit=5&accept-language=zh-TW&q=' + encodeURIComponent(q);
+        const res = await fetch(u);
+        if (!res.ok) return; // 服務暫時不能用：下次再試
+        const hits = (await res.json())
+          .map((h) => ({ lat: +h.lat, lon: +h.lon }))
+          .filter((h) => km(h.lat, h.lon, p.lat, p.lon) <= 3)
+          .sort((a, b) => km(a.lat, a.lon, p.lat, p.lon) - km(b.lat, b.lon, p.lat, p.lon));
+        if (hits.length) { store.set('ptcam.geo.' + k, hits[0]); found = true; break; }
+      } catch (e) { return; }
+      await new Promise((ok) => setTimeout(ok, 1100)); // Nominatim 每秒最多一次
+    }
+    if (!found) store.set('ptcam.geo.' + k, { t: Date.now() });
+  }
+}
+
+function fillSelects() {
+  const mk = (sel, which, keys) => {
+    sel.textContent = '';
+    for (const k of keys) {
+      const o = document.createElement('option');
+      o.value = k;
+      o.textContent = k === 'custom' ? (which === 'from' ? '📍 自訂起點（地圖點選／現在位置）' : '📍 自訂終點（地圖點選）') : PLACES[k].name;
+      sel.appendChild(o);
+    }
+    sel.value = rs[which];
+  };
+  const keys = Object.keys(PLACES).concat('custom');
+  mk($('r-from'), 'from', keys);
+  mk($('r-to'), 'to', keys);
+  const d = $('r-depart'); d.textContent = '';
+  for (const m of DEPARTS) {
+    const o = document.createElement('option');
+    o.value = m;
+    o.textContent = m === 0 ? '現在出發' : (m < 60 ? m + ' 分鐘後' : (m % 60 ? (m / 60).toFixed(1) : m / 60) + ' 小時後') + '（' + hhmm(new Date(Date.now() + m * 60000)) + '）';
+    d.appendChild(o);
+  }
+  if (!DEPARTS.includes(+rs.depart)) rs.depart = 0;
+  d.value = String(rs.depart);
+}
+
+function hhmm(d) { return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Taipei' }); }
+function hourKey(d) {
+  const p = {};
+  for (const x of new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).formatToParts(d)) p[x.type] = x.value;
+  return p.year + '-' + p.month + '-' + p.day + 'T' + p.hour + ':00';
+}
+
+/* 路線 */
+function roadSummary(rt) {
+  const acc = new Map();
+  let i = 0;
+  for (const leg of rt.legs || []) {
+    for (const st of leg.steps || []) {
+      const k = (st.ref || st.name || '').split(';')[0].trim();
+      i++;
+      if (!k) continue;
+      const v = acc.get(k) || { d: 0, i };
+      v.d += st.distance || 0;
+      acc.set(k, v);
+    }
+  }
+  return [...acc.entries()].filter(([, v]) => v.d >= 600).sort((a, b) => a[1].i - b[1].i).slice(0, 5).map(([k]) => k);
+}
+
+async function getRoutes(a, b) {
+  const url = OSRM + a.lon + ',' + a.lat + ';' + b.lon + ',' + b.lat + '?alternatives=3&overview=full&geometries=geojson&steps=true';
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(res.status);
+    const j = await res.json();
+    if (j.code !== 'Ok' || !j.routes || !j.routes.length) throw new Error(j.code);
+    return j.routes.slice(0, 4).map((rt) => ({
+      coords: rt.geometry.coordinates.map(([lo, la]) => [la, lo]),
+      dist: rt.distance, dur: rt.duration, roads: roadSummary(rt)
+    }));
+  } catch (e) {
+    const d = km(a.lat, a.lon, b.lat, b.lon) * 1.3;
+    return [{ coords: [[a.lat, a.lon], [b.lat, b.lon]], dist: d * 1000, dur: d / 40 * 3600, roads: [], straight: true }];
+  }
+}
+
+// 沿路線每約 3 公里取一個點
+function samplePoints(rt) {
+  const c = rt.coords, cum = [0];
+  for (let i = 1; i < c.length; i++) cum.push(cum[i - 1] + km(c[i - 1][0], c[i - 1][1], c[i][0], c[i][1]));
+  const total = cum[cum.length - 1] || 0.001;
+  const n = Math.max(3, Math.min(8, Math.ceil(total / 3) + 1));
+  const pts = [];
+  for (let s = 0; s < n; s++) {
+    const target = total * s / (n - 1);
+    let i = 1;
+    while (i < cum.length - 1 && cum[i] < target) i++;
+    const seg = cum[i] - cum[i - 1] || 1;
+    const t = Math.min(1, Math.max(0, (target - cum[i - 1]) / seg));
+    const lat = c[i - 1][0] + (c[i][0] - c[i - 1][0]) * t, lon = c[i - 1][1] + (c[i][1] - c[i - 1][1]) * t;
+    pts.push({ f: s / (n - 1), lat, lon, key: lat.toFixed(2) + ',' + lon.toFixed(2) });
+  }
+  return pts;
+}
+
+/* 天氣 */
+async function getWeather(keys) {
+  const need = keys.filter((k) => !wx[k]);
+  if (Date.now() - wxAt > 15 * 60000) { wx = {}; need.splice(0, need.length, ...keys); }
+  if (!need.length) return;
+  const lats = need.map((k) => k.split(',')[0]).join(','), lons = need.map((k) => k.split(',')[1]).join(',');
+  const u = METEO + '?latitude=' + lats + '&longitude=' + lons +
+    '&hourly=precipitation_probability,precipitation,weather_code&current=precipitation,weather_code&timezone=Asia%2FTaipei&forecast_days=2';
+  const res = await fetch(u);
+  if (!res.ok) throw new Error('天氣預報讀取失敗（' + res.status + '）');
+  let j = await res.json();
+  if (!Array.isArray(j)) j = [j];
+  need.forEach((k, i) => {
+    const r = j[i] || {};
+    const h = r.hourly || {};
+    wx[k] = {
+      times: h.time || [], prob: h.precipitation_probability || [], mm: h.precipitation || [], code: h.weather_code || [],
+      curMm: r.current ? r.current.precipitation : null, curCode: r.current ? r.current.weather_code : null
+    };
+  });
+  wxAt = Date.now();
+}
+
+function wxText(code) {
+  if (code == null) return '';
+  if (code === 0) return '晴';
+  if (code <= 3) return '多雲';
+  if (code === 45 || code === 48) return '霧';
+  if (code >= 51 && code <= 57) return '毛毛雨';
+  if (code >= 61 && code <= 67) return '雨';
+  if (code >= 80 && code <= 82) return '陣雨';
+  if (code >= 95) return '雷雨';
+  return '';
+}
+
+function evalRoute(rt, depart) {
+  const out = { maxProb: null, maxMm: 0, rainingNow: false, pts: [] };
+  for (const p of rt.samples) {
+    const w = wx[p.key];
+    const t = new Date(depart.getTime() + p.f * rt.dur * 1000);
+    const idx = w ? w.times.indexOf(hourKey(t)) : -1;
+    const prob = idx >= 0 ? w.prob[idx] : null, mm = idx >= 0 ? w.mm[idx] : null, code = idx >= 0 ? w.code[idx] : null;
+    if (prob != null) out.maxProb = Math.max(out.maxProb == null ? 0 : out.maxProb, prob);
+    if (mm != null) out.maxMm = Math.max(out.maxMm, mm);
+    if (w && w.curMm > 0) out.rainingNow = true;
+    out.pts.push({ f: p.f, lat: p.lat, lon: p.lon, t, prob, mm, code });
+  }
+  return out;
+}
+
+function verdict(ev) {
+  if (ev.maxProb == null) return { cls: 'warn', icon: '❔', text: '沒有這個時間的預報' };
+  if (ev.maxProb >= 60 || ev.maxMm >= 1) return { cls: 'bad', icon: '🌧️', text: '很可能下雨，記得帶傘、雨衣' };
+  if (ev.maxProb >= 30 || ev.maxMm >= 0.2) return { cls: 'warn', icon: '🌦️', text: '可能會下雨，建議帶傘' };
+  return { cls: 'good', icon: '☀️', text: '不太會下雨' };
+}
+
+function departDate() { return new Date(Date.now() + rs.depart * 60000); }
+
+/* 主流程 */
+async function runRoute(force) {
+  const a = place(rs.from, 'from'), b = place(rs.to, 'to');
+  const msg = $('r-msg');
+  msg.className = 'msg';
+  renderPlaces(a, b);
+  if (!a || !b) { msg.className = 'msg err'; msg.textContent = '請先選好起點與終點（自訂地點請按「地圖上點起點／終點」）。'; return; }
+  const k = [a.lat, a.lon, b.lat, b.lon].map((v) => v.toFixed(5)).join(',');
+  msg.textContent = '查詢路線與天氣中…';
+  try {
+    if (force || k !== routeKey || !routes.length) {
+      routes = await getRoutes(a, b);
+      routes.forEach((r) => { r.samples = samplePoints(r); });
+      routeKey = k;
+      if (rs.sel >= routes.length) rs.sel = 0;
+    }
+    if (force) wxAt = 0;
+    await getWeather([...new Set(routes.flatMap((r) => r.samples.map((p) => p.key)))]);
+    msg.textContent = routes[0].straight ? '⚠️ 目前無法取得道路路線，先用直線估算沿路天氣。' : '';
+  } catch (e) {
+    msg.className = 'msg err';
+    msg.textContent = errText(e);
+  }
+  renderRoute();
+}
+
+function renderPlaces(a, b) {
+  const f = (p) => p ? p.name + (p.addr ? '（' + p.addr + '）' : '') + (p.fixed || !p.addr ? '' : '・位置為估計') : '未設定';
+  $('r-places').textContent = '起點：' + f(a) + '　→　終點：' + f(b);
+}
+
+function renderRoute() {
+  const list = $('r-list'); list.textContent = '';
+  if (!routes.length) { $('r-sum').hidden = true; $('r-detail').hidden = true; return; }
+  const dep = departDate();
+  const evs = routes.map((r) => evalRoute(r, dep));
+
+  // 總結：選定路線
+  const sel = Math.min(rs.sel, routes.length - 1);
+  const v = verdict(evs[sel]);
+  $('r-sum').hidden = false;
+  $('r-verdict').className = 'verdict rv ' + v.cls;
+  $('r-verdict').textContent = v.icon + ' ' + hhmm(dep) + ' 出發走路線 ' + LETTERS[sel] + '：' + v.text;
+  const sub = [];
+  if (evs[sel].maxProb != null) sub.push('沿路最高降雨機率 ' + evs[sel].maxProb + '%，每小時雨量最多約 ' + evs[sel].maxMm.toFixed(1) + ' mm');
+  if (evs.some((e) => e.rainingNow)) sub.push('目前沿線已有地方在下雨');
+  const dry = evs.map((e, i) => ({ e, i })).filter((x) => x.e.maxProb != null).sort((x, y) => x.e.maxProb - y.e.maxProb)[0];
+  if (dry && dry.i !== sel && dry.e.maxProb + 10 <= evs[sel].maxProb) sub.push('路線 ' + LETTERS[dry.i] + ' 比較不會淋到雨（' + dry.e.maxProb + '%）');
+  $('r-verdict-sub').textContent = sub.join('；');
+
+  // 未來 12 小時出發時間表
+  const tl = $('r-timeline'); tl.textContent = '';
+  const slots = [];
+  for (let h = 0; h <= 12; h++) {
+    const m = h * 60;
+    const e = evalRoute(routes[sel], new Date(Date.now() + m * 60000));
+    slots.push({ m, e });
+  }
+  const valid = slots.filter((s) => s.e.maxProb != null);
+  const best = valid.length ? valid.reduce((x, y) => (y.e.maxProb < x.e.maxProb ? y : x)) : null;
+  for (const s of slots) {
+    const btn = document.createElement('button');
+    const p = s.e.maxProb;
+    btn.className = (p == null ? '' : p >= 60 ? 't2' : p >= 30 ? 't1' : 't0') + (s.m === rs.depart ? ' on' : '') + (best && s === best ? ' best' : '');
+    const t = document.createElement('span'); t.textContent = s.m === 0 ? '現在' : hhmm(new Date(Date.now() + s.m * 60000));
+    const b = document.createElement('b'); b.textContent = p == null ? '—' : p + '%';
+    btn.append(t, b);
+    btn.title = verdict(s.e).text;
+    btn.addEventListener('click', () => {
+      rs.depart = s.m; saveRoute();
+      if (!DEPARTS.includes(s.m)) { const o = document.createElement('option'); o.value = s.m; o.textContent = hhmm(new Date(Date.now() + s.m * 60000)) + ' 出發'; $('r-depart').appendChild(o); }
+      $('r-depart').value = String(s.m);
+      renderRoute();
+    });
+    tl.appendChild(btn);
+  }
+
+  // 路線卡片
+  routes.forEach((r, i) => {
+    const e = evs[i], vv = verdict(e);
+    const card = document.createElement('button');
+    card.className = 'route' + (i === sel ? ' sel' : '');
+    const t = document.createElement('div'); t.className = 'rt';
+    t.textContent = '路線 ' + LETTERS[i] + (r.roads.length ? '：經 ' + r.roads.join(' → ') : (r.straight ? '（直線估算）' : ''));
+    const rv = document.createElement('div'); rv.className = 'rv ' + vv.cls; rv.textContent = vv.icon + ' ' + vv.text;
+    const m = document.createElement('div'); m.className = 'small';
+    m.textContent = (r.dist / 1000).toFixed(1) + ' 公里・約 ' + Math.max(1, Math.round(r.dur / 60)) + ' 分鐘' +
+      (e.maxProb != null ? '・最高降雨機率 ' + e.maxProb + '%' : '') + '・沿線攝影機 ' + camsAlong(r).length + ' 支';
+    card.append(t, rv, m);
+    card.addEventListener('click', () => { rs.sel = i; saveRoute(); renderRoute(); });
+    list.appendChild(card);
+  });
+
+  // 選定路線每一段的天氣
+  $('r-detail').hidden = false;
+  $('r-detail-title').textContent = '路線 ' + LETTERS[sel] + ' 沿路天氣';
+  const pts = $('r-pts'); pts.textContent = '';
+  evs[sel].pts.forEach((p, i, arr) => {
+    const d = document.createElement('div'); d.className = 'pt';
+    const b = document.createElement('b');
+    b.textContent = (i === 0 ? '起點' : i === arr.length - 1 ? '終點' : '途中 ' + i) + '・' + hhmm(p.t);
+    d.appendChild(b);
+    d.appendChild(document.createTextNode(p.prob == null ? '沒有預報' : '降雨 ' + p.prob + '%・' + (p.mm || 0).toFixed(1) + ' mm' + (wxText(p.code) ? '・' + wxText(p.code) : '')));
+    pts.appendChild(d);
+  });
+
+  drawRouteMap(evs);
+  renderRouteCams();
+}
+
+/* 沿線攝影機 */
+function allCams() { return SOURCES.flatMap((s) => lists[s.key] || []); }
+function camsAlong(rt) {
+  if (!rt || rt.straight) return [];
+  const c = rt.coords, out = [];
+  const cosLat = Math.cos(c[0][0] * Math.PI / 180), M = 111320;
+  const cum = [0];
+  for (let i = 1; i < c.length; i++) cum.push(cum[i - 1] + km(c[i - 1][0], c[i - 1][1], c[i][0], c[i][1]));
+  for (const cam of allCams()) {
+    if (cam.lat == null || cam.lon == null) continue;
+    let best = Infinity, along = 0;
+    for (let i = 1; i < c.length; i++) {
+      const ax = c[i - 1][1] * cosLat * M, ay = c[i - 1][0] * M, bx = c[i][1] * cosLat * M, by = c[i][0] * M;
+      const px = cam.lon * cosLat * M, py = cam.lat * M;
+      const dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy || 1;
+      const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / L2));
+      const d = Math.hypot(px - ax - t * dx, py - ay - t * dy);
+      if (d < best) { best = d; along = cum[i - 1] + (cum[i] - cum[i - 1]) * t; }
+    }
+    if (best <= NEAR_ROUTE_M) out.push(Object.assign({}, cam, { along, d: 999 }));
+  }
+  return out.sort((x, y) => x.along - y.along);
+}
+
+function renderRouteCams() {
+  const el = $('route-cams');
+  if (state.view !== 'route') return;
+  clearGrid(el);
+  const rt = routes[Math.min(rs.sel, routes.length - 1)];
+  const cams = camsAlong(rt);
+  $('r-cams-title').textContent = rt ? '路線 ' + LETTERS[Math.min(rs.sel, routes.length - 1)] + ' 沿線攝影機（' + cams.length + ' 支）' : '沿線攝影機';
+  if (!cams.length) {
+    const d = document.createElement('div'); d.className = 'empty';
+    const loading = SOURCES.some((s) => srcStatus[s.key] && srcStatus[s.key].wait);
+    d.textContent = !rt ? '查到路線後會列出沿路的攝影機。' : loading ? '正在讀取攝影機清單…' : rt.straight ? '沒有道路路線，無法比對沿線攝影機。' : '這條路線附近沒有找到攝影機（或攝影機清單讀取失敗）。';
+    el.appendChild(d);
+    return;
+  }
+  cams.forEach((c) => el.appendChild(camCard(c)));
+}
+
+/* 路線地圖 */
+async function drawRouteMap(evs) {
+  let L;
+  try { L = await loadLeaflet(); } catch (e) { $('route-map').textContent = '地圖元件載入失敗。'; return; }
+  if (!rmap) {
+    rmap = L.map('route-map').setView([22.64, 120.53], 12);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(rmap);
+    rlayer = L.layerGroup().addTo(rmap);
+    rmap.on('click', (e) => {
+      if (!picking) return;
+      rs.custom[picking] = { lat: +e.latlng.lat.toFixed(5), lon: +e.latlng.lng.toFixed(5) };
+      rs[picking] = 'custom';
+      $('r-' + picking).value = 'custom';
+      setPicking(null); saveRoute(); runRoute(false);
+    });
+  }
+  setTimeout(() => rmap.invalidateSize(), 50);
+  rlayer.clearLayers();
+  const sel = Math.min(rs.sel, routes.length - 1);
+  const bounds = [];
+  routes.forEach((r, i) => {
+    if (i === sel) return;
+    L.polyline(r.coords, { color: '#8899AA', weight: 4, opacity: .7, dashArray: '6 6' })
+      .bindTooltip('路線 ' + LETTERS[i]).on('click', () => { rs.sel = i; saveRoute(); renderRoute(); }).addTo(rlayer);
+  });
+  const r = routes[sel];
+  if (!r) return;
+  L.polyline(r.coords, { color: RAIN_COLOR[verdict(evs[sel]).cls], weight: 7, opacity: .9 }).bindTooltip('路線 ' + LETTERS[sel]).addTo(rlayer);
+  r.coords.forEach((p) => bounds.push(p));
+  for (const p of evs[sel].pts) {
+    const col = p.prob == null ? '#999' : p.prob >= 60 ? RAIN_COLOR.bad : p.prob >= 30 ? RAIN_COLOR.warn : RAIN_COLOR.good;
+    L.circleMarker([p.lat, p.lon], { radius: 9, weight: 2, color: '#fff', fillColor: col, fillOpacity: 1 })
+      .bindTooltip(hhmm(p.t) + ' 降雨 ' + (p.prob == null ? '—' : p.prob + '%'), { permanent: false }).addTo(rlayer);
+  }
+  for (const c of camsAlong(r)) {
+    const m = L.circleMarker([c.lat, c.lon], { radius: 6, weight: 2, color: '#fff', fillColor: SRC_COLOR[c.src] || '#555', fillOpacity: .95 });
+    m.bindTooltip('📹 ' + c.name).on('click', () => openModal(c)).addTo(rlayer);
+  }
+  const a = place(rs.from, 'from'), b = place(rs.to, 'to');
+  if (a) L.marker([a.lat, a.lon]).bindTooltip('起點：' + a.name, { permanent: true, direction: 'top' }).addTo(rlayer);
+  if (b) L.marker([b.lat, b.lon]).bindTooltip('終點：' + b.name, { permanent: true, direction: 'top' }).addTo(rlayer);
+  if (bounds.length) rmap.fitBounds(bounds, { padding: [30, 30] });
+}
+
+function setPicking(which) {
+  picking = which;
+  $('route-map').classList.toggle('picking', !!which);
+  $('r-pick-from').classList.toggle('on', which === 'from');
+  $('r-pick-to').classList.toggle('on', which === 'to');
+  if (which) {
+    $('r-msg').className = 'msg';
+    $('r-msg').textContent = '請在下方地圖上點一下' + (which === 'from' ? '起點' : '終點') + '的位置。';
+    $('route-map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function startRadar() {
+  const img = $('r-radar');
+  const load = () => { if (!document.hidden && state.view === 'route') img.src = RADAR + '?t=' + Math.floor(Date.now() / 600000); };
+  img.onerror = () => { img.hidden = true; $('r-radar-fail').hidden = false; };
+  load();
+  if (!radarTimer) radarTimer = setInterval(load, 600000);
+}
+
+let routeInited = false, refined = false;
+function initRoute() {
+  if (routeInited) return;
+  routeInited = true;
+  fillSelects();
+  $('r-from').addEventListener('change', () => { rs.from = $('r-from').value; saveRoute(); if (rs.from === 'custom' && !rs.custom.from) setPicking('from'); else runRoute(false); });
+  $('r-to').addEventListener('change', () => { rs.to = $('r-to').value; saveRoute(); if (rs.to === 'custom' && !rs.custom.to) setPicking('to'); else runRoute(false); });
+  $('r-depart').addEventListener('change', () => { rs.depart = +$('r-depart').value; saveRoute(); renderRoute(); });
+  $('r-swap').addEventListener('click', () => {
+    [rs.from, rs.to] = [rs.to, rs.from];
+    [rs.custom.from, rs.custom.to] = [rs.custom.to, rs.custom.from];
+    rs.sel = 0; saveRoute(); fillSelects(); runRoute(false);
+  });
+  $('r-pick-from').addEventListener('click', () => setPicking(picking === 'from' ? null : 'from'));
+  $('r-pick-to').addEventListener('click', () => setPicking(picking === 'to' ? null : 'to'));
+  $('r-here').addEventListener('click', () => {
+    if (!navigator.geolocation) { $('r-msg').textContent = '這個瀏覽器不支援定位。'; return; }
+    $('r-msg').className = 'msg'; $('r-msg').textContent = '定位中…';
+    navigator.geolocation.getCurrentPosition((pos) => {
+      rs.custom.from = { lat: +pos.coords.latitude.toFixed(5), lon: +pos.coords.longitude.toFixed(5) };
+      rs.from = 'custom'; $('r-from').value = 'custom'; saveRoute(); runRoute(false);
+    }, () => { $('r-msg').className = 'msg err'; $('r-msg').textContent = '無法取得位置（請允許瀏覽器使用定位）。'; }, { enableHighAccuracy: true, timeout: 15000 });
+  });
+  $('r-go').addEventListener('click', () => { fillSelects(); runRoute(true); });
+  // 每 10 分鐘更新一次天氣
+  setInterval(() => { if (state.view === 'route' && !document.hidden && routes.length) runRoute(false); }, 600000);
+}
+
+async function enterRoute() {
+  initRoute();
+  startRadar();
+  // 沿線攝影機需要所有來源的清單（有暫存就不會重抓）
+  const loadCams = (async () => {
+    for (const s of SOURCES) {
+      if (!lists[s.key]) { await fetchSource(s, false); renderStatus(); if (routes.length) renderRoute(); else renderRouteCams(); }
+    }
+  })();
+  if (!refined) {
+    refined = true;
+    const before = JSON.stringify([place(rs.from, 'from'), place(rs.to, 'to')]);
+    refinePlaces().then(() => { if (JSON.stringify([place(rs.from, 'from'), place(rs.to, 'to')]) !== before) runRoute(false); });
+  }
+  await runRoute(false);
+  await loadCams;
+}
+
 /* ---------- 控制項 ---------- */
 function syncButtons() {
   document.querySelectorAll('#area-seg button').forEach((b) => b.classList.toggle('on', b.dataset.area === state.area));
   document.querySelectorAll('#view-seg button').forEach((b) => b.classList.toggle('on', b.dataset.view === state.view));
   $('grid-view').hidden = state.view !== 'grid';
   $('map-view').hidden = state.view !== 'map';
+  $('route-view').hidden = state.view !== 'route';
+  document.body.classList.toggle('route-mode', state.view === 'route');
+  if (state.view !== 'route') clearGrid($('route-cams'));
 }
 $('area-seg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; state.area = b.dataset.area; savePrefs(); syncButtons(); render(true); });
-$('view-seg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; state.view = b.dataset.view; savePrefs(); syncButtons(); render(true); });
+$('view-seg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; state.view = b.dataset.view; savePrefs(); syncButtons(); render(true); if (state.view === 'route') enterRoute(); });
 let qTimer = null;
 $('q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = $('q').value; render(true); }, 250); });
 $('fav-only').checked = !!state.favOnly;
@@ -650,6 +1200,8 @@ async function loadAll(force) {
 
 syncButtons();
 loadAll(false);
+initRoute();
+if (state.view === 'route') enterRoute();
 })();
 </script>
 </body>
