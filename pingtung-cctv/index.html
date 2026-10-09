@@ -103,6 +103,11 @@ body.route-mode .not-route{display:none!important}
 .pt b{display:block;color:var(--ink)}
 #route-map{height:min(60vh,520px);border-radius:14px;border:1px solid var(--line);margin-top:14px;z-index:0}
 #route-map.picking{cursor:crosshair}
+.zones{margin:8px 0 0;padding-left:1.2em} .zones li{margin:4px 0}
+.zones .avoid{color:var(--good);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;margin-top:10px}
+.lg{display:inline-block;width:16px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+.lg.warn{background:rgba(217,154,0,.45)} .lg.bad{background:rgba(46,123,214,.55)} .lg.now{border:2px dashed #1F5FA8}
 .radar{display:block;max-width:100%;max-height:520px;margin:8px auto 0;border-radius:10px}
 </style>
 </head>
@@ -209,6 +214,18 @@ body.route-mode .not-route{display:none!important}
     <h2 id="r-detail-title"></h2>
     <div class="small">每一段預計經過的時間與當時的天氣預報：</div>
     <div class="pts" id="r-pts"></div>
+  </section>
+
+  <section class="card" id="r-zones" hidden>
+    <h2>☔ 沿路容易下雨的區域</h2>
+    <div class="small" id="r-zones-time"></div>
+    <ul class="zones" id="r-zones-list"></ul>
+    <div class="legend small">
+      <span><span class="lg warn"></span>可能下雨 30–59%</span>
+      <span><span class="lg bad"></span>很可能下雨 60% 以上</span>
+      <span><span class="lg now"></span>虛線框：現在正在下雨</span>
+      <span>路線顏色＝該路段經過時的降雨機率</span>
+    </div>
   </section>
 
   <div id="route-map"></div>
@@ -687,6 +704,42 @@ const RADAR = 'https://www.cwa.gov.tw/Data/radar/CV1_3600.png';
 const NEAR_ROUTE_M = 350;
 const DEPARTS = [0, 30, 60, 90, 120, 180, 240, 300, 360, 480, 600, 720];
 const RAIN_COLOR = { good: '#2E8B57', warn: '#D99A00', bad: '#2E7BD6' };
+// 鄉鎮中心的大略位置，用來替雨區取名（離哪個中心最近就叫「○○一帶」）
+const TOWNS = [
+  ['屏東市', 22.672, 120.488], ['長治鄉', 22.684, 120.530], ['麟洛鄉', 22.651, 120.527], ['內埔鄉', 22.612, 120.567],
+  ['竹田鄉', 22.586, 120.522], ['萬丹鄉', 22.590, 120.483], ['九如鄉', 22.737, 120.490], ['鹽埔鄉', 22.754, 120.573],
+  ['萬巒鄉', 22.572, 120.600], ['潮州鎮', 22.550, 120.542], ['里港鄉', 22.779, 120.494], ['高樹鄉', 22.826, 120.600],
+  ['瑪家鄉', 22.700, 120.640], ['三地門鄉', 22.716, 120.654], ['新園鄉', 22.544, 120.462], ['崁頂鄉', 22.514, 120.514]
+];
+function townOf(lat, lon) {
+  let best = null, d = Infinity;
+  for (const t of TOWNS) { const x = km(lat, lon, t[1], t[2]); if (x < d) { d = x; best = t[0]; } }
+  return best;
+}
+const GRID_MAX = 120;
+let cells = [];          // 路線周圍的天氣格子
+function makeGrid() {
+  let s = 90, n = 0, e = 0, w = 180;
+  for (const r of routes) for (const [la, lo] of r.coords) { s = Math.min(s, la); n = Math.max(n, la); w = Math.min(w, lo); e = Math.max(e, lo); }
+  let step = 0.02;
+  const count = (st) => (Math.floor((n + 0.03) / st) - Math.floor((s - 0.03) / st) + 1) * (Math.floor((e + 0.03) / st) - Math.floor((w - 0.03) / st) + 1);
+  while (count(step) > GRID_MAX) step += 0.01;
+  const out = [];
+  for (let i = Math.floor((s - 0.03) / step); i <= Math.floor((n + 0.03) / step); i++) {
+    for (let j = Math.floor((w - 0.03) / step); j <= Math.floor((e + 0.03) / step); j++) {
+      const lat = +(i * step).toFixed(2), lon = +(j * step).toFixed(2);
+      out.push({ lat, lon, step, key: lat.toFixed(2) + ',' + lon.toFixed(2), town: townOf(lat, lon) });
+    }
+  }
+  return out;
+}
+function probAt(key, t) {
+  const w = wx[key];
+  if (!w) return null;
+  const i = w.times.indexOf(hourKey(t));
+  return i >= 0 ? w.prob[i] : null;
+}
+function riskCls(p) { return p == null ? '' : p >= 60 ? 'bad' : p >= 30 ? 'warn' : 'good'; }
 const LETTERS = 'ABCDE';
 
 const rs = Object.assign({ from: 'yuying', to: 'ptch', depart: 0, sel: 0, custom: { from: null, to: null } }, store.get('ptcam.route', {}));
@@ -896,11 +949,12 @@ async function runRoute(force) {
     if (force || k !== routeKey || !routes.length) {
       routes = await getRoutes(a, b);
       routes.forEach((r) => { r.samples = samplePoints(r); });
+      cells = routes[0].straight ? [] : makeGrid();
       routeKey = k;
       if (rs.sel >= routes.length) rs.sel = 0;
     }
     if (force) wxAt = 0;
-    await getWeather([...new Set(routes.flatMap((r) => r.samples.map((p) => p.key)))]);
+    await getWeather([...new Set(routes.flatMap((r) => r.samples.map((p) => p.key)).concat(cells.map((c) => c.key)))]);
     msg.textContent = routes[0].straight ? '⚠️ 目前無法取得道路路線，先用直線估算沿路天氣。' : '';
   } catch (e) {
     msg.className = 'msg err';
@@ -983,14 +1037,56 @@ function renderRoute() {
   evs[sel].pts.forEach((p, i, arr) => {
     const d = document.createElement('div'); d.className = 'pt';
     const b = document.createElement('b');
-    b.textContent = (i === 0 ? '起點' : i === arr.length - 1 ? '終點' : '途中 ' + i) + '・' + hhmm(p.t);
+    b.textContent = (i === 0 ? '起點' : i === arr.length - 1 ? '終點' : '途中 ' + i) + '・' + hhmm(p.t) + '・' + townOf(p.lat, p.lon);
+    if (p.prob != null && p.prob >= 30) d.style.borderColor = RAIN_COLOR[riskCls(p.prob)];
     d.appendChild(b);
     d.appendChild(document.createTextNode(p.prob == null ? '沒有預報' : '降雨 ' + p.prob + '%・' + (p.mm || 0).toFixed(1) + ' mm' + (wxText(p.code) ? '・' + wxText(p.code) : '')));
     pts.appendChild(d);
   });
 
+  renderZones(evs, sel);
   drawRouteMap(evs);
   renderRouteCams();
+}
+
+/* 容易下雨的區域 */
+function zoneTime(sel) { return new Date(departDate().getTime() + (routes[sel] ? routes[sel].dur * 500 : 0)); }
+function renderZones(evs, sel) {
+  const box = $('r-zones'), ul = $('r-zones-list');
+  ul.textContent = '';
+  if (!cells.length) { box.hidden = true; return; }
+  box.hidden = false;
+  const t = zoneTime(sel);
+  $('r-zones-time').textContent = '以 ' + hhmm(t) + '（出發後約半程）的預報標示；改出發時間會跟著更新。';
+  // 每條路線經過哪些鄉鎮
+  const passes = routes.map((r) => { const set = new Set(); r.coords.forEach(([la, lo], i) => { if (i % 3 === 0) set.add(townOf(la, lo)); }); set.add(townOf(...r.coords[r.coords.length - 1])); return set; });
+  const zones = new Map();
+  for (const c of cells) {
+    const p = probAt(c.key, t), now = wx[c.key] && wx[c.key].curMm > 0;
+    if (!(p >= 30) && !now) continue;
+    const z = zones.get(c.town) || { town: c.town, max: 0, now: false };
+    z.max = Math.max(z.max, p || 0); z.now = z.now || now;
+    zones.set(c.town, z);
+  }
+  const list = [...zones.values()].sort((a, b) => b.max - a.max);
+  const li = (parts) => { const el = document.createElement('li'); parts.forEach((x) => el.append(x)); ul.appendChild(el); };
+  const span = (text, cls) => { const e = document.createElement('span'); e.textContent = text; if (cls) e.className = cls; return e; };
+  if (!list.length) li(['☀️ 這段時間路線附近沒有明顯的降雨區域。']);
+  for (const z of list) {
+    const via = routes.map((r, i) => passes[i].has(z.town) ? LETTERS[i] : null).filter(Boolean);
+    const avoid = routes.map((r, i) => passes[i].has(z.town) ? null : LETTERS[i]).filter(Boolean);
+    const parts = [(z.max >= 60 ? '🌧️ ' : '🌦️ ') + z.town + '一帶：降雨機率最高 ' + z.max + '%' + (z.now ? '（現在正在下雨）' : '')];
+    if (via.length) parts.push('，路線 ' + via.join('、') + ' 會經過');
+    else parts.push('，目前的路線都不經過');
+    if (via.length && avoid.length) parts.push('；', span('想避開可走路線 ' + avoid.join('、'), 'avoid'));
+    li(parts);
+  }
+  // 選定路線哪一段會淋雨
+  const wet = evs[sel].pts.filter((p) => p.prob != null && p.prob >= 30);
+  if (wet.length) {
+    const towns = [...new Set(wet.map((p) => townOf(p.lat, p.lon)))];
+    li(['🛵 路線 ' + LETTERS[sel] + ' 約 ' + hhmm(wet[0].t) + '～' + hhmm(wet[wet.length - 1].t) + ' 經過 ' + towns.join('、') + ' 一帶時可能遇到雨，雨衣放在好拿的地方。']);
+  }
 }
 
 /* 沿線攝影機 */
@@ -1054,6 +1150,16 @@ async function drawRouteMap(evs) {
   rlayer.clearLayers();
   const sel = Math.min(rs.sel, routes.length - 1);
   const bounds = [];
+  const zt = zoneTime(sel);
+  for (const c of cells) {
+    const p = probAt(c.key, zt), now = wx[c.key] && wx[c.key].curMm > 0;
+    if (!(p >= 30) && !now) continue;
+    const h = c.step / 2;
+    L.rectangle([[c.lat - h, c.lon - h], [c.lat + h, c.lon + h]], {
+      stroke: !!now, color: '#1F5FA8', weight: 2, dashArray: '5 5',
+      fill: p >= 30, fillColor: p >= 60 ? RAIN_COLOR.bad : RAIN_COLOR.warn, fillOpacity: p >= 60 ? .38 : .28, interactive: true
+    }).bindTooltip(c.town + '一帶・' + hhmm(zt) + ' 降雨 ' + (p == null ? '—' : p + '%') + (now ? '・現在下雨中' : '')).addTo(rlayer);
+  }
   routes.forEach((r, i) => {
     if (i === sel) return;
     L.polyline(r.coords, { color: '#8899AA', weight: 4, opacity: .7, dashArray: '6 6' })
@@ -1061,7 +1167,21 @@ async function drawRouteMap(evs) {
   });
   const r = routes[sel];
   if (!r) return;
-  L.polyline(r.coords, { color: RAIN_COLOR[verdict(evs[sel]).cls], weight: 7, opacity: .9 }).bindTooltip('路線 ' + LETTERS[sel]).addTo(rlayer);
+  // 依每一段經過時的降雨機率分段上色
+  const pts = evs[sel].pts, nP = pts.length;
+  const cum = [0];
+  for (let i = 1; i < r.coords.length; i++) cum.push(cum[i - 1] + km(r.coords[i - 1][0], r.coords[i - 1][1], r.coords[i][0], r.coords[i][1]));
+  const tot = cum[cum.length - 1] || 1;
+  let run = [r.coords[0]], runCls = null;
+  const flush = () => { if (run.length > 1) L.polyline(run, { color: runCls ? RAIN_COLOR[runCls] : '#999', weight: 7, opacity: .9 }).bindTooltip('路線 ' + LETTERS[sel]).addTo(rlayer); };
+  for (let i = 1; i < r.coords.length; i++) {
+    const idx = Math.min(nP - 1, Math.round(((cum[i - 1] + cum[i]) / 2 / tot) * (nP - 1)));
+    const cls = riskCls(pts[idx] && pts[idx].prob);
+    if (runCls !== null && cls !== runCls) { flush(); run = [r.coords[i - 1]]; }
+    runCls = cls;
+    run.push(r.coords[i]);
+  }
+  flush();
   r.coords.forEach((p) => bounds.push(p));
   for (const p of evs[sel].pts) {
     const col = p.prob == null ? '#999' : p.prob >= 60 ? RAIN_COLOR.bad : p.prob >= 30 ? RAIN_COLOR.warn : RAIN_COLOR.good;
