@@ -196,6 +196,7 @@ body.route-mode .not-route{display:none!important}
       <button id="r-swap">⇅ 回程（反向走一次）</button>
       <button id="r-pick-from">📍 地圖上點起點</button>
       <button id="r-pick-to">📍 地圖上點終點</button>
+      <label class="check">📌 修正地點位置：<select id="r-fix" style="width:auto;min-height:36px;padding:4px 8px"></select></label>
       <button id="r-here">🧭 現在位置當起點</button>
       <button id="r-go" class="primary">🔄 重新查詢</button>
     </div>
@@ -242,7 +243,8 @@ body.route-mode .not-route{display:none!important}
     <ul class="links small">
       <li>降雨預報來自 <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> 的數值模式（每點約數公里解析度），路線來自 OpenStreetMap 的 OSRM 路線規劃，行車時間不含塞車與紅燈，僅供出門前參考。</li>
       <li>官方預報：<a href="https://www.cwa.gov.tw/V8/C/W/County/County.html?CID=10013" target="_blank" rel="noopener">中央氣象署 屏東縣天氣預報</a>、<a href="https://www.cwa.gov.tw/V8/C/W/OBS_Radar.html" target="_blank" rel="noopener">雷達回波</a>、<a href="https://www.cwa.gov.tw/V8/C/P/Rainfall/Rainfall_10Min_County.html" target="_blank" rel="noopener">即時雨量</a>。</li>
-      <li>起點、終點的預設位置是依地址估的大略位置，若不準可按「地圖上點起點／終點」修正，會記在這台裝置。</li>
+      <li>預設地點是依地址估的大略位置，開啟時會用 OpenStreetMap 校正；若不準，用「📌 修正地點位置」選地點後在地圖上點正確位置，會記在這台裝置，常用行程照樣能用。</li>
+      <li>「途中經過」的點（例如西勢國小、大春路、大湖路）要定位成功才會讓「常走路線」照順序經過；每條路線會標示有沒有走到指定的道路（✅／⚠️）。</li>
     </ul>
   </section>
 </div>
@@ -701,12 +703,16 @@ const PLACES = {
   ptchRg: { name: '屏基瑞光院區', addr: '屏東市建豐路2巷113號', lat: 22.6575, lon: 120.5110, q: ['屏基瑞光院區', '屏東基督教醫院 瑞光'] },
   jiazhou: { name: '內埔加州大樓', addr: '內埔鄉學興路一帶', lat: 22.6125, lon: 120.5640, q: [] },
   futian: { name: '富田國小', addr: '內埔鄉富田村', lat: 22.6380, lon: 120.5720, q: ['富田國小', '富田國民小學'], r: 5 },
-  guilai: { name: '歸來慈天宮（媽祖廟）', addr: '屏東市歸來里', lat: 22.6520, lon: 120.5100, q: ['歸來慈天宮', '慈天宮'], r: 4 }
+  guilai: { name: '歸來慈天宮（媽祖廟）', addr: '屏東市歸來里', lat: 22.6520, lon: 120.5100, q: ['歸來慈天宮', '慈天宮'], r: 4 },
+  // 以下為「途中經過」的點：只有定位成功（OpenStreetMap 找到或自己在地圖上修正）才會強制路線經過
+  xishi: { name: '西勢國小', addr: '竹田鄉西勢村', lat: 22.6000, lon: 120.5280, q: ['西勢國小', '西勢國民小學'], r: 5, pass: true },
+  dachun: { name: '大春路', lat: 22.6250, lon: 120.5100, q: ['大春路, 屏東縣'], r: 10, pass: true, road: true },
+  dahu: { name: '大湖路', addr: '屏東市大湖里一帶', lat: 22.6400, lon: 120.4970, q: ['大湖路, 屏東市', '大湖路, 屏東縣'], r: 8, pass: true, road: true }
 };
 // 常用行程（起點 → 途經 → 終點）
 const TRIPS = [
   { id: 'me', name: '🛵 育英分校 → 屏基', from: 'yuying', via: '', to: 'ptch' },
-  { id: 'wife', name: '👩 老婆接大寶：加州大樓 → 富田國小 → 歸來媽祖廟', from: 'jiazhou', via: 'futian', to: 'guilai' }
+  { id: 'wife', name: '👩 老婆接大寶：加州大樓 → 富田國小 → 歸來媽祖廟', from: 'jiazhou', via: 'futian', to: 'guilai', passes: ['xishi', 'dachun', 'dahu'] }
 ];
 const DWELL = 5 * 60; // 中途停靠預估停留秒數
 const OSRM = 'https://router.project-osrm.org/route/v1/driving/';
@@ -781,10 +787,13 @@ function place(k, which) {
 
 // 用 OpenStreetMap 地名搜尋校正預設地點（只接受離估計位置 3～5 公里內的結果）
 async function refinePlaces() {
-  for (const k of Object.keys(PLACES)) {
+  // 目前行程用到的地點先查
+  const mine = [rs.from, rs.via, ...curPasses(), rs.to].filter((k) => PLACES[k]);
+  for (const k of [...new Set(mine.concat(Object.keys(PLACES)))]) {
     const had = store.get('ptcam.geo.' + k, null);
     if (had && (had.lat != null || Date.now() - had.t < 7 * 86400000)) continue; // 找不到的一週內不再查
     const p = PLACES[k];
+    if (!p.q.length) continue;
     let found = false;
     for (const q of p.q) {
       try {
@@ -814,11 +823,11 @@ function fillSelects() {
     }
     sel.value = rs[which];
   };
-  const keys = Object.keys(PLACES).concat('custom');
+  const keys = Object.keys(PLACES).filter((k) => !PLACES[k].pass).concat('custom');
   mk($('r-from'), 'from', keys);
   mk($('r-to'), 'to', keys);
   const v = $('r-via'); v.textContent = '';
-  [''].concat(Object.keys(PLACES)).forEach((k) => {
+  [''].concat(Object.keys(PLACES).filter((k) => !PLACES[k].pass)).forEach((k) => {
     const o = document.createElement('option'); o.value = k; o.textContent = k ? PLACES[k].name : '（不停靠）'; v.appendChild(o);
   });
   v.value = PLACES[rs.via] ? rs.via : '';
@@ -838,9 +847,25 @@ function fillSelects() {
   d.value = String(rs.depart);
 }
 
+function curTrip() { return TRIPS.find((x) => x.from === rs.from && x.via === (rs.via || '') && x.to === rs.to) || null; }
+function curPasses() { const t = curTrip(); return t && t.passes ? t.passes : []; }
 function syncTrip() {
-  const t = TRIPS.find((x) => x.from === rs.from && x.via === (rs.via || '') && x.to === rs.to);
+  const t = curTrip();
   $('r-trip').value = t ? t.id : '';
+  fillFix();
+}
+// 「修正地點位置」選單：列出目前行程用到的預設地點
+function fillFix() {
+  const sel = $('r-fix'); if (!sel) return;
+  const keys = [rs.from, rs.via, ...curPasses(), rs.to].filter((k) => k && PLACES[k]);
+  sel.textContent = '';
+  const o0 = document.createElement('option'); o0.value = ''; o0.textContent = '選地點後在地圖上點'; sel.appendChild(o0);
+  for (const k of [...new Set(keys)]) {
+    const o = document.createElement('option'); o.value = k;
+    o.textContent = PLACES[k].name + (place(k).fixed ? '' : '（未定位）');
+    sel.appendChild(o);
+  }
+  sel.value = '';
 }
 function hhmm(d) { return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Taipei' }); }
 function hourKey(d) {
@@ -866,20 +891,31 @@ function roadSummary(rt) {
   return [...acc.entries()].filter(([, v]) => v.d >= 600).sort((a, b) => a[1].i - b[1].i).slice(0, 5).map(([k]) => k);
 }
 
+function stepNames(rt) {
+  const set = new Set();
+  for (const leg of rt.legs || []) for (const st of leg.steps || []) {
+    for (const v of [st.name, st.ref]) if (v) v.split(';').forEach((x) => set.add(x.trim()));
+  }
+  return [...set];
+}
+async function osrm(pts, alt) {
+  const url = OSRM + pts.map((p) => p.lon + ',' + p.lat).join(';') + '?alternatives=' + (alt ? 3 : 'false') + '&overview=full&geometries=geojson&steps=true';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(res.status);
+  const j = await res.json();
+  if (j.code !== 'Ok' || !j.routes || !j.routes.length) throw new Error(j.code);
+  return j.routes.slice(0, 4).map((rt) => ({
+    coords: rt.geometry.coordinates.map(([lo, la]) => [la, lo]),
+    dist: rt.distance, dur: rt.duration, roads: roadSummary(rt), names: stepNames(rt),
+    legs: (rt.legs || []).map((l) => ({ dist: l.distance, dur: l.duration }))
+  }));
+}
 async function getRoutes(a, b) {
-  const url = OSRM + a.lon + ',' + a.lat + ';' + b.lon + ',' + b.lat + '?alternatives=3&overview=full&geometries=geojson&steps=true';
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(res.status);
-    const j = await res.json();
-    if (j.code !== 'Ok' || !j.routes || !j.routes.length) throw new Error(j.code);
-    return j.routes.slice(0, 4).map((rt) => ({
-      coords: rt.geometry.coordinates.map(([lo, la]) => [la, lo]),
-      dist: rt.distance, dur: rt.duration, roads: roadSummary(rt)
-    }));
+    return await osrm([a, b], true);
   } catch (e) {
     const d = km(a.lat, a.lon, b.lat, b.lon) * 1.3;
-    return [{ coords: [[a.lat, a.lon], [b.lat, b.lon]], dist: d * 1000, dur: d / 40 * 3600, roads: [], straight: true }];
+    return [{ coords: [[a.lat, a.lon], [b.lat, b.lon]], dist: d * 1000, dur: d / 40 * 3600, roads: [], names: [], straight: true }];
   }
 }
 
@@ -896,6 +932,7 @@ async function getTripRoutes(stops) {
         dist: a.dist + b.dist,
         dur: a.dur + DWELL + b.dur,
         roads: [...new Set(a.roads.concat(b.roads))].slice(0, 6),
+        names: [...new Set((a.names || []).concat(b.names || []))],
         straight: a.straight || b.straight,
         via: stops[1].name,
         segs: [[0, f, 0, a.dur], [f, 1, a.dur + DWELL, a.dur + DWELL + b.dur]]
@@ -903,6 +940,24 @@ async function getTripRoutes(stops) {
     }
   }
   return combos.sort((x, y) => x.dur - y.dur).slice(0, 4);
+}
+// 常走路線：照順序經過已定位的途中點（西勢國小、大春路…），一次查出一條
+async function habitRoute(stops, passes) {
+  const pts = stops.length === 3 ? [stops[0], stops[1], ...passes, stops[2]] : [stops[0], ...passes, stops[1]];
+  try {
+    const r = (await osrm(pts, false))[0];
+    if (stops.length === 3 && r.legs.length) {
+      const d0 = r.legs[0].dur, f = r.legs[0].dist / (r.dist || 1);
+      r.segs = [[0, f, 0, d0], [f, 1, d0 + DWELL, r.dur + DWELL]];
+      r.dur += DWELL; r.via = stops[1].name;
+    }
+    r.habit = true;
+    return r;
+  } catch (e) { return null; }
+}
+// 路線有沒有走到指定的道路（看 OSRM 每一步的路名）
+function roadCheck(rt, passKeys) {
+  return passKeys.filter((k) => PLACES[k].road).map((k) => ({ name: PLACES[k].name, ok: (rt.names || []).some((n) => n.includes(PLACES[k].name)) }));
 }
 // 路線上某個位置（0～1）預計是出發後幾秒（有中途停靠時要加上停留時間）
 function timeAt(rt, f) {
@@ -995,13 +1050,19 @@ async function runRoute(force) {
   const msg = $('r-msg');
   msg.className = 'msg';
   renderPlaces(a, b, v);
+  fillFix();
   if (!a || !b) { msg.className = 'msg err'; msg.textContent = '請先選好起點與終點（自訂地點請按「地圖上點起點／終點」）。'; return; }
   const stops = v ? [a, v, b] : [a, b];
-  const k = stops.map((p) => p.lat.toFixed(5) + ',' + p.lon.toFixed(5)).join(';');
+  const passes = curPasses().map((k2) => place(k2)).filter((p2) => p2 && p2.fixed);
+  const k = stops.concat(passes).map((p) => p.lat.toFixed(5) + ',' + p.lon.toFixed(5)).join(';');
   msg.textContent = '查詢路線與天氣中…';
   try {
     if (force || k !== routeKey || !routes.length) {
       routes = await getTripRoutes(stops);
+      if (passes.length && !routes[0].straight) {
+        const h = await habitRoute(stops, passes);
+        if (h) routes = [h].concat(routes.filter((r) => Math.abs(r.dist - h.dist) > h.dist * 0.01)).slice(0, 4);
+      }
       routes.forEach((r) => { r.samples = samplePoints(r); });
       cells = routes[0].straight ? [] : makeGrid();
       routeKey = k;
@@ -1009,7 +1070,7 @@ async function runRoute(force) {
     }
     if (force) wxAt = 0;
     await getWeather([...new Set(routes.flatMap((r) => r.samples.map((p) => p.key)).concat(cells.map((c) => c.key)))]);
-    msg.textContent = routes[0].straight ? '⚠️ 目前無法取得道路路線，先用直線估算沿路天氣。' : '';
+    msg.textContent = routes[0].straight ? '⚠️ 目前無法取得道路路線，先用直線估算沿路天氣。' : pickMsg();
   } catch (e) {
     msg.className = 'msg err';
     msg.textContent = errText(e);
@@ -1019,7 +1080,9 @@ async function runRoute(force) {
 
 function renderPlaces(a, b, v) {
   const f = (p) => p ? p.name + (p.addr ? '（' + p.addr + '）' : '') + (p.fixed || !p.addr ? '' : '・位置為估計') : '未設定';
-  $('r-places').textContent = '起點：' + f(a) + (v ? '　→　途經：' + f(v) + '（停留約 ' + DWELL / 60 + ' 分鐘）' : '') + '　→　終點：' + f(b);
+  const ps = curPasses().map((k) => PLACES[k].name + (place(k).fixed ? '' : '（未定位，按「修正地點位置」設定）'));
+  $('r-places').textContent = '起點：' + f(a) + (v ? '　→　途經：' + f(v) + '（停留約 ' + DWELL / 60 + ' 分鐘）' : '') +
+    (ps.length ? '　→　途中經過：' + ps.join('、') : '') + '　→　終點：' + f(b);
 }
 
 function renderRoute() {
@@ -1074,7 +1137,14 @@ function renderRoute() {
     const card = document.createElement('button');
     card.className = 'route' + (i === sel ? ' sel' : '');
     const t = document.createElement('div'); t.className = 'rt';
-    t.textContent = '路線 ' + LETTERS[i] + (r.roads.length ? '：經 ' + r.roads.join(' → ') : (r.straight ? '（直線估算）' : ''));
+    t.textContent = '路線 ' + LETTERS[i] + (r.habit ? '（常走路線）' : '') + (r.roads.length ? '：經 ' + r.roads.join(' → ') : (r.straight ? '（直線估算）' : ''));
+    const rc = roadCheck(r, curPasses());
+    if (rc.length && !r.straight) {
+      const ck = document.createElement('div'); ck.className = 'small';
+      ck.textContent = rc.map((x) => (x.ok ? '✅ 經' : '⚠️ 沒走') + x.name).join('　');
+      ck.style.fontWeight = '400';
+      t.appendChild(ck);
+    }
     const rv = document.createElement('div'); rv.className = 'rv ' + vv.cls; rv.textContent = vv.icon + ' ' + vv.text;
     const m = document.createElement('div'); m.className = 'small';
     m.textContent = (r.dist / 1000).toFixed(1) + ' 公里・約 ' + Math.max(1, Math.round(r.dur / 60)) + ' 分鐘' + (r.via ? '（含在' + r.via + '停 ' + DWELL / 60 + ' 分鐘）' : '') +
@@ -1194,6 +1264,12 @@ async function drawRouteMap(evs) {
     rlayer = L.layerGroup().addTo(rmap);
     rmap.on('click', (e) => {
       if (!picking) return;
+      if (picking.startsWith('fix:')) {
+        // 修正預設地點的位置（記在這台裝置，常用行程照樣能用）
+        store.set('ptcam.geo.' + picking.slice(4), { lat: +e.latlng.lat.toFixed(5), lon: +e.latlng.lng.toFixed(5), user: true });
+        setPicking(null); runRoute(false);
+        return;
+      }
       rs.custom[picking] = { lat: +e.latlng.lat.toFixed(5), lon: +e.latlng.lng.toFixed(5) };
       rs[picking] = 'custom';
       syncTrip();
@@ -1252,9 +1328,18 @@ async function drawRouteMap(evs) {
   if (b) L.marker([b.lat, b.lon]).bindTooltip('終點：' + b.name, { permanent: true, direction: 'top' }).addTo(rlayer);
   const v = rs.via ? place(rs.via) : null;
   if (v) L.marker([v.lat, v.lon]).bindTooltip('途經：' + v.name, { permanent: true, direction: 'top' }).addTo(rlayer);
+  for (const k of curPasses()) {
+    const pp = place(k);
+    if (!pp.fixed) continue;
+    L.circleMarker([pp.lat, pp.lon], { radius: 7, weight: 3, color: '#1F3A5F', fillColor: '#fff', fillOpacity: 1 })
+      .bindTooltip('經過：' + pp.name, { permanent: true, direction: 'right' }).addTo(rlayer);
+  }
   if (bounds.length) rmap.fitBounds(bounds, { padding: [30, 30] });
 }
 
+function pickMsg() {
+  return picking ? '請在下方地圖上點一下' + (picking.startsWith('fix:') ? '「' + PLACES[picking.slice(4)].name + '」' : picking === 'from' ? '起點' : '終點') + '的位置。' : '';
+}
 function setPicking(which) {
   picking = which;
   $('route-map').classList.toggle('picking', !!which);
@@ -1262,7 +1347,7 @@ function setPicking(which) {
   $('r-pick-to').classList.toggle('on', which === 'to');
   if (which) {
     $('r-msg').className = 'msg';
-    $('r-msg').textContent = '請在下方地圖上點一下' + (which === 'from' ? '起點' : '終點') + '的位置。';
+    $('r-msg').textContent = pickMsg();
     $('route-map').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }
@@ -1295,6 +1380,7 @@ function initRoute() {
     [rs.custom.from, rs.custom.to] = [rs.custom.to, rs.custom.from];
     rs.sel = 0; saveRoute(); fillSelects(); runRoute(false);
   });
+  $('r-fix').addEventListener('change', () => { const k = $('r-fix').value; if (k) setPicking('fix:' + k); });
   $('r-pick-from').addEventListener('click', () => setPicking(picking === 'from' ? null : 'from'));
   $('r-pick-to').addEventListener('click', () => setPicking(picking === 'to' ? null : 'to'));
   $('r-here').addEventListener('click', () => {
@@ -1321,8 +1407,9 @@ async function enterRoute() {
   })();
   if (!refined) {
     refined = true;
-    const before = JSON.stringify([place(rs.from, 'from'), place(rs.to, 'to')]);
-    refinePlaces().then(() => { if (JSON.stringify([place(rs.from, 'from'), place(rs.to, 'to')]) !== before) runRoute(false); });
+    const snap = () => JSON.stringify([place(rs.from, 'from'), place(rs.to, 'to'), rs.via && place(rs.via)].concat(curPasses().map((k) => place(k))));
+    const before = snap();
+    refinePlaces().then(() => { if (snap() !== before) runRoute(false); });
   }
   await runRoute(false);
   await loadCams;
