@@ -704,7 +704,10 @@ const PLACES = {
   jiazhou: { name: '內埔加州大樓', addr: '內埔鄉學興路一帶', lat: 22.6125, lon: 120.5640, q: [] },
   futian: { name: '富田國小', addr: '內埔鄉富田村', lat: 22.6380, lon: 120.5720, q: ['富田國小', '富田國民小學'], r: 5 },
   guilai: { name: '歸來慈天宮（媽祖廟）', addr: '屏東市歸來里', lat: 22.6520, lon: 120.5100, q: ['歸來慈天宮', '慈天宮'], r: 4 },
-  // 以下為「途中經過」的點：只有定位成功（OpenStreetMap 找到或自己在地圖上修正）才會強制路線經過
+  // 以下為「途中經過」的點：只有定位成功（OpenStreetMap 找到或自己在地圖上修正）才會強制路線經過；check 的只檢查路名
+  dexiu: { name: '德修路', addr: '內埔鄉', lat: 22.6140, lon: 120.5660, q: ['德修路, 內埔鄉', '德修路, 屏東縣'], r: 5, pass: true, road: true },
+  dongning: { name: '東寧國小', addr: '內埔鄉自強路85號', lat: 22.6180, lon: 120.5630, q: ['東寧國小', '東寧國民小學'], r: 4, pass: true },
+  ziqiang: { name: '自強路', addr: '內埔鄉（東寧國小前）', lat: 22.6180, lon: 120.5630, q: [], pass: true, road: true, check: true },
   xishi: { name: '西勢國小', addr: '竹田鄉西勢村', lat: 22.6000, lon: 120.5280, q: ['西勢國小', '西勢國民小學'], r: 5, pass: true },
   dachun: { name: '大春路', lat: 22.6250, lon: 120.5100, q: ['大春路, 屏東縣'], r: 10, pass: true, road: true },
   dahu: { name: '大湖路', addr: '屏東市大湖里一帶', lat: 22.6400, lon: 120.4970, q: ['大湖路, 屏東市', '大湖路, 屏東縣'], r: 8, pass: true, road: true }
@@ -712,7 +715,7 @@ const PLACES = {
 // 常用行程（起點 → 途經 → 終點）
 const TRIPS = [
   { id: 'me', name: '🛵 育英分校 → 屏基', from: 'yuying', via: '', to: 'ptch' },
-  { id: 'wife', name: '👩 老婆接大寶：加州大樓 → 富田國小 → 歸來媽祖廟', from: 'jiazhou', via: 'futian', to: 'guilai', passes: ['xishi', 'dachun', 'dahu'] }
+  { id: 'wife', name: '👩 老婆接大寶：加州大樓 → 東寧國小 → 富田國小 → 歸來媽祖廟', from: 'jiazhou', via: 'futian', to: 'guilai', before: ['dexiu', 'dongning', 'ziqiang'], passes: ['xishi', 'dachun', 'dahu'] }
 ];
 const DWELL = 5 * 60; // 中途停靠預估停留秒數
 const OSRM = 'https://router.project-osrm.org/route/v1/driving/';
@@ -848,7 +851,11 @@ function fillSelects() {
 }
 
 function curTrip() { return TRIPS.find((x) => x.from === rs.from && x.via === (rs.via || '') && x.to === rs.to) || null; }
-function curPasses() { const t = curTrip(); return t && t.passes ? t.passes : []; }
+// 途中經過的點：before 在途經（停靠）點之前，passes 在之後
+function curBefore() { const t = curTrip(); return t && t.before ? t.before : []; }
+function curAfter() { const t = curTrip(); return t && t.passes ? t.passes : []; }
+function curPasses() { return curBefore().concat(curAfter()); }
+function waypoints(keys) { return keys.filter((k) => !PLACES[k].check).map((k) => place(k)).filter((p) => p && p.fixed); }
 function syncTrip() {
   const t = curTrip();
   $('r-trip').value = t ? t.id : '';
@@ -857,7 +864,7 @@ function syncTrip() {
 // 「修正地點位置」選單：列出目前行程用到的預設地點
 function fillFix() {
   const sel = $('r-fix'); if (!sel) return;
-  const keys = [rs.from, rs.via, ...curPasses(), rs.to].filter((k) => k && PLACES[k]);
+  const keys = [rs.from, ...curBefore(), rs.via, ...curAfter(), rs.to].filter((k) => k && PLACES[k] && !PLACES[k].check);
   sel.textContent = '';
   const o0 = document.createElement('option'); o0.value = ''; o0.textContent = '選地點後在地圖上點'; sel.appendChild(o0);
   for (const k of [...new Set(keys)]) {
@@ -942,12 +949,14 @@ async function getTripRoutes(stops) {
   return combos.sort((x, y) => x.dur - y.dur).slice(0, 4);
 }
 // 常走路線：照順序經過已定位的途中點（西勢國小、大春路…），一次查出一條
-async function habitRoute(stops, passes) {
-  const pts = stops.length === 3 ? [stops[0], stops[1], ...passes, stops[2]] : [stops[0], ...passes, stops[1]];
+async function habitRoute(stops, before, after) {
+  const pts = stops.length === 3 ? [stops[0], ...before, stops[1], ...after, stops[2]] : [stops[0], ...before, ...after, stops[1]];
   try {
     const r = (await osrm(pts, false))[0];
-    if (stops.length === 3 && r.legs.length) {
-      const d0 = r.legs[0].dur, f = r.legs[0].dist / (r.dist || 1);
+    if (stops.length === 3 && r.legs.length > before.length) {
+      // 到停靠點為止的各段加總，之後加上停留時間
+      const head = r.legs.slice(0, before.length + 1);
+      const d0 = head.reduce((x, l) => x + l.dur, 0), f = head.reduce((x, l) => x + l.dist, 0) / (r.dist || 1);
       r.segs = [[0, f, 0, d0], [f, 1, d0 + DWELL, r.dur + DWELL]];
       r.dur += DWELL; r.via = stops[1].name;
     }
@@ -1053,14 +1062,14 @@ async function runRoute(force) {
   fillFix();
   if (!a || !b) { msg.className = 'msg err'; msg.textContent = '請先選好起點與終點（自訂地點請按「地圖上點起點／終點」）。'; return; }
   const stops = v ? [a, v, b] : [a, b];
-  const passes = curPasses().map((k2) => place(k2)).filter((p2) => p2 && p2.fixed);
-  const k = stops.concat(passes).map((p) => p.lat.toFixed(5) + ',' + p.lon.toFixed(5)).join(';');
+  const before = waypoints(curBefore()), after = waypoints(curAfter());
+  const k = stops.concat(['|'], before, ['|'], after).map((p) => p === '|' ? p : p.lat.toFixed(5) + ',' + p.lon.toFixed(5)).join(';');
   msg.textContent = '查詢路線與天氣中…';
   try {
     if (force || k !== routeKey || !routes.length) {
       routes = await getTripRoutes(stops);
-      if (passes.length && !routes[0].straight) {
-        const h = await habitRoute(stops, passes);
+      if ((before.length || after.length) && !routes[0].straight) {
+        const h = await habitRoute(stops, before, after);
         if (h) routes = [h].concat(routes.filter((r) => Math.abs(r.dist - h.dist) > h.dist * 0.01)).slice(0, 4);
       }
       routes.forEach((r) => { r.samples = samplePoints(r); });
@@ -1080,9 +1089,11 @@ async function runRoute(force) {
 
 function renderPlaces(a, b, v) {
   const f = (p) => p ? p.name + (p.addr ? '（' + p.addr + '）' : '') + (p.fixed || !p.addr ? '' : '・位置為估計') : '未設定';
-  const ps = curPasses().map((k) => PLACES[k].name + (place(k).fixed ? '' : '（未定位，按「修正地點位置」設定）'));
-  $('r-places').textContent = '起點：' + f(a) + (v ? '　→　途經：' + f(v) + '（停留約 ' + DWELL / 60 + ' 分鐘）' : '') +
-    (ps.length ? '　→　途中經過：' + ps.join('、') : '') + '　→　終點：' + f(b);
+  const ps = (keys) => keys.map((k) => PLACES[k].name + (PLACES[k].check ? '（檢查路名）' : place(k).fixed ? '' : '（未定位，按「修正地點位置」設定）'));
+  const pb = ps(curBefore()), pa = ps(curAfter());
+  $('r-places').textContent = '起點：' + f(a) + (pb.length ? '　→　途中經過：' + pb.join('、') : '') +
+    (v ? '　→　途經：' + f(v) + '（停留約 ' + DWELL / 60 + ' 分鐘）' : '') +
+    (pa.length ? '　→　途中經過：' + pa.join('、') : '') + '　→　終點：' + f(b);
 }
 
 function renderRoute() {
@@ -1330,7 +1341,7 @@ async function drawRouteMap(evs) {
   if (v) L.marker([v.lat, v.lon]).bindTooltip('途經：' + v.name, { permanent: true, direction: 'top' }).addTo(rlayer);
   for (const k of curPasses()) {
     const pp = place(k);
-    if (!pp.fixed) continue;
+    if (!pp.fixed || PLACES[k].check) continue;
     L.circleMarker([pp.lat, pp.lon], { radius: 7, weight: 3, color: '#1F3A5F', fillColor: '#fff', fillOpacity: 1 })
       .bindTooltip('經過：' + pp.name, { permanent: true, direction: 'right' }).addTo(rlayer);
   }
