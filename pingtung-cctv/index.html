@@ -186,12 +186,14 @@ body.route-mode .not-route{display:none!important}
   <section class="card">
     <h2>🚗 出門前看：沿路會不會下雨、路況如何</h2>
     <div class="filters">
+      <label class="f">常用行程<select id="r-trip"></select></label>
       <label class="f">起點<select id="r-from"></select></label>
+      <label class="f">途經（中途停靠，選填）<select id="r-via"></select></label>
       <label class="f">終點<select id="r-to"></select></label>
       <label class="f">出發時間<select id="r-depart"></select></label>
     </div>
     <div class="btns">
-      <button id="r-swap">⇅ 回程（起終點互換）</button>
+      <button id="r-swap">⇅ 回程（反向走一次）</button>
       <button id="r-pick-from">📍 地圖上點起點</button>
       <button id="r-pick-to">📍 地圖上點終點</button>
       <button id="r-here">🧭 現在位置當起點</button>
@@ -696,8 +698,17 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modalCam
 const PLACES = {
   yuying: { name: '東寧國小育英分校', addr: '內埔鄉育文路73號', lat: 22.6065, lon: 120.5620, q: ['育英分校', '育英國小'] },
   ptch: { name: '屏東基督教醫院（大連路總院）', addr: '屏東市大連路60號', lat: 22.6790, lon: 120.5013, q: ['屏東基督教醫院', '屏基'] },
-  ptchRg: { name: '屏基瑞光院區', addr: '屏東市建豐路2巷113號', lat: 22.6575, lon: 120.5110, q: ['屏基瑞光院區', '屏東基督教醫院 瑞光'] }
+  ptchRg: { name: '屏基瑞光院區', addr: '屏東市建豐路2巷113號', lat: 22.6575, lon: 120.5110, q: ['屏基瑞光院區', '屏東基督教醫院 瑞光'] },
+  jiazhou: { name: '內埔加州大樓', addr: '內埔鄉學興路一帶', lat: 22.6125, lon: 120.5640, q: [] },
+  futian: { name: '富田國小', addr: '內埔鄉富田村', lat: 22.6380, lon: 120.5720, q: ['富田國小', '富田國民小學'], r: 5 },
+  guilai: { name: '歸來慈天宮（媽祖廟）', addr: '屏東市歸來里', lat: 22.6520, lon: 120.5100, q: ['歸來慈天宮', '慈天宮'], r: 4 }
 };
+// 常用行程（起點 → 途經 → 終點）
+const TRIPS = [
+  { id: 'me', name: '🛵 育英分校 → 屏基', from: 'yuying', via: '', to: 'ptch' },
+  { id: 'wife', name: '👩 老婆接大寶：加州大樓 → 富田國小 → 歸來媽祖廟', from: 'jiazhou', via: 'futian', to: 'guilai' }
+];
+const DWELL = 5 * 60; // 中途停靠預估停留秒數
 const OSRM = 'https://router.project-osrm.org/route/v1/driving/';
 const METEO = 'https://api.open-meteo.com/v1/forecast';
 const RADAR = 'https://www.cwa.gov.tw/Data/radar/CV1_3600.png';
@@ -742,7 +753,7 @@ function probAt(key, t) {
 function riskCls(p) { return p == null ? '' : p >= 60 ? 'bad' : p >= 30 ? 'warn' : 'good'; }
 const LETTERS = 'ABCDE';
 
-const rs = Object.assign({ from: 'yuying', to: 'ptch', depart: 0, sel: 0, custom: { from: null, to: null } }, store.get('ptcam.route', {}));
+const rs = Object.assign({ from: 'yuying', via: '', to: 'ptch', depart: 0, sel: 0, custom: { from: null, to: null } }, store.get('ptcam.route', {}));
 let routes = [];        // 目前的路線結果
 let wx = {};            // 天氣：點的 key → 預報
 let wxAt = 0;
@@ -751,7 +762,7 @@ let picking = null;     // 'from' | 'to'
 let rmap = null, rlayer = null;
 let radarTimer = null;
 
-function saveRoute() { store.set('ptcam.route', { from: rs.from, to: rs.to, depart: rs.depart, sel: rs.sel, custom: rs.custom }); }
+function saveRoute() { store.set('ptcam.route', { from: rs.from, via: rs.via, to: rs.to, depart: rs.depart, sel: rs.sel, custom: rs.custom }); }
 
 function km(aLat, aLon, bLat, bLon) {
   const R = 6371, rad = Math.PI / 180;
@@ -768,7 +779,7 @@ function place(k, which) {
   return g && g.lat != null ? Object.assign({}, p, { lat: g.lat, lon: g.lon, fixed: true }) : p;
 }
 
-// 用 OpenStreetMap 地名搜尋校正預設地點（只接受離估計位置 3 公里內的結果）
+// 用 OpenStreetMap 地名搜尋校正預設地點（只接受離估計位置 3～5 公里內的結果）
 async function refinePlaces() {
   for (const k of Object.keys(PLACES)) {
     const had = store.get('ptcam.geo.' + k, null);
@@ -782,7 +793,7 @@ async function refinePlaces() {
         if (!res.ok) return; // 服務暫時不能用：下次再試
         const hits = (await res.json())
           .map((h) => ({ lat: +h.lat, lon: +h.lon }))
-          .filter((h) => km(h.lat, h.lon, p.lat, p.lon) <= 3)
+          .filter((h) => km(h.lat, h.lon, p.lat, p.lon) <= (p.r || 3))
           .sort((a, b) => km(a.lat, a.lon, p.lat, p.lon) - km(b.lat, b.lon, p.lat, p.lon));
         if (hits.length) { store.set('ptcam.geo.' + k, hits[0]); found = true; break; }
       } catch (e) { return; }
@@ -806,6 +817,16 @@ function fillSelects() {
   const keys = Object.keys(PLACES).concat('custom');
   mk($('r-from'), 'from', keys);
   mk($('r-to'), 'to', keys);
+  const v = $('r-via'); v.textContent = '';
+  [''].concat(Object.keys(PLACES)).forEach((k) => {
+    const o = document.createElement('option'); o.value = k; o.textContent = k ? PLACES[k].name : '（不停靠）'; v.appendChild(o);
+  });
+  v.value = PLACES[rs.via] ? rs.via : '';
+  const tr = $('r-trip'); tr.textContent = '';
+  TRIPS.concat({ id: '', name: '✏️ 自訂（自己選起點、終點）' }).forEach((t) => {
+    const o = document.createElement('option'); o.value = t.id; o.textContent = t.name; tr.appendChild(o);
+  });
+  syncTrip();
   const d = $('r-depart'); d.textContent = '';
   for (const m of DEPARTS) {
     const o = document.createElement('option');
@@ -817,6 +838,10 @@ function fillSelects() {
   d.value = String(rs.depart);
 }
 
+function syncTrip() {
+  const t = TRIPS.find((x) => x.from === rs.from && x.via === (rs.via || '') && x.to === rs.to);
+  $('r-trip').value = t ? t.id : '';
+}
 function hhmm(d) { return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Taipei' }); }
 function hourKey(d) {
   const p = {};
@@ -856,6 +881,34 @@ async function getRoutes(a, b) {
     const d = km(a.lat, a.lon, b.lat, b.lon) * 1.3;
     return [{ coords: [[a.lat, a.lon], [b.lat, b.lon]], dist: d * 1000, dur: d / 40 * 3600, roads: [], straight: true }];
   }
+}
+
+// 起點 → 途經 → 終點：每段各自取替代路線，再組合（最多 4 種，依時間排序）
+async function getTripRoutes(stops) {
+  if (stops.length === 2) return getRoutes(stops[0], stops[1]);
+  const legs = await Promise.all([getRoutes(stops[0], stops[1]), getRoutes(stops[1], stops[2])]);
+  const combos = [];
+  for (const a of legs[0].slice(0, 3)) {
+    for (const b of legs[1].slice(0, 3)) {
+      const f = a.dist / ((a.dist + b.dist) || 1);
+      combos.push({
+        coords: a.coords.concat(b.coords.slice(1)),
+        dist: a.dist + b.dist,
+        dur: a.dur + DWELL + b.dur,
+        roads: [...new Set(a.roads.concat(b.roads))].slice(0, 6),
+        straight: a.straight || b.straight,
+        via: stops[1].name,
+        segs: [[0, f, 0, a.dur], [f, 1, a.dur + DWELL, a.dur + DWELL + b.dur]]
+      });
+    }
+  }
+  return combos.sort((x, y) => x.dur - y.dur).slice(0, 4);
+}
+// 路線上某個位置（0～1）預計是出發後幾秒（有中途停靠時要加上停留時間）
+function timeAt(rt, f) {
+  if (!rt.segs) return f * rt.dur;
+  for (const [f0, f1, t0, t1] of rt.segs) if (f <= f1 || f1 === 1) return t0 + (f1 > f0 ? (Math.max(f, f0) - f0) / (f1 - f0) : 0) * (t1 - t0);
+  return rt.dur;
 }
 
 // 沿路線每約 3 公里取一個點
@@ -916,7 +969,7 @@ function evalRoute(rt, depart) {
   const out = { maxProb: null, maxMm: 0, rainingNow: false, pts: [] };
   for (const p of rt.samples) {
     const w = wx[p.key];
-    const t = new Date(depart.getTime() + p.f * rt.dur * 1000);
+    const t = new Date(depart.getTime() + timeAt(rt, p.f) * 1000);
     const idx = w ? w.times.indexOf(hourKey(t)) : -1;
     const prob = idx >= 0 ? w.prob[idx] : null, mm = idx >= 0 ? w.mm[idx] : null, code = idx >= 0 ? w.code[idx] : null;
     if (prob != null) out.maxProb = Math.max(out.maxProb == null ? 0 : out.maxProb, prob);
@@ -938,16 +991,17 @@ function departDate() { return new Date(Date.now() + rs.depart * 60000); }
 
 /* 主流程 */
 async function runRoute(force) {
-  const a = place(rs.from, 'from'), b = place(rs.to, 'to');
+  const a = place(rs.from, 'from'), b = place(rs.to, 'to'), v = rs.via ? place(rs.via) : null;
   const msg = $('r-msg');
   msg.className = 'msg';
-  renderPlaces(a, b);
+  renderPlaces(a, b, v);
   if (!a || !b) { msg.className = 'msg err'; msg.textContent = '請先選好起點與終點（自訂地點請按「地圖上點起點／終點」）。'; return; }
-  const k = [a.lat, a.lon, b.lat, b.lon].map((v) => v.toFixed(5)).join(',');
+  const stops = v ? [a, v, b] : [a, b];
+  const k = stops.map((p) => p.lat.toFixed(5) + ',' + p.lon.toFixed(5)).join(';');
   msg.textContent = '查詢路線與天氣中…';
   try {
     if (force || k !== routeKey || !routes.length) {
-      routes = await getRoutes(a, b);
+      routes = await getTripRoutes(stops);
       routes.forEach((r) => { r.samples = samplePoints(r); });
       cells = routes[0].straight ? [] : makeGrid();
       routeKey = k;
@@ -963,9 +1017,9 @@ async function runRoute(force) {
   renderRoute();
 }
 
-function renderPlaces(a, b) {
+function renderPlaces(a, b, v) {
   const f = (p) => p ? p.name + (p.addr ? '（' + p.addr + '）' : '') + (p.fixed || !p.addr ? '' : '・位置為估計') : '未設定';
-  $('r-places').textContent = '起點：' + f(a) + '　→　終點：' + f(b);
+  $('r-places').textContent = '起點：' + f(a) + (v ? '　→　途經：' + f(v) + '（停留約 ' + DWELL / 60 + ' 分鐘）' : '') + '　→　終點：' + f(b);
 }
 
 function renderRoute() {
@@ -1023,7 +1077,7 @@ function renderRoute() {
     t.textContent = '路線 ' + LETTERS[i] + (r.roads.length ? '：經 ' + r.roads.join(' → ') : (r.straight ? '（直線估算）' : ''));
     const rv = document.createElement('div'); rv.className = 'rv ' + vv.cls; rv.textContent = vv.icon + ' ' + vv.text;
     const m = document.createElement('div'); m.className = 'small';
-    m.textContent = (r.dist / 1000).toFixed(1) + ' 公里・約 ' + Math.max(1, Math.round(r.dur / 60)) + ' 分鐘' +
+    m.textContent = (r.dist / 1000).toFixed(1) + ' 公里・約 ' + Math.max(1, Math.round(r.dur / 60)) + ' 分鐘' + (r.via ? '（含在' + r.via + '停 ' + DWELL / 60 + ' 分鐘）' : '') +
       (e.maxProb != null ? '・最高降雨機率 ' + e.maxProb + '%' : '') + '・沿線攝影機 ' + camsAlong(r).length + ' 支';
     card.append(t, rv, m);
     card.addEventListener('click', () => { rs.sel = i; saveRoute(); renderRoute(); });
@@ -1050,7 +1104,7 @@ function renderRoute() {
 }
 
 /* 容易下雨的區域 */
-function zoneTime(sel) { return new Date(departDate().getTime() + (routes[sel] ? routes[sel].dur * 500 : 0)); }
+function zoneTime(sel) { return new Date(departDate().getTime() + (routes[sel] ? timeAt(routes[sel], 0.5) * 1000 : 0)); }
 function renderZones(evs, sel) {
   const box = $('r-zones'), ul = $('r-zones-list');
   ul.textContent = '';
@@ -1142,6 +1196,7 @@ async function drawRouteMap(evs) {
       if (!picking) return;
       rs.custom[picking] = { lat: +e.latlng.lat.toFixed(5), lon: +e.latlng.lng.toFixed(5) };
       rs[picking] = 'custom';
+      syncTrip();
       $('r-' + picking).value = 'custom';
       setPicking(null); saveRoute(); runRoute(false);
     });
@@ -1195,6 +1250,8 @@ async function drawRouteMap(evs) {
   const a = place(rs.from, 'from'), b = place(rs.to, 'to');
   if (a) L.marker([a.lat, a.lon]).bindTooltip('起點：' + a.name, { permanent: true, direction: 'top' }).addTo(rlayer);
   if (b) L.marker([b.lat, b.lon]).bindTooltip('終點：' + b.name, { permanent: true, direction: 'top' }).addTo(rlayer);
+  const v = rs.via ? place(rs.via) : null;
+  if (v) L.marker([v.lat, v.lon]).bindTooltip('途經：' + v.name, { permanent: true, direction: 'top' }).addTo(rlayer);
   if (bounds.length) rmap.fitBounds(bounds, { padding: [30, 30] });
 }
 
@@ -1223,8 +1280,15 @@ function initRoute() {
   if (routeInited) return;
   routeInited = true;
   fillSelects();
-  $('r-from').addEventListener('change', () => { rs.from = $('r-from').value; saveRoute(); if (rs.from === 'custom' && !rs.custom.from) setPicking('from'); else runRoute(false); });
-  $('r-to').addEventListener('change', () => { rs.to = $('r-to').value; saveRoute(); if (rs.to === 'custom' && !rs.custom.to) setPicking('to'); else runRoute(false); });
+  $('r-trip').addEventListener('change', () => {
+    const t = TRIPS.find((x) => x.id === $('r-trip').value);
+    if (!t) return;
+    rs.from = t.from; rs.via = t.via; rs.to = t.to; rs.sel = 0;
+    saveRoute(); fillSelects(); runRoute(false);
+  });
+  $('r-via').addEventListener('change', () => { rs.via = $('r-via').value; rs.sel = 0; saveRoute(); syncTrip(); runRoute(false); });
+  $('r-from').addEventListener('change', () => { rs.from = $('r-from').value; syncTrip(); saveRoute(); if (rs.from === 'custom' && !rs.custom.from) setPicking('from'); else runRoute(false); });
+  $('r-to').addEventListener('change', () => { rs.to = $('r-to').value; syncTrip(); saveRoute(); if (rs.to === 'custom' && !rs.custom.to) setPicking('to'); else runRoute(false); });
   $('r-depart').addEventListener('change', () => { rs.depart = +$('r-depart').value; saveRoute(); renderRoute(); });
   $('r-swap').addEventListener('click', () => {
     [rs.from, rs.to] = [rs.to, rs.from];
@@ -1238,7 +1302,7 @@ function initRoute() {
     $('r-msg').className = 'msg'; $('r-msg').textContent = '定位中…';
     navigator.geolocation.getCurrentPosition((pos) => {
       rs.custom.from = { lat: +pos.coords.latitude.toFixed(5), lon: +pos.coords.longitude.toFixed(5) };
-      rs.from = 'custom'; $('r-from').value = 'custom'; saveRoute(); runRoute(false);
+      rs.from = 'custom'; $('r-from').value = 'custom'; syncTrip(); saveRoute(); runRoute(false);
     }, () => { $('r-msg').className = 'msg err'; $('r-msg').textContent = '無法取得位置（請允許瀏覽器使用定位）。'; }, { enableHighAccuracy: true, timeout: 15000 });
   });
   $('r-go').addEventListener('click', () => { fillSelects(); runRoute(true); });
