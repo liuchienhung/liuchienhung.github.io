@@ -709,13 +709,14 @@ const PLACES = {
   dongning: { name: '東寧國小', addr: '內埔鄉自強路85號', lat: 22.6180, lon: 120.5630, q: ['東寧國小', '東寧國民小學'], r: 4, pass: true },
   ziqiang: { name: '自強路', addr: '內埔鄉（東寧國小前）', lat: 22.6180, lon: 120.5630, q: [], pass: true, road: true, check: true },
   xishi: { name: '西勢國小', addr: '竹田鄉西勢村', lat: 22.6000, lon: 120.5280, q: ['西勢國小', '西勢國民小學'], r: 5, pass: true },
+  yongda: { name: '永達名谷宿舍', addr: '麟洛鄉永達技術學院一帶', lat: 22.6520, lon: 120.5180, q: ['永達名谷', '永達技術學院', '永達科技大學'], r: 4, pass: true },
   dachun: { name: '大春路', lat: 22.6250, lon: 120.5100, q: ['大春路, 屏東縣'], r: 10, pass: true, road: true },
   dahu: { name: '大湖路', addr: '屏東市大湖里一帶', lat: 22.6400, lon: 120.4970, q: ['大湖路, 屏東市', '大湖路, 屏東縣'], r: 8, pass: true, road: true }
 };
 // 常用行程（起點 → 途經 → 終點）
 const TRIPS = [
   { id: 'me', name: '🛵 育英分校 → 屏基', from: 'yuying', via: '', to: 'ptch' },
-  { id: 'wife', name: '👩 老婆接大寶：加州大樓 → 東寧國小 → 富田國小 → 歸來媽祖廟', from: 'jiazhou', via: 'futian', to: 'guilai', before: ['dexiu', 'dongning', 'ziqiang'], passes: ['xishi', 'dachun', 'dahu'] }
+  { id: 'wife', name: '👩 老婆接大寶：加州大樓 → 東寧國小 → 富田國小 → 歸來媽祖廟', from: 'jiazhou', via: 'futian', to: 'guilai', before: ['dexiu', 'dongning', 'ziqiang'], passes: ['xishi', 'yongda', 'dachun', 'dahu'] }
 ];
 const DWELL = 5 * 60; // 中途停靠預估停留秒數
 const OSRM = 'https://router.project-osrm.org/route/v1/driving/';
