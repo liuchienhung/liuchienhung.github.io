@@ -51,6 +51,7 @@ label.f{display:flex;flex-direction:column;gap:4px;font-size:.88rem;font-weight:
 .chip.ok{border-color:var(--good);color:var(--good)} .chip.err{border-color:var(--bad);color:var(--bad)} .chip.wait{color:var(--muted)}
 .msg{margin-top:8px;font-size:.9rem}
 .msg.err{color:var(--bad)}
+.msg.ok{color:var(--good)}
 .summary{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-top:16px}
 .summary strong{color:var(--ink)}
 .cams{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:10px}
@@ -202,6 +203,21 @@ body.route-mode .not-route{display:none!important}
     </div>
     <div class="msg" id="r-msg"></div>
     <p class="small" id="r-places"></p>
+    <details id="r-gmap-box">
+      <summary>📥 匯入 Google 地圖路線（照實際騎的路走）</summary>
+      <ol class="small" style="margin:6px 0 0;padding-left:1.3em">
+        <li>在 Google 地圖規劃好路線（可拖曳路線改走平常的路），按「分享」複製連結。</li>
+        <li>短網址（maps.app.goo.gl）不能直接讀：請用瀏覽器打開它，等網址列變成很長的 <code>google.com/maps/dir/…</code> 後，複製整個網址。</li>
+        <li>貼在下面按「匯入」。也可以直接貼座標，一行一個點，例如 <code>22.6512, 120.5134</code>。</li>
+      </ol>
+      <textarea id="r-gmap" rows="3" style="width:100%;margin-top:8px;font-size:.85rem" placeholder="https://www.google.com/maps/dir/…"></textarea>
+      <div class="btns">
+        <button id="r-gmap-go" class="primary">匯入到目前的行程</button>
+        <button id="r-gmap-clear">清除匯入的路線</button>
+      </div>
+      <div class="msg" id="r-gmap-msg"></div>
+      <p class="small">匯入的路線只存在這台裝置的瀏覽器，不會出現在網站上；起點、終點若是住家也不會公開。</p>
+    </details>
   </section>
 
   <section class="card" id="r-sum" hidden>
@@ -949,6 +965,46 @@ async function getTripRoutes(stops) {
   }
   return combos.sort((x, y) => x.dur - y.dur).slice(0, 4);
 }
+// 匯入的 Google 地圖路線（只存在這台裝置）
+function tripKey() { const t = curTrip(); return t ? t.id : 'custom'; }
+function gmapPoints() { const g = store.get('ptcam.gmap.' + tripKey(), null); return Array.isArray(g) && g.length >= 2 ? g : null; }
+function parseGmaps(text) {
+  let pts = [];
+  // 長網址 data 參數中的每個路點：!1d經度!2d緯度
+  const re = /!1d(-?\d+\.\d+)!2d(-?\d+\.\d+)/g;
+  let m;
+  while ((m = re.exec(text))) pts.push({ lat: +m[2], lon: +m[1] });
+  // /maps/dir/緯度,經度/緯度,經度/… 或一行一個座標
+  if (!pts.length) {
+    const re2 = /(-?\d{1,2}\.\d{3,})\s*,\s*(-?\d{2,3}\.\d{3,})/g;
+    const src = text.includes('/dir/') ? decodeURIComponent(text.split('/dir/')[1].split('/@')[0].split('/data=')[0]) : text;
+    while ((m = re2.exec(src))) pts.push({ lat: +m[1], lon: +m[2] });
+  }
+  pts = pts.filter((p) => p.lat > 21 && p.lat < 26.5 && p.lon > 119 && p.lon < 122.5);
+  // 去掉相鄰重複的點（30 公尺內）
+  const out = [];
+  for (const p of pts) if (!out.length || km(out[out.length - 1].lat, out[out.length - 1].lon, p.lat, p.lon) > 0.03) out.push({ lat: +p.lat.toFixed(6), lon: +p.lon.toFixed(6) });
+  return out.slice(0, 25);
+}
+async function gmapRoute(points, via) {
+  try {
+    const r = (await osrm(points, false))[0];
+    r.habit = true; r.gmap = true;
+    if (via && r.legs.length) {
+      // 停留時間加在最接近途經點的那個路點之後
+      let bi = -1, bd = 1;
+      points.forEach((p, i) => { const d = km(p.lat, p.lon, via.lat, via.lon); if (i > 0 && i < points.length - 1 && d < bd) { bd = d; bi = i; } });
+      if (bi > 0) {
+        const head = r.legs.slice(0, bi);
+        const d0 = head.reduce((x, l) => x + l.dur, 0), f = head.reduce((x, l) => x + l.dist, 0) / (r.dist || 1);
+        r.segs = [[0, f, 0, d0], [f, 1, d0 + DWELL, r.dur + DWELL]];
+        r.dur += DWELL; r.via = via.name;
+      }
+    }
+    return r;
+  } catch (e) { return null; }
+}
+
 // 常走路線：照順序經過已定位的途中點（西勢國小、大春路…），一次查出一條
 async function habitRoute(stops, before, after) {
   const pts = stops.length === 3 ? [stops[0], ...before, stops[1], ...after, stops[2]] : [stops[0], ...before, ...after, stops[1]];
@@ -1064,12 +1120,16 @@ async function runRoute(force) {
   if (!a || !b) { msg.className = 'msg err'; msg.textContent = '請先選好起點與終點（自訂地點請按「地圖上點起點／終點」）。'; return; }
   const stops = v ? [a, v, b] : [a, b];
   const before = waypoints(curBefore()), after = waypoints(curAfter());
-  const k = stops.concat(['|'], before, ['|'], after).map((p) => p === '|' ? p : p.lat.toFixed(5) + ',' + p.lon.toFixed(5)).join(';');
+  const gm = gmapPoints();
+  const k = stops.concat(['|'], before, ['|'], after, ['|'], gm || []).map((p) => p === '|' ? p : p.lat.toFixed(5) + ',' + p.lon.toFixed(5)).join(';');
   msg.textContent = '查詢路線與天氣中…';
   try {
     if (force || k !== routeKey || !routes.length) {
       routes = await getTripRoutes(stops);
-      if ((before.length || after.length) && !routes[0].straight) {
+      if (gm && !routes[0].straight) {
+        const h = await gmapRoute(gm, v);
+        if (h) routes = [h].concat(routes.filter((r) => Math.abs(r.dist - h.dist) > h.dist * 0.01)).slice(0, 4);
+      } else if ((before.length || after.length) && !routes[0].straight) {
         const h = await habitRoute(stops, before, after);
         if (h) routes = [h].concat(routes.filter((r) => Math.abs(r.dist - h.dist) > h.dist * 0.01)).slice(0, 4);
       }
@@ -1149,7 +1209,7 @@ function renderRoute() {
     const card = document.createElement('button');
     card.className = 'route' + (i === sel ? ' sel' : '');
     const t = document.createElement('div'); t.className = 'rt';
-    t.textContent = '路線 ' + LETTERS[i] + (r.habit ? '（常走路線）' : '') + (r.roads.length ? '：經 ' + r.roads.join(' → ') : (r.straight ? '（直線估算）' : ''));
+    t.textContent = '路線 ' + LETTERS[i] + (r.gmap ? '（Google 地圖匯入的路線）' : r.habit ? '（常走路線）' : '') + (r.roads.length ? '：經 ' + r.roads.join(' → ') : (r.straight ? '（直線估算）' : ''));
     const rc = roadCheck(r, curPasses());
     if (rc.length && !r.straight) {
       const ck = document.createElement('div'); ck.className = 'small';
@@ -1346,6 +1406,10 @@ async function drawRouteMap(evs) {
     L.circleMarker([pp.lat, pp.lon], { radius: 7, weight: 3, color: '#1F3A5F', fillColor: '#fff', fillOpacity: 1 })
       .bindTooltip('經過：' + pp.name, { permanent: true, direction: 'right' }).addTo(rlayer);
   }
+  (gmapPoints() || []).forEach((p, i) => {
+    L.circleMarker([p.lat, p.lon], { radius: 4, weight: 2, color: '#1F3A5F', fillColor: '#FFD9A8', fillOpacity: 1 })
+      .bindTooltip('Google 路線點 ' + (i + 1)).addTo(rlayer);
+  });
   if (bounds.length) rmap.fitBounds(bounds, { padding: [30, 30] });
 }
 
@@ -1392,6 +1456,26 @@ function initRoute() {
     [rs.custom.from, rs.custom.to] = [rs.custom.to, rs.custom.from];
     rs.sel = 0; saveRoute(); fillSelects(); runRoute(false);
   });
+  const gmapStatus = () => {
+    const g = gmapPoints();
+    $('r-gmap-msg').className = 'msg' + (g ? ' ok' : '');
+    $('r-gmap-msg').textContent = g ? '目前行程已匯入 ' + g.length + ' 個路點，「路線 A」會照這條路走。' : '';
+  };
+  $('r-gmap-go').addEventListener('click', () => {
+    const text = $('r-gmap').value.trim();
+    const m = $('r-gmap-msg');
+    if (/goo\.gl|g\.co\//.test(text) && !/!1d|\/dir\//.test(text)) {
+      m.className = 'msg err'; m.textContent = '這是短網址，網頁讀不到內容。請用瀏覽器打開它，複製網址列的長網址再貼上。'; return;
+    }
+    const pts = parseGmaps(text);
+    if (pts.length < 2) { m.className = 'msg err'; m.textContent = '沒有讀到路線上的座標（至少要 2 個點）。請確認貼的是 google.com/maps/dir/ 開頭的長網址。'; return; }
+    store.set('ptcam.gmap.' + tripKey(), pts);
+    $('r-gmap').value = '';
+    rs.sel = 0; saveRoute(); gmapStatus(); runRoute(false);
+  });
+  $('r-gmap-clear').addEventListener('click', () => { store.del('ptcam.gmap.' + tripKey()); gmapStatus(); runRoute(false); });
+  $('r-trip').addEventListener('change', gmapStatus);
+  gmapStatus();
   $('r-fix').addEventListener('change', () => { const k = $('r-fix').value; if (k) setPicking('fix:' + k); });
   $('r-pick-from').addEventListener('click', () => setPicking(picking === 'from' ? null : 'from'));
   $('r-pick-to').addEventListener('click', () => setPicking(picking === 'to' ? null : 'to'));
