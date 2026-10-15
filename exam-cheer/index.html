@@ -85,6 +85,13 @@ h1,h2,h3{font-family:var(--f-kai);text-wrap:balance;margin:0}
 @media (max-width:420px){.stickers{grid-template-columns:repeat(6,1fr)}}
 .stk{aspect-ratio:1;max-width:100%;border-radius:12px;display:grid;place-items:center;font-size:1.6rem;background:var(--soft)}
 .stk.empty{font-size:.9rem;color:var(--muted);border:2px dashed var(--line);background:transparent}
+.voice{display:flex;flex-direction:column;gap:10px}
+.voice .vrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.voice select{font:inherit;color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:12px;min-height:48px;padding:6px 10px;flex:1 1 220px;min-width:0;max-width:100%}
+.voice .seg{display:flex;gap:6px}
+.voice .seg button[aria-pressed="true"]{border-color:var(--leaf);background:var(--leaf-soft);font-weight:700}
+.voice .vnote{margin:0;font-size:.88rem;color:var(--muted);max-width:62ch}
+.voice .vnote.warn{background:var(--hint);color:var(--hint-ink);border-radius:12px;padding:8px 12px}
 details.parent summary{cursor:pointer;font-family:var(--f-kai);font-size:1.15rem;font-weight:700;min-height:44px;display:flex;align-items:center}
 details.parent ul{margin:6px 0 0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px;max-width:62ch}
 details.parent li{color:var(--muted)} details.parent li b{color:var(--ink)}
@@ -203,6 +210,23 @@ rt.mask{color:var(--sun);font-weight:700}
     <h2>我的貼紙本</h2>
     <div class="stickers" id="stickers"></div>
   </div>
+  <div class="card voice">
+    <h2>龜龜的聲音</h2>
+    <div class="vrow">
+      <label for="voiceSel" class="vnote">朗讀語音</label>
+      <select id="voiceSel"></select>
+      <button type="button" id="voiceTest">▶ 試聽</button>
+    </div>
+    <div class="vrow">
+      <span class="vnote">說話速度</span>
+      <div class="seg" id="rateSeg">
+        <button type="button" data-r="0.75">慢慢說</button>
+        <button type="button" data-r="0.88">一般</button>
+        <button type="button" data-r="1">快一點</button>
+      </div>
+    </div>
+    <p class="vnote" id="voiceNote"></p>
+  </div>
   <details class="card parent">
     <summary>給爸爸媽媽的小紙條</summary>
     <ul>
@@ -253,6 +277,7 @@ rt.mask{color:var(--sun);font-weight:700}
 
 <script>
 const KID = '大寶';
+const VOICE_SAMPLE = `${KID}你好，我是龜龜老師。我們今天一起玩注音和數學，好不好？加油喔！`;
 
 /* ---------- 小工具 ---------- */
 const $ = s => document.querySelector(s);
@@ -266,14 +291,54 @@ const store = {
 };
 
 /* ---------- 聲音 ---------- */
-let soundOn = store.get('sound', true), zhVoice = null, actx = null;
-function loadVoice() { const vs = speechSynthesis.getVoices(); zhVoice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh/i.test(v.lang)) || null; }
+let soundOn = store.get('sound', true), zhVoice = null, actx = null, voices = [];
+let voicePref = store.get('voice', ''), rate = store.get('rate', 0.88);
+// 台灣國語的語音排前面；大陸普通話、粵語排後面，不會自動選到
+function twScore(v) {
+  const s = (v.lang + ' ' + v.name).toLowerCase();
+  let sc = 0;
+  if (/zh[-_]tw|cmn[-_]hant[-_]tw|hant[-_]tw/.test(s)) sc += 100;
+  if (/臺灣|台灣|taiwan|國語/.test(s)) sc += 60;
+  if (/hsiaochen|hsiaoyu|yating|mei-?jia|zhiwei|yunjhe|hanhan/.test(s)) sc += 20;
+  if (/natural|online|neural|enhanced|premium|高品質/.test(s)) sc += 15;
+  if (/zh[-_]hk|yue|cantonese|粵|廣東/.test(s)) sc -= 80;
+  if (/zh[-_]cn|cmn[-_]hans|普通话|mainland/.test(s)) sc -= 40;
+  return sc;
+}
+const isTW = v => twScore(v) >= 60;
+function loadVoice() {
+  voices = speechSynthesis.getVoices().filter(v => /^(zh|cmn|yue)/i.test(v.lang)).sort((a, b) => twScore(b) - twScore(a));
+  const tw = voices.filter(isTW);
+  zhVoice = voices.find(v => v.voiceURI === voicePref) || tw[0] || null;
+  renderVoicePanel();
+}
 if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+function renderVoicePanel() {
+  const sel = $('#voiceSel'); if (!sel) return;
+  const tw = voices.filter(isTW);
+  sel.innerHTML = voices.length
+    ? voices.map(v => `<option value="${v.voiceURI}">${isTW(v) ? '🇹🇼 ' : ''}${v.name}（${v.lang}）</option>`).join('')
+    : '<option value="">這台裝置沒有中文語音</option>';
+  sel.disabled = !voices.length;
+  if (zhVoice) sel.value = zhVoice.voiceURI;
+  else if (voices.length) sel.insertAdjacentHTML('afterbegin', '<option value="" selected>自動（交給裝置決定）</option>');
+  $('#rateSeg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.r === rate));
+  const note = $('#voiceNote');
+  if (!('speechSynthesis' in window)) { note.textContent = '這個瀏覽器不支援朗讀，題目還是可以看著玩。'; note.className = 'vnote warn'; }
+  else if (tw.length) { note.textContent = `已找到 ${tw.length} 個台灣國語語音（有 🇹🇼 的），會自動使用。想換聲音可以在上面選，按「試聽」聽聽看。`; note.className = 'vnote'; }
+  else {
+    note.innerHTML = '這台裝置還沒有台灣國語語音，可能會聽到大陸口音。可以這樣加：<br>' +
+      '・<b>Android（三星）</b>：設定 › 一般管理 › 文字轉語音 › 偏好的引擎選「Google 語音服務」› 點⚙️ › 安裝語音資料 › 下載「中文（台灣）」，再重新打開這一頁。<br>' +
+      '・<b>iPhone／iPad</b>：設定 › 輔助使用 › 朗讀內容 › 聲音 › 中文（台灣），下載「美佳」。<br>' +
+      '・<b>電腦</b>：用 Microsoft Edge 打開，會有「曉臻 HsiaoChen」等台灣語音。';
+    note.className = 'vnote warn';
+  }
+}
 function speak(text) {
   if (!soundOn || !('speechSynthesis' in window) || !text) return;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text.replace(/[ㄅ-ㄩˊˇˋ˙]+/g, ''));
-  u.lang = 'zh-TW'; u.rate = 0.85; u.pitch = 1.1; if (zhVoice) u.voice = zhVoice;
+  u.lang = zhVoice ? zhVoice.lang : 'zh-TW'; u.rate = rate; u.pitch = 1.1; if (zhVoice) try { u.voice = zhVoice; } catch {}
   speechSynthesis.speak(u);
 }
 function chime(freqs, dur = .12, type = 'sine', vol = .12) {
@@ -296,6 +361,20 @@ function renderSoundBtns() { ['#soundBtn', '#soundBtn2'].forEach(s => { $(s).tex
   soundOn = !soundOn; store.set('sound', soundOn); renderSoundBtns();
   if (!soundOn && 'speechSynthesis' in window) speechSynthesis.cancel();
 }));
+
+$('#voiceSel').addEventListener('change', e => {
+  voicePref = e.target.value; store.set('voice', voicePref);
+  zhVoice = voices.find(v => v.voiceURI === voicePref) || null;
+  speak(VOICE_SAMPLE);
+});
+$('#voiceTest').addEventListener('click', () => {
+  if (!soundOn) { soundOn = true; store.set('sound', true); renderSoundBtns(); }
+  speak(VOICE_SAMPLE);
+});
+$('#rateSeg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  rate = +b.dataset.r; store.set('rate', rate); renderVoicePanel(); speak(VOICE_SAMPLE);
+});
 
 /* ---------- 溫柔的話 ---------- */
 const PRAISE = [
@@ -618,6 +697,7 @@ function renderHome() {
   const got = store.get('stickers', []);
   $('#stickers').innerHTML = STICKERS.map(s => got.includes(s) ? `<span class="stk em">${s}</span>` : `<span class="stk empty">?</span>`).join('');
   renderSoundBtns();
+  renderVoicePanel();
 }
 document.addEventListener('click', e => {
   const lv = e.target.closest('.level');
