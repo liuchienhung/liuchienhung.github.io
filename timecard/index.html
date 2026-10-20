@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>打卡紙板彙整</title>
+<meta name="description" content="用手機拍打卡紙板正反面，自動裁切，每月一頁，下載成 Word 與 PDF。">
+<style>
+:root{
+  --bg:#F3F1EC; --card:#FFFFFF; --ink:#1F2933; --muted:#5F6B76; --line:#DDD8CE; --soft:#EEEAE2;
+  --accent:#0F6E78; --accent-ink:#FFFFFF; --accent-soft:#D9EEF0; --ok:#2E7D4F; --ok-soft:#DCF0E3;
+  --warn:#9A5B00; --warn-soft:#FBEBD0; --danger:#B3261E; --shadow:0 1px 2px rgba(0,0,0,.06),0 4px 14px rgba(0,0,0,.06);
+  --f:"PingFang TC","Noto Sans TC","Microsoft JhengHei","Heiti TC",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15191D; --card:#1E2429; --ink:#E7ECF0; --muted:#A3AFB9; --line:#323A42; --soft:#262D33;
+  --accent:#5CC3CC; --accent-ink:#0B2226; --accent-soft:#1D3A3E; --ok:#7FD39E; --ok-soft:#1E3627;
+  --warn:#F3C077; --warn-soft:#3D3020; --danger:#F2867E; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#15191D; --card:#1E2429; --ink:#E7ECF0; --muted:#A3AFB9; --line:#323A42; --soft:#262D33;
+  --accent:#5CC3CC; --accent-ink:#0B2226; --accent-soft:#1D3A3E; --ok:#7FD39E; --ok-soft:#1E3627;
+  --warn:#F3C077; --warn-soft:#3D3020; --danger:#F2867E; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:16px;line-height:1.55;
+  padding:12px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px));
+  -webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+a{color:var(--accent)}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 14px;border-radius:10px;
+  border:1px solid var(--line);background:var(--card);font-weight:600;font-size:15px;white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--danger)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.small{min-height:36px;padding:6px 10px;font-size:14px}
+
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+header.top h1{margin:0;font-size:22px;letter-spacing:.02em}
+header.top .home{font-size:14px;text-decoration:none}
+.lead{margin:2px 0 0;color:var(--muted);font-size:14px}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+.panel h2{margin:0 0 12px;font-size:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.panel h2 .sub{font-weight:400;font-size:14px;color:var(--muted)}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0;padding:0;list-style:none}
+.steps li{background:var(--soft);border-radius:10px;padding:10px;font-size:13px;color:var(--muted)}
+.steps b{display:block;color:var(--ink);font-size:14px}
+
+.yearbar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.yearbar .y{font-size:20px;font-weight:700;min-width:96px;text-align:center}
+.yearbar .count{margin-left:auto;font-size:13px;color:var(--muted)}
+
+.months{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:560px){.months{grid-template-columns:repeat(3,1fr)}}
+.mtile{position:relative;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px;text-align:left;
+  display:flex;flex-direction:column;gap:6px;min-height:96px}
+.mtile .mname{font-weight:700;font-size:15px}
+.mtile .thumbs{display:flex;gap:4px;flex:1}
+.mtile .thumbs span{flex:1;border-radius:6px;background:var(--soft) center/cover no-repeat;min-height:44px;display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--muted)}
+.mtile.sel{outline:3px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+.mtile.cur .mname::after{content:"本月";margin-left:6px;font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:1px 6px;border-radius:99px;vertical-align:2px}
+.mtile .badge{position:absolute;top:7px;right:7px;font-size:11px;font-weight:700;padding:1px 6px;border-radius:99px}
+.badge.full{background:var(--ok-soft);color:var(--ok)}
+.badge.half{background:var(--warn-soft);color:var(--warn)}
+
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:480px){.slots{gap:8px}}
+.slot{border:1px dashed var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.slot h3{margin:0;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+.slot .ph{aspect-ratio:3/5;border-radius:8px;background:var(--soft);display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--muted);font-size:13px;text-align:center;padding:6px}
+.slot .ph img{width:100%;height:100%;object-fit:contain;background:#fff}
+.slot .acts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.slot .acts .btn{padding:6px 4px;font-size:14px}
+.slot .acts2{display:flex;gap:6px}
+.slot .acts2 .btn{flex:1}
+
+.preview-wrap{margin-top:14px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.preview-wrap .lbl{font-size:13px;color:var(--muted)}
+.a4{container-type:inline-size;width:min(100%,320px);aspect-ratio:210/297;background:#fff;color:#111;border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,.18);position:relative;overflow:hidden}
+.a4 > *{position:absolute}
+.a4 .t{font-weight:700;text-align:center;white-space:nowrap;left:0;right:0}
+.a4 img{object-fit:fill;outline:1px solid #ddd}
+.a4 .c{text-align:center;color:#333;white-space:nowrap}
+.month-dl{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:6px 12px;font-size:14px;min-height:36px}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--ink);font-weight:600}
+.chip:disabled{opacity:.4}
+.dlrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hint{font-size:13px;color:var(--muted);margin:10px 0 0}
+.empty{color:var(--muted);font-size:14px;margin:0 0 8px}
+
+/* 裁切編輯器 */
+.editor{position:fixed;inset:0;z-index:50;background:#0E1114;color:#F1F4F6;display:flex;flex-direction:column}
+.editor .bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:max(10px,env(safe-area-inset-top,0px)) 12px 10px}
+.editor .bar b{font-size:16px}
+.editor .btn{background:#232A30;border-color:#3A434B;color:#F1F4F6}
+.editor .btn.primary{background:#5CC3CC;border-color:#5CC3CC;color:#0B2226}
+.editor .stage{flex:1;position:relative;min-height:0;touch-action:none}
+.editor canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.editor .tools{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:10px 12px max(12px,env(safe-area-inset-bottom,0px))}
+.editor .tip{text-align:center;font-size:13px;color:#AEB9C2;padding:0 12px}
+.editor label.tg{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border-radius:10px;background:#232A30;border:1px solid #3A434B;font-weight:600;font-size:15px}
+.editor label.tg input{width:18px;height:18px;accent-color:#5CC3CC}
+.busy{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center}
+.busy div{background:var(--card);color:var(--ink);padding:16px 22px;border-radius:12px;font-weight:600;box-shadow:var(--shadow)}
+.toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;background:#1F2933;color:#fff;
+  padding:10px 16px;border-radius:10px;font-size:14px;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
+.warnbox{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>🗂️ 打卡紙板彙整</h1>
+      <p class="lead">手機拍打卡紙板正反面 → 自動裁切 → 每月一頁 → 下載 Word / PDF</p>
+    </div>
+    <a class="home" href="../">← 回首頁</a>
+  </header>
+
+  <div id="storageWarn" class="warnbox" hidden>這個瀏覽器無法長期保存照片（可能是無痕模式）。關閉頁面前請先下載 Word / PDF。</div>
+
+  <section class="panel">
+    <ol class="steps">
+      <li><b>1. 選月份</b>點下方月份格子</li>
+      <li><b>2. 拍正反面</b>放在深色桌面上拍，會自動框出紙板</li>
+      <li><b>3. 下載</b>年底一次匯出整年 Word / PDF</li>
+    </ol>
+  </section>
+
+  <section class="panel">
+    <div class="yearbar">
+      <button class="btn small" id="prevYear" aria-label="上一年">‹</button>
+      <span class="y" id="yearLabel">2026 年</span>
+      <button class="btn small" id="nextYear" aria-label="下一年">›</button>
+      <span class="count" id="yearCount"></span>
+    </div>
+    <div class="months" id="months"></div>
+  </section>
+
+  <section class="panel" id="monthPanel">
+    <h2 id="monthTitle">2026年10月</h2>
+    <div class="slots">
+      <div class="slot" data-side="front">
+        <h3>正面</h3>
+        <div class="ph"></div>
+        <div class="acts">
+          <button class="btn primary" data-act="camera">📷 拍照</button>
+          <button class="btn" data-act="album">🖼️ 相簿</button>
+        </div>
+        <div class="acts2" hidden>
+          <button class="btn small" data-act="recrop">✂️ 重新裁切</button>
+          <button class="btn small danger" data-act="delete">刪除</button>
+        </div>
+      </div>
+      <div class="slot" data-side="back">
+        <h3>反面</h3>
+        <div class="ph"></div>
+        <div class="acts">
+          <button class="btn primary" data-act="camera">📷 拍照</button>
+          <button class="btn" data-act="album">🖼️ 相簿</button>
+        </div>
+        <div class="acts2" hidden>
+          <button class="btn small" data-act="recrop">✂️ 重新裁切</button>
+          <button class="btn small danger" data-act="delete">刪除</button>
+        </div>
+      </div>
+    </div>
+    <div class="preview-wrap" id="previewWrap" hidden>
+      <span class="lbl">頁面預覽（A4）</span>
+      <div class="a4" id="a4"></div>
+      <div class="month-dl">
+        <button class="btn small" data-dl="docx" data-scope="month">下載本月 Word</button>
+        <button class="btn small" data-dl="pdf" data-scope="month">下載本月 PDF</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>匯出整年 <span class="sub" id="exportSub"></span></h2>
+    <p class="empty" id="exportEmpty">這一年還沒有任何照片。</p>
+    <div class="chips" id="chips"></div>
+    <div class="dlrow">
+      <button class="btn primary" data-dl="docx" data-scope="year">⬇️ 下載 Word</button>
+      <button class="btn primary" data-dl="pdf" data-scope="year">⬇️ 下載 PDF</button>
+    </div>
+    <p class="hint">每個月一頁，標題為「西元年月的打卡紀錄」，正反面排在同一頁。照片只存在這支手機的瀏覽器裡，不會上傳到任何地方；換手機或清除瀏覽器資料前，請先下載備份。</p>
+  </section>
+</div>
+
+<input type="file" id="fileCamera" accept="image/*" capture="environment" hidden>
+<input type="file" id="fileAlbum" accept="image/*" hidden>
+
+<div class="editor" id="editor" hidden>
+  <div class="bar">
+    <button class="btn" id="edCancel">取消</button>
+    <b id="edTitle">調整裁切範圍</b>
+    <button class="btn primary" id="edDone">完成</button>
+  </div>
+  <p class="tip">拖曳四個角對準打卡紙板的四個角</p>
+  <div class="stage" id="stage"><canvas id="edCanvas"></canvas></div>
+  <div class="tools">
+    <button class="btn" id="edAuto">🔍 自動偵測</button>
+    <button class="btn" id="edFull">⬜ 整張</button>
+    <button class="btn" id="edRotate">↻ 旋轉</button>
+    <label class="tg"><input type="checkbox" id="edEnhance" checked> 掃描效果</label>
+  </div>
+</div>
+
+<div class="busy" id="busy" hidden><div id="busyText">處理中…</div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+'use strict';
+/* =========================================================
+   打卡紙板彙整：全部在瀏覽器內處理，照片存在 IndexedDB。
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const SIDES = { front: '正面', back: '反面' };
+const pad2 = n => String(n).padStart(2, '0');
+const ymKey = (y, m) => `${y}-${pad2(m)}`;
+const titleOf = ym => { const [y, m] = ym.split('-'); return `${y}年${Number(m)}月的打卡紀錄`; };
+
+/* ---------------- 儲存（IndexedDB，失敗就只放記憶體） ---------------- */
+const Store = (() => {
+  const mem = new Map();
+  let db = null;
+  function openDb() {
+    return new Promise(res => {
+      try {
+        const r = indexedDB.open('timecard-db', 1);
+        r.onupgradeneeded = () => r.result.createObjectStore('cards');
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => res(null);
+        r.onblocked = () => res(null);
+      } catch (e) { res(null); }
+    });
+  }
+  function run(mode, fn) {
+    return new Promise((res, rej) => {
+      try {
+        const t = db.transaction('cards', mode);
+        const req = fn(t.objectStore('cards'));
+        t.oncomplete = () => res(req && req.result);
+        t.onerror = () => rej(t.error);
+        t.onabort = () => rej(t.error);
+      } catch (e) { rej(e); }
+    });
+  }
+  return {
+    persistent: false,
+    async init() {
+      db = await openDb();
+      if (!db) return;
+      try {
+        const all = await run('readonly', s => s.getAll());
+        (all || []).forEach(r => mem.set(r.key, r));
+        this.persistent = true;
+      } catch (e) { db = null; }
+    },
+    get: k => mem.get(k),
+    all: () => Array.from(mem.values()),
+    async put(rec) {
+      mem.set(rec.key, rec);
+      if (!db) return false;
+      try { await run('readwrite', s => s.put(rec, rec.key)); return true; } catch (e) { return false; }
+    },
+    async del(k) {
+      mem.delete(k);
+      if (!db) return;
+      try { await run('readwrite', s => s.delete(k)); } catch (e) {}
+    }
+  };
+})();
+
+/* ---------------- 小工具 ---------------- */
+function toast(msg, ms = 2600) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, ms);
+}
+function busy(on, text) { $('#busyText').textContent = text || '處理中…'; $('#busy').hidden = !on; }
+const nextFrame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+function canvasToBlob(c, type = 'image/jpeg', q = 0.9) {
+  return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('toBlob failed')), type, q));
+}
+function makeCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+async function loadBitmap(blob) {
+  // 依 EXIF 轉正（現代瀏覽器預設會處理）
+  if (window.createImageBitmap) {
+    try { return await createImageBitmap(blob, { imageOrientation: 'from-image' }); } catch (e) {}
+    try { return await createImageBitmap(blob); } catch (e) {}
+  }
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(blob); const img = new Image();
+    img.onload = () => { res(img); setTimeout(() => URL.revokeObjectURL(url), 1000); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('無法讀取圖片')); };
+    img.src = url;
+  });
+}
+function bitmapToCanvas(bm, maxDim) {
+  const w0 = bm.width || bm.naturalWidth, h0 = bm.height || bm.naturalHeight;
+  const s = Math.min(1, maxDim / Math.max(w0, h0));
+  const c = makeCanvas(Math.max(1, Math.round(w0 * s)), Math.max(1, Math.round(h0 * s)));
+  const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(bm, 0, 0, c.width, c.height);
+  return c;
+}
+const urlCache = new Map();
+function blobUrl(rec, field) {
+  const k = rec.key + ':' + field + ':' + rec.t;
+  if (!urlCache.has(k)) urlCache.set(k, URL.createObjectURL(rec[field]));
+  return urlCache.get(k);
+}
+
+/* ---------------- 自動偵測紙板四角 ---------------- */
+function detectQuad(src) {
+  const W = src.width, H = src.height;
+  const S = 320, sc = Math.min(1, S / Math.max(W, H));
+  const w = Math.max(8, Math.round(W * sc)), h = Math.max(8, Math.round(H * sc));
+  const c = makeCanvas(w, h), g = c.getContext('2d', { willReadFrequently: true });
+  g.drawImage(src, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h).data;
+  let gray = new Float32Array(w * h);
+  for (let i = 0, j = 0; i < gray.length; i++, j += 4) gray[i] = 0.299 * d[j] + 0.587 * d[j + 1] + 0.114 * d[j + 2];
+  // 模糊兩次，抹掉格線與字跡
+  for (let k = 0; k < 2; k++) gray = boxBlur(gray, w, h, 3);
+  const t = otsu(gray);
+  // 中央區域多數是哪一類，就當作紙板
+  let bright = 0, tot = 0;
+  for (let y = Math.floor(h * 0.35); y < h * 0.65; y++) for (let x = Math.floor(w * 0.35); x < w * 0.65; x++) { tot++; if (gray[y * w + x] > t) bright++; }
+  const wantBright = bright >= tot / 2;
+  let mask = new Uint8Array(w * h);
+  for (let i = 0; i < mask.length; i++) mask[i] = (gray[i] > t) === wantBright ? 1 : 0;
+  mask = morph(morph(mask, w, h, 2, false), w, h, 2, true); // 開運算：切斷細小相連
+  // 找連通區塊，挑最靠中央、最大的
+  const lab = new Int32Array(w * h).fill(-1), stack = new Int32Array(w * h);
+  let best = null;
+  const cx0 = w * 0.3, cx1 = w * 0.7, cy0 = h * 0.3, cy1 = h * 0.7;
+  for (let i0 = 0; i0 < mask.length; i0++) {
+    if (!mask[i0] || lab[i0] >= 0) continue;
+    let sp = 0; stack[sp++] = i0; lab[i0] = i0;
+    const r = { area: 0, center: 0, tl: [0, 0, 1e9], br: [0, 0, -1e9], tr: [0, 0, -1e9], bl: [0, 0, 1e9] };
+    while (sp) {
+      const i = stack[--sp], x = i % w, y = (i - x) / w;
+      r.area++;
+      if (x >= cx0 && x < cx1 && y >= cy0 && y < cy1) r.center++;
+      const s1 = x + y, s2 = x - y;
+      if (s1 < r.tl[2]) r.tl = [x, y, s1];
+      if (s1 > r.br[2]) r.br = [x + 1, y + 1, s1];
+      if (s2 > r.tr[2]) r.tr = [x + 1, y, s2];
+      if (s2 < r.bl[2]) r.bl = [x, y + 1, s2];
+      if (x > 0 && mask[i - 1] && lab[i - 1] < 0) { lab[i - 1] = i0; stack[sp++] = i - 1; }
+      if (x < w - 1 && mask[i + 1] && lab[i + 1] < 0) { lab[i + 1] = i0; stack[sp++] = i + 1; }
+      if (y > 0 && mask[i - w] && lab[i - w] < 0) { lab[i - w] = i0; stack[sp++] = i - w; }
+      if (y < h - 1 && mask[i + w] && lab[i + w] < 0) { lab[i + w] = i0; stack[sp++] = i + w; }
+    }
+    if (!best || r.center > best.center || (r.center === best.center && r.area > best.area)) best = r;
+  }
+  if (!best || best.area < w * h * 0.06) return null;
+  const q = [best.tl, best.tr, best.br, best.bl].map(p => [p[0] / sc, p[1] / sc]);
+  const a = quadArea(q);
+  if (a < W * H * 0.06) return null;
+  let out = q.map(p => [clamp(p[0], 0, W), clamp(p[1], 0, H)]);
+  try { out = refineQuad(src, out, wantBright); } catch (e) {}
+  return out;
+}
+/* 在較高解析度下，沿著每條邊找真正的紙板邊緣，再用直線擬合求四角 */
+function refineQuad(src, q, cardBright) {
+  const W = src.width, H = src.height, sc = Math.min(1, 1100 / Math.max(W, H));
+  const w = Math.round(W * sc), h = Math.round(H * sc);
+  const c = makeCanvas(w, h), g = c.getContext('2d', { willReadFrequently: true });
+  g.drawImage(src, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h).data;
+  let gray = new Float32Array(w * h);
+  for (let i = 0, j = 0; i < gray.length; i++, j += 4) gray[i] = 0.299 * d[j] + 0.587 * d[j + 1] + 0.114 * d[j + 2];
+  gray = boxBlur(gray, w, h, 1);
+  const at = (x, y) => {
+    if (x < 0 || y < 0 || x > w - 1.001 || y > h - 1.001) return NaN;
+    const x0 = x | 0, y0 = y | 0, fx = x - x0, fy = y - y0, i = y0 * w + x0;
+    const a = gray[i] + (gray[i + 1] - gray[i]) * fx, b = gray[i + w] + (gray[i + w + 1] - gray[i + w]) * fx;
+    return a + (b - a) * fy;
+  };
+  const P = q.map(p => [p[0] * sc, p[1] * sc]);
+  const cx = P.reduce((s, p) => s + p[0], 0) / 4, cy = P.reduce((s, p) => s + p[1], 0) / 4;
+  const R = Math.max(8, Math.round(Math.hypot(w, h) * 0.035));
+  const lines = [];
+  for (let e = 0; e < 4; e++) {
+    const a = P[e], b = P[(e + 1) % 4], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const tx = (b[0] - a[0]) / len, ty = (b[1] - a[1]) / len;
+    let nx = -ty, ny = tx;
+    const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+    if ((mx - cx) * nx + (my - cy) * ny < 0) { nx = -nx; ny = -ny; } // 法向量朝外
+    const pts = [];
+    for (let k = 0; k < 40; k++) {
+      const t = 0.08 + 0.84 * k / 39, px = a[0] + (b[0] - a[0]) * t, py = a[1] + (b[1] - a[1]) * t;
+      const ds = [];
+      let best = 0;
+      for (let s = -R; s <= R; s++) {
+        const v1 = at(px + (s + 1.5) * nx, py + (s + 1.5) * ny), v0 = at(px + (s - 1.5) * nx, py + (s - 1.5) * ny);
+        let dv = v1 - v0; if (isNaN(dv)) dv = 0;
+        if (cardBright) dv = -dv; // 往外走應該變暗
+        ds.push(dv); if (dv > best) best = dv;
+      }
+      if (best < 12) continue;
+      // 取「夠強」的邊緣中最外側的那一個（避開紙板上印的框線）
+      let pick = -1;
+      for (let i = ds.length - 1; i >= 0; i--) if (ds[i] >= best * 0.7) { pick = i; break; }
+      // 往外延伸到該峰值的頂點
+      while (pick > 0 && pick < ds.length - 1 && ds[pick + 1] > ds[pick]) pick++;
+      while (pick > 0 && ds[pick - 1] > ds[pick]) pick--;
+      const s = pick - R;
+      pts.push([px + s * nx, py + s * ny]);
+    }
+    if (pts.length < 10) return q;
+    let L = fitLine(pts);
+    const inl = pts.filter(p => Math.abs((p[0] - L.x) * L.nx + (p[1] - L.y) * L.ny) < 2.5);
+    if (inl.length >= 8) L = fitLine(inl);
+    lines.push(L);
+  }
+  const out = [];
+  for (let i = 0; i < 4; i++) {
+    const A = lines[(i + 3) % 4], B = lines[i]; // 角 i 在邊 i-1 與邊 i 交會處
+    const det = A.nx * B.ny - A.ny * B.nx;
+    if (Math.abs(det) < 1e-6) return q;
+    const ca = A.nx * A.x + A.ny * A.y, cb = B.nx * B.x + B.ny * B.y;
+    const x = (ca * B.ny - cb * A.ny) / det, y = (A.nx * cb - B.nx * ca) / det;
+    if (Math.hypot(x - P[i][0], y - P[i][1]) > R * 1.6) return q;
+    out.push([clamp(x / sc, 0, W), clamp(y / sc, 0, H)]);
+  }
+  return out;
+}
+function fitLine(pts) {
+  const n = pts.length; let mx = 0, my = 0;
+  pts.forEach(p => { mx += p[0]; my += p[1]; }); mx /= n; my /= n;
+  let sxx = 0, syy = 0, sxy = 0;
+  pts.forEach(p => { const dx = p[0] - mx, dy = p[1] - my; sxx += dx * dx; syy += dy * dy; sxy += dx * dy; });
+  const th = 0.5 * Math.atan2(2 * sxy, sxx - syy); // 主方向
+  return { x: mx, y: my, nx: -Math.sin(th), ny: Math.cos(th) };
+}
+function boxBlur(a, w, h, r) {
+  const tmp = new Float32Array(a.length), out = new Float32Array(a.length);
+  for (let y = 0; y < h; y++) {
+    let s = 0, n = 0; const o = y * w;
+    for (let x = -r; x < w; x++) {
+      if (x + r < w) { s += a[o + x + r]; n++; }
+      if (x - r - 1 >= 0) { s -= a[o + x - r - 1]; n--; }
+      if (x >= 0) tmp[o + x] = s / n;
+    }
+  }
+  for (let x = 0; x < w; x++) {
+    let s = 0, n = 0;
+    for (let y = -r; y < h; y++) {
+      if (y + r < h) { s += tmp[(y + r) * w + x]; n++; }
+      if (y - r - 1 >= 0) { s -= tmp[(y - r - 1) * w + x]; n--; }
+      if (y >= 0) out[y * w + x] = s / n;
+    }
+  }
+  return out;
+}
+function otsu(a) {
+  const hist = new Float64Array(256);
+  for (let i = 0; i < a.length; i++) hist[Math.min(255, Math.max(0, a[i] | 0))]++;
+  const n = a.length; let sum = 0; for (let i = 0; i < 256; i++) sum += i * hist[i];
+  let sB = 0, wB = 0, best = 0, t = 127;
+  for (let i = 0; i < 256; i++) {
+    wB += hist[i]; if (!wB) continue; const wF = n - wB; if (!wF) break;
+    sB += i * hist[i]; const mB = sB / wB, mF = (sum - sB) / wF, v = wB * wF * (mB - mF) * (mB - mF);
+    if (v > best) { best = v; t = i; }
+  }
+  return t;
+}
+function morph(m, w, h, r, dilate) {
+  // 方形結構元素，可分離成水平+垂直
+  const pass = (src, horiz) => {
+    const out = new Uint8Array(src.length);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      let v = dilate ? 0 : 1;
+      for (let k = -r; k <= r; k++) {
+        const xx = horiz ? x + k : x, yy = horiz ? y : y + k;
+        const p = (xx < 0 || yy < 0 || xx >= w || yy >= h) ? 0 : src[yy * w + xx];
+        if (dilate ? p : !p) { v = dilate ? 1 : 0; break; }
+      }
+      out[y * w + x] = v;
+    }
+    return out;
+  };
+  return pass(pass(m, true), false);
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function quadArea(q) { let s = 0; for (let i = 0; i < 4; i++) { const a = q[i], b = q[(i + 1) % 4]; s += a[0] * b[1] - b[0] * a[1]; } return Math.abs(s) / 2; }
+function defaultQuad(W, H) { const m = 0.05; return [[W * m, H * m], [W * (1 - m), H * m], [W * (1 - m), H * (1 - m)], [W * m, H * (1 - m)]]; }
+function fullQuad(W, H) { return [[0, 0], [W, 0], [W, H], [0, H]]; }
+function orderQuad(q) {
+  const cx = q.reduce((s, p) => s + p[0], 0) / 4, cy = q.reduce((s, p) => s + p[1], 0) / 4;
+  const s = q.slice().sort((a, b) => Math.atan2(a[1] - cy, a[0] - cx) - Math.atan2(b[1] - cy, b[0] - cx));
+  let k = 0; for (let i = 1; i < 4; i++) if (s[i][0] + s[i][1] < s[k][0] + s[k][1]) k = i;
+  return [0, 1, 2, 3].map(i => s[(k + i) % 4].slice());
+}
+
+/* ---------------- 透視校正（四角 → 長方形） ---------------- */
+function solveHomography(dst, src) {
+  // 求 H 使 dst(u,v) → src(x,y)
+  const A = [], b = [];
+  for (let i = 0; i < 4; i++) {
+    const [u, v] = dst[i], [x, y] = src[i];
+    A.push([u, v, 1, 0, 0, 0, -u * x, -v * x]); b.push(x);
+    A.push([0, 0, 0, u, v, 1, -u * y, -v * y]); b.push(y);
+  }
+  for (let c = 0; c < 8; c++) {
+    let p = c; for (let r = c + 1; r < 8; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    [A[c], A[p]] = [A[p], A[c]]; [b[c], b[p]] = [b[p], b[c]];
+    const piv = A[c][c] || 1e-12;
+    for (let r = 0; r < 8; r++) {
+      if (r === c) continue; const f = A[r][c] / piv; if (!f) continue;
+      for (let k = c; k < 8; k++) A[r][k] -= f * A[c][k]; b[r] -= f * b[c];
+    }
+  }
+  return b.map((v, i) => v / A[i][i]);
+}
+function warpQuad(src, quad, maxDim = 2000) {
+  const q = orderQuad(quad);
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  let W = Math.max(dist(q[0], q[1]), dist(q[3], q[2])), H = Math.max(dist(q[0], q[3]), dist(q[1], q[2]));
+  const s = Math.min(1, maxDim / Math.max(W, H));
+  W = Math.max(16, Math.round(W * s)); H = Math.max(16, Math.round(H * s));
+  const h = solveHomography([[0, 0], [W, 0], [W, H], [0, H]], q);
+  const sw = src.width, sh = src.height;
+  const sd = src.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, sw, sh).data;
+  const out = makeCanvas(W, H), og = out.getContext('2d'), img = og.createImageData(W, H), od = img.data;
+  for (let v = 0; v < H; v++) {
+    const vv = v + 0.5;
+    for (let u = 0; u < W; u++) {
+      const uu = u + 0.5, den = h[6] * uu + h[7] * vv + 1;
+      let x = (h[0] * uu + h[1] * vv + h[2]) / den - 0.5, y = (h[3] * uu + h[4] * vv + h[5]) / den - 0.5;
+      x = clamp(x, 0, sw - 1.001); y = clamp(y, 0, sh - 1.001);
+      const x0 = x | 0, y0 = y | 0, fx = x - x0, fy = y - y0;
+      const i00 = (y0 * sw + x0) * 4, i10 = i00 + 4, i01 = i00 + sw * 4, i11 = i01 + 4;
+      const o = (v * W + u) * 4;
+      for (let k = 0; k < 3; k++) {
+        const a = sd[i00 + k] + (sd[i10 + k] - sd[i00 + k]) * fx, b = sd[i01 + k] + (sd[i11 + k] - sd[i01 + k]) * fx;
+        od[o + k] = a + (b - a) * fy;
+      }
+      od[o + 3] = 255;
+    }
+  }
+  og.putImageData(img, 0, 0);
+  return out;
+}
+function enhance(c) {
+  // 依亮度做色階拉伸：紙張變白、字跡變清楚，顏色（紅/藍章）保留
+  const g = c.getContext('2d', { willReadFrequently: true }), img = g.getImageData(0, 0, c.width, c.height), d = img.data;
+  const hist = new Uint32Array(256), n = d.length / 4;
+  for (let i = 0; i < d.length; i += 4) hist[(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]) | 0]++;
+  const pct = p => { let acc = 0; for (let i = 0; i < 256; i++) { acc += hist[i]; if (acc >= n * p) return i; } return 255; };
+  const lo = pct(0.01), hi = pct(0.92);
+  if (hi - lo < 40) return c;
+  const lut = new Uint8ClampedArray(256);
+  for (let i = 0; i < 256; i++) { const t = clamp((i - lo) / (hi - lo), 0, 1); lut[i] = 255 * Math.pow(t, 1.15); }
+  for (let i = 0; i < d.length; i += 4) { d[i] = lut[d[i]]; d[i + 1] = lut[d[i + 1]]; d[i + 2] = lut[d[i + 2]]; }
+  g.putImageData(img, 0, 0);
+  return c;
+}
+function rotateCanvas(c) {
+  const o = makeCanvas(c.height, c.width), g = o.getContext('2d');
+  g.translate(o.width, 0); g.rotate(Math.PI / 2); g.drawImage(c, 0, 0);
+  return o;
+}
+
+/* ---------------- 裁切編輯器 ---------------- */
+const Ed = {
+  work: null, quad: null, ym: null, side: null, drag: -1, view: null, resolve: null,
+  open(work, quad, ym, side, enh) {
+    this.work = work; this.quad = quad; this.ym = ym; this.side = side;
+    $('#edTitle').textContent = `${titleOf(ym).replace('的打卡紀錄', '')} ${SIDES[side]}`;
+    $('#edEnhance').checked = enh !== false;
+    $('#editor').hidden = false; document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => this.draw());
+    return new Promise(r => { this.resolve = r; });
+  },
+  close(result) { $('#editor').hidden = true; document.body.style.overflow = ''; const r = this.resolve; this.resolve = null; r && r(result); },
+  layout() {
+    const cv = $('#edCanvas'), st = $('#stage'), dpr = window.devicePixelRatio || 1;
+    const cw = st.clientWidth, ch = st.clientHeight;
+    if (cv.width !== Math.round(cw * dpr) || cv.height !== Math.round(ch * dpr)) { cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr); }
+    const padPx = 22, s = Math.min((cw - padPx * 2) / this.work.width, (ch - padPx * 2) / this.work.height);
+    const dw = this.work.width * s, dh = this.work.height * s;
+    this.view = { s, ox: (cw - dw) / 2, oy: (ch - dh) / 2, dpr, cw, ch };
+  },
+  toScreen(p) { const v = this.view; return [v.ox + p[0] * v.s, v.oy + p[1] * v.s]; },
+  toImage(x, y) { const v = this.view; return [clamp((x - v.ox) / v.s, 0, this.work.width), clamp((y - v.oy) / v.s, 0, this.work.height)]; },
+  draw() {
+    if ($('#editor').hidden || !this.work) return;
+    this.layout();
+    const cv = $('#edCanvas'), g = cv.getContext('2d'), v = this.view;
+    g.setTransform(v.dpr, 0, 0, v.dpr, 0, 0);
+    g.clearRect(0, 0, v.cw, v.ch);
+    g.drawImage(this.work, v.ox, v.oy, this.work.width * v.s, this.work.height * v.s);
+    const pts = this.quad.map(p => this.toScreen(p));
+    g.save(); g.beginPath(); g.rect(0, 0, v.cw, v.ch);
+    g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < 4; i++) g.lineTo(pts[i][0], pts[i][1]); g.closePath();
+    g.fillStyle = 'rgba(0,0,0,.55)'; g.fill('evenodd'); g.restore();
+    g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < 4; i++) g.lineTo(pts[i][0], pts[i][1]); g.closePath();
+    g.lineWidth = 2.5; g.strokeStyle = '#5CC3CC'; g.stroke();
+    pts.forEach((p, i) => {
+      g.beginPath(); g.arc(p[0], p[1], i === this.drag ? 16 : 13, 0, Math.PI * 2);
+      g.fillStyle = 'rgba(92,195,204,.35)'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#fff'; g.stroke();
+    });
+    if (this.drag >= 0) this.drawLoupe(g, pts[this.drag]);
+  },
+  drawLoupe(g, p) {
+    const v = this.view, R = 58, Z = 2.5;
+    const left = p[0] > v.cw / 2 ? R + 12 : v.cw - R - 12, top = R + 12;
+    const ip = this.quad[this.drag], srcR = R / (v.s * Z);
+    g.save(); g.beginPath(); g.arc(left, top, R, 0, Math.PI * 2); g.clip();
+    g.fillStyle = '#000'; g.fillRect(left - R, top - R, R * 2, R * 2);
+    g.drawImage(this.work, ip[0] - srcR, ip[1] - srcR, srcR * 2, srcR * 2, left - R, top - R, R * 2, R * 2);
+    g.strokeStyle = '#5CC3CC'; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(left - R, top); g.lineTo(left + R, top); g.moveTo(left, top - R); g.lineTo(left, top + R); g.stroke();
+    g.restore();
+    g.beginPath(); g.arc(left, top, R, 0, Math.PI * 2); g.lineWidth = 3; g.strokeStyle = '#fff'; g.stroke();
+  }
+};
+(function bindEditor() {
+  const cv = $('#edCanvas');
+  const pos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  cv.addEventListener('pointerdown', e => {
+    if (!Ed.view) return;
+    const [x, y] = pos(e); let k = -1, bd = 1e9;
+    Ed.quad.forEach((p, i) => { const s = Ed.toScreen(p), dd = Math.hypot(s[0] - x, s[1] - y); if (dd < bd) { bd = dd; k = i; } });
+    if (bd > 60) return;
+    Ed.drag = k; Ed.grab = [Ed.toScreen(Ed.quad[k])[0] - x, Ed.toScreen(Ed.quad[k])[1] - y];
+    cv.setPointerCapture(e.pointerId); e.preventDefault(); Ed.draw();
+  });
+  cv.addEventListener('pointermove', e => {
+    if (Ed.drag < 0) return; const [x, y] = pos(e);
+    Ed.quad[Ed.drag] = Ed.toImage(x + Ed.grab[0], y + Ed.grab[1]); Ed.draw();
+  });
+  const end = () => { if (Ed.drag >= 0) { Ed.drag = -1; Ed.draw(); } };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  window.addEventListener('resize', () => Ed.draw());
+  $('#edCancel').onclick = () => Ed.close(null);
+  $('#edAuto').onclick = () => { const q = detectQuad(Ed.work); if (q) { Ed.quad = q; Ed.draw(); } else toast('沒有找到明顯的紙板邊緣，請手動拖曳四個角'); };
+  $('#edFull').onclick = () => { Ed.quad = fullQuad(Ed.work.width, Ed.work.height); Ed.draw(); };
+  $('#edRotate').onclick = () => {
+    const H = Ed.work.height; Ed.work = rotateCanvas(Ed.work);
+    Ed.quad = orderQuad(Ed.quad.map(([x, y]) => [H - y, x])); Ed.draw();
+  };
+  $('#edDone').onclick = () => Ed.close({ work: Ed.work, quad: orderQuad(Ed.quad), enhance: $('#edEnhance').checked });
+})();
+
+/* ---------------- 主畫面 ---------------- */
+const now = new Date();
+const state = { year: now.getFullYear(), month: now.getMonth() + 1, exportSel: new Set(), pending: null };
+function recOf(ym, side) { return Store.get(`${ym}-${side}`); }
+function monthsWithData(year) {
+  const out = [];
+  for (let m = 1; m <= 12; m++) { const ym = ymKey(year, m); if (recOf(ym, 'front') || recOf(ym, 'back')) out.push(ym); }
+  return out;
+}
+function renderMonths() {
+  $('#yearLabel').textContent = `${state.year} 年`;
+  const box = $('#months'); box.innerHTML = '';
+  for (let m = 1; m <= 12; m++) {
+    const ym = ymKey(state.year, m), f = recOf(ym, 'front'), b = recOf(ym, 'back');
+    const btn = document.createElement('button');
+    btn.className = 'mtile' + (m === state.month ? ' sel' : '') + (state.year === now.getFullYear() && m === now.getMonth() + 1 && !(f || b) ? ' cur' : '');
+    btn.innerHTML = `<span class="mname">${m} 月</span><span class="thumbs"><span>正</span><span>反</span></span>`;
+    const th = btn.querySelectorAll('.thumbs span');
+    [f, b].forEach((r, i) => { if (r) { th[i].style.backgroundImage = `url("${blobUrl(r, 'crop')}")`; th[i].textContent = ''; } });
+    if (f || b) { const bd = document.createElement('span'); bd.className = 'badge ' + (f && b ? 'full' : 'half'); bd.textContent = f && b ? '完成' : '缺一面'; btn.appendChild(bd); }
+    btn.setAttribute('aria-label', `${m} 月${f && b ? '，正反面完成' : f || b ? '，缺一面' : ''}`);
+    btn.onclick = () => { state.month = m; renderMonths(); renderMonth(); $('#monthPanel').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+    box.appendChild(btn);
+  }
+  const n = monthsWithData(state.year).length;
+  $('#yearCount').textContent = n ? `已有 ${n} 個月` : '';
+}
+function renderMonth() {
+  const ym = ymKey(state.year, state.month);
+  $('#monthTitle').textContent = `${state.year}年${state.month}月`;
+  $$('.slot').forEach(sl => {
+    const side = sl.dataset.side, r = recOf(ym, side), ph = sl.querySelector('.ph');
+    ph.innerHTML = r ? `<img alt="${SIDES[side]}" src="${blobUrl(r, 'crop')}">` : `還沒拍${SIDES[side]}`;
+    sl.querySelector('.acts2').hidden = !r;
+    sl.querySelector('[data-act="camera"]').textContent = r ? '📷 重拍' : '📷 拍照';
+  });
+  renderPreview(ym);
+}
+function renderPreview(ym) {
+  const imgs = ['front', 'back'].map(s => ({ side: s, r: recOf(ym, s) })).filter(x => x.r);
+  $('#previewWrap').hidden = !imgs.length;
+  if (!imgs.length) return;
+  const box = $('#a4'); box.innerHTML = '';
+  const L = pageLayout(imgs.map(x => ({ w: x.r.cw, h: x.r.ch })));
+  const pct = (v, tot) => (v / tot * 100) + '%';
+  const t = document.createElement('div'); t.className = 't'; t.textContent = titleOf(ym);
+  t.style.top = pct(L.title.y, PAGE.h); t.style.fontSize = 'calc(' + (L.title.size / PAGE.w * 100) + 'cqw)';
+  box.appendChild(t);
+  imgs.forEach((x, i) => {
+    const p = L.items[i], im = document.createElement('img'); im.src = blobUrl(x.r, 'crop'); im.alt = SIDES[x.side];
+    Object.assign(im.style, { left: pct(p.x, PAGE.w), top: pct(p.y, PAGE.h), width: pct(p.w, PAGE.w), height: pct(p.h, PAGE.h) });
+    const c = document.createElement('div'); c.className = 'c'; c.textContent = SIDES[x.side];
+    Object.assign(c.style, { left: pct(p.x, PAGE.w), width: pct(p.w, PAGE.w), top: pct(p.capY, PAGE.h), fontSize: 'calc(' + (L.capSize / PAGE.w * 100) + 'cqw)' });
+    box.append(im, c);
+  });
+}
+function renderExport() {
+  const yms = monthsWithData(state.year);
+  // 預設全選；新增的月份自動加入
+  yms.forEach(ym => { if (!state.exportSel.has('x' + ym)) { state.exportSel.add(ym); state.exportSel.add('x' + ym); } });
+  const chips = $('#chips'); chips.innerHTML = '';
+  for (let m = 1; m <= 12; m++) {
+    const ym = ymKey(state.year, m), has = yms.includes(ym);
+    if (!has) continue;
+    const c = document.createElement('button'); c.className = 'chip'; c.textContent = `${m} 月`;
+    c.setAttribute('aria-pressed', state.exportSel.has(ym) ? 'true' : 'false');
+    c.onclick = () => { state.exportSel.has(ym) ? state.exportSel.delete(ym) : state.exportSel.add(ym); renderExport(); };
+    chips.appendChild(c);
+  }
+  const sel = yms.filter(ym => state.exportSel.has(ym));
+  $('#exportEmpty').hidden = yms.length > 0;
+  $('#exportSub').textContent = yms.length ? `${state.year} 年・已選 ${sel.length} 個月` : `${state.year} 年`;
+  $$('[data-scope="year"]').forEach(b => { b.disabled = !sel.length; });
+}
+function renderAll() { renderMonths(); renderMonth(); renderExport(); }
+
+$('#prevYear').onclick = () => { state.year--; renderAll(); };
+$('#nextYear').onclick = () => { state.year++; renderAll(); };
+
+$$('.slot').forEach(sl => {
+  const side = sl.dataset.side;
+  sl.addEventListener('click', async e => {
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    const ym = ymKey(state.year, state.month), act = b.dataset.act;
+    if (act === 'camera' || act === 'album') {
+      state.pending = { ym, side };
+      const inp = act === 'camera' ? $('#fileCamera') : $('#fileAlbum');
+      inp.value = ''; inp.click();
+    } else if (act === 'recrop') {
+      const r = recOf(ym, side); if (!r) return;
+      busy(true, '載入中…');
+      try { const bm = await loadBitmap(r.orig); const work = bitmapToCanvas(bm, 2400); busy(false);
+        const s = work.width / r.ow; await editAndSave(work, r.quad.map(p => [p[0] * s, p[1] * s]), ym, side, r.enhance);
+      } catch (err) { busy(false); toast('讀取失敗：' + err.message); }
+    } else if (act === 'delete') {
+      if (!confirm(`確定刪除 ${state.year}年${state.month}月的${SIDES[side]}？`)) return;
+      await Store.del(`${ym}-${side}`); renderAll(); toast('已刪除');
+    }
+  });
+});
+['#fileCamera', '#fileAlbum'].forEach(id => $(id).addEventListener('change', async e => {
+  const f = e.target.files && e.target.files[0]; const p = state.pending; if (!f || !p) return;
+  busy(true, '讀取照片、偵測紙板…'); await nextFrame();
+  try {
+    const bm = await loadBitmap(f); const work = bitmapToCanvas(bm, 2400); if (bm.close) bm.close();
+    const q = detectQuad(work) || defaultQuad(work.width, work.height);
+    busy(false);
+    await editAndSave(work, q, p.ym, p.side, true);
+  } catch (err) { busy(false); toast('無法讀取這張照片：' + err.message); }
+}));
+
+async function editAndSave(work, quad, ym, side, enh) {
+  const res = await Ed.open(work, quad, ym, side, enh);
+  if (!res) return;
+  busy(true, '裁切中…'); await nextFrame();
+  try {
+    let crop = warpQuad(res.work, res.quad);
+    if (res.enhance) crop = enhance(crop);
+    const [cropBlob, origBlob] = await Promise.all([canvasToBlob(crop, 'image/jpeg', 0.9), canvasToBlob(res.work, 'image/jpeg', 0.85)]);
+    const rec = { key: `${ym}-${side}`, ym, side, crop: cropBlob, cw: crop.width, ch: crop.height,
+      orig: origBlob, ow: res.work.width, oh: res.work.height, quad: res.quad, enhance: res.enhance, t: Date.now() };
+    const ok = await Store.put(rec);
+    if (!ok) $('#storageWarn').hidden = false;
+    renderAll();
+    const other = side === 'front' ? 'back' : 'front';
+    toast(recOf(ym, other) ? `${titleOf(ym).replace('的打卡紀錄', '')} 正反面都完成了` : `已存好${SIDES[side]}，接著拍${SIDES[other]}吧`);
+  } catch (err) { toast('裁切失敗：' + err.message); }
+  busy(false);
+}
+
+/* ---------------- 版面（單位：pt，A4 直式） ---------------- */
+const PAGE = { w: 595.28, h: 841.89, m: 42.52 }; // 邊界 1.5 cm
+function pageLayout(imgs) {
+  const CW = PAGE.w - PAGE.m * 2, top = PAGE.m;
+  const titleSize = 20, titleH = 46, capSize = 12, capH = 22, gap = 16;
+  const availH = PAGE.h - PAGE.m * 2 - titleH;
+  const fit = (im, bw, bh) => { const s = Math.min(bw / im.w, bh / im.h); return { w: im.w * s, h: im.h * s }; };
+  let items = [];
+  if (imgs.length === 1) {
+    const f = fit(imgs[0], CW, availH - capH);
+    items = [{ ...f, x: PAGE.m + (CW - f.w) / 2, y: top + titleH }];
+  } else {
+    const sideBW = (CW - gap) / 2, sideBH = availH - capH;
+    const side = imgs.map(im => fit(im, sideBW, sideBH));
+    const stackBH = (availH - capH * 2 - gap) / 2;
+    const stack = imgs.map(im => fit(im, CW, stackBH));
+    const area = a => a.reduce((s, f) => s + f.w * f.h, 0);
+    if (area(side) >= area(stack)) {
+      items = side.map((f, i) => ({ ...f, x: PAGE.m + i * (sideBW + gap) + (sideBW - f.w) / 2, y: top + titleH }));
+    } else {
+      let y = top + titleH;
+      items = stack.map(f => { const it = { ...f, x: PAGE.m + (CW - f.w) / 2, y }; y += f.h + capH + gap; return it; });
+    }
+    items.mode = area(side) >= area(stack) ? 'side' : 'stack';
+  }
+  items.forEach(it => { it.capY = it.y + it.h + 5; });
+  return { title: { y: top + 4, size: titleSize, h: titleH }, items, mode: items.mode || 'single', capSize, capH, gap, CW };
+}
+async function collectPages(yms) {
+  const pages = [];
+  for (const ym of yms) {
+    const recs = ['front', 'back'].map(s => recOf(ym, s)).filter(Boolean);
+    if (!recs.length) continue;
+    const imgs = [];
+    for (const r of recs) imgs.push({ side: r.side, w: r.cw, h: r.ch, bytes: new Uint8Array(await r.crop.arrayBuffer()) });
+    pages.push({ ym, title: titleOf(ym), imgs, layout: pageLayout(imgs) });
+  }
+  return pages;
+}
+
+/* ---------------- ZIP（Word 檔就是 ZIP） ---------------- */
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) { // files: [{name, data:Uint8Array}]
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  const d = new Date(), dt = ((d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1)) & 0xFFFF,
+    dd = (((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate()) & 0xFFFF;
+  for (const f of files) {
+    const name = enc.encode(f.name), data = f.data, crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, dt, true); lh.setUint16(12, dd, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), name, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+    ch.setUint16(12, dt, true); ch.setUint16(14, dd, true); ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true);
+    ch.setUint16(28, name.length, true); ch.setUint32(42, off, true);
+    central.push(new Uint8Array(ch.buffer), name);
+    off += 30 + name.length + data.length;
+  }
+  const cdSize = central.reduce((s, p) => s + p.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, off, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+}
+
+/* ---------------- Word (.docx) ---------------- */
+function xmlEsc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function buildDocx(pages) {
+  const enc = new TextEncoder(), media = [], EMU = 12700, TW = 20, SAFE = 0.97;
+  const font = '<w:rFonts w:ascii="Microsoft JhengHei" w:hAnsi="Microsoft JhengHei" w:eastAsia="Microsoft JhengHei" w:cs="Microsoft JhengHei"/>';
+  let pid = 0;
+  const drawing = (rid, w, h) => {
+    pid++; const cx = Math.round(w * SAFE * EMU), cy = Math.round(h * SAFE * EMU);
+    return `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>` +
+      `<wp:docPr id="${pid}" name="打卡紙板 ${pid}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr>` +
+      `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">` +
+      `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${pid}" name="image${pid}.jpeg"/><pic:cNvPicPr><a:picLocks noChangeAspect="1"/></pic:cNvPicPr></pic:nvPicPr>` +
+      `<pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>` +
+      `<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>` +
+      `</a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+  };
+  const para = (inner, opts = {}) => `<w:p><w:pPr>${opts.pageBreak ? '<w:pageBreakBefore/>' : ''}${opts.keep ? '<w:keepNext/>' : ''}<w:spacing w:before="${opts.before || 0}" w:after="${opts.after || 0}" w:line="240" w:lineRule="auto"/><w:jc w:val="center"/></w:pPr>${inner}</w:p>`;
+  const text = (t, sz, bold) => `<w:r><w:rPr>${font}${bold ? '<w:b/><w:bCs/>' : ''}<w:sz w:val="${sz * 2}"/><w:szCs w:val="${sz * 2}"/></w:rPr><w:t xml:space="preserve">${xmlEsc(t)}</w:t></w:r>`;
+  let body = '';
+  pages.forEach((pg, pi) => {
+    const L = pg.layout;
+    body += para(text(pg.title, L.title.size, true), { pageBreak: pi > 0, after: 360, keep: true });
+    const rids = pg.imgs.map(im => { media.push(im.bytes); return 'rIdImg' + media.length; });
+    if (L.mode === 'side') {
+      const colTw = Math.floor(L.CW * TW / 2);
+      const cell = inner => `<w:tc><w:tcPr><w:tcW w:w="${colTw}" w:type="dxa"/><w:vAlign w:val="top"/></w:tcPr>${inner}</w:tc>`;
+      const none = ['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(s => `<w:${s} w:val="nil"/>`).join('');
+      body += `<w:tbl><w:tblPr><w:tblW w:w="${colTw * 2}" w:type="dxa"/><w:jc w:val="center"/><w:tblBorders>${none}</w:tblBorders><w:tblLayout w:type="fixed"/>` +
+        `<w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="0" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar><w:tblLook w:val="0000"/></w:tblPr>` +
+        `<w:tblGrid><w:gridCol w:w="${colTw}"/><w:gridCol w:w="${colTw}"/></w:tblGrid>` +
+        `<w:tr><w:trPr><w:cantSplit/></w:trPr>${pg.imgs.map((im, i) => cell(para(drawing(rids[i], L.items[i].w, L.items[i].h)))).join('')}</w:tr>` +
+        `<w:tr><w:trPr><w:cantSplit/></w:trPr>${pg.imgs.map(im => cell(para(text(SIDES[im.side], L.capSize), { before: 80 }))).join('')}</w:tr></w:tbl>`;
+      body += para('');
+    } else {
+      pg.imgs.forEach((im, i) => {
+        body += para(drawing(rids[i], L.items[i].w, L.items[i].h), { keep: true });
+        body += para(text(SIDES[im.side], L.capSize), { before: 80, after: i < pg.imgs.length - 1 ? 240 : 0 });
+      });
+    }
+  });
+  const m = Math.round(PAGE.m * TW);
+  body += `<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="${m}" w:right="${m}" w:bottom="${m}" w:left="${m}" w:header="425" w:footer="425" w:gutter="0"/></w:sectPr>`;
+  const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>${body}</w:body></w:document>`;
+  const rels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
+    media.map((_, i) => `<Relationship Id="rIdImg${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image${i + 1}.jpeg"/>`).join('') + `</Relationships>`;
+  const ct = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpeg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>`;
+  const root = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>`;
+  const iso = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+  const core = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>打卡紀錄</dc:title><dcterms:created xsi:type="dcterms:W3CDTF">${iso}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${iso}</dcterms:modified></cp:coreProperties>`;
+  return makeZip([
+    { name: '[Content_Types].xml', data: enc.encode(ct) },
+    { name: '_rels/.rels', data: enc.encode(root) },
+    { name: 'docProps/core.xml', data: enc.encode(core) },
+    { name: 'word/document.xml', data: enc.encode(doc) },
+    { name: 'word/_rels/document.xml.rels', data: enc.encode(rels) },
+    ...media.map((d, i) => ({ name: `word/media/image${i + 1}.jpeg`, data: d }))
+  ]);
+}
+
+/* ---------------- PDF（圖片用 JPEG 直接嵌入；中文字先畫成圖） ---------------- */
+async function textJpeg(t, ptSize, bold) {
+  const scale = 8, fontPx = ptSize * scale, f = `${bold ? '700 ' : ''}${fontPx}px ${getComputedStyle(document.body).fontFamily}`;
+  const m = makeCanvas(10, 10).getContext('2d'); m.font = f;
+  const w = Math.ceil(m.measureText(t).width + fontPx * 0.2), h = Math.ceil(fontPx * 1.35);
+  const c = makeCanvas(w, h), g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, w, h); g.fillStyle = '#111'; g.font = f; g.textBaseline = 'middle'; g.textAlign = 'center';
+  g.fillText(t, w / 2, h / 2);
+  return { bytes: new Uint8Array(await (await canvasToBlob(c, 'image/jpeg', 0.92)).arrayBuffer()), w, h, ptW: w / scale, ptH: h / scale };
+}
+async function buildPdf(pages) {
+  const enc = new TextEncoder(), chunks = [], offsets = []; let len = 0;
+  const push = x => { const u = typeof x === 'string' ? enc.encode(x) : x; chunks.push(u); len += u.length; };
+  const objs = []; // 依序配置物件編號
+  const newObj = () => { objs.push(null); return objs.length; };
+  const catalogId = newObj(), pagesId = newObj();
+  const pageIds = [], later = [];
+  const capCache = {};
+  for (const pg of pages) {
+    const L = pg.layout, draws = [];
+    const title = await textJpeg(pg.title, L.title.size, true);
+    const tW = title.ptW, tH = title.ptH;
+    draws.push({ img: title, x: (PAGE.w - tW) / 2, y: L.title.y - 2, w: tW, h: tH });
+    for (let i = 0; i < pg.imgs.length; i++) {
+      const im = pg.imgs[i], it = L.items[i];
+      draws.push({ img: { bytes: im.bytes, w: im.w, h: im.h }, x: it.x, y: it.y, w: it.w, h: it.h, border: true });
+      const cap = capCache[im.side] || (capCache[im.side] = await textJpeg(SIDES[im.side], L.capSize, false));
+      draws.push({ img: cap, x: it.x + (it.w - cap.ptW) / 2, y: it.capY - 2, w: cap.ptW, h: cap.ptH });
+    }
+    const pageId = newObj(), contentId = newObj();
+    const imgIds = draws.map(() => newObj());
+    pageIds.push(pageId);
+    let cs = '';
+    draws.forEach((d, i) => {
+      const y = PAGE.h - d.y - d.h;
+      cs += `q ${d.w.toFixed(2)} 0 0 ${d.h.toFixed(2)} ${d.x.toFixed(2)} ${y.toFixed(2)} cm /Im${i} Do Q\n`;
+      if (d.border) cs += `q 0.8 0.8 0.8 RG 0.5 w ${d.x.toFixed(2)} ${y.toFixed(2)} ${d.w.toFixed(2)} ${d.h.toFixed(2)} re S Q\n`;
+    });
+    later.push({ pageId, contentId, imgIds, draws, cs });
+  }
+  push('%PDF-1.4\n'); push(new Uint8Array([0x25, 0xE2, 0xE3, 0xCF, 0xD3, 0x0A]));
+  const begin = id => { offsets[id] = len; push(`${id} 0 obj\n`); };
+  begin(catalogId); push(`<< /Type /Catalog /Pages ${pagesId} 0 R >>\nendobj\n`);
+  begin(pagesId); push(`<< /Type /Pages /Kids [${pageIds.map(i => i + ' 0 R').join(' ')}] /Count ${pageIds.length} >>\nendobj\n`);
+  for (const p of later) {
+    const xo = p.imgIds.map((id, i) => `/Im${i} ${id} 0 R`).join(' ');
+    begin(p.pageId); push(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${PAGE.w} ${PAGE.h}] /Resources << /XObject << ${xo} >> >> /Contents ${p.contentId} 0 R >>\nendobj\n`);
+    const csb = enc.encode(p.cs);
+    begin(p.contentId); push(`<< /Length ${csb.length} >>\nstream\n`); push(csb); push('\nendstream\nendobj\n');
+    p.draws.forEach((d, i) => {
+      begin(p.imgIds[i]);
+      push(`<< /Type /XObject /Subtype /Image /Width ${d.img.w} /Height ${d.img.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${d.img.bytes.length} >>\nstream\n`);
+      push(d.img.bytes); push('\nendstream\nendobj\n');
+    });
+  }
+  const xref = len, n = objs.length + 1;
+  let x = `xref\n0 ${n}\n0000000000 65535 f \n`;
+  for (let i = 1; i < n; i++) x += String(offsets[i]).padStart(10, '0') + ' 00000 n \n';
+  push(x); push(`trailer\n<< /Size ${n} /Root ${catalogId} 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(chunks, { type: 'application/pdf' });
+}
+
+/* ---------------- 下載 ---------------- */
+function saveBlob(blob, name) {
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+async function doExport(fmt, scope) {
+  let yms;
+  if (scope === 'month') yms = [ymKey(state.year, state.month)];
+  else yms = monthsWithData(state.year).filter(ym => state.exportSel.has(ym));
+  if (!yms.length) { toast('沒有可匯出的月份'); return; }
+  busy(true, fmt === 'pdf' ? '產生 PDF 中…' : '產生 Word 中…'); await nextFrame();
+  try {
+    const pages = await collectPages(yms);
+    const blob = fmt === 'pdf' ? await buildPdf(pages) : buildDocx(pages);
+    const base = yms.length === 1 ? titleOf(yms[0]) : (() => {
+      const ms = yms.map(ym => Number(ym.split('-')[1]));
+      return `${state.year}年${ms[0]}-${ms[ms.length - 1]}月的打卡紀錄`;
+    })();
+    saveBlob(blob, `${base}.${fmt}`);
+    toast(`已下載 ${base}.${fmt}`);
+  } catch (err) { toast('匯出失敗：' + err.message); console.error(err); }
+  busy(false);
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-dl]'); if (b && !b.disabled) doExport(b.dataset.dl, b.dataset.scope); });
+
+/* ---------------- 啟動 ---------------- */
+(async () => {
+  await Store.init();
+  if (!Store.persistent) $('#storageWarn').hidden = false;
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+  renderAll();
+})();
+</script>
+</body>
+</html>
