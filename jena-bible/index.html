@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>橄欖栽子家學堂</title>
+<meta name="description" content="耶拿教育（Jenaplan）結合聖經自學的混齡家庭教材：圓圈對話、主題工作、遊戲、慶典，支援電子白板與平板，從特殊需求孩子到小學六年級。">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="家學堂">
+<meta name="theme-color" content="#4E6B2F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* 版面：橄欖綠的家庭教室。四種基本活動各有顏色：對話藍、遊戲橘、工作綠、慶典紫 */
+:root{
+  --bg:#F3F1E7; --card:#FFFFFF; --ink:#26301E; --muted:#66705A; --line:#DCD9C6; --soft:#ECE9DA;
+  --olive:#4E6B2F; --olive-soft:#E3EBD3; --star:#E0A100; --ok:#2F8F5E; --ok-soft:#D6EEDF; --no:#C2553A; --hint:#FFF1C9; --hint-ink:#6A4B00;
+  --k-talk:#2F7DB5; --k-play:#D97B12; --k-work:#3E8E5E; --k-party:#8E5BB5; --k-life:#7D8590;
+  --f-kai:"LXGW WenKai TC","BiauKai","DFKai-SB","Kaiti TC",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-emoji:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  --navh:64px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171B12; --card:#20261A; --ink:#E8EEDD; --muted:#A9B39A; --line:#36402B; --soft:#283020;
+  --olive:#A6C77A; --olive-soft:#2E3A21; --star:#F5C431; --ok:#6CCB98; --ok-soft:#1F3A2B; --no:#E98A73; --hint:#3A3015; --hint-ink:#F4DE9C;
+  --k-talk:#6FB3E6; --k-play:#F0A24A; --k-work:#6CC08F; --k-party:#C29BE6; --k-life:#A3AAB4;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#171B12; --card:#20261A; --ink:#E8EEDD; --muted:#A9B39A; --line:#36402B; --soft:#283020;
+  --olive:#A6C77A; --olive-soft:#2E3A21; --star:#F5C431; --ok:#6CCB98; --ok-soft:#1F3A2B; --no:#E98A73; --hint:#3A3015; --hint-ink:#F4DE9C;
+  --k-talk:#6FB3E6; --k-play:#F0A24A; --k-work:#6CC08F; --k-party:#C29BE6; --k-life:#A3AAB4;
+  color-scheme:dark;
+}
+html.big{font-size:20px}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1rem;line-height:1.6;-webkit-tap-highlight-color:transparent;min-height:100vh}
+[hidden]{display:none!important}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:2px solid var(--line);background:var(--card);border-radius:14px;padding:8px 14px;min-height:44px;touch-action:manipulation}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--star);outline-offset:2px}
+button.pri{background:var(--olive);border-color:var(--olive);color:#fff;font-weight:700}
+:root:not([data-theme="light"]) button.pri{color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button.pri{color:#162008}}
+:root[data-theme="dark"] button.pri{color:#162008}
+a{color:var(--olive)}
+.em{font-family:var(--f-emoji);line-height:1;font-style:normal}
+h1,h2,h3{font-family:var(--f-kai);margin:0;text-wrap:balance;line-height:1.3}
+h2{font-size:1.45rem}
+small,.muted{color:var(--muted)}
+
+/* 頁首與導覽 */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:8px max(16px,env(safe-area-inset-left,0px)) 8px max(16px,env(safe-area-inset-left,0px))}
+.brand{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);flex:none}
+.brand .em{font-size:1.8rem}
+.brand b{font-family:var(--f-kai);font-size:1.3rem;letter-spacing:.04em}
+#nav{display:flex;gap:4px;flex:1;justify-content:center}
+#nav a{display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:var(--muted);padding:6px 10px;border-radius:14px;min-width:58px;font-size:.85rem}
+#nav a .em{font-size:1.5rem}
+#nav a.on{background:var(--olive-soft);color:var(--ink);font-weight:700}
+.tools{display:flex;gap:6px;flex:none}
+.tools button{min-width:44px;padding:6px 8px;font-size:1.15rem}
+main{max-width:1180px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-left,0px)) 40px}
+@media (max-width:860px){
+  .brand b{font-size:1.1rem}
+  #nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);
+    justify-content:space-around;gap:0;padding:4px 2px calc(4px + env(safe-area-inset-bottom,0px))}
+  #nav a{min-width:0;flex:1;padding:4px 0;font-size:.7rem}
+  #nav a .em{font-size:1.35rem}
+  main{padding-bottom:calc(var(--navh) + 40px)}
+  .top{justify-content:space-between}
+}
+@media (max-width:380px){ .brand b{display:none} }
+@media (max-width:560px){ h2{font-size:1.25rem} .banner{grid-template-columns:1fr;text-align:left} .banner .be{grid-row:auto;font-size:3rem} .banner h1{font-size:1.6rem} }
+
+/* 共用卡片 */
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:16px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grid{display:grid;gap:14px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:999px;font-size:.8rem;background:var(--soft);color:var(--ink);white-space:nowrap}
+.k-talk{--kc:var(--k-talk)} .k-play{--kc:var(--k-play)} .k-work{--kc:var(--k-work)} .k-party{--kc:var(--k-party)} .k-life{--kc:var(--k-life)}
+.chip.kind{background:color-mix(in srgb,var(--kc) 18%,transparent);color:var(--ink);border:1px solid color-mix(in srgb,var(--kc) 45%,transparent)}
+.lv{display:inline-flex;align-items:center;gap:3px;padding:1px 9px;border-radius:999px;font-size:.8rem;background:var(--olive-soft);white-space:nowrap}
+.say{min-width:44px;padding:4px 8px;font-size:1.1rem;border-radius:12px}
+.sec-title{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}
+
+/* 本期主題橫幅 */
+.banner{--tc:#4E6B2F;border-radius:26px;padding:20px;margin-bottom:16px;display:grid;grid-template-columns:auto 1fr;gap:6px 18px;align-items:center;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--tc) 22%,var(--card)),var(--card));border:2px solid color-mix(in srgb,var(--tc) 40%,transparent)}
+.banner .be{font-size:4.2rem;grid-row:span 2}
+.banner h1{font-size:2rem}
+.banner .verse-mini{grid-column:1/-1;font-family:var(--f-kai);font-size:1.25rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+  background:color-mix(in srgb,var(--card) 70%,transparent);border-radius:16px;padding:8px 12px}
+.banner .verse-mini small{font-family:var(--f-body)}
+
+/* 先／再 板 */
+.firstthen{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch;margin-bottom:14px}
+.ft{border-radius:20px;padding:14px;text-align:center;background:color-mix(in srgb,var(--kc) 14%,var(--card));border:3px solid color-mix(in srgb,var(--kc) 55%,transparent)}
+.ft .em{font-size:3.6rem;display:block;margin:4px 0}
+.ft b{font-family:var(--f-kai);font-size:1.25rem}
+.ft .lab{font-size:.95rem;color:var(--muted);font-weight:700}
+.ft-arrow{align-self:center;font-size:2rem}
+
+/* 節奏表 */
+.rhythm{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.blk{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 12px;border-radius:18px;background:var(--card);
+  border:2px solid var(--line);border-left:10px solid var(--kc)}
+.blk .be{font-size:2.3rem}
+.blk .bt{font-weight:700;font-size:1.05rem}
+.blk .bm{font-size:.85rem;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.blk .bb{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.blk .bb button{min-height:44px;padding:4px 10px}
+.blk.cur{box-shadow:0 0 0 4px color-mix(in srgb,var(--star) 55%,transparent)}
+.blk.done{opacity:.55}
+.blk.done .bt{text-decoration:line-through}
+@media (max-width:560px){ .blk{grid-template-columns:auto 1fr} .blk .bb{grid-column:1/-1;justify-content:flex-start} }
+
+/* 孩子卡 */
+.kids{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.kid{display:flex;gap:12px;align-items:center;padding:12px;border-radius:20px;border:2px solid var(--line);background:var(--card)}
+.kid .av{font-size:2.6rem}
+.kid b{font-size:1.15rem}
+
+/* 晨圈 */
+.steps{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px;scrollbar-width:thin}
+.steps a{flex:none;display:flex;flex-direction:column;align-items:center;text-decoration:none;color:var(--muted);padding:8px 12px;border-radius:16px;border:2px solid var(--line);background:var(--card);min-width:74px;font-size:.85rem}
+.steps a .em{font-size:1.7rem}
+.steps a.on{border-color:var(--k-talk);color:var(--ink);font-weight:700;background:color-mix(in srgb,var(--k-talk) 12%,var(--card))}
+.stage{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:22px;min-height:52vh}
+.stage h2{font-size:1.9rem;margin-bottom:12px}
+.stagenav{display:flex;justify-content:space-between;gap:10px;margin-top:14px}
+.stagenav button{min-height:60px;font-size:1.15rem;padding:8px 22px;border-radius:20px}
+.bigtiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px 8px;border-radius:22px;border:3px solid var(--line);background:var(--card);min-height:140px;font-size:1.1rem;font-weight:700}
+.tile .em{font-size:3.4rem}
+.tile.on{border-color:var(--ok);background:var(--ok-soft)}
+.tile.sel{border-color:var(--star);background:var(--hint)}
+.datebig{font-family:var(--f-kai);font-size:2.6rem;line-height:1.2}
+.weekstrip{display:flex;gap:6px;margin:12px 0 18px}
+.weekstrip span{flex:1;text-align:center;padding:8px 0;border-radius:12px;background:var(--soft);font-weight:700}
+.weekstrip span.today{background:var(--olive);color:#fff}
+.feelrow{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line)}
+.feelrow .who{display:flex;gap:8px;align-items:center;font-weight:700;font-size:1.15rem}
+.feelrow .who .em{font-size:2.2rem}
+.feels{display:flex;gap:8px;flex-wrap:wrap}
+.feels button{min-width:78px;min-height:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.85rem;border-radius:18px}
+.feels button .em{font-size:2.1rem}
+.feels button.sel{border-color:var(--star);background:var(--hint);border-width:3px}
+@media (max-width:560px){ .feelrow{grid-template-columns:1fr} }
+.slide{display:grid;grid-template-columns:minmax(160px,34%) 1fr;gap:20px;align-items:center;min-height:36vh}
+.slide .se{font-size:clamp(5rem,13vw,9rem);text-align:center}
+.slide p{font-family:var(--f-kai);font-size:clamp(1.4rem,3vw,2.1rem);line-height:1.6;margin:0}
+@media (max-width:620px){ .slide{grid-template-columns:1fr;text-align:center} }
+.dots{display:flex;gap:6px;justify-content:center;margin-top:10px}
+.dots i{width:12px;height:12px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--k-talk)}
+.vkeys{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:6px 0 16px}
+.vkeys div{display:flex;flex-direction:column;align-items:center;padding:12px 18px;border-radius:20px;background:var(--soft);font-weight:700;font-size:1.2rem}
+.vkeys .em{font-size:3.6rem}
+.vtext{font-family:var(--f-kai);font-size:clamp(1.6rem,3.6vw,2.6rem);line-height:1.7;text-align:center}
+.vtext span{border-radius:10px;padding:0 2px;transition:background .2s}
+.vtext span.hl{background:var(--hint);color:var(--hint-ink)}
+.vref{text-align:center;color:var(--muted);font-size:1.1rem;margin-top:6px}
+.talkq{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px;border-radius:18px;background:var(--soft);margin-bottom:10px}
+.talkq .em{font-size:2.4rem}
+.talkq p{margin:0;font-family:var(--f-kai);font-size:1.35rem}
+.aac{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:10px}
+.aac button{min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:20px;font-weight:700;font-size:1rem}
+.aac button .em{font-size:2.8rem}
+
+/* 主題 */
+.themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.th{--tc:#4E6B2F;display:flex;flex-direction:column;gap:4px;text-decoration:none;color:var(--ink);padding:16px;border-radius:22px;background:color-mix(in srgb,var(--tc) 12%,var(--card));
+  border:2px solid color-mix(in srgb,var(--tc) 35%,transparent);position:relative}
+.th .em{font-size:3rem}
+.th b{font-family:var(--f-kai);font-size:1.35rem}
+.th .now{position:absolute;top:10px;right:10px;background:var(--star);color:#3a2a00;font-weight:700;font-size:.8rem;padding:2px 10px;border-radius:999px}
+.lvl{border:2px solid var(--line);border-radius:20px;padding:14px;margin-bottom:12px;background:var(--card)}
+.lvl h3{font-size:1.25rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.lvl ul{margin:6px 0;padding-left:1.2em}
+.lvl li{margin:4px 0}
+.task{display:flex;gap:10px;align-items:flex-start;padding:6px 0}
+.task input{width:24px;height:24px;margin-top:3px;flex:none;accent-color:var(--ok)}
+.task .when{font-size:.8rem;color:var(--ok)}
+.storylist{display:grid;gap:8px;counter-reset:s}
+.storylist div{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;padding:8px 10px;border-radius:14px;background:var(--soft)}
+.storylist .em{font-size:1.8rem}
+
+/* 遊戲選單 */
+.pick{display:flex;gap:10px;flex-wrap:wrap}
+.pick button{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:110px;min-height:110px;border-radius:22px;border-width:3px}
+.pick button .em{font-size:2.6rem}
+.pick button[aria-pressed="true"]{border-color:var(--ok);background:var(--ok-soft)}
+.acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.acts button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 10px;min-height:150px;border-radius:22px;border-width:3px;text-align:center}
+.acts button .em{font-size:3rem}
+.acts button b{font-size:1.15rem}
+.acts button small{font-size:.8rem}
+
+/* 遊戲畫面（全螢幕） */
+.game{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;gap:10px;
+  padding:max(10px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));overflow-y:auto}
+.gtop{display:flex;align-items:center;gap:10px}
+.gtop .gtitle{flex:1;font-weight:700;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gdots{display:flex;gap:5px;flex-wrap:wrap;max-width:45%}
+.gdots i{width:14px;height:14px;border-radius:50%;background:var(--line)}
+.gdots i.ok{background:var(--ok)} .gdots i.help{background:var(--star)} .gdots i.cur{outline:3px solid var(--star)}
+.gturn{display:flex;align-items:center;gap:10px;font-size:1.35rem;font-weight:700}
+.gturn>.em{font-size:2.6rem}
+.gturn.multi{animation:pop .5s}
+.gq{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.gq .ph{display:flex;gap:10px;align-items:flex-start}
+.gprompt{font-family:var(--f-kai);font-size:clamp(1.4rem,3.2vw,2.1rem);line-height:1.45;flex:1}
+.gprompt .bigword{font-size:clamp(2.6rem,7vw,4.4rem);display:inline-block;padding:0 12px;border-radius:14px;background:var(--soft)}
+.gvis{font-family:var(--f-emoji);font-size:clamp(2.4rem,6.5vw,4.2rem);line-height:1.25;text-align:center;letter-spacing:.06em;word-break:break-all}
+.gvis .plus{font-family:var(--f-body);font-size:.7em;color:var(--muted);margin:0 .2em}
+.gvis .grp{display:inline-block;border:3px dashed var(--line);border-radius:18px;padding:2px 8px;margin:4px}
+.gline{font-family:var(--f-kai);font-size:clamp(1.3rem,3vw,2rem);min-height:1.6em;text-align:center;color:var(--ok)}
+.gline:empty::before{content:"＿＿＿＿";color:var(--line)}
+.gopts{display:grid;gap:12px;flex:1;align-content:start;grid-template-columns:repeat(var(--cols,2),1fr)}
+.opt{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-radius:24px;border:4px solid var(--line);
+  background:var(--card);min-height:clamp(120px,24vh,260px);padding:10px;font-size:clamp(1.1rem,2.6vw,1.6rem);font-weight:700;transition:transform .15s,opacity .3s}
+.opt .oe{font-family:var(--f-emoji);font-size:clamp(3.2rem,9vw,6rem);line-height:1.1}
+.opt .on{font-size:clamp(3rem,8vw,5.4rem);line-height:1;font-family:var(--f-body)}
+.opt .od{font-size:clamp(1rem,2.4vw,1.5rem);letter-spacing:.15em;color:var(--k-play)}
+.opt .og{font-family:var(--f-emoji);font-size:clamp(1.8rem,4.6vw,3rem);line-height:1.2;word-break:break-all;text-align:center}
+.opt.txt{min-height:clamp(64px,10vh,110px);font-family:var(--f-kai);font-size:clamp(1.25rem,2.8vw,1.8rem);font-weight:400;text-align:center}
+.opt.part{min-height:clamp(64px,11vh,120px);font-family:var(--f-kai);font-size:clamp(1.3rem,3vw,2rem);font-weight:400}
+.opt.ev{min-height:clamp(110px,18vh,200px)}
+.opt.ev .oe{font-size:clamp(2.6rem,6vw,4rem)}
+.opt:active{transform:scale(.97)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.no{animation:shake .4s}
+.opt.gone{opacity:.25;pointer-events:none}
+.opt.used{opacity:.4;pointer-events:none;border-style:dashed}
+.opt .badge{position:absolute;top:6px;left:8px;background:var(--ok);color:#fff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.opt.hint{animation:glow 1.1s ease-in-out infinite;border-color:var(--star)}
+.opt.scan{border-color:var(--k-talk);box-shadow:0 0 0 6px color-mix(in srgb,var(--k-talk) 40%,transparent);transform:scale(1.02)}
+.gfoot{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+.scanbar{width:100%;min-height:max(18vh,110px);font-size:1.8rem;font-weight:700;border-radius:26px;border:4px solid var(--k-talk);background:color-mix(in srgb,var(--k-talk) 14%,var(--card))}
+.gexp{background:var(--hint);color:var(--hint-ink);border-radius:18px;padding:12px 16px;font-size:1.1rem}
+.gexp button{margin-top:8px}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--star) 60%,transparent)}50%{box-shadow:0 0 0 12px color-mix(in srgb,var(--star) 10%,transparent)}}
+@keyframes pop{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.opt.hint{animation:none;box-shadow:0 0 0 6px var(--star)}.gturn.multi{animation:none}}
+.result{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.result .kid{flex-direction:column;text-align:center}
+.result .stars{font-size:2.4rem;letter-spacing:.1em}
+
+/* 計時器 */
+.timer{position:fixed;inset:0;z-index:70;background:color-mix(in srgb,var(--bg) 96%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:20px}
+.timer svg{width:min(70vw,52vh);height:min(70vw,52vh)}
+.timer .tl{font-size:1.6rem;font-weight:700;font-family:var(--f-kai)}
+
+/* 白板 */
+.board{position:relative;height:calc(100vh - 150px);min-height:380px;border-radius:20px;overflow:hidden;border:2px solid var(--line);background:#fff}
+@media (max-width:860px){ .board{height:calc(100vh - 230px)} }
+.board canvas{position:absolute;inset:0;width:100%;height:100%}
+#ink{touch-action:none;cursor:crosshair}
+.btools{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.btools button{min-width:44px;padding:4px 8px}
+.btools button[aria-pressed="true"]{border-color:var(--olive);background:var(--olive-soft);font-weight:700}
+.swatch{width:40px;height:40px;min-height:40px;border-radius:50%;padding:0;border:3px solid var(--line)}
+.swatch[aria-pressed="true"]{outline:3px solid var(--star);outline-offset:2px}
+.stamps{display:flex;gap:6px;flex-wrap:wrap}
+.stamps button{font-size:1.6rem;padding:2px 6px}
+:root.fs .top,:root.fs #nav{display:none}
+:root.fs main{max-width:none;padding:8px}
+:root.fs .board{height:calc(100vh - 70px)}
+
+/* 慶典 */
+.party-kid{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+.party-kid .av{font-size:3.4rem}
+.stickers{display:flex;flex-wrap:wrap;gap:4px;font-size:1.8rem}
+.stickers .new{animation:pop .6s;filter:drop-shadow(0 0 6px var(--star))}
+.confetti{position:fixed;top:-60px;z-index:90;pointer-events:none;font-size:2rem;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(115vh) rotate(540deg)}}
+
+/* 家長 */
+details.pane{background:var(--card);border:1px solid var(--line);border-radius:20px;margin-bottom:12px}
+details.pane>summary{cursor:pointer;padding:16px 18px;font-family:var(--f-kai);font-size:1.35rem;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.pane>summary::after{content:"▾";color:var(--muted)}
+details.pane[open]>summary::after{content:"▴"}
+details.pane>div{padding:0 18px 18px}
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 14px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:.9rem;color:var(--muted)}
+.form label.ck{flex-direction:row;align-items:center;gap:8px;color:var(--ink)}
+.form input[type=text],.form input[type=number],.form select,textarea,.inp{padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:var(--bg);min-height:44px;color:var(--ink)}
+.form input[type=checkbox]{width:24px;height:24px;accent-color:var(--olive)}
+.kidform{border:2px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
+.kidform h3{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.wk-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.wk-tabs button[aria-pressed="true"]{background:var(--olive);color:#fff;border-color:var(--olive)}
+.wkrow{display:grid;grid-template-columns:64px 1fr 110px 80px 120px auto;gap:6px;align-items:center;margin-bottom:6px}
+.wkrow input,.wkrow select{padding:6px 8px;border-radius:10px;border:2px solid var(--line);background:var(--bg);min-height:42px;width:100%}
+.wkrow .mv{display:flex;gap:4px}
+.wkrow .mv button{min-width:40px;padding:2px 6px}
+@media (max-width:760px){ .wkrow{grid-template-columns:56px 1fr;padding-bottom:8px;border-bottom:1px dashed var(--line)} }
+.tbl{width:100%;border-collapse:collapse;font-size:.9rem}
+.tbl th,.tbl td{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}
+.tblwrap{overflow-x:auto;max-height:420px;overflow-y:auto}
+.guide h3{margin:16px 0 6px;font-size:1.2rem}
+.guide p,.guide li{max-width:72ch}
+.note{background:var(--hint);color:var(--hint-ink);border-radius:14px;padding:10px 14px;font-size:.92rem}
+
+/* 列印 */
+#print{display:none}
+@media print{
+  body>*:not(#print){display:none!important}
+  #print{display:block;color:#000;font-size:11pt;line-height:1.5}
+  #print h1{font-size:18pt} #print h2{font-size:14pt;margin-top:12pt} #print h3{font-size:12pt;margin-top:8pt}
+  #print table{width:100%;border-collapse:collapse} #print td,#print th{border:1px solid #999;padding:4pt;vertical-align:top}
+  #print .em{font-family:var(--f-emoji)}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="#/today" aria-label="橄欖栽子家學堂首頁"><span class="em">🫒</span><b>橄欖栽子家學堂</b></a>
+  <nav id="nav" aria-label="主要功能">
+    <a data-v="today" href="#/today"><span class="em">🏠</span><span>今天</span></a>
+    <a data-v="circle" href="#/circle"><span class="em">⭕</span><span>晨圈</span></a>
+    <a data-v="theme" href="#/theme"><span class="em">🌍</span><span>主題</span></a>
+    <a data-v="games" href="#/games"><span class="em">🎮</span><span>遊戲</span></a>
+    <a data-v="board" href="#/board"><span class="em">✏️</span><span>白板</span></a>
+    <a data-v="party" href="#/party"><span class="em">🎉</span><span>慶典</span></a>
+    <a data-v="parent" href="#/parent"><span class="em">⚙️</span><span>家長</span></a>
+  </nav>
+  <div class="tools">
+    <button id="sndBtn" title="聲音開關" aria-label="聲音開關">🔊</button>
+    <button id="bigBtn" title="大字（電子白板）" aria-label="切換大字">🔠</button>
+    <button id="fsBtn" title="全螢幕" aria-label="全螢幕">⛶</button>
+  </div>
+</header>
+<main id="view"></main>
+<div id="layer"></div>
+<div id="print"></div>
+
+<script src="themes.js"></script>
+<script>
+'use strict';
+/* ---------- 基本工具 ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const sample = (a, n) => shuffle(a).slice(0, n);
+const ymd = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const WD = ['日', '一', '二', '三', '四', '五', '六'];
+const THEMES = window.JENA_THEMES;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('jena1:' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('jena1:' + k, JSON.stringify(v)); } catch {} }
+};
+
+/* 五個程度：依孩子的能力設定，不一定照年齡 */
+const LV = [
+  { e: '🌱', n: '種子', d: '感官・溝通（支援需求）', opts: 2, rounds: 3 },
+  { e: '🌿', n: '嫩芽', d: '幼兒 4–5 歲', opts: 3, rounds: 4 },
+  { e: '🌳', n: '小樹', d: '小一・小二', opts: 3, rounds: 5 },
+  { e: '🍇', n: '結果', d: '小三・小四', opts: 4, rounds: 5 },
+  { e: '🌲', n: '香柏', d: '小五・小六', opts: 4, rounds: 5 }
+];
+const lvChip = L => `<span class="lv" title="${LV[L].d}"><span class="em">${LV[L].e}</span>${LV[L].n}</span>`;
+/* 耶拿四種基本活動（加上生活作息） */
+const KIND = {
+  talk: { e: '💬', n: '對話' }, play: { e: '🎈', n: '遊戲' }, work: { e: '🛠️', n: '工作' }, party: { e: '🎉', n: '慶典' }, life: { e: '🍎', n: '生活' }
+};
+const kindChip = k => `<span class="chip kind k-${k}"><span class="em">${KIND[k].e}</span>${KIND[k].n}</span>`;
+const GO = { circle: '晨圈', move: '律動', theme: '主題', games: '遊戲', board: '白板', party: '慶典' };
+const AVATARS = ['🚂', '🐢', '🐣', '🐑', '🦁', '🐟', '🌟', '🪲', '🐻', '🦋', '🐰', '🐬', '🦒', '🌻', '🚀', '🐱'];
+const STICKERS = ['🐑', '🕊️', '🌈', '⭐', '🐟', '🍞', '🌾', '🦁', '🐋', '👑', '🦋', '🌷', '🐣', '🚢', '🎵', '🌻', '🍇', '🐢', '🚂', '🪲', '🌙', '☀️', '🫒', '🍎'];
+const FEELS = [['😊', '開心'], ['😢', '難過'], ['😠', '生氣'], ['😨', '害怕'], ['😴', '累了'], ['🤒', '不舒服']];
+
+/* ---------- 預設資料 ---------- */
+function defaultKids() {
+  return [
+    { id: 'k1', name: '大寶', av: '🚂', age: 6, L: 2, opts: 3, errorless: false, scan: false, scanMs: 2500, autoSay: true, slowTap: false },
+    { id: 'k2', name: '二寶', av: '🐢', age: 5, L: 0, opts: 2, errorless: true, scan: false, scanMs: 3000, autoSay: true, slowTap: true },
+    { id: 'k3', name: '三寶', av: '🐣', age: 4, L: 1, opts: 3, errorless: false, scan: false, scanMs: 2500, autoSay: true, slowTap: false }
+  ];
+}
+const B = (e, t, k, min, go = '') => ({ e, t, k, min, go });
+function defaultWeek() {
+  const day = (mid, extra) => [
+    B('⭕', '晨圈：問安・心情・聖經故事', 'talk', 20, 'circle'),
+    B('🌍', '主題工作：世界導向（同主題、分程度）', 'work', 40, 'theme'),
+    B('🤸', '律動時間', 'play', 15, 'move'),
+    B('🍎', '點心・洗手・上廁所', 'life', 15),
+    mid,
+    B('🎈', '自由遊戲・戶外', 'play', 40),
+    extra || B('🙏', '晚圈：今天學到什麼・禱告', 'talk', 10, 'circle')
+  ];
+  const course = B('📚', '課程時間：國語／數學（各自的程度）', 'work', 30, 'games');
+  return {
+    1: day(course), 2: day(course),
+    3: day(B('🎨', '藝術・音樂（白板畫畫、唱詩歌）', 'work', 30, 'board')),
+    4: day(course),
+    5: day(B('🎉', '慶典：作品分享・讚美・獎勵', 'party', 30, 'party'), B('🙏', '晚圈：一週回顧・感恩禱告', 'talk', 10, 'circle')),
+    6: [B('🌳', '家庭日：戶外探索、郊遊、拜訪', 'play', 120), B('🧑‍🍳', '一起做家事・料理', 'work', 30)],
+    0: [B('⛪', '主日：敬拜與休息', 'party', 0)]
+  };
+}
+const MONTH_THEME = { 9: 0, 10: 2, 11: 4, 12: 7, 1: 6, 2: 8, 3: 9, 4: 10, 5: 11, 6: 1, 7: 0, 8: 0 };
+
+const S = {
+  kids: store.get('kids', null) || defaultKids(),
+  theme: store.get('theme', MONTH_THEME[new Date().getMonth() + 1] ?? 0),
+  week: store.get('week', null) || defaultWeek(),
+  day: store.get('day', { d: '', cur: 0, done: [] }),
+  att: store.get('att', {}), weather: store.get('weather', {}), feel: store.get('feel', {}),
+  log: store.get('log', []), notes: store.get('notes', []), done: store.get('done', {}),
+  stars: store.get('stars', {}), stickers: store.get('stickers', {})
+};
+if (S.theme >= THEMES.length) S.theme = 0;
+function save(...keys) { for (const k of keys) store.set(k, S[k]); }
+function today() { const d = ymd(); if (S.day.d !== d) { S.day = { d, cur: 0, done: [] }; save('day'); } return S.day; }
+const curTheme = () => THEMES[S.theme];
+const kidById = id => S.kids.find(k => k.id === id);
+
+/* ---------- 聲音 ---------- */
+let soundOn = store.get('sound', true), zhVoice = null, voices = [], actx = null;
+let voicePref = store.get('voice', ''), rate = store.get('rate', 0.85), speakSeq = 0;
+function twScore(v) {
+  const s = (v.lang + ' ' + v.name).toLowerCase(); let sc = 0;
+  if (/zh[-_]tw|cmn[-_]hant[-_]tw|hant[-_]tw/.test(s)) sc += 100;
+  if (/臺灣|台灣|taiwan|國語/.test(s)) sc += 60;
+  if (/hsiaochen|hsiaoyu|yating|mei-?jia|zhiwei|yunjhe|hanhan/.test(s)) sc += 20;
+  if (/natural|online|neural|enhanced|premium|高品質/.test(s)) sc += 15;
+  if (/zh[-_]hk|yue|cantonese|粵|廣東/.test(s)) sc -= 80;
+  if (/zh[-_]cn|cmn[-_]hans|普通话|mainland/.test(s)) sc -= 40;
+  return sc;
+}
+const isTW = v => twScore(v) >= 60;
+function loadVoice() {
+  voices = speechSynthesis.getVoices().filter(v => /^(zh|cmn|yue)/i.test(v.lang)).sort((a, b) => twScore(b) - twScore(a));
+  zhVoice = voices.find(v => v.voiceURI === voicePref) || voices.filter(isTW)[0] || null;
+  if ($('#voiceSel')) renderVoice();
+}
+if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
+const clean = t => String(t).replace(/<[^>]+>/g, '').replace(/[＿_]{2,}/g, '空格').replace(/[🌀-🫸☀-➿️‍]/gu, ' ').replace(/\s+/g, ' ').trim();
+/* 念出文字；回傳 Promise，念完（或被下一句打斷）時結束，值為「是否還是最新的一句」 */
+function speak(text, r) {
+  return new Promise(res => {
+    const id = ++speakSeq; const t = clean(text || '');
+    if (!soundOn || !('speechSynthesis' in window) || !t) { setTimeout(() => res(id === speakSeq), 10); return; }
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = zhVoice ? zhVoice.lang : 'zh-TW'; u.rate = r || rate; u.pitch = 1.05;
+    if (zhVoice) try { u.voice = zhVoice; } catch {}
+    let fin = false; const end = () => { if (!fin) { fin = true; clearTimeout(to); res(id === speakSeq); } };
+    const to = setTimeout(end, 1500 + t.length * 380 / u.rate);
+    u.onend = end; u.onerror = end;
+    speechSynthesis.speak(u);
+  });
+}
+function hush() { speakSeq++; if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+const wait = ms => new Promise(r => setTimeout(r, ms));
+function tone(freqs, dur = .12, type = 'sine', vol = .12) {
+  if (!soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+    freqs.forEach((f, i) => {
+      const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime + i * dur;
+      o.type = type; o.frequency.value = f; g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(.001, t0 + dur * 1.6);
+      o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + dur * 1.7);
+    });
+  } catch {}
+}
+const sndOk = () => tone([660, 880], .1);
+const sndSoft = () => tone([300], .12, 'triangle', .06);
+const sndWin = () => tone([523, 659, 784, 1047], .13);
+function confetti(n = 36) {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; if (reduce) n = 8;
+  const em = ['🎉', '⭐', '✨', '🌈', '🎈', '💛', '🫒'];
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('span'); s.className = 'confetti em'; s.textContent = pick(em);
+    s.style.left = Math.random() * 100 + 'vw'; s.style.animationDuration = (2 + Math.random() * 2) + 's'; s.style.animationDelay = Math.random() * .6 + 's';
+    document.body.appendChild(s); setTimeout(() => s.remove(), 5000);
+  }
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-say]'); if (b) { e.preventDefault(); speak(b.dataset.say); } });
+const sayBtn = (t, label = '🔊') => `<button class="say" data-say="${esc(t)}" aria-label="念出來">${label}</button>`;
+
+/* ---------- 頁首工具 ---------- */
+function syncTools() {
+  $('#sndBtn').textContent = soundOn ? '🔊' : '🔇';
+  document.documentElement.classList.toggle('big', !!store.get('big', false));
+  $('#bigBtn').setAttribute('aria-pressed', !!store.get('big', false));
+}
+$('#sndBtn').onclick = () => { soundOn = !soundOn; store.set('sound', soundOn); if (!soundOn) hush(); syncTools(); };
+$('#bigBtn').onclick = () => { store.set('big', !store.get('big', false)); syncTools(); if (route()[0] === 'board') renderView(); };
+$('#fsBtn').onclick = () => {
+  const d = document;
+  if (d.fullscreenElement || d.webkitFullscreenElement) (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+  else { const el = d.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); }
+};
+document.addEventListener('fullscreenchange', () => { if (route()[0] === 'board') setTimeout(renderView, 120); });
+
+/* ---------- 路由 ---------- */
+const route = () => (location.hash.replace(/^#\/?/, '') || 'today').split('/');
+function renderView() {
+  const [v, a] = route(); hush(); stopTimer();
+  if (G) endGame();
+  $('#view').onclick = null; $('#view').onchange = null;
+  $$('#nav a').forEach(x => x.classList.toggle('on', x.dataset.v === v));
+  document.documentElement.classList.remove('fs');
+  const fn = { today: vToday, circle: vCircle, theme: vTheme, games: vGames, board: vBoard, party: vParty, parent: vParent }[v] || vToday;
+  fn(a); window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', renderView);
+const goHref = go => go === 'move' ? '#/circle/7' : go === 'theme' ? '#/theme/' + curTheme().id : '#/' + go;
+
+/* ======================== 今天 ======================== */
+function banner(T, extra = '') {
+  return `<section class="banner" style="--tc:${T.color}">
+    <span class="be em">${T.e}</span>
+    <div><small>本期主題 · 世界導向</small><h1>${esc(T.title)}</h1></div>
+    <div class="muted">${esc(T.bible)}　·　${esc(T.world)}</div>
+    <div class="verse-mini">${sayBtn(T.verse.fp.join('') + '。' + T.verse.ref)}<span>「${esc(T.verse.fp.join(''))}」</span><small>— ${esc(T.verse.ref)}</small></div>
+    ${extra}
+  </section>`;
+}
+function vToday() {
+  const T = curTheme(), D = today(), wd = new Date().getDay(), blocks = S.week[wd] || [];
+  const cur = blocks[D.cur], next = blocks.slice(D.cur + 1).find((b, i) => !D.done.includes(D.cur + 1 + i));
+  const now = new Date();
+  $('#view').innerHTML = banner(T) + `
+  <section class="card">
+    <div class="sec-title"><h2>今天的節奏 · ${now.getMonth() + 1} 月 ${now.getDate()} 日 星期${WD[wd]}</h2>
+      <div class="row">${Object.keys(KIND).map(kindChip).join('')}</div></div>
+    ${cur ? `<div class="firstthen">
+      <div class="ft k-${cur.k}"><div class="lab">現在</div><span class="em">${cur.e}</span><b>${esc(cur.t.split('：')[0])}</b></div>
+      <div class="ft-arrow em">➡️</div>
+      ${next ? `<div class="ft k-${next.k}"><div class="lab">等一下</div><span class="em">${next.e}</span><b>${esc(next.t.split('：')[0])}</b></div>` : `<div class="ft k-party"><div class="lab">等一下</div><span class="em">🏡</span><b>休息</b></div>`}
+    </div>` : ''}
+    <ol class="rhythm">${blocks.map((b, i) => `
+      <li class="blk k-${b.k} ${i === D.cur ? 'cur' : ''} ${D.done.includes(i) ? 'done' : ''}" data-i="${i}">
+        <span class="be em">${b.e}</span>
+        <div><div class="bt">${esc(b.t)}</div><div class="bm">${kindChip(b.k)}${b.min ? `<span>⏱️ ${b.min} 分鐘</span>` : ''}</div></div>
+        <div class="bb">
+          ${b.go && GO[b.go] ? `<a href="${goHref(b.go)}"><button tabindex="-1">▶ 去${GO[b.go]}</button></a>` : ''}
+          ${b.min ? `<button data-timer="${i}" aria-label="計時">⏳</button>` : ''}
+          <button data-cur="${i}" aria-label="設為現在">📍</button>
+          <button data-done="${i}" aria-label="完成">${D.done.includes(i) ? '↩️' : '✅'}</button>
+        </div>
+      </li>`).join('') || '<p class="muted">今天沒有安排。可以到「⚙️ 家長 › 週節奏表」設定。</p>'}
+    </ol>
+  </section>
+  <section class="card">
+    <div class="sec-title"><h2>我們的根基小組</h2><a href="#/parent">調整程度與輔助</a></div>
+    <div class="kids">${S.kids.map(k => `<div class="kid"><span class="av em">${k.av}</span><div><b>${esc(k.name)}</b><div class="row">${lvChip(k.L)}<span class="chip">⭐ ${S.stars[k.id] || 0}</span></div>
+      <a href="#/games" data-solo="${k.id}">🎮 玩主題遊戲</a></div></div>`).join('')}</div>
+  </section>
+  <p class="muted" style="text-align:center"><a href="../">← 回到服務入口</a></p>`;
+  const v = $('#view');
+  v.onclick = e => {
+    const t = e.target.closest('[data-timer],[data-cur],[data-done],[data-solo]'); if (!t) return;
+    if (t.dataset.solo) { store.set('players', [t.dataset.solo]); return; }
+    if (t.dataset.timer) { const b = blocks[+t.dataset.timer]; D.cur = +t.dataset.timer; save('day'); startTimer(b.min, b.e, b.t); vToday(); return; }
+    if (t.dataset.cur) { D.cur = +t.dataset.cur; save('day'); speak('現在是：' + blocks[D.cur].t.split('：')[0]); vToday(); return; }
+    if (t.dataset.done) {
+      const i = +t.dataset.done, at = D.done.indexOf(i);
+      if (at >= 0) D.done.splice(at, 1);
+      else { D.done.push(i); sndOk(); if (i === D.cur) { const n = blocks.findIndex((b, j) => j > i && !D.done.includes(j)); if (n >= 0) { D.cur = n; speak('完成了！接下來：' + blocks[n].t.split('：')[0]); } } }
+      save('day'); vToday();
+    }
+  };
+}
+
+/* ---------- 視覺計時器（不用看數字也懂：圓餅慢慢變小） ---------- */
+let TM = null;
+function startTimer(min, e, label) {
+  stopTimer();
+  const total = min * 60000; let left = total, last = Date.now(), paused = false;
+  const L = $('#layer');
+  L.innerHTML = `<div class="timer" role="dialog" aria-label="計時器">
+    <div class="tl"><span class="em">${e}</span> ${esc(label.split('：')[0])}</div>
+    <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="none" stroke="var(--line)" stroke-width="4"/>
+      <path id="pie" fill="var(--k-play)"/></svg>
+    <div id="tleft" class="tl"></div>
+    <div class="row"><button id="tpause">⏸ 暫停</button><button id="tadd">＋1 分鐘</button><button id="tclose" class="pri">✕ 關閉</button></div>
+  </div>`;
+  const draw = () => {
+    const f = Math.max(0, left / total), a = f * Math.PI * 2;
+    const x = 50 + 44 * Math.sin(a), y = 50 - 44 * Math.cos(a);
+    $('#pie').setAttribute('d', f >= .9999 ? 'M50 6 A44 44 0 1 1 49.99 6 Z' : f <= 0 ? '' : `M50 50 L50 6 A44 44 0 ${a > Math.PI ? 1 : 0} 1 ${x} ${y} Z`);
+    const m = Math.ceil(left / 60000); $('#tleft').textContent = left <= 0 ? '時間到了！' : `還有 ${m} 分鐘`;
+  };
+  draw();
+  TM = setInterval(() => {
+    const n = Date.now(); if (!paused) left -= n - last; last = n; draw();
+    if (left <= 0) { clearInterval(TM); TM = null; sndWin(); speak('時間到了！'); }
+  }, 500);
+  $('#tpause').onclick = e => { paused = !paused; e.target.textContent = paused ? '▶ 繼續' : '⏸ 暫停'; };
+  $('#tadd').onclick = () => { left += 60000; if (!TM) { last = Date.now(); startTimer(Math.ceil(left / 60000), e, label); } };
+  $('#tclose').onclick = stopTimer;
+}
+function stopTimer() { if (TM) clearInterval(TM); TM = null; const t = $('.timer'); if (t) t.remove(); }
+
+/* ======================== 晨圈 ======================== */
+const STEPS = [['👋', '問安'], ['📅', '今天'], ['😊', '心情'], ['📖', '故事'], ['📜', '經文'], ['💬', '對話'], ['🙏', '禱告'], ['🤸', '律動']];
+let storyIdx = 0;
+function vCircle(a) {
+  const st = Math.min(STEPS.length - 1, Math.max(0, +a || 0));
+  const T = curTheme();
+  const body = [cHello, cDay, cFeel, cStory, cVerse, cTalk, cPray, cMove][st](T);
+  $('#view').innerHTML = `
+    <nav class="steps" aria-label="晨圈步驟">${STEPS.map((s, i) => `<a href="#/circle/${i}" class="${i === st ? 'on' : ''}"><span class="em">${s[0]}</span>${i + 1}. ${s[1]}</a>`).join('')}</nav>
+    <section class="stage" id="stage">${body}</section>
+    <div class="stagenav">
+      ${st > 0 ? `<a href="#/circle/${st - 1}"><button tabindex="-1">◀ ${STEPS[st - 1][1]}</button></a>` : '<span></span>'}
+      ${st < STEPS.length - 1 ? `<a href="#/circle/${st + 1}"><button tabindex="-1" class="pri">${STEPS[st + 1][1]} ▶</button></a>` : `<a href="#/theme/${T.id}"><button tabindex="-1" class="pri">去主題工作 ▶</button></a>`}
+    </div>`;
+  const init = [iHello, iDay, iFeel, iStory, iVerse, null, iPray, null][st];
+  if (init) init(T);
+}
+function cHello() {
+  const d = ymd(), at = S.att[d] || {};
+  const all = S.kids.every(k => at[k.id]);
+  return `<h2>👋 早安！誰來了？</h2>
+    <div class="bigtiles">${S.kids.map(k => `<button class="tile ${at[k.id] ? 'on' : ''}" data-kid="${k.id}"><span class="em">${k.av}</span>${esc(k.name)}${at[k.id] ? ' ✔' : ''}</button>`).join('')}</div>
+    <p class="note" style="margin-top:16px">${all ? '🎉 大家都到齊了！一起唱一首早安詩歌吧。' : '點自己的圖片說「我來了！」（也可以請哥哥姊姊幫忙點）'}</p>`;
+}
+function iHello() {
+  $('#stage').onclick = e => {
+    const b = e.target.closest('[data-kid]'); if (!b) return;
+    const d = ymd(); S.att[d] = S.att[d] || {}; const k = kidById(b.dataset.kid);
+    S.att[d][k.id] = true; save('att'); sndOk();
+    const all = S.kids.every(x => S.att[d][x.id]);
+    speak(`早安，${k.name}！神愛你！` + (all ? '大家都到齊了！' : ''));
+    if (all) confetti(20);
+    $('#stage').innerHTML = cHello();
+  };
+}
+const WEATHER = [['☀️', '晴天'], ['⛅', '多雲'], ['☁️', '陰天'], ['🌧️', '下雨'], ['⛈️', '打雷'], ['🌬️', '刮風'], ['🥵', '很熱'], ['🥶', '很冷']];
+function cDay() {
+  const n = new Date(), w = S.weather[ymd()];
+  const strip = [1, 2, 3, 4, 5, 6, 0].map(i => `<span class="${i === n.getDay() ? 'today' : ''}">${WD[i]}</span>`).join('');
+  return `<h2>📅 今天是…</h2>
+    <div class="row"><div class="datebig">${n.getMonth() + 1} 月 ${n.getDate()} 日　星期${WD[n.getDay()]}</div>${sayBtn(`今天是${n.getMonth() + 1}月${n.getDate()}日，星期${WD[n.getDay()]}`)}</div>
+    <div class="weekstrip">${strip}</div>
+    <h3 style="margin-bottom:8px">今天的天氣？</h3>
+    <div class="bigtiles">${WEATHER.map(([e, t]) => `<button class="tile ${w === t ? 'sel' : ''}" data-w="${t}"><span class="em">${e}</span>${t}</button>`).join('')}</div>
+    <p class="vref" style="margin-top:14px">「這是耶和華所定的日子，我們在其中要高興歡喜！」— 詩篇 118:24 ${sayBtn('這是耶和華所定的日子，我們在其中要高興歡喜！')}</p>`;
+}
+function iDay() {
+  $('#stage').onclick = e => {
+    const b = e.target.closest('[data-w]'); if (!b) return;
+    S.weather[ymd()] = b.dataset.w; save('weather'); speak('今天是' + b.dataset.w); $('#stage').innerHTML = cDay();
+  };
+}
+function cFeel() {
+  const f = S.feel[ymd()] || {};
+  const sad = S.kids.filter(k => f[k.id] && !['開心'].includes(f[k.id]));
+  return `<h2>😊 今天的心情</h2>
+    ${S.kids.map(k => `<div class="feelrow"><div class="who"><span class="em">${k.av}</span>${esc(k.name)}</div>
+      <div class="feels">${FEELS.map(([e, t]) => `<button class="${f[k.id] === t ? 'sel' : ''}" data-k="${k.id}" data-f="${t}"><span class="em">${e}</span>${t}</button>`).join('')}</div></div>`).join('')}
+    ${sad.length ? `<p class="note" style="margin-top:14px">💛 ${sad.map(k => esc(k.name) + '（' + f[k.id] + '）').join('、')}：我們一起抱一抱，等一下為他禱告。</p>` : ''}`;
+}
+function iFeel() {
+  $('#stage').onclick = e => {
+    const b = e.target.closest('[data-f]'); if (!b) return;
+    const d = ymd(); S.feel[d] = S.feel[d] || {}; S.feel[d][b.dataset.k] = b.dataset.f; save('feel');
+    const k = kidById(b.dataset.k); speak(`${k.name}覺得${b.dataset.f}`); $('#stage').innerHTML = cFeel();
+  };
+}
+function cStory(T) {
+  storyIdx = Math.min(storyIdx, T.story.length - 1);
+  const [e, t] = T.story[storyIdx];
+  return `<h2>📖 ${esc(T.title)}</h2>
+    <div class="slide"><div class="se em">${e}</div><p>${esc(t)}</p></div>
+    <div class="dots">${T.story.map((_, i) => `<i class="${i === storyIdx ? 'on' : ''}"></i>`).join('')}</div>
+    <div class="row" style="justify-content:center;margin-top:12px">
+      <button data-s="-1" ${storyIdx === 0 ? 'disabled' : ''}>◀ 上一張</button>${sayBtn(t, '🔊 再念一次')}
+      <button data-s="1" class="pri" ${storyIdx === T.story.length - 1 ? 'disabled' : ''}>下一張 ▶</button></div>
+    <p class="vref">大孩子自己讀經：${esc(T.bible)}</p>`;
+}
+function iStory(T) {
+  speak(T.story[storyIdx][1]);
+  $('#stage').onclick = e => {
+    const b = e.target.closest('[data-s]'); if (!b) return;
+    storyIdx = Math.max(0, Math.min(T.story.length - 1, storyIdx + +b.dataset.s));
+    $('#stage').innerHTML = cStory(T); speak(T.story[storyIdx][1]);
+  };
+}
+function cVerse(T) {
+  const V = T.verse;
+  return `<h2>📜 背經文</h2>
+    <div class="vkeys">${V.keys.map(([e, t]) => `<div><span class="em">${e}</span>${esc(t)}</div>`).join('')}</div>
+    <div class="vtext" id="vtext">${V.fp.map((p, i) => `<span data-i="${i}">${esc(p)}</span>`).join('')}</div>
+    <div class="vref">— ${esc(V.ref)}（和合本）</div>
+    <div class="row" style="justify-content:center;margin-top:16px">
+      <button data-v="all" class="pri">🔊 念全節</button>
+      <button data-v="echo">🔁 跟我念（一句一句）</button>
+      <button data-v="short">🌱 小小孩短句</button>
+      <button data-v="gest">👐 動作</button>
+    </div>
+    <p class="note" id="vnote" hidden></p>`;
+}
+function iVerse(T) {
+  const V = T.verse;
+  const run = async (parts, gap) => {
+    for (let i = 0; i < parts.length; i++) {
+      $$('#vtext span').forEach(s => s.classList.toggle('hl', +s.dataset.i === parts[i]));
+      if (!(await speak(V.fp[parts[i]]))) return;
+      if (gap) await wait(gap);
+    }
+    $$('#vtext span').forEach(s => s.classList.remove('hl'));
+    speak(V.ref);
+  };
+  $('#stage').onclick = e => {
+    const b = e.target.closest('[data-v]'); if (!b) return;
+    const k = b.dataset.v, n = $('#vnote');
+    if (k === 'all') run(V.fp.map((_, i) => i), 0);
+    if (k === 'echo') run(V.fp.map((_, i) => i), 2600);
+    if (k === 'short') { n.hidden = false; n.innerHTML = `🌱 短句：「${esc(V.sp.join(''))}」${sayBtn(V.sp.join(''))}`; speak(V.sp.join('')); }
+    if (k === 'gest') { n.hidden = false; n.textContent = '👐 ' + V.gesture; speak(V.gesture); }
+  };
+}
+const AAC = [['👍', '是'], ['👎', '不是'], ['🙋', '還要'], ['✋', '好了'], ['🤷', '不知道'], ['🆘', '幫幫我']];
+function cTalk(T) {
+  const ls = [...new Set(S.kids.map(k => k.L))].sort();
+  return `<h2>💬 圓圈對話</h2>
+    <p class="muted">同一個故事，每個孩子回答自己程度的問題。哥哥姊姊先示範，弟弟妹妹用圖卡回答。</p>
+    ${S.kids.map(k => {
+      const q = T.talk[k.L][(new Date().getDate() + k.L) % T.talk[k.L].length];
+      return `<div class="talkq"><span class="em">${k.av}</span><div><b>${esc(k.name)}</b> ${lvChip(k.L)}<p>${esc(q)}</p></div>${sayBtn(k.name + '，' + q)}</div>`;
+    }).join('')}
+    <details style="margin-top:8px"><summary>其他程度的問題</summary>${[0, 1, 2, 3, 4].filter(l => !ls.includes(l)).map(l => `<p>${lvChip(l)} ${T.talk[l].map(esc).join(' ／ ')}</p>`).join('')}</details>
+    <h3 style="margin-top:14px">🗣️ 圖卡回答板（點一下就會說）</h3>
+    <div class="aac">${AAC.map(([e, t]) => `<button data-say="${t}"><span class="em">${e}</span>${t}</button>`).join('')}
+    ${T.items.map(([e, t]) => `<button data-say="${t}"><span class="em">${e}</span>${t}</button>`).join('')}</div>`;
+}
+const THANKS = [['👨‍👩‍👧', '家人', '謝謝神賜給我們家人'], ['🍚', '食物', '謝謝神賜給我們食物'], ['💪', '身體', '謝謝神給我們身體'], ['🏠', '家', '謝謝神給我們溫暖的家'],
+  ['☀️', '好天氣', '謝謝神給我們今天的天氣'], ['👫', '朋友', '謝謝神給我們朋友'], ['🧑‍⚕️', '醫生和治療師', '謝謝神給我們醫生和治療師'], ['📚', '可以學習', '謝謝神讓我們可以學習']];
+const ASKS = [['🤒', '生病的人', '求神醫治生病的人'], ['👴', '爺爺奶奶', '求神保守爺爺奶奶'], ['🙋', '我自己', '求神幫助我今天聽話、勇敢'], ['🌏', '世界', '求神看顧世界上需要幫助的人'], ['⛪', '教會', '求神祝福我們的教會']];
+function cPray() {
+  const f = S.feel[ymd()] || {};
+  const need = S.kids.filter(k => f[k.id] && f[k.id] !== '開心');
+  return `<h2>🙏 一起禱告</h2>
+    <h3>感謝</h3><div class="aac">${THANKS.map(([e, t, s]) => `<button data-say="${s}"><span class="em">${e}</span>${t}</button>`).join('')}</div>
+    <h3 style="margin-top:14px">代禱</h3><div class="aac">${ASKS.map(([e, t, s]) => `<button data-say="${s}"><span class="em">${e}</span>${t}</button>`).join('')}
+      ${need.map(k => `<button data-say="求神幫助${esc(k.name)}，${esc(k.name)}今天覺得${f[k.id]}"><span class="em">${k.av}</span>${esc(k.name)}</button>`).join('')}</div>
+    <div class="row" style="justify-content:center;margin-top:18px"><button class="pri" id="amen" style="font-size:1.3rem;min-height:64px">🙏 奉耶穌的名禱告，阿們！</button></div>`;
+}
+function iPray() { $('#amen').onclick = () => { speak('奉耶穌的名禱告，阿們！'); confetti(14); }; }
+function cMove(T) {
+  return `<h2>🤸 律動時間</h2>
+    <div class="grid">${[...T.move, ...JENA_MOVES].map(m => `<div class="talkq"><span class="em">${m.split(' ')[0]}</span><div><p>${esc(m.replace(/^\S+\s/, ''))}</p></div>${sayBtn(m)}</div>`).join('')}</div>
+    <div class="row" style="margin-top:12px"><button class="pri" onclick="startTimer(1,'🤸','一起動一動')">⏳ 一起動 1 分鐘</button><button onclick="startTimer(3,'🤸','一起動一動')">⏳ 3 分鐘</button></div>
+    <p class="note" style="margin-top:12px">肌肉張力低、平衡不穩的孩子：動作請依物理／職能治療師的建議調整次數與輔助，在軟墊上進行，大人在旁保護；孩子累了就休息，喝水。</p>`;
+}
+
+/* ======================== 主題 ======================== */
+function vTheme(id) {
+  const T = THEMES.find(t => t.id === id);
+  if (!T) {
+    $('#view').innerHTML = `<div class="sec-title"><h2>🌍 世界導向主題（一年 12 個）</h2><span class="muted">每個主題約 3 週，全家同一個主題、各自的程度</span></div>
+      <div class="themes">${THEMES.map((t, i) => `<a class="th" href="#/theme/${t.id}" style="--tc:${t.color}">${i === S.theme ? '<span class="now">本期</span>' : ''}
+        <span class="em">${t.e}</span><b>${esc(t.title)}</b><small>${esc(t.when)}・${esc(t.bible)}</small><span style="font-size:.9rem">${esc(t.world)}</span></a>`).join('')}</div>`;
+    return;
+  }
+  const idx = THEMES.indexOf(T);
+  const kidsAt = L => S.kids.filter(k => k.L === L).map(k => `<span class="em" title="${esc(k.name)}">${k.av}</span>`).join('');
+  $('#view').innerHTML = banner(T, `<div class="row" style="grid-column:1/-1">
+      ${idx === S.theme ? '<span class="chip">⭐ 本期主題</span>' : `<button id="setCur" class="pri">⭐ 設為本期主題</button>`}
+      <a href="#/games"><button tabindex="-1" id="playT">🎮 用這個主題玩遊戲</button></a>
+      <button id="printT">🖨️ 列印主題教案</button><a href="#/theme">← 全部主題</a></div>`) + `
+    <section class="card"><h2>📖 聖經故事</h2><div class="storylist" style="margin-top:10px">${T.story.map(([e, t]) => `<div><span class="em">${e}</span><span>${esc(t)}</span></div>`).join('')}</div>
+      <p class="muted">晨圈時到「⭕ 晨圈 › 故事」用大圖一張一張講。</p></section>
+    <section class="card"><h2>🧭 分程度：對話・動手做・遊戲</h2><p class="muted">打勾記錄完成日期。頭像表示哪個孩子在這個程度。</p>
+      ${LV.map((lv, L) => `<div class="lvl"><h3>${lvChip(L)} <small>${lv.d}</small> ${kidsAt(L)}</h3>
+        <b>💬 對話</b><ul>${T.talk[L].map(q => `<li>${esc(q)}</li>`).join('')}</ul>
+        <b>🛠️ 動手做（工作）</b>${T.work[L].map((w, i) => { const key = `${T.id}:${L}:${i}`, d = S.done[key];
+          return `<label class="task"><input type="checkbox" data-key="${key}" ${d ? 'checked' : ''}><span>${esc(w)} ${d ? `<span class="when">✓ ${d}</span>` : ''}</span></label>`; }).join('')}
+        <b>🎮 遊戲</b><div class="muted">${gameList(L)}</div>
+      </div>`).join('')}
+    </section>
+    <section class="card"><h2>🤸 律動</h2><ul>${T.move.map(m => `<li>${esc(m)}</li>`).join('')}</ul></section>
+    <section class="card k-party"><h2>🎉 慶典</h2><p>${esc(T.party)}</p></section>`;
+  const sc = $('#setCur'); if (sc) sc.onclick = () => { S.theme = idx; save('theme'); vTheme(id); };
+  $('#playT').onclick = () => store.set('gtheme', idx);
+  $('#printT').onclick = () => printTheme(T);
+  $('#view').onchange = e => {
+    const c = e.target.closest('[data-key]'); if (!c) return;
+    if (c.checked) S.done[c.dataset.key] = ymd(); else delete S.done[c.dataset.key];
+    save('done'); vTheme(id);
+  };
+}
+function gameList(L) {
+  return ACTS.filter(a => a.min <= L).map(a => `${a.e} ${a.n}`).join('、') + (L < 2 ? '（想一想、排經文到小樹程度才開放）' : '');
+}
+function printTheme(T) {
+  $('#print').innerHTML = `<h1>${T.e} ${esc(T.title)}　主題教案</h1>
+    <p>經文出處：${esc(T.bible)}　建議時間：${esc(T.when)}（約 3 週）<br>世界導向：${esc(T.world)}<br>
+    背誦經文：「${esc(T.verse.fp.join(''))}」（${esc(T.verse.ref)}）　短句：「${esc(T.verse.sp.join(''))}」　動作：${esc(T.verse.gesture)}</p>
+    <h2>聖經故事</h2><ol>${T.story.map(s => `<li>${esc(s[1])}</li>`).join('')}</ol>
+    <h2>分程度活動</h2><table><tr><th>程度</th><th>對話</th><th>動手做</th><th>想一想</th></tr>
+    ${LV.map((lv, L) => `<tr><td>${lv.e} ${lv.n}<br>${lv.d}</td><td>${T.talk[L].map(esc).join('<br>')}</td><td>${T.work[L].map(w => '☐ ' + esc(w)).join('<br>')}</td>
+      <td>${(T.quiz[L] || []).map(q => esc(q[0]) + '（' + esc(q[1][q[2]]) + '）').join('<br>') || '圖卡與遊戲'}</td></tr>`).join('')}</table>
+    <h2>律動</h2><ul>${T.move.map(m => `<li>${esc(m)}</li>`).join('')}</ul>
+    <h2>慶典</h2><p>${esc(T.party)}</p>
+    <h2>觀察紀錄</h2><table>${S.kids.map(k => `<tr><td style="width:20%">${esc(k.name)}（${LV[k.L].n}）</td><td style="height:60pt"></td></tr>`).join('')}</table>`;
+  window.print();
+}
+
+/* ======================== 遊戲引擎 ======================== */
+const ACTS = [
+  { k: 'vocab', e: '🎧', n: '聽一聽', d: '聽詞語、找圖片；大孩子讀詞語', min: 0 },
+  { k: 'math', e: '🔢', n: '數一數', d: '數數、比多少 → 加減乘除、分數', min: 0 },
+  { k: 'sort', e: '🧺', n: '分一分', d: '把東西放到對的地方', min: 0 },
+  { k: 'order', e: '📜', n: '排一排', d: '故事先後順序', min: 0 },
+  { k: 'verse', e: '📖', n: '經文', d: '找經文圖卡 → 排出整節經文', min: 0 },
+  { k: 'quiz', e: '❓', n: '想一想', d: '故事理解與自然、社會延伸', min: 2 },
+  { k: 'mix', e: '🎲', n: '綜合', d: '每一題隨機換遊戲', min: 0 }
+];
+const optsMax = k => Math.max(2, Math.min(4, k.opts || LV[k.L].opts));
+const OPT = (e, t, extra = {}) => ({ e, t, ...extra });
+const okey = o => `${o.e || ''}|${o.t || ''}|${o.num ?? ''}|${o.grp ?? ''}`;
+function choose(q, correct, wrongs, max) {
+  const seen = new Set([okey(correct)]), w = [];
+  for (const o of shuffle(wrongs)) { const k = okey(o); if (!seen.has(k)) { seen.add(k); w.push(o); } }
+  const opts = shuffle([correct, ...w.slice(0, max - 1)]);
+  return { ui: 'choose', ...q, opts, ans: opts.indexOf(correct) };
+}
+const allItems = () => THEMES.flatMap(t => t.items);
+const emo = (e, n) => Array(n).fill(e).join('');
+function nums(ans, max, lo = 0, dots = false, cands) {
+  const c = (cands || [ans + 1, ans - 1, ans + 2, ans - 2, ans + 10, ans - 10, ans * 2, Math.round(ans / 2), ans + 5, ans - 5])
+    .filter(n => Number.isInteger(n) && n >= lo && n !== ans);
+  return { correct: { num: ans, dots }, wrongs: [...new Set(c)].slice(0, 6).map(n => ({ num: n, dots })) };
+}
+function numQ(q, ans, max, lo, dots, cands) { const { correct, wrongs } = nums(ans, max, lo, dots, cands); return choose(q, correct, wrongs, max); }
+
+const GEN = {
+  vocab(k, T) {
+    const max = optsMax(k), [e, t] = pick(T.items);
+    const others = (k.L >= 3 ? allItems() : T.items).filter(x => x[1] !== t && x[0] !== e).map(([a, b]) => OPT(a, b));
+    if (k.L <= 1) return choose({ prompt: `找一找：<b>${esc(t)}</b>在哪裡？`, say: `${t}，${t}在哪裡？` }, OPT(e, t), others, max);
+    if (k.L === 2) return choose({ prompt: `讀一讀：<span class="bigword">${esc(t)}</span> 是哪一個？`, say: '讀一讀，這個詞是哪一個圖？' }, OPT(e, ''), others.map(o => OPT(o.e, '')), max);
+    return choose({ prompt: '這是什麼？選出正確的詞語。', vis: e, say: '這是什麼？選出正確的詞語。', txt: true }, OPT('', t), others.map(o => OPT('', o.t)), max);
+  },
+  math(k, T) {
+    const [e, n, u] = T.m, max = optsMax(k), L = k.L, r = Math.random();
+    if (L === 0) {
+      if (r < .6) { const c = rnd(1, 3); return numQ({ prompt: `數一數，有幾${u}${n}？`, vis: emo(e, c) }, c, max, 1, true, [1, 2, 3, 4]); }
+      const a = rnd(1, 4); let b = rnd(1, 4); while (b === a) b = rnd(1, 4);
+      return choose({ prompt: `哪一邊的${n}比較多？` }, { grp: Math.max(a, b), e }, [{ grp: Math.min(a, b), e }], 2);
+    }
+    if (L === 1) {
+      if (r < .4) { const c = rnd(3, 10); return numQ({ prompt: `數一數，有幾${u}${n}？`, vis: emo(e, c) }, c, max, 1, true); }
+      if (r < .65) {
+        const a = rnd(1, 8); let b = rnd(1, 8); while (b === a) b = rnd(1, 8); const more = Math.random() < .6;
+        return choose({ prompt: `哪一邊的${n}比較${more ? '多' : '少'}？` }, { grp: more ? Math.max(a, b) : Math.min(a, b), e }, [{ grp: more ? Math.min(a, b) : Math.max(a, b), e }], 2);
+      }
+      const a = rnd(1, 6), b = rnd(1, 3);
+      return numQ({ prompt: `有 ${a} ${u}${n}，又來了 ${b} ${u}，現在有幾${u}？`, vis: `${emo(e, a)}<span class="plus">＋</span>${emo(e, b)}` }, a + b, max, 1, true);
+    }
+    if (L === 2) {
+      if (r < .3) { const a = rnd(2, 9), b = rnd(1, 9); return numQ({ prompt: `${a} ${u}${n}加 ${b} ${u}，一共幾${u}？`, vis: a + b <= 12 ? `${emo(e, a)}<span class="plus">＋</span>${emo(e, b)}` : '', say: `${a}加${b}等於多少？` }, a + b, max, 0); }
+      if (r < .55) { const a = rnd(6, 18), b = rnd(1, Math.min(9, a - 1)); return numQ({ prompt: `有 ${a} ${u}${n}，拿走 ${b} ${u}，還剩幾${u}？`, say: `${a}減${b}等於多少？` }, a - b, max, 0); }
+      if (r < .8) { const a = rnd(11, 60), b = rnd(10, 39); return numQ({ prompt: `${a} ＋ ${b} ＝ ？`, say: `${a}加${b}等於多少？` }, a + b, max, 0); }
+      const g = rnd(2, 5), m = pick([2, 5, 10]);
+      return numQ({ prompt: `有 ${g} 堆，每堆 ${m} ${u}${n}，一共幾${u}？`, vis: g * m <= 20 ? Array(g).fill(`<span class="grp">${emo(e, m)}</span>`).join('') : '' }, g * m, max, 0);
+    }
+    if (L === 3) {
+      if (r < .3) { const a = rnd(2, 9), b = rnd(3, 9); return numQ({ prompt: `每排 ${a} ${u}${n}，排了 ${b} 排，一共幾${u}？` }, a * b, max, 0, false, [a * b + a, a * b - a, a * b + b, a * b - b, a + b, a * b + 10]); }
+      if (r < .55) { const b = rnd(2, 9), q = rnd(2, 9); return numQ({ prompt: `${b * q} ${u}${n}平分給 ${b} 個人，每人分到幾${u}？` }, q, max, 1); }
+      if (r < .8) { const k2 = pick([2, 3, 4, 5]), tot = k2 * rnd(2, 8); return numQ({ prompt: `${tot} ${u}${n}的 1/${k2} 是幾${u}？`, say: `${tot}${u}${n}的${k2}分之1是幾${u}？` }, tot / k2, max, 1); }
+      const a = rnd(120, 480), b = rnd(105, 450); return numQ({ prompt: `${a} ＋ ${b} ＝ ？` }, a + b, max, 0, false, [a + b + 10, a + b - 10, a + b + 100, a + b - 100, a + b + 1]);
+    }
+    if (r < .25) { const q = pick([3, 4, 5, 6, 8]), p = rnd(2, q - 1), tot = q * rnd(2, 12); return numQ({ prompt: `${tot} ${u}${n}的 ${p}/${q} 是幾${u}？`, say: `${tot}${u}${n}的${q}分之${p}是幾${u}？` }, tot / q * p, max, 1, false, [tot / q, tot / q * (p + 1), tot / q * p + 1, tot - tot / q * p]); }
+    if (r < .45) { const pc = pick([10, 20, 25, 50, 75]), tot = rnd(2, 15) * 20; return numQ({ prompt: `${tot} ${u}${n}的 ${pc}% 是幾${u}？`, say: `${tot}${u}${n}的百分之${pc}是幾${u}？` }, tot * pc / 100, max, 1); }
+    if (r < .65) { const a = rnd(10, 40), b = rnd(10, 40), c0 = rnd(10, 40), c = c0 + (3 - (a + b + c0) % 3) % 3; return numQ({ prompt: `三天各收集了 ${a}、${b}、${c} ${u}${n}，平均每天幾${u}？` }, (a + b + c) / 3, max, 1); }
+    if (r < .85) { const w = rnd(4, 15), h = rnd(3, 12); return Math.random() < .5 ? numQ({ prompt: `長方形菜園長 ${w} 公尺、寬 ${h} 公尺，面積是幾平方公尺？` }, w * h, max, 1, false, [2 * (w + h), w * h + w, w * h - h, w + h]) : numQ({ prompt: `長方形菜園長 ${w} 公尺、寬 ${h} 公尺，周長是幾公尺？` }, 2 * (w + h), max, 1, false, [w * h, w + h, 2 * (w + h) + 2, 2 * w + h]); }
+    const v = rnd(3, 6), t = rnd(2, 8); return numQ({ prompt: `每小時走 ${v} 公里，走了 ${t} 小時，一共走幾公里？` }, v * t, max, 1);
+  },
+  sort(k, T) {
+    const [e, t, bi] = pick(T.sort.items), bins = T.sort.bins.map(([a, b]) => OPT(a, b));
+    return choose({ prompt: `${esc(t)}：${esc(T.sort.q)}`, vis: e, say: `${t}，${T.sort.q}` }, bins[bi], bins.filter((_, i) => i !== bi), Math.max(2, Math.min(bins.length, optsMax(k))));
+  },
+  order(k, T) {
+    const ev = T.order.map(([e, t]) => OPT(e, t));
+    if (k.L === 0) {
+      const i = rnd(0, ev.length - 2), j = rnd(i + 1, ev.length - 1);
+      return choose({ prompt: '哪一個先發生？', say: `${ev[i].t}，還是${ev[j].t}？哪一個先發生？` }, ev[i], [ev[j]], 2);
+    }
+    if (k.L === 1) {
+      const i = rnd(0, ev.length - 2);
+      return choose({ prompt: `「${ev[i].e} ${esc(ev[i].t)}」，接下來呢？`, say: `${ev[i].t}，接下來發生什麼事？` }, ev[i + 1], ev.filter((_, j) => j !== i + 1 && j !== i), optsMax(k));
+    }
+    const n = k.L === 2 ? Math.min(4, ev.length) : ev.length;
+    const idx = sample(ev.map((_, i) => i), n).sort((a, b) => a - b);
+    return { ui: 'order', prompt: '照故事的順序，一個一個點。', say: '照故事發生的順序，一個一個點。', items: idx.map(i => ev[i]) };
+  },
+  verse(k, T) {
+    const V = T.verse, max = optsMax(k);
+    if (k.L <= 1) {
+      const [e, t] = pick(V.keys);
+      const others = [...T.items, ...V.keys].filter(x => x[0] !== e && x[1] !== t).map(([a, b]) => OPT(a, b));
+      return choose({ prompt: `經文：「${esc(V.sp.join(''))}」<br>找一找：<b>${esc(t)}</b>`, say: `${V.sp.join('')}。${t}在哪裡？` }, OPT(e, t), others, max);
+    }
+    if (k.L === 4 && Math.random() < .4) {
+      const refs = THEMES.filter(x => x !== T).map(x => OPT('', x.verse.ref));
+      return choose({ prompt: `「${esc(V.fp.join(''))}」<br>這節經文出自哪裡？`, txt: true }, OPT('', V.ref), refs, max);
+    }
+    const parts = k.L === 2 ? V.sp : V.fp;
+    return { ui: 'order', prompt: k.L === 2 ? '聽一聽，再把經文排好。' : `把經文排好（${esc(V.ref)}）`, say: k.L === 2 ? '聽一聽，再把經文排好。' + parts.join('') : '把經文排好。', items: parts.map(p => OPT('', p)), text: true, line: true, done: parts.join('') + (k.L >= 3 ? '　' + V.ref : '') };
+  },
+  quiz(k, T) {
+    if (k.L < 2) return GEN.vocab(k, T);
+    const pool = [...(T.quiz[k.L] || []), ...(k.L > 2 ? T.quiz[k.L - 1] || [] : [])];
+    const fresh = pool.filter(q => !G.used.has(q[0]));
+    const q = pick(fresh.length ? fresh : pool); G.used.add(q[0]);
+    const opts = q[1].map(t => OPT('', t));
+    return choose({ prompt: esc(q[0]), say: q[0] + '　' + q[1].join('、'), txt: true, exp: q[3] }, opts[q[2]], opts.filter((_, i) => i !== q[2]), Math.max(optsMax(k), Math.min(3, q[1].length)));
+  }
+};
+function genFor(act, k, T) {
+  let a = act;
+  if (a === 'mix') a = pick(ACTS.filter(x => x.k !== 'mix' && x.min <= k.L && !(x.k === 'sort' && k.L >= 3)).map(x => x.k));
+  for (let i = 0; i < 6; i++) {
+    const q = GEN[a](k, T); q.act = a;
+    const key = a + ':' + clean(q.prompt) + (q.vis || '') + (q.ans != null ? okey(q.opts[q.ans]) : '');
+    if (!G.used.has(key) || i === 5) { G.used.add(key); return q; }
+  }
+}
+
+/* ---------- 遊戲選單 ---------- */
+function vGames() {
+  let players = store.get('players', null); if (!players || !players.some(kidById)) players = S.kids.map(k => k.id);
+  players = players.filter(kidById); store.set('players', players);
+  const ti = store.get('gtheme', S.theme) ?? S.theme;
+  $('#view').innerHTML = `
+    <section class="card"><h2>🎮 誰要玩？</h2><p class="muted">選一個人自己玩；選兩個以上就是「混齡輪流玩」，每個人拿到自己程度的題目，哥哥姊姊可以按「🙋 小幫手」幫弟弟妹妹。</p>
+      <div class="pick" id="pk">${S.kids.map(k => `<button aria-pressed="${players.includes(k.id)}" data-k="${k.id}"><span class="em">${k.av}</span><b>${esc(k.name)}</b>${lvChip(k.L)}</button>`).join('')}</div></section>
+    <section class="card"><div class="sec-title"><h2>主題</h2>
+      <select id="gt" class="inp">${THEMES.map((t, i) => `<option value="${i}" ${i === ti ? 'selected' : ''}>${t.e} ${esc(t.title)}${i === S.theme ? '（本期）' : ''}</option>`).join('')}</select></div>
+      <div class="acts" id="acts">${ACTS.map(a => `<button data-a="${a.k}"><span class="em">${a.e}</span><b>${a.n}</b><small>${a.d}</small>${a.min ? `<small>${lvChip(a.min)} 以上；較小的孩子自動改玩聽一聽</small>` : ''}</button>`).join('')}</div></section>`;
+  $('#pk').onclick = e => {
+    const b = e.target.closest('[data-k]'); if (!b) return;
+    const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on);
+    players = $$('#pk [aria-pressed="true"]').map(x => x.dataset.k); store.set('players', players);
+  };
+  $('#gt').onchange = e => store.set('gtheme', +e.target.value);
+  $('#acts').onclick = e => {
+    const b = e.target.closest('[data-a]'); if (!b) return;
+    if (!players.length) { speak('先選誰要玩喔'); $('#pk').scrollIntoView({ behavior: 'smooth' }); return; }
+    startGame(players.map(kidById), THEMES[+$('#gt').value], b.dataset.a);
+  };
+}
+
+/* ---------- 遊戲進行 ---------- */
+let G = null;
+function startGame(kids, T, act) {
+  const turns = [];
+  if (kids.length === 1) for (let i = 0; i < LV[kids[0].L].rounds; i++) turns.push(kids[0]);
+  else for (let r = 0; r < 2; r++) kids.forEach(k => turns.push(k));
+  G = { kids, T, act, turns, i: 0, used: new Set(), res: Object.fromEntries(kids.map(k => [k.id, { n: 0, ok: 0 }])), marks: [], lastTap: 0 };
+  nextTurn();
+}
+function endGame() { hush(); stopScan(); clearTimeout(G && G.hintT); G = null; $('#layer').innerHTML = ''; }
+function nextTurn() {
+  stopScan(); clearTimeout(G.hintT);
+  if (G.i >= G.turns.length) return finishGame();
+  const k = G.turns[G.i]; G.k = k; G.q = genFor(G.act, k, G.T); G.tries = 0; G.step = 0; G.stepMiss = 0; G.shownAt = Date.now();
+  renderQ();
+}
+function renderQ() {
+  const { k, q, T } = G, A = ACTS.find(a => a.k === q.act);
+  const multi = G.kids.length > 1;
+  const isOrder = q.ui === 'order';
+  const list = isOrder ? (G.order = G.order && G.orderFor === q ? G.order : shuffle(q.items.map((it, i) => ({ ...it, i }))), G.orderFor = q, G.order) : q.opts;
+  const n = list.length, big = !isOrder && n <= 2;
+  const cols = isOrder ? (q.text ? Math.min(n, innerWidth < 600 ? 2 : 4) : Math.min(n, innerWidth < 600 ? 2 : (n > 4 ? 4 : n))) : (q.txt ? (innerWidth < 700 ? 1 : 2) : (n === 4 && innerWidth < 900 ? 2 : n));
+  const tile = (o, i) => {
+    let inner = '';
+    if (o.grp != null) inner = `<span class="og">${emo(o.e, o.grp)}</span>`;
+    else if (o.num != null) inner = `<span class="on">${o.num}</span>${o.dots && o.num <= 10 ? `<span class="od">${'●'.repeat(o.num)}</span>` : ''}`;
+    else inner = `${o.e ? `<span class="oe">${o.e}</span>` : ''}${o.t ? `<span>${esc(o.t)}</span>` : ''}`;
+    const cls = isOrder ? (q.text ? 'part' : 'ev') : (q.txt ? 'txt' : '');
+    const lab = o.t || (o.num != null ? String(o.num) : '') || (o.grp != null ? o.grp + '個' : '') || o.e || '';
+    return `<button class="opt ${cls}" data-o="${i}" aria-label="${esc(lab)}">${inner}</button>`;
+  };
+  $('#layer').innerHTML = `<div class="game" role="dialog" aria-label="學習遊戲">
+    <div class="gtop"><button id="gx" aria-label="離開">✕</button><div class="gtitle">${T.e} ${esc(T.title)}・${A.e} ${A.n}</div>
+      <div class="gdots">${G.turns.map((_, i) => `<i class="${G.marks[i] || ''} ${i === G.i ? 'cur' : ''}"></i>`).join('')}</div></div>
+    <div class="gturn ${multi ? 'multi' : ''}"><span class="em">${k.av}</span>${multi ? '輪到 ' : ''}${esc(k.name)} ${lvChip(k.L)}</div>
+    <div class="gq"><div class="ph"><button class="say" id="gsay" aria-label="再念一次">🔊</button><div class="gprompt">${q.prompt}</div></div>
+      ${q.vis ? `<div class="gvis">${q.vis}</div>` : ''}${q.line ? '<div class="gline" id="gline"></div>' : ''}</div>
+    <div class="gopts" id="gopts" style="--cols:${cols}">${list.map(tile).join('')}</div>
+    <div id="gexp"></div>
+    <div class="gfoot"><button id="ghelp">🙋 小幫手提示</button>${k.scan ? '' : '<span></span>'}</div>
+    ${k.scan ? '<button class="scanbar" id="scanbar">✋ 選這個</button>' : ''}
+  </div>`;
+  if (big) $$('.opt .oe').forEach(x => x.style.fontSize = 'clamp(4rem,12vw,8rem)');
+  const say = () => speak(q.say || q.prompt, k.L === 0 ? rate * .9 : rate);
+  $('#gsay').onclick = say;
+  $('#gx').onclick = () => { if (G.i === 0 || confirm('要離開遊戲嗎？')) endGame(); };
+  $('#ghelp').onclick = () => { G.tries = Math.max(G.tries, 1); G.helped = true; hintCorrect(); speak('小幫手：看看發亮的那一個。'); };
+  $('#gopts').onclick = e => { const b = e.target.closest('.opt'); if (b) tap(b); };
+  if (k.autoSay) say().then(() => { if (G && G.k === k) startScan(); }); else startScan();
+  if (k.errorless) G.hintT = setTimeout(() => G && hintCorrect(), 6000);
+}
+function correctEl() {
+  const q = G.q;
+  if (q.ui === 'order') { const pos = G.order.findIndex(o => o.i === G.step); return $(`.opt[data-o="${pos}"]`); }
+  return $(`.opt[data-o="${q.ans}"]`);
+}
+function hintCorrect() { const el = correctEl(); if (el) el.classList.add('hint'); }
+function tap(b) {
+  const k = G.k, now = Date.now();
+  if (k.slowTap && (now - G.lastTap < 700 || now - G.shownAt < 500)) return;
+  G.lastTap = now; clearTimeout(G.hintT);
+  const i = +b.dataset.o, q = G.q;
+  if (q.ui === 'order') return tapOrder(b, i);
+  if (G.solved) return;
+  if (i === q.ans) {
+    G.solved = true; b.classList.remove('hint'); b.classList.add('ok'); sndOk(); stopScan();
+    $$('.opt').forEach(x => x !== b && x.classList.add('gone'));
+    record(G.tries === 0);
+    const praise = pick(['答對了！', '好棒！', '真厲害！', '太好了！', '你做到了！']);
+    if (q.exp) { speak(praise); $('#gexp').innerHTML = `<div class="gexp">💡 ${esc(q.exp)}<br><button class="pri" id="gnext">下一題 ▶</button></div>`; $('#gnext').onclick = advance; }
+    else { const g = G; speak(praise).then(() => setTimeout(() => G === g && advance(), 300)); }
+    return;
+  }
+  G.tries++;
+  if (k.errorless) { b.classList.add('gone'); sndSoft(); speak('再找找看'); hintCorrect(); restartScan(); return; }
+  b.classList.remove('no'); void b.offsetWidth; b.classList.add('no'); sndSoft();
+  if (G.tries >= 2) { hintCorrect(); speak('是發亮的這一個喔'); } else speak('再想一想');
+}
+function tapOrder(b, pos) {
+  const q = G.q, it = G.order[pos];
+  if (b.classList.contains('used')) return;
+  if (it.i === G.step) {
+    b.classList.remove('hint'); b.classList.add('used'); b.insertAdjacentHTML('beforeend', `<span class="badge">${G.step + 1}</span>`);
+    G.step++; G.stepMiss = 0; tone([520 + G.step * 60], .08);
+    if (q.line) $('#gline').textContent = q.items.slice(0, G.step).map(x => x.t).join('');
+    else speak(it.t);
+    if (G.step === q.items.length) {
+      stopScan(); record(G.tries === 0); sndOk();
+      const g = G; speak((q.done || '排好了！') + '　' + pick(['好棒！', '排好了！', '太厲害了！'])).then(() => setTimeout(() => G === g && advance(), 400));
+    } else restartScan();
+    return;
+  }
+  G.tries++; G.stepMiss++;
+  b.classList.remove('no'); void b.offsetWidth; b.classList.add('no'); sndSoft();
+  if (G.k.errorless || G.stepMiss >= 2) { hintCorrect(); speak('下一個是發亮的這個'); } else speak('再想想，下一個是什麼？');
+}
+function record(first) {
+  const r = G.res[G.k.id]; r.n++; if (first) r.ok++;
+  G.marks[G.i] = first ? 'ok' : 'help';
+}
+function advance() { if (!G) return; G.solved = false; G.helped = false; G.i++; nextTurn(); }
+function finishGame() {
+  stopScan(); const d = ymd(), T = G.T;
+  const out = G.kids.map(k => {
+    const r = G.res[k.id], ratio = r.n ? r.ok / r.n : 0, st = ratio >= .8 ? 3 : ratio >= .5 ? 2 : 1;
+    const before = S.stars[k.id] || 0; S.stars[k.id] = before + st;
+    const got = Math.floor(S.stars[k.id] / 10) - Math.floor(before / 10);
+    const newSt = [];
+    for (let i = 0; i < got; i++) { const list = S.stickers[k.id] = S.stickers[k.id] || []; const s = STICKERS[list.length % STICKERS.length]; list.push({ s, d }); newSt.push(s); }
+    S.log.push({ d, t: Date.now(), c: k.id, th: T.id, a: G.act, L: k.L, n: r.n, ok: r.ok, st });
+    return { k, r, st, newSt };
+  });
+  if (S.log.length > 4000) S.log = S.log.slice(-4000);
+  save('stars', 'stickers', 'log');
+  sndWin(); confetti();
+  const names = G.kids.map(k => k.name).join('、');
+  speak(`${names}，${G.kids.length > 1 ? '你們' : '你'}好棒！` + (out.some(o => o.newSt.length) ? '得到新的貼紙了！' : ''));
+  const again = { kids: G.kids, T, act: G.act };
+  $('#layer').innerHTML = `<div class="game"><div class="gtop"><div class="gtitle">${T.e} ${esc(T.title)}</div><button id="gx" aria-label="離開">✕</button></div>
+    <h2 style="text-align:center;font-size:2.2rem">🎉 完成了！</h2>
+    <div class="result">${out.map(o => `<div class="kid"><span class="av em" style="font-size:3.6rem">${o.k.av}</span><b>${esc(o.k.name)}</b>
+      <div class="stars em">${'⭐'.repeat(o.st)}</div><small>自己答對 ${o.r.ok} / ${o.r.n} 題</small>
+      ${o.newSt.length ? `<div class="stickers"><span class="new em">${o.newSt.join('')}</span> 新貼紙！</div>` : ''}</div>`).join('')}</div>
+    <div class="row" style="justify-content:center;margin-top:10px"><button class="pri" id="gagain" style="min-height:64px;font-size:1.2rem">🔁 再玩一次</button>
+      <button id="gback" style="min-height:64px">🎮 換遊戲</button><button id="gparty" style="min-height:64px">🎉 看貼紙</button></div></div>`;
+  G = null;
+  $('#gx').onclick = $('#gback').onclick = () => { $('#layer').innerHTML = ''; hush(); };
+  $('#gagain').onclick = () => startGame(again.kids, again.T, again.act);
+  $('#gparty').onclick = () => { $('#layer').innerHTML = ''; location.hash = '#/party'; };
+}
+/* 掃描選擇：選項輪流亮起，按大按鈕（或空白鍵）就選目前亮的那個 */
+let SC = null;
+function scanList() { return $$('#gopts .opt:not(.used):not(.gone)'); }
+function startScan() {
+  stopScan(); if (!G || !G.k.scan || G.solved) return;
+  const k = G.k; let idx = -1;
+  const stepScan = () => {
+    const l = scanList(); if (!l.length) return;
+    $$('.opt.scan').forEach(x => x.classList.remove('scan'));
+    idx = (idx + 1) % l.length; const el = l[idx]; el.classList.add('scan');
+    const lab = el.getAttribute('aria-label'); if (k.autoSay && lab) speak(lab);
+  };
+  stepScan(); SC = setInterval(stepScan, Math.max(1500, k.scanMs || 2500));
+  const bar = $('#scanbar'); if (bar) bar.onclick = () => { const el = $('.opt.scan'); if (el) { G.lastTap = 0; tap(el); } };
+}
+function restartScan() { if (G && G.k.scan) setTimeout(startScan, 900); }
+function stopScan() { if (SC) clearInterval(SC); SC = null; $$('.opt.scan').forEach(x => x.classList.remove('scan')); }
+document.addEventListener('keydown', e => {
+  if (!G || !$('.game')) return;
+  if ((e.key === ' ' || e.key === 'Enter') && G.k.scan) { e.preventDefault(); const el = $('.opt.scan'); if (el) { G.lastTap = 0; tap(el); } return; }
+  const n = parseInt(e.key, 10); if (n >= 1 && n <= 9) { const el = $(`.opt[data-o="${n - 1}"]`); if (el) tap(el); }
+  if (e.key === 'Escape') endGame();
+});
+
+/* ======================== 白板 ======================== */
+const BD = { strokes: [], undo: [], color: '#222222', size: 6, tool: 'pen', bg: 'blank', stamp: '⭐' };
+const COLORS = ['#222222', '#D0342C', '#1F6FD1', '#2E8B4E', '#E58A00', '#8E44AD', '#FFFFFF'];
+function vBoard() {
+  const T = curTheme();
+  const stamps = [...new Set([...T.items.map(x => x[0]), ...T.verse.keys.map(x => x[0]), '⭐', '❤️', '✅', '😊'])];
+  $('#view').innerHTML = `
+    <div class="btools" id="bt">
+      ${COLORS.map(c => `<button class="swatch" data-c="${c}" style="background:${c}" aria-label="顏色" aria-pressed="${BD.color === c && BD.tool === 'pen'}"></button>`).join('')}
+      <button data-z="3" aria-pressed="${BD.size === 3}">細</button><button data-z="6" aria-pressed="${BD.size === 6}">中</button><button data-z="14" aria-pressed="${BD.size === 14}">粗</button>
+      <button data-t="eraser" aria-pressed="${BD.tool === 'eraser'}">🧽 擦</button>
+      <button data-t="stamp" aria-pressed="${BD.tool === 'stamp'}">🖼️ 貼圖</button>
+      <select id="bbg" class="inp" aria-label="背景">${[['blank', '空白'], ['lines', '橫線'], ['tian', '田字格'], ['grid', '方格'], ['dots', '點點']].map(([v, n]) => `<option value="${v}" ${BD.bg === v ? 'selected' : ''}>${n}</option>`).join('')}</select>
+      <button id="bundo">↩️ 復原</button><button id="bclear">🗑️ 清除</button><button id="bsave">💾 存圖</button><button id="bfs">⛶ 白板全螢幕</button>
+    </div>
+    <div class="stamps" id="bst" ${BD.tool === 'stamp' ? '' : 'hidden'}>${stamps.map(s => `<button data-s="${s}" aria-pressed="${BD.stamp === s}">${s}</button>`).join('')}</div>
+    <div class="board" id="board"><canvas id="bgc"></canvas><canvas id="ink"></canvas></div>`;
+  const bgc = $('#bgc'), ink = $('#ink'), wrap = $('#board');
+  let W = 0, H = 0, dpr = 1;
+  const resize = () => {
+    const r = wrap.getBoundingClientRect(); dpr = window.devicePixelRatio || 1; W = r.width; H = r.height;
+    for (const c of [bgc, ink]) { c.width = W * dpr; c.height = H * dpr; c.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0); }
+    drawBg(); redraw();
+  };
+  const drawBg = () => {
+    const g = bgc.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.strokeStyle = '#cfd8c4'; g.fillStyle = '#b9c4ad'; g.lineWidth = 1;
+    if (BD.bg === 'lines') for (let y = 60; y < H; y += 60) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+    if (BD.bg === 'grid') for (let x = 0; x < W; x += 40) for (let y = 0; y < H; y += 40) g.strokeRect(x, y, 40, 40);
+    if (BD.bg === 'dots') for (let x = 30; x < W; x += 40) for (let y = 30; y < H; y += 40) { g.beginPath(); g.arc(x, y, 2, 0, 7); g.fill(); }
+    if (BD.bg === 'tian') {
+      const s = Math.min(180, (W - 20) / Math.max(1, Math.floor((W - 20) / 160))), cols = Math.floor((W - 20) / s), rows = Math.floor((H - 20) / s);
+      const ox = (W - cols * s) / 2, oy = (H - rows * s) / 2;
+      for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+        const x = ox + i * s, y = oy + j * s; g.setLineDash([]); g.strokeStyle = '#d98b8b'; g.lineWidth = 2; g.strokeRect(x, y, s, s);
+        g.setLineDash([6, 6]); g.lineWidth = 1; g.beginPath(); g.moveTo(x + s / 2, y); g.lineTo(x + s / 2, y + s); g.moveTo(x, y + s / 2); g.lineTo(x + s, y + s / 2); g.stroke();
+      }
+      g.setLineDash([]);
+    }
+  };
+  const ctx = () => ink.getContext('2d');
+  const drawStroke = (g, s) => {
+    if (s.t === 's') { g.globalCompositeOperation = 'source-over'; g.font = `${s.z}px ${getComputedStyle(document.body).getPropertyValue('--f-emoji')}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(s.e, s.x * W, s.y * H); return; }
+    g.globalCompositeOperation = s.er ? 'destination-out' : 'source-over'; g.strokeStyle = s.c; g.lineWidth = s.w; g.lineCap = g.lineJoin = 'round';
+    g.beginPath(); s.p.forEach(([x, y], i) => i ? g.lineTo(x * W, y * H) : g.moveTo(x * W, y * H));
+    if (s.p.length === 1) g.lineTo(s.p[0][0] * W + .1, s.p[0][1] * H);
+    g.stroke(); g.globalCompositeOperation = 'source-over';
+  };
+  const redraw = () => { const g = ctx(); g.clearRect(0, 0, W, H); BD.strokes.forEach(s => drawStroke(g, s)); };
+  let cur = null;
+  const pt = e => { const r = ink.getBoundingClientRect(); return [(e.clientX - r.left) / W, (e.clientY - r.top) / H]; };
+  ink.onpointerdown = e => {
+    e.preventDefault(); ink.setPointerCapture(e.pointerId);
+    if (BD.tool === 'stamp') { const [x, y] = pt(e); const s = { t: 's', e: BD.stamp, x, y, z: Math.max(48, Math.min(W, H) / 7) }; BD.strokes.push(s); drawStroke(ctx(), s); tone([700], .06); return; }
+    cur = { t: 'p', c: BD.color, w: BD.tool === 'eraser' ? BD.size * 4 : BD.size, er: BD.tool === 'eraser', p: [pt(e)] }; BD.strokes.push(cur);
+  };
+  ink.onpointermove = e => {
+    if (!cur) return;
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+    const g = ctx(); g.globalCompositeOperation = cur.er ? 'destination-out' : 'source-over'; g.strokeStyle = cur.c; g.lineWidth = cur.w; g.lineCap = g.lineJoin = 'round';
+    for (const ev of evs) { const p = pt(ev), l = cur.p[cur.p.length - 1]; g.beginPath(); g.moveTo(l[0] * W, l[1] * H); g.lineTo(p[0] * W, p[1] * H); g.stroke(); cur.p.push(p); }
+    g.globalCompositeOperation = 'source-over';
+  };
+  ink.onpointerup = ink.onpointercancel = () => { if (cur && cur.p.length === 1) drawStroke(ctx(), cur); cur = null; };
+  $('#bt').onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.c) { BD.color = b.dataset.c; BD.tool = 'pen'; }
+    else if (b.dataset.z) BD.size = +b.dataset.z;
+    else if (b.dataset.t) BD.tool = BD.tool === b.dataset.t ? 'pen' : b.dataset.t;
+    else if (b.id === 'bundo') { BD.strokes.pop(); redraw(); return; }
+    else if (b.id === 'bclear') { if (!BD.strokes.length || confirm('清除整個白板？')) { BD.strokes = []; redraw(); } return; }
+    else if (b.id === 'bsave') {
+      const c = document.createElement('canvas'); c.width = bgc.width; c.height = bgc.height; const g = c.getContext('2d'); g.drawImage(bgc, 0, 0); g.drawImage(ink, 0, 0);
+      const a = document.createElement('a'); a.download = `白板-${ymd()}.png`; a.href = c.toDataURL('image/png'); a.click(); return;
+    }
+    else if (b.id === 'bfs') { document.documentElement.classList.toggle('fs'); requestAnimationFrame(resize); return; }
+    else return;
+    vBoard();
+  };
+  $('#bst').onclick = e => { const b = e.target.closest('[data-s]'); if (!b) return; BD.stamp = b.dataset.s; $$('#bst button').forEach(x => x.setAttribute('aria-pressed', x === b)); };
+  $('#bbg').onchange = e => { BD.bg = e.target.value; drawBg(); };
+  resize();
+  if (BD.ro) BD.ro.disconnect();
+  BD.ro = new ResizeObserver(() => { if (document.body.contains(wrap)) resize(); else BD.ro.disconnect(); }); BD.ro.observe(wrap);
+}
+
+/* ======================== 慶典 ======================== */
+function weekRange() {
+  const n = new Date(), day = (n.getDay() + 6) % 7, s = new Date(n); s.setDate(n.getDate() - day);
+  const e = new Date(s); e.setDate(s.getDate() + 6); return [ymd(s), ymd(e)];
+}
+function vParty() {
+  const [ws, we] = weekRange(), T = curTheme();
+  const inWeek = d => d >= ws && d <= we;
+  const doneWeek = Object.entries(S.done).filter(([, d]) => inWeek(d)).map(([key, d]) => {
+    const [tid, L, i] = key.split(':'), t = THEMES.find(x => x.id === tid); return t ? { t, L: +L, w: t.work[+L][+i], d } : null;
+  }).filter(Boolean);
+  $('#view').innerHTML = `
+    <section class="banner" style="--tc:#8E5BB5"><span class="be em">🎉</span><div><small>${ws} ～ ${we}</small><h1>這一週的慶典</h1></div>
+      <div class="muted">耶拿教育的「慶典」：分享作品、彼此肯定、一起讚美神。</div></section>
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">${S.kids.map(k => {
+      const L = S.log.filter(x => x.c === k.id && inWeek(x.d));
+      const st = L.reduce((a, x) => a + x.st, 0), sk = S.stickers[k.id] || [];
+      return `<section class="card party-kid"><span class="av em">${k.av}</span><div><h2>${esc(k.name)}</h2>
+        <div class="row">${lvChip(k.L)}<span class="chip">本週 ⭐ ${st}</span><span class="chip">玩了 ${L.length} 次</span></div>
+        <div class="stickers" title="貼紙本">${sk.length ? sk.map(x => `<span class="em ${inWeek(x.d) ? 'new' : ''}">${x.s}</span>`).join('') : '<small>再累積星星就有貼紙（每 10 顆一張）</small>'}</div>
+        <button class="pri" data-cheer="${k.id}" style="margin-top:8px">🎉 為${esc(k.name)}慶祝</button></div></section>`;
+    }).join('')}</div>
+    <section class="card"><h2>📜 本週經文</h2><p class="vtext" style="font-size:1.6rem">「${esc(T.verse.fp.join(''))}」</p><p class="vref">— ${esc(T.verse.ref)} ${sayBtn(T.verse.fp.join('') + '。' + T.verse.ref)}</p>
+      <p class="muted">每個孩子用自己的方式說出來：念全節、念短句、做動作，或指圖卡。</p></section>
+    <section class="card"><h2>🛠️ 這週完成的工作</h2>${doneWeek.length ? `<ul>${doneWeek.map(x => `<li>${x.t.e} ${LV[x.L].e} ${esc(x.w)} <small>(${x.d})</small></li>`).join('')}</ul>` : '<p class="muted">到「🌍 主題」打勾完成的動手做，就會出現在這裡。</p>'}</section>
+    <section class="card k-party"><h2>💡 慶典怎麼辦？</h2><ol>
+      <li>⭕ 圍成一圈，唱一首大家喜歡的詩歌。</li>
+      <li>🖼️ 每個孩子拿出一件這週的作品（畫、白板圖、觀察日記），說說看或指給大家看。</li>
+      <li>💬 感謝接龍：「我感謝＿＿，因為＿＿。」</li>
+      <li>📜 一起說本週經文。</li>
+      <li>🎉 為每個人慶祝、按上面的按鈕放彩帶，最後一起禱告。</li></ol>
+      <p><b>本主題慶典建議：</b>${esc(T.party)}</p></section>`;
+  $('#view').onclick = e => {
+    const b = e.target.closest('[data-cheer]'); if (!b) return;
+    const k = kidById(b.dataset.cheer); sndWin(); confetti(); speak(`${k.name}，這一週你做得很好！神愛你，我們也愛你！`);
+  };
+}
+
+/* ======================== 家長 ======================== */
+let wkDay = new Date().getDay();
+function vParent() {
+  const open = store.get('popen', 'kids');
+  $('#view').innerHTML = `
+    <div class="sec-title"><h2>⚙️ 家長・老師</h2><a href="../">← 回到服務入口</a></div>
+    <details class="pane" data-p="kids" ${open === 'kids' ? 'open' : ''}><summary>👧 孩子與輔助設定</summary><div id="pKids"></div></details>
+    <details class="pane" data-p="week" ${open === 'week' ? 'open' : ''}><summary>🗓️ 週節奏表</summary><div id="pWeek"></div></details>
+    <details class="pane" data-p="log" ${open === 'log' ? 'open' : ''}><summary>📊 學習紀錄與觀察</summary><div id="pLog"></div></details>
+    <details class="pane" data-p="voice" ${open === 'voice' ? 'open' : ''}><summary>🔊 聲音</summary><div id="pVoice"></div></details>
+    <details class="pane" data-p="guide" ${open === 'guide' ? 'open' : ''}><summary>📘 使用說明與教學理念</summary><div class="guide">${GUIDE}</div></details>`;
+  $$('details.pane').forEach(d => d.addEventListener('toggle', () => { if (d.open) store.set('popen', d.dataset.p); }));
+  renderKids(); renderWeek(); renderLog(); renderVoice();
+}
+function renderKids() {
+  const box = $('#pKids');
+  box.innerHTML = `<p class="muted">程度依能力設定，不一定照年齡；國語和數學差很多時，可以依當天要練的科目調整。</p>
+  ${S.kids.map((k, n) => `<div class="kidform" data-id="${k.id}"><h3><span class="em" style="font-size:2rem">${k.av}</span>${esc(k.name)} ${lvChip(k.L)}</h3>
+    <div class="form">
+      <label>名字<input type="text" data-f="name" value="${esc(k.name)}"></label>
+      <label>頭像<select data-f="av">${AVATARS.map(a => `<option ${a === k.av ? 'selected' : ''}>${a}</option>`).join('')}</select></label>
+      <label>年齡<input type="number" data-f="age" min="2" max="15" value="${k.age}"></label>
+      <label>程度<select data-f="L">${LV.map((l, i) => `<option value="${i}" ${i === k.L ? 'selected' : ''}>${l.e} ${l.n}（${l.d}）</option>`).join('')}</select></label>
+      <label>選項數量<select data-f="opts">${[2, 3, 4].map(v => `<option value="${v}" ${v === k.opts ? 'selected' : ''}>${v} 選 1</option>`).join('')}</select></label>
+      <label>掃描速度<select data-f="scanMs">${[1500, 2500, 3000, 4000].map(v => `<option value="${v}" ${v === k.scanMs ? 'selected' : ''}>每 ${v / 1000} 秒</option>`).join('')}</select></label>
+      <label class="ck"><input type="checkbox" data-f="errorless" ${k.errorless ? 'checked' : ''}>無錯誤學習（答錯不扣分，錯的選項淡出，6 秒沒反應會提示）</label>
+      <label class="ck"><input type="checkbox" data-f="scan" ${k.scan ? 'checked' : ''}>掃描選擇（選項輪流亮起，按大按鈕選）</label>
+      <label class="ck"><input type="checkbox" data-f="autoSay" ${k.autoSay ? 'checked' : ''}>自動念題目</label>
+      <label class="ck"><input type="checkbox" data-f="slowTap" ${k.slowTap ? 'checked' : ''}>防誤觸（忽略太快的連點）</label>
+    </div>
+    <div class="row" style="margin-top:8px"><button data-del="${k.id}">🗑️ 移除</button>${n > 0 ? `<button data-up="${n}">⬆️ 往前</button>` : ''}</div></div>`).join('')}
+  <button class="pri" id="addKid">＋ 新增孩子</button>`;
+  box.onchange = e => {
+    const f = e.target.dataset.f, card = e.target.closest('[data-id]'); if (!f || !card) return;
+    const k = kidById(card.dataset.id), v = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    k[f] = ['L', 'opts', 'scanMs', 'age'].includes(f) ? +v : v;
+    if (f === 'L') k.opts = LV[k.L].opts;
+    if (f === 'name') k.name = String(v).trim().slice(0, 12) || '小朋友';
+    save('kids'); renderKids();
+  };
+  box.onclick = e => {
+    const d = e.target.closest('[data-del]'), u = e.target.closest('[data-up]');
+    if (d) { const k = kidById(d.dataset.del); if (S.kids.length > 1 && confirm(`移除 ${k.name}？（學習紀錄會保留）`)) { S.kids = S.kids.filter(x => x !== k); save('kids'); renderKids(); } }
+    if (u) { const i = +u.dataset.up; [S.kids[i - 1], S.kids[i]] = [S.kids[i], S.kids[i - 1]]; save('kids'); renderKids(); }
+    if (e.target.id === 'addKid') {
+      S.kids.push({ id: 'k' + Date.now().toString(36), name: '新朋友', av: AVATARS[S.kids.length % AVATARS.length], age: 8, L: 3, opts: 4, errorless: false, scan: false, scanMs: 2500, autoSay: false, slowTap: false });
+      save('kids'); renderKids();
+    }
+  };
+}
+function renderWeek() {
+  const box = $('#pWeek'), days = [1, 2, 3, 4, 5, 6, 0], list = S.week[wkDay] = S.week[wkDay] || [];
+  box.innerHTML = `<p class="muted">耶拿教育用「節奏」取代上下課鐘聲：對話、遊戲、工作、慶典輪流出現。可以依孩子的體力調整，例如治療課的日子縮短工作時間。</p>
+    <div class="wk-tabs">${days.map(d => `<button data-d="${d}" aria-pressed="${d === wkDay}">星期${WD[d]}</button>`).join('')}</div>
+    ${list.map((b, i) => `<div class="wkrow" data-i="${i}">
+      <input data-f="e" value="${esc(b.e)}" aria-label="圖示" style="text-align:center;font-size:1.4rem">
+      <input data-f="t" value="${esc(b.t)}" aria-label="名稱">
+      <select data-f="k" aria-label="活動類型">${Object.keys(KIND).map(k => `<option value="${k}" ${b.k === k ? 'selected' : ''}>${KIND[k].e} ${KIND[k].n}</option>`).join('')}</select>
+      <input data-f="min" type="number" min="0" max="240" value="${b.min}" aria-label="分鐘">
+      <select data-f="go" aria-label="連到">${[['', '（不連結）'], ...Object.entries(GO)].map(([v, n]) => `<option value="${v}" ${b.go === v ? 'selected' : ''}>${v ? '▶ ' + n : n}</option>`).join('')}</select>
+      <div class="mv"><button data-mv="-1" aria-label="上移">↑</button><button data-mv="1" aria-label="下移">↓</button><button data-rm aria-label="刪除">✕</button></div></div>`).join('')}
+    <div class="row" style="margin-top:8px"><button id="wkAdd">＋ 加一段</button><button id="wkCopy">📋 複製到其他平日</button><button id="wkReset">↺ 恢復預設</button><button id="wkPrint">🖨️ 列印週節奏表</button></div>`;
+  box.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.d != null) { wkDay = +b.dataset.d; return renderWeek(); }
+    const row = b.closest('.wkrow'), i = row ? +row.dataset.i : -1;
+    if (b.dataset.mv) { const j = i + +b.dataset.mv; if (j >= 0 && j < list.length) [list[i], list[j]] = [list[j], list[i]]; }
+    else if (b.hasAttribute('data-rm')) list.splice(i, 1);
+    else if (b.id === 'wkAdd') list.push(B('🧩', '新的時段', 'work', 20));
+    else if (b.id === 'wkCopy') { if (!confirm(`把星期${WD[wkDay]}的安排複製到星期一到五？`)) return; [1, 2, 3, 4, 5].forEach(d => { if (d !== wkDay) S.week[d] = JSON.parse(JSON.stringify(list)); }); }
+    else if (b.id === 'wkReset') { if (!confirm('恢復整週的預設節奏表？')) return; S.week = defaultWeek(); }
+    else if (b.id === 'wkPrint') return printWeek();
+    else return;
+    save('week'); renderWeek();
+  };
+  box.onchange = e => {
+    const row = e.target.closest('.wkrow'), f = e.target.dataset.f; if (!row || !f) return;
+    list[+row.dataset.i][f] = f === 'min' ? Math.max(0, +e.target.value || 0) : e.target.value; save('week');
+  };
+}
+function printWeek() {
+  const days = [1, 2, 3, 4, 5, 6, 0], max = Math.max(...days.map(d => (S.week[d] || []).length));
+  $('#print').innerHTML = `<h1>🫒 我們家的週節奏表</h1><p>本期主題：${curTheme().e} ${esc(curTheme().title)}　💬 對話　🎈 遊戲　🛠️ 工作　🎉 慶典</p>
+    <table><tr>${days.map(d => `<th>星期${WD[d]}</th>`).join('')}</tr>
+    ${Array.from({ length: max }, (_, i) => `<tr>${days.map(d => { const b = (S.week[d] || [])[i]; return `<td>${b ? `<span class="em">${b.e}</span> ${esc(b.t)}<br><small>${KIND[b.k].e} ${KIND[b.k].n}${b.min ? '・' + b.min + ' 分' : ''}</small>` : ''}</td>`; }).join('')}</tr>`).join('')}</table>`;
+  window.print();
+}
+function renderLog() {
+  const box = $('#pLog'), f = store.get('logKid', '');
+  const rows = S.log.filter(x => !f || x.c === f).slice(-300).reverse();
+  const nm = id => (kidById(id) || { name: '（已移除）' }).name;
+  const actN = a => (ACTS.find(x => x.k === a) || { n: a }).n, thN = id => (THEMES.find(t => t.id === id) || { title: id }).title;
+  const days = Object.keys(S.feel).sort().slice(-14).reverse();
+  box.innerHTML = `
+    <div class="row"><select id="lk" class="inp"><option value="">全部孩子</option>${S.kids.map(k => `<option value="${k.id}" ${f === k.id ? 'selected' : ''}>${k.av} ${esc(k.name)}</option>`).join('')}</select>
+      <button id="csv">⬇️ 匯出 CSV</button><button id="bk">💾 備份全部資料</button><label class="chip" style="cursor:pointer">📂 還原備份<input type="file" id="rs" accept=".json" hidden></label></div>
+    <h3 style="margin-top:14px">遊戲紀錄（最近 300 筆）</h3>
+    <div class="tblwrap"><table class="tbl"><tr><th>日期</th><th>孩子</th><th>主題</th><th>遊戲</th><th>程度</th><th>自己答對</th><th>星星</th></tr>
+      ${rows.map(x => `<tr><td>${x.d}</td><td>${esc(nm(x.c))}</td><td>${esc(thN(x.th))}</td><td>${esc(actN(x.a))}</td><td>${LV[x.L] ? LV[x.L].e : ''}</td><td>${x.ok}/${x.n}</td><td>${'⭐'.repeat(x.st)}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">還沒有紀錄</td></tr>'}</table></div>
+    <h3 style="margin-top:14px">心情紀錄（最近 14 天）</h3>
+    <div class="tblwrap"><table class="tbl"><tr><th>日期</th>${S.kids.map(k => `<th>${k.av} ${esc(k.name)}</th>`).join('')}</tr>
+      ${days.map(d => `<tr><td>${d}</td>${S.kids.map(k => { const v = S.feel[d][k.id]; const fe = FEELS.find(x => x[1] === v); return `<td>${fe ? fe[0] + ' ' + v : ''}</td>`; }).join('')}</tr>`).join('') || '<tr><td class="muted">晨圈選了心情就會記錄</td></tr>'}</table></div>
+    <h3 style="margin-top:14px">觀察筆記（實驗教育學習紀錄可用）</h3>
+    <div class="row"><select id="nk" class="inp">${S.kids.map(k => `<option value="${k.id}">${k.av} ${esc(k.name)}</option>`).join('')}</select>
+      <textarea id="nt" rows="2" style="flex:1;min-width:220px" placeholder="例：二寶今天在圖卡板主動點了「還要」三次；大寶幫忙念題目。"></textarea><button class="pri" id="na">＋ 新增</button></div>
+    <ul>${S.notes.filter(x => !f || x.c === f).slice(-50).reverse().map(x => `<li><b>${x.d}</b> ${esc(nm(x.c))}：${esc(x.text)}</li>`).join('')}</ul>
+    <button id="wipe" style="margin-top:10px">⚠️ 清除所有紀錄</button>`;
+  $('#lk').onchange = e => { store.set('logKid', e.target.value); renderLog(); };
+  $('#na').onclick = () => { const t = $('#nt').value.trim(); if (!t) return; S.notes.push({ d: ymd(), c: $('#nk').value, th: curTheme().id, text: t }); save('notes'); renderLog(); };
+  $('#csv').onclick = () => {
+    const q = v => `"${String(v).replace(/"/g, '""')}"`;
+    const lines = [['日期', '孩子', '主題', '項目', '程度', '自己答對', '題數', '星星／內容'].map(q).join(',')];
+    S.log.forEach(x => lines.push([x.d, nm(x.c), thN(x.th), '遊戲：' + actN(x.a), LV[x.L] ? LV[x.L].n : '', x.ok, x.n, x.st].map(q).join(',')));
+    S.notes.forEach(x => lines.push([x.d, nm(x.c), thN(x.th), '觀察筆記', '', '', '', x.text].map(q).join(',')));
+    Object.entries(S.done).forEach(([key, d]) => { const [tid, L, i] = key.split(':'), t = THEMES.find(z => z.id === tid); if (t) lines.push([d, '', t.title, '動手做', LV[+L].n, '', '', t.work[+L][+i]].map(q).join(',')); });
+    download('﻿' + lines.join('\r\n'), `家學堂紀錄-${ymd()}.csv`, 'text/csv');
+  };
+  $('#bk').onclick = () => download(JSON.stringify({ app: 'jena-bible', v: 1, at: new Date().toISOString(), data: S }, null, 1), `家學堂備份-${ymd()}.json`, 'application/json');
+  $('#rs').onchange = async e => {
+    const file = e.target.files[0]; if (!file) return;
+    try { const j = JSON.parse(await file.text()); if (j.app !== 'jena-bible') throw 0; if (!confirm('用備份檔取代目前的資料？')) return;
+      Object.keys(S).forEach(k => { if (j.data[k] !== undefined) { S[k] = j.data[k]; save(k); } }); renderView(); alert('還原完成'); }
+    catch { alert('這不是家學堂的備份檔'); }
+  };
+  $('#wipe').onclick = () => { if (confirm('清除所有遊戲紀錄、星星、貼紙、心情和筆記？（孩子設定與週節奏表會保留）')) { ['log', 'notes', 'feel', 'att', 'weather', 'done'].forEach(k => S[k] = Array.isArray(S[k]) ? [] : {}); S.stars = {}; S.stickers = {}; save('log', 'notes', 'feel', 'att', 'weather', 'done', 'stars', 'stickers'); renderLog(); } };
+}
+function download(text, name, type) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function renderVoice() {
+  const box = $('#pVoice'); if (!box) return;
+  const tw = voices.filter(isTW);
+  box.innerHTML = `<div class="row"><select id="voiceSel" class="inp" style="max-width:100%">${voices.length ? (zhVoice ? '' : '<option value="">自動</option>') + voices.map(v => `<option value="${esc(v.voiceURI)}" ${zhVoice === v ? 'selected' : ''}>${isTW(v) ? '🇹🇼 ' : ''}${esc(v.name)}（${v.lang}）</option>`).join('') : '<option>這台裝置沒有中文語音</option>'}</select>
+    <button id="vtest">▶ 試聽</button></div>
+    <div class="row" style="margin-top:8px"><span>速度</span>${[[0.7, '慢'], [0.85, '中'], [1, '正常']].map(([r, n]) => `<button data-r="${r}" aria-pressed="${rate === r}" class="${rate === r ? 'pri' : ''}">${n}</button>`).join('')}</div>
+    <p class="note" style="margin-top:10px">${!('speechSynthesis' in window) ? '這個瀏覽器不支援朗讀。' : tw.length ? `已找到 ${tw.length} 個台灣國語語音（🇹🇼），會自動使用。` :
+      '這台裝置還沒有台灣國語語音：Android 到「設定 › 文字轉語音 › Google 語音服務 › 安裝語音資料 › 中文（台灣）」；iPad 到「設定 › 輔助使用 › 朗讀內容 › 聲音 › 中文（台灣）」；電腦建議用 Microsoft Edge。'}
+      種子程度的孩子念題速度會再慢一點。</p>`;
+  $('#voiceSel').onchange = e => { voicePref = e.target.value; store.set('voice', voicePref); zhVoice = voices.find(v => v.voiceURI === voicePref) || null; };
+  $('#vtest').onclick = () => speak('耶和華是我的牧者，我必不致缺乏。');
+  box.onclick = e => { const b = e.target.closest('[data-r]'); if (!b) return; rate = +b.dataset.r; store.set('rate', rate); renderVoice(); speak('這樣的速度可以嗎？'); };
+}
+
+const GUIDE = `
+<h3>🫒 名字的由來</h3>
+<p>「你兒女圍繞你的桌子，好像橄欖栽子。」（詩篇 128:3）耶拿教育的教室像一個家，大家圍成圓圈；我們的家，就是孩子們一起長大的學堂。</p>
+<h3>🧭 耶拿教育（Jenaplan）在這裡怎麼做</h3>
+<ul>
+  <li><b>根基小組（混齡）</b>：不同年齡的孩子在同一組，大的幫小的、小的看大的學。這裡的「一起玩」會讓每個孩子輪流，拿到自己程度的題目。</li>
+  <li><b>四種基本活動</b>：💬 對話（晨圈、晚圈）、🎈 遊戲（律動、自由遊戲、學習遊戲）、🛠️ 工作（主題工作、分齡課程）、🎉 慶典（每週五分享與讚美）。節奏表的顏色就是這四種活動。</li>
+  <li><b>節奏週計畫</b>：不用上下課鐘聲，而是依孩子的節奏輪替「專注 → 活動 → 休息」。可在「週節奏表」調整。</li>
+  <li><b>世界導向</b>：主題是課程的核心。每個聖經故事延伸到自然、社會、語文、數學、藝術，例如挪亞方舟 → 天氣、彩虹、測量、沉浮。</li>
+  <li><b>教室像客廳</b>：電子白板或平板放在大家圍坐的地方；工作時間每個孩子有自己的角落和材料。</li>
+</ul>
+<h3>📖 與聖經自學結合</h3>
+<ul>
+  <li>每個主題（約 3 週）一個聖經故事、一節經文（和合本），全家一起學，各自用自己的方式回應。</li>
+  <li>晨圈：問安 → 今天 → 心情 → 故事 → 經文 → 對話 → 禱告 → 律動。大約 20 分鐘；小小孩坐不住時可以只做前三項和律動。</li>
+  <li>大孩子（結果、香柏程度）自己讀經文出處，做「想一想」與延伸研究，並擔任小幫手；教別人也是最好的學習。</li>
+</ul>
+<h3>🌱 給需要更多支持的孩子（例如：中度智能障礙、小腦蚓部發育不全、肌肉低張力）</h3>
+<ul>
+  <li><b>程度和年齡分開</b>：在「孩子與輔助設定」選 🌱 種子程度，題目只有 2 選 1、每次 3 題、念題速度較慢。</li>
+  <li><b>無錯誤學習</b>：答錯不會有失敗音效，錯的選項淡出；6 秒沒有反應，正確答案會發亮提示。</li>
+  <li><b>只要「點一下」</b>：所有活動都不需要拖曳或精細動作；選項很大。手不穩的孩子可開「防誤觸」。</li>
+  <li><b>掃描選擇</b>：如果點選很吃力，打開「掃描選擇」，選項會輪流亮起並念出來，孩子只要按下面的大按鈕（或接上一個大型按鍵開關，對應空白鍵）。</li>
+  <li><b>圖卡溝通</b>：晨圈的「對話」有圖卡回答板（是、不是、還要、好了、幫幫我＋主題圖卡），點了就會說出來。</li>
+  <li><b>先／再板</b>：「今天」頁上方的「現在 → 等一下」幫助孩子預備轉換；計時器用圓餅變小表示時間，不用看數字。</li>
+  <li><b>動作與姿勢</b>：律動卡的動作請先請教孩子的物理／職能治療師，調整次數、輔具與保護；坐姿要穩（腳踩地、背有支撐），平板或白板放在眼睛高度。</li>
+  <li>紀錄裡的「自己答對」只看第一次就答對的題數，用來觀察進步，不用來比較兄弟姊妹。</li>
+</ul>
+<h3>🖥️ 電子白板・平板</h3>
+<ul>
+  <li>按右上角 ⛶ 全螢幕；🔠 放大字體，坐在遠處也看得清楚。</li>
+  <li>白板可以選田字格、橫線、方格，用主題圖案「貼圖」講故事，存成圖片放進學習歷程。</li>
+  <li>平板可以「加入主畫面」，像 App 一樣打開。所有資料只存在這台裝置的瀏覽器，換裝置前請先「備份全部資料」。</li>
+  <li>遊戲中可用鍵盤數字鍵 1–4 選答案，Esc 離開。</li>
+</ul>
+<h3>📝 自學（實驗教育）紀錄</h3>
+<ul>
+  <li>主題頁可「列印主題教案」，裡面有分程度的對話、動手做、題目和觀察紀錄欄。</li>
+  <li>「學習紀錄與觀察」可匯出 CSV（遊戲、動手做完成日期、觀察筆記），整理成期末成果報告。</li>
+</ul>
+<p class="muted">內容僅供家庭教學參考；醫療、復健相關的安排請以專業團隊建議為準。</p>`;
+
+/* ---------- 開始 ---------- */
+syncTools();
+renderView();
+</script>
+</body>
+</html>
