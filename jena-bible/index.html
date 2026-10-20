@@ -67,6 +67,7 @@ small,.muted{color:var(--muted)}
 .tools button{min-width:44px;padding:6px 8px;font-size:1.15rem}
 main{max-width:1180px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-left,0px)) 40px}
 @media (max-width:860px){
+  .top{backdrop-filter:none;background:var(--bg)}
   .brand b{font-size:1.1rem}
   #nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);
     justify-content:space-around;gap:0;padding:4px 2px calc(4px + env(safe-area-inset-bottom,0px))}
@@ -75,6 +76,7 @@ main{max-width:1180px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-le
   main{padding-bottom:calc(var(--navh) + 40px)}
   .top{justify-content:space-between}
 }
+@media (max-width:460px){ .brand b{font-size:.95rem;letter-spacing:0} .brand .em{font-size:1.5rem} .tools{gap:4px} .tools button{min-width:40px;min-height:40px;padding:4px 6px;font-size:1rem} .top{gap:6px} }
 @media (max-width:380px){ .brand b{display:none} }
 @media (max-width:560px){ h2{font-size:1.25rem} .banner{grid-template-columns:1fr;text-align:left} .banner .be{grid-row:auto;font-size:3rem} .banner h1{font-size:1.6rem} }
 
@@ -309,6 +311,22 @@ details.pane>div{padding:0 18px 18px}
 .guide p,.guide li{max-width:72ch}
 .note{background:var(--hint);color:var(--hint-ink);border-radius:14px;padding:10px 14px;font-size:.92rem}
 
+/* 使用手冊 */
+.toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0 4px}
+.toc button{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:96px;border-radius:18px;font-weight:700}
+.toc button .em{font-size:2.2rem}
+.toc button small{font-weight:400}
+.mod{scroll-margin-top:90px}
+.mod h2{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mod h2 .em{font-size:2.2rem}
+.mod h2 a{margin-left:auto;font-family:var(--f-body);font-size:.95rem}
+.mod p,.mod li{max-width:75ch}
+.mod li{margin:4px 0}
+.mod .tbl td,.mod .tbl th{font-size:.95rem}
+.lvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.lvgrid div{padding:12px;border-radius:16px;background:var(--olive-soft)}
+.lvgrid .em{font-size:1.8rem}
+
 /* 列印 */
 #print{display:none}
 @media print{
@@ -335,6 +353,7 @@ details.pane>div{padding:0 18px 18px}
   <div class="tools">
     <button id="sndBtn" title="聲音開關" aria-label="聲音開關">🔊</button>
     <button id="bigBtn" title="大字（電子白板）" aria-label="切換大字">🔠</button>
+    <button id="helpBtn" title="使用手冊" aria-label="使用手冊">❓</button>
     <button id="fsBtn" title="全螢幕" aria-label="全螢幕">⛶</button>
   </div>
 </header>
@@ -499,6 +518,7 @@ function syncTools() {
 }
 $('#sndBtn').onclick = () => { soundOn = !soundOn; store.set('sound', soundOn); if (!soundOn) hush(); syncTools(); };
 $('#bigBtn').onclick = () => { store.set('big', !store.get('big', false)); syncTools(); if (route()[0] === 'board') renderView(); };
+$('#helpBtn').onclick = () => { location.hash = '#/help'; };
 $('#fsBtn').onclick = () => {
   const d = document;
   if (d.fullscreenElement || d.webkitFullscreenElement) (d.exitFullscreen || d.webkitExitFullscreen).call(d);
@@ -514,7 +534,7 @@ function renderView() {
   $('#view').onclick = null; $('#view').onchange = null;
   $$('#nav a').forEach(x => x.classList.toggle('on', x.dataset.v === v));
   document.documentElement.classList.remove('fs');
-  const fn = { today: vToday, circle: vCircle, theme: vTheme, games: vGames, board: vBoard, party: vParty, parent: vParent }[v] || vToday;
+  const fn = { today: vToday, circle: vCircle, theme: vTheme, games: vGames, board: vBoard, party: vParty, parent: vParent, help: vHelp }[v] || vToday;
   fn(a); window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', renderView);
@@ -561,7 +581,7 @@ function vToday() {
     <div class="kids">${S.kids.map(k => `<div class="kid"><span class="av em">${k.av}</span><div><b>${esc(k.name)}</b><div class="row">${lvChip(k.L)}<span class="chip">⭐ ${S.stars[k.id] || 0}</span></div>
       <a href="#/games" data-solo="${k.id}">🎮 玩主題遊戲</a></div></div>`).join('')}</div>
   </section>
-  <p class="muted" style="text-align:center"><a href="../">← 回到服務入口</a></p>`;
+  <p class="muted" style="text-align:center"><a href="#/help">📖 使用手冊：每個功能怎麼用</a>　·　<a href="../">← 回到服務入口</a></p>`;
   const v = $('#view');
   v.onclick = e => {
     const t = e.target.closest('[data-timer],[data-cur],[data-done],[data-solo]'); if (!t) return;
@@ -1243,7 +1263,7 @@ let wkDay = new Date().getDay();
 function vParent() {
   const open = store.get('popen', 'kids');
   $('#view').innerHTML = `
-    <div class="sec-title"><h2>⚙️ 家長・老師</h2><a href="../">← 回到服務入口</a></div>
+    <div class="sec-title"><h2>⚙️ 家長・老師</h2><div class="row"><a href="#/help">📖 使用手冊</a><a href="../">← 回到服務入口</a></div></div>
     <details class="pane" data-p="kids" ${open === 'kids' ? 'open' : ''}><summary>👧 孩子與輔助設定</summary><div id="pKids"></div></details>
     <details class="pane" data-p="week" ${open === 'week' ? 'open' : ''}><summary>🗓️ 週節奏表</summary><div id="pWeek"></div></details>
     <details class="pane" data-p="log" ${open === 'log' ? 'open' : ''}><summary>📊 學習紀錄與觀察</summary><div id="pLog"></div></details>
@@ -1379,6 +1399,96 @@ function renderVoice() {
   $('#voiceSel').onchange = e => { voicePref = e.target.value; store.set('voice', voicePref); zhVoice = voices.find(v => v.voiceURI === voicePref) || null; };
   $('#vtest').onclick = () => speak('耶和華是我的牧者，我必不致缺乏。');
   box.onclick = e => { const b = e.target.closest('[data-r]'); if (!b) return; rate = +b.dataset.r; store.set('rate', rate); renderVoice(); speak('這樣的速度可以嗎？'); };
+}
+
+/* ======================== 使用手冊 ======================== */
+const HELP_MODS = [['m-today', '🏠', '今天', '一天的節奏'], ['m-circle', '⭕', '晨圈', '全家圍坐'], ['m-theme', '🌍', '主題', '12 個聖經故事'], ['m-games', '🎮', '遊戲', '混齡輪流玩'],
+  ['m-board', '✏️', '白板', '畫畫・寫字'], ['m-party', '🎉', '慶典', '每週分享'], ['m-parent', '⚙️', '家長', '設定與紀錄'], ['m-levels', '🌱', '五個程度', '依能力設定']];
+const HELP = `
+<section class="card"><h2>📖 使用手冊</h2>
+  <p>家學堂共有 7 個功能，在畫面上方（手機在下方）切換。右上角有四個按鈕：🔊 開關聲音、🔠 放大字體（適合電子白板）、❓ 打開這本手冊、⛶ 全螢幕。</p>
+  <div class="toc">${HELP_MODS.map(([id, e, n, d]) => `<button data-jump="${id}"><span class="em">${e}</span>${n}<small class="muted">${d}</small></button>`).join('')}</div>
+  <div class="row" style="margin-top:10px"><button id="helpPrint">🖨️ 列印手冊</button></div>
+</section>
+<div id="helpdoc">
+<section class="card mod" id="m-today"><h2><span class="em">🏠</span>今天：一天的節奏<a href="#/today">前往 ▶</a></h2>
+  <ul>
+    <li><b>本期主題</b>：最上面顯示目前的聖經主題和經文，按 🔊 會念出來。</li>
+    <li><b>現在 → 等一下</b>：兩張大圖卡，讓孩子知道接下來要做什麼，比較容易換到下一個活動。</li>
+    <li><b>今天的節奏表</b>：一天分成幾段，顏色代表耶拿教育的四種活動：💬 對話（藍）、🎈 遊戲（橘）、🛠️ 工作（綠）、🎉 慶典（紫）。每一段旁邊的按鈕：
+      <ul><li>▶ 直接前往對應的功能，例如晨圈或遊戲</li>
+        <li>⏳ 視覺計時器：圓餅慢慢變小，孩子不用看數字也知道時間快到了</li>
+        <li>📍 設為「現在」</li>
+        <li>✅ 完成，會自動跳到下一段</li></ul></li>
+    <li><b>根基小組</b>：每個孩子的程度和星星數，點「玩主題遊戲」可以直接讓那個孩子開始玩。</li>
+  </ul></section>
+<section class="card mod" id="m-circle"><h2><span class="em">⭕</span>晨圈：全家圍坐，投影到白板<a href="#/circle">前往 ▶</a></h2>
+  <p>照順序有 8 個步驟，按上方的分頁或下方的「下一步」切換。大約 20 分鐘；小小孩坐不住時，可以只做前三項和律動。</p>
+  <ol>
+    <li><b>👋 問安</b>：每個孩子點自己的頭像，系統會說「早安，大寶！神愛你！」</li>
+    <li><b>📅 今天</b>：日期、星期，再選今天的天氣。</li>
+    <li><b>😊 心情</b>：每人選一個心情。選了難過或生氣，會提醒大家等一下為他禱告。</li>
+    <li><b>📖 故事</b>：本期聖經故事，一張大圖一句話，自動念出來。</li>
+    <li><b>📜 經文</b>：念全節（念到的那一句會亮起來）、跟我念（念一句停一下讓孩子跟著說）、給小小孩的短句、用手勢一起記經文。</li>
+    <li><b>💬 對話</b>：每個孩子拿到自己程度的問題。下面有圖卡回答板（是、不是、還要、好了、幫幫我，加上主題圖卡），點一下就會說出來，不太會說話的孩子可以用它回答。</li>
+    <li><b>🙏 禱告</b>：點感謝或代禱的圖卡，系統會念出禱告句，最後按「阿們」。</li>
+    <li><b>🤸 律動</b>：主題相關的大肢體動作，有 1 分鐘和 3 分鐘計時。</li>
+  </ol></section>
+<section class="card mod" id="m-theme"><h2><span class="em">🌍</span>主題：12 個聖經故事<a href="#/theme">前往 ▶</a></h2>
+  <ul>
+    <li>一年 12 個主題，每個大約 3 週，從「神創造世界」到「好撒瑪利亞人」。每個主題都延伸到自然、數學、語文等科目，例如挪亞方舟連到天氣、彩虹和測量。</li>
+    <li>打開一個主題可以看到：<b>聖經故事</b>全文；<b>分程度的內容</b>（5 個程度各有對話題和動手做的工作，旁邊顯示哪個孩子在哪個程度，工作打勾後會記下完成日期）；<b>律動與慶典</b>建議。</li>
+    <li><b>⭐ 設為本期主題</b>：首頁、晨圈和遊戲都會改成這個主題。</li>
+    <li><b>🖨️ 列印主題教案</b>：包含各程度的活動、題目，以及給每個孩子寫觀察紀錄的欄位。</li>
+  </ul></section>
+<section class="card mod" id="m-games"><h2><span class="em">🎮</span>遊戲：混齡輪流玩<a href="#/games">前往 ▶</a></h2>
+  <ul>
+    <li><b>選一個孩子</b>就是自己玩；<b>選兩個以上</b>就是輪流玩，每個人拿到自己程度的題目。</li>
+    <li><b>🙋 小幫手提示</b>：按了正確答案會發亮，哥哥姊姊可以用來幫弟弟妹妹。</li>
+    <li>玩完會得到 1～3 顆星星，每 10 顆換一張貼紙。鍵盤數字鍵 1～4 可以選答案，Esc 離開。</li>
+  </ul>
+  <div class="tblwrap" style="max-height:none"><table class="tbl"><tr><th>遊戲</th><th>小的孩子</th><th>大的孩子</th></tr>
+    <tr><td>🎧 聽一聽</td><td>聽詞語、找圖片</td><td>讀詞語、選詞</td></tr>
+    <tr><td>🔢 數一數</td><td>數 1～3、比多少</td><td>加減乘除、分數、百分比、面積</td></tr>
+    <tr><td>🧺 分一分</td><td>天空／海裡、晴天／雨天</td><td>同左</td></tr>
+    <tr><td>📜 排一排</td><td>哪個先發生</td><td>把整個故事排順序</td></tr>
+    <tr><td>📖 經文</td><td>找經文裡的圖卡</td><td>排出整節經文、認出處</td></tr>
+    <tr><td>❓ 想一想</td><td>（自動改玩聽一聽）</td><td>故事理解、自然社會延伸</td></tr>
+    <tr><td>🎲 綜合</td><td colspan="2">每一題隨機換一種遊戲</td></tr></table></div></section>
+<section class="card mod" id="m-board"><h2><span class="em">✏️</span>白板<a href="#/board">前往 ▶</a></h2>
+  <ul>
+    <li>7 種顏色，細、中、粗三種筆，加上 🧽 橡皮擦和 ↩️ 復原。</li>
+    <li>背景可以選空白、橫線、田字格、方格或點點，田字格適合練寫字。</li>
+    <li><b>🖼️ 貼圖</b>：點一下就貼上主題圖案，手部動作不靈活的孩子也能「畫」。</li>
+    <li><b>💾 存圖</b>：存成圖片，可以放進學習歷程。<b>⛶ 白板全螢幕</b>：隱藏其他按鈕，整面都是白板。</li>
+  </ul></section>
+<section class="card mod" id="m-party"><h2><span class="em">🎉</span>慶典：每週五的分享與讚美<a href="#/party">前往 ▶</a></h2>
+  <ul>
+    <li>每個孩子這週拿到的星星、玩了幾次、貼紙本（這週新拿到的貼紙會發亮）。</li>
+    <li><b>🎉 為孩子慶祝</b>：放彩帶，並說「這一週你做得很好！神愛你！」</li>
+    <li>本週經文、這週完成的工作，以及建議的慶典流程（唱詩歌、分享作品、感謝接龍、禱告）。</li>
+  </ul></section>
+<section class="card mod" id="m-parent"><h2><span class="em">⚙️</span>家長<a href="#/parent">前往 ▶</a></h2>
+  <ul>
+    <li><b>👧 孩子與輔助設定</b>（每個孩子分開設）：名字、頭像、年齡、程度；選項數量（2、3 或 4 選 1）；可以新增孩子。
+      <ul><li><b>無錯誤學習</b>：答錯不會有失敗的聲音，錯的選項會淡掉，6 秒沒反應會提示正確答案。</li>
+        <li><b>掃描選擇</b>：選項輪流亮起並念出來，按下面的大按鈕（或空白鍵、大型按鍵開關）就能選。</li>
+        <li><b>自動念題目</b>、<b>防誤觸</b>（忽略手不穩時太快的連點）。</li></ul></li>
+    <li><b>🗓️ 週節奏表</b>：每天的時段可以新增、刪除、排順序，設定活動類型和分鐘數，也能複製到其他天或列印貼在牆上。</li>
+    <li><b>📊 學習紀錄</b>：遊戲紀錄、心情紀錄和觀察筆記；匯出 CSV 可以拿來寫自學（實驗教育）的成果報告；備份全部資料、還原備份。</li>
+    <li><b>🔊 聲音</b>：選台灣國語的語音、調整說話速度、試聽。</li>
+    <li><b>📘 使用說明與教學理念</b>：耶拿教育的理念，以及給特殊需求孩子的調整建議。</li>
+  </ul></section>
+<section class="card mod" id="m-levels"><h2><span class="em">🌱</span>五個程度（依能力設定，不一定照年齡）</h2>
+  <div class="lvgrid">${LV.map(l => `<div><span class="em">${l.e}</span> <b>${l.n}</b><br>${l.d}<br><small class="muted">${l.opts} 選 1・每次 ${l.rounds} 題</small></div>`).join('')}</div>
+  <p class="note" style="margin-top:12px">所有資料只存在這台裝置的瀏覽器裡，換平板前請先到「⚙️ 家長 › 學習紀錄」按「備份全部資料」。律動動作請依孩子的物理／職能治療師建議調整。</p></section>
+</div>`;
+function vHelp() {
+  $('#view').innerHTML = HELP;
+  $('#view').onclick = e => {
+    const j = e.target.closest('[data-jump]'); if (j) { document.getElementById(j.dataset.jump).scrollIntoView({ behavior: 'smooth' }); return; }
+    if (e.target.id === 'helpPrint') { $('#print').innerHTML = '<h1>🫒 橄欖栽子家學堂　使用手冊</h1>' + $('#helpdoc').innerHTML.replace(/<a href="#\/[^"]*">前往 ▶<\/a>/g, ''); window.print(); }
+  };
 }
 
 const GUIDE = `
