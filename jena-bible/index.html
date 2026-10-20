@@ -196,11 +196,11 @@ main{max-width:1180px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-le
 /* 遊戲選單 */
 .pick{display:flex;gap:10px;flex-wrap:wrap}
 .pick button{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:110px;min-height:110px;border-radius:22px;border-width:3px}
-.pick button .em{font-size:2.6rem}
+.pick button>.em{font-size:2.6rem}
 .pick button[aria-pressed="true"]{border-color:var(--ok);background:var(--ok-soft)}
 .acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
 .acts button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 10px;min-height:150px;border-radius:22px;border-width:3px;text-align:center}
-.acts button .em{font-size:3rem}
+.acts button>.em{font-size:3rem}
 .acts button b{font-size:1.15rem}
 .acts button small{font-size:.8rem}
 
@@ -311,6 +311,16 @@ details.pane>div{padding:0 18px 18px}
 .guide p,.guide li{max-width:72ch}
 .note{background:var(--hint);color:var(--hint-ink);border-radius:14px;padding:10px 14px;font-size:.92rem}
 
+/* 注音（標在國字右邊，像課本一樣） */
+.zy{display:inline-flex;align-items:center;white-space:nowrap;vertical-align:baseline}
+.zb{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;position:relative;font:400 .3em/1.02 var(--f-body);
+  margin:0 .62em 0 .08em;color:var(--muted);letter-spacing:0;text-indent:0}
+.zb i{font-style:normal;display:block}
+.zb .zt{position:absolute;left:100%;bottom:.15em;margin-left:.05em}
+.zb .zl{line-height:.7}
+.gprompt .zb,.vtext .zb,.slide .zb,.opt .zb{color:var(--ink);opacity:.8}
+.tools button[aria-pressed="true"]{border-color:var(--olive);background:var(--olive-soft)}
+
 /* 使用手冊 */
 .toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0 4px}
 .toc button{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:96px;border-radius:18px;font-weight:700}
@@ -353,6 +363,7 @@ details.pane>div{padding:0 18px 18px}
   <div class="tools">
     <button id="sndBtn" title="聲音開關" aria-label="聲音開關">🔊</button>
     <button id="bigBtn" title="大字（電子白板）" aria-label="切換大字">🔠</button>
+    <button id="zyBtn" title="注音（晨圈、故事、經文）" aria-label="切換注音" style="font-weight:700">ㄅ</button>
     <button id="helpBtn" title="使用手冊" aria-label="使用手冊">❓</button>
     <button id="fsBtn" title="全螢幕" aria-label="全螢幕">⛶</button>
   </div>
@@ -362,6 +373,7 @@ details.pane>div{padding:0 18px 18px}
 <div id="print"></div>
 
 <script src="themes.js"></script>
+<script src="zhuyin.js"></script>
 <script>
 'use strict';
 /* ---------- 基本工具 ---------- */
@@ -394,7 +406,8 @@ const KIND = {
   talk: { e: '💬', n: '對話' }, play: { e: '🎈', n: '遊戲' }, work: { e: '🛠️', n: '工作' }, party: { e: '🎉', n: '慶典' }, life: { e: '🍎', n: '生活' }
 };
 const kindChip = k => `<span class="chip kind k-${k}"><span class="em">${KIND[k].e}</span>${KIND[k].n}</span>`;
-const GO = { circle: '晨圈', move: '律動', theme: '主題', games: '遊戲', board: '白板', party: '慶典' };
+const GO = { circle: '晨圈', move: '律動', theme: '主題', games: '遊戲', zhuyin: '注音', board: '白板', party: '慶典' };
+const ZY_APPS = [['🚂', '注音小火車大冒險', '聽音找符號、拼音、聲調（康軒首冊）', '../kangxuan-chinese/'], ['✍️', '注音筆順小火車', '37 個注音符號在田字格練筆順', '../zhuyin-stroke/']];
 const AVATARS = ['🚂', '🐢', '🐣', '🐑', '🦁', '🐟', '🌟', '🪲', '🐻', '🦋', '🐰', '🐬', '🦒', '🌻', '🚀', '🐱'];
 const STICKERS = ['🐑', '🕊️', '🌈', '⭐', '🐟', '🍞', '🌾', '🦁', '🐋', '👑', '🦋', '🌷', '🐣', '🚢', '🎵', '🌻', '🍇', '🐢', '🚂', '🪲', '🌙', '☀️', '🫒', '🍎'];
 const FEELS = [['😊', '開心'], ['😢', '難過'], ['😠', '生氣'], ['😨', '害怕'], ['😴', '累了'], ['🤒', '不舒服']];
@@ -402,9 +415,9 @@ const FEELS = [['😊', '開心'], ['😢', '難過'], ['😠', '生氣'], ['�
 /* ---------- 預設資料 ---------- */
 function defaultKids() {
   return [
-    { id: 'k1', name: '大寶', av: '🚂', age: 6, L: 2, opts: 3, errorless: false, scan: false, scanMs: 2500, autoSay: true, slowTap: false },
-    { id: 'k2', name: '二寶', av: '🐢', age: 5, L: 0, opts: 2, errorless: true, scan: false, scanMs: 3000, autoSay: true, slowTap: true },
-    { id: 'k3', name: '三寶', av: '🐣', age: 4, L: 1, opts: 3, errorless: false, scan: false, scanMs: 2500, autoSay: true, slowTap: false }
+    { id: 'k1', name: '大寶', av: '🚂', age: 6, L: 2, opts: 3, errorless: false, scan: false, scanMs: 2500, autoSay: true, slowTap: false, zhuyin: true },
+    { id: 'k2', name: '二寶', av: '🐢', age: 5, L: 0, opts: 2, errorless: true, scan: false, scanMs: 3000, autoSay: true, slowTap: true, zhuyin: false },
+    { id: 'k3', name: '三寶', av: '🐣', age: 4, L: 1, opts: 3, errorless: false, scan: false, scanMs: 2500, autoSay: true, slowTap: false, zhuyin: true }
   ];
 }
 const B = (e, t, k, min, go = '') => ({ e, t, k, min, go });
@@ -415,10 +428,12 @@ function defaultWeek() {
     B('🤸', '律動時間', 'play', 15, 'move'),
     B('🍎', '點心・洗手・上廁所', 'life', 15),
     mid,
+    ...(mid.go === 'games' ? [zy] : []),
     B('🎈', '自由遊戲・戶外', 'play', 40),
     extra || B('🙏', '晚圈：今天學到什麼・禱告', 'talk', 10, 'circle')
   ];
   const course = B('📚', '課程時間：國語／數學（各自的程度）', 'work', 30, 'games');
+  const zy = B('ㄅ', '注音時間：注音小火車・筆順練習（嫩芽、小樹）', 'work', 15, 'zhuyin');
   return {
     1: day(course), 2: day(course),
     3: day(B('🎨', '藝術・音樂（白板畫畫、唱詩歌）', 'work', 30, 'board')),
@@ -440,6 +455,7 @@ const S = {
   stars: store.get('stars', {}), stickers: store.get('stickers', {})
 };
 if (S.theme >= THEMES.length) S.theme = 0;
+S.kids.forEach(k => { if (k.zhuyin === undefined) k.zhuyin = k.L >= 1 && k.L <= 2; });
 function save(...keys) { for (const k of keys) store.set(k, S[k]); }
 function today() { const d = ymd(); if (S.day.d !== d) { S.day = { d, cur: 0, done: [] }; save('day'); } return S.day; }
 const curTheme = () => THEMES[S.theme];
@@ -508,6 +524,32 @@ function confetti(n = 36) {
   }
 }
 document.addEventListener('click', e => { const b = e.target.closest('[data-say]'); if (b) { e.preventDefault(); speak(b.dataset.say); } });
+/* ---------- 注音 ---------- */
+const ZYC = window.JENA_ZY_C || {}, ZYW = window.JENA_ZY_W || {}, ZY_MAX = 5;
+const HANC = /[㐀-鿿豈-﫿]/;
+const zyOn = () => store.get('zy', true);
+function zyRuby(c, b) {
+  if (!b) return c;
+  let light = false, tone = '';
+  if (b[0] === '˙') { light = true; b = b.slice(1); }
+  if ('ˊˇˋ'.includes(b.slice(-1))) { tone = b.slice(-1); b = b.slice(0, -1); }
+  return `<span class="zy">${c}<span class="zb" aria-hidden="true">${light ? '<i class="zl">˙</i>' : ''}${[...b].map(x => `<i>${x}</i>`).join('')}${tone ? `<i class="zt">${tone}</i>` : ''}</span></span>`;
+}
+/* 對已跳脫、不含標籤的文字加注音：先找最長的詞，找不到再用字的預設讀音 */
+function zyText(s) {
+  const a = [...String(s)]; let out = '', i = 0;
+  while (i < a.length) {
+    if (!HANC.test(a[i])) { out += a[i++]; continue; }
+    let L = Math.min(ZY_MAX, a.length - i), hit = null;
+    for (; L >= 2; L--) { const r = ZYW[a.slice(i, i + L).join('')]; if (r) { hit = r.split(' '); break; } }
+    if (hit) { for (let j = 0; j < L; j++) out += zyRuby(a[i + j], hit[j]); i += L; }
+    else { out += zyRuby(a[i], ZYC[a[i]]); i++; }
+  }
+  return out;
+}
+const zyHTML = h => String(h).split(/(<[^>]+>)/).map(p => p[0] === '<' ? p : zyText(p)).join('');
+/* 共用畫面（晨圈、故事、經文）依右上角 ㄅ 開關 */
+const zt = s => zyOn() ? zyText(esc(s)) : esc(s);
 const sayBtn = (t, label = '🔊') => `<button class="say" data-say="${esc(t)}" aria-label="念出來">${label}</button>`;
 
 /* ---------- 頁首工具 ---------- */
@@ -515,10 +557,12 @@ function syncTools() {
   $('#sndBtn').textContent = soundOn ? '🔊' : '🔇';
   document.documentElement.classList.toggle('big', !!store.get('big', false));
   $('#bigBtn').setAttribute('aria-pressed', !!store.get('big', false));
+  $('#zyBtn').setAttribute('aria-pressed', zyOn());
 }
 $('#sndBtn').onclick = () => { soundOn = !soundOn; store.set('sound', soundOn); if (!soundOn) hush(); syncTools(); };
 $('#bigBtn').onclick = () => { store.set('big', !store.get('big', false)); syncTools(); if (route()[0] === 'board') renderView(); };
 $('#helpBtn').onclick = () => { location.hash = '#/help'; };
+$('#zyBtn').onclick = () => { store.set('zy', !zyOn()); syncTools(); renderView(); };
 $('#fsBtn').onclick = () => {
   const d = document;
   if (d.fullscreenElement || d.webkitFullscreenElement) (d.exitFullscreen || d.webkitExitFullscreen).call(d);
@@ -538,7 +582,7 @@ function renderView() {
   fn(a); window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', renderView);
-const goHref = go => go === 'move' ? '#/circle/7' : go === 'theme' ? '#/theme/' + curTheme().id : '#/' + go;
+const goHref = go => go === 'move' ? '#/circle/7' : go === 'theme' ? '#/theme/' + curTheme().id : go === 'zhuyin' ? ZY_APPS[0][3] : '#/' + go;
 
 /* ======================== 今天 ======================== */
 function banner(T, extra = '') {
@@ -546,7 +590,7 @@ function banner(T, extra = '') {
     <span class="be em">${T.e}</span>
     <div><small>本期主題 · 世界導向</small><h1>${esc(T.title)}</h1></div>
     <div class="muted">${esc(T.bible)}　·　${esc(T.world)}</div>
-    <div class="verse-mini">${sayBtn(T.verse.fp.join('') + '。' + T.verse.ref)}<span>「${esc(T.verse.fp.join(''))}」</span><small>— ${esc(T.verse.ref)}</small></div>
+    <div class="verse-mini">${sayBtn(T.verse.fp.join('') + '。' + T.verse.ref)}<span>「${zt(T.verse.fp.join(''))}」</span><small>— ${esc(T.verse.ref)}</small></div>
     ${extra}
   </section>`;
 }
@@ -667,10 +711,10 @@ function cDay() {
   const n = new Date(), w = S.weather[ymd()];
   const strip = [1, 2, 3, 4, 5, 6, 0].map(i => `<span class="${i === n.getDay() ? 'today' : ''}">${WD[i]}</span>`).join('');
   return `<h2>📅 今天是…</h2>
-    <div class="row"><div class="datebig">${n.getMonth() + 1} 月 ${n.getDate()} 日　星期${WD[n.getDay()]}</div>${sayBtn(`今天是${n.getMonth() + 1}月${n.getDate()}日，星期${WD[n.getDay()]}`)}</div>
+    <div class="row"><div class="datebig">${n.getMonth() + 1} ${zt('月')} ${n.getDate()} ${zt('日　星期' + WD[n.getDay()])}</div>${sayBtn(`今天是${n.getMonth() + 1}月${n.getDate()}日，星期${WD[n.getDay()]}`)}</div>
     <div class="weekstrip">${strip}</div>
-    <h3 style="margin-bottom:8px">今天的天氣？</h3>
-    <div class="bigtiles">${WEATHER.map(([e, t]) => `<button class="tile ${w === t ? 'sel' : ''}" data-w="${t}"><span class="em">${e}</span>${t}</button>`).join('')}</div>
+    <h3 style="margin-bottom:8px">${zt('今天的天氣？')}</h3>
+    <div class="bigtiles">${WEATHER.map(([e, t]) => `<button class="tile ${w === t ? 'sel' : ''}" data-w="${t}"><span class="em">${e}</span>${zt(t)}</button>`).join('')}</div>
     <p class="vref" style="margin-top:14px">「這是耶和華所定的日子，我們在其中要高興歡喜！」— 詩篇 118:24 ${sayBtn('這是耶和華所定的日子，我們在其中要高興歡喜！')}</p>`;
 }
 function iDay() {
@@ -684,7 +728,7 @@ function cFeel() {
   const sad = S.kids.filter(k => f[k.id] && !['開心'].includes(f[k.id]));
   return `<h2>😊 今天的心情</h2>
     ${S.kids.map(k => `<div class="feelrow"><div class="who"><span class="em">${k.av}</span>${esc(k.name)}</div>
-      <div class="feels">${FEELS.map(([e, t]) => `<button class="${f[k.id] === t ? 'sel' : ''}" data-k="${k.id}" data-f="${t}"><span class="em">${e}</span>${t}</button>`).join('')}</div></div>`).join('')}
+      <div class="feels">${FEELS.map(([e, t]) => `<button class="${f[k.id] === t ? 'sel' : ''}" data-k="${k.id}" data-f="${t}"><span class="em">${e}</span>${zt(t)}</button>`).join('')}</div></div>`).join('')}
     ${sad.length ? `<p class="note" style="margin-top:14px">💛 ${sad.map(k => esc(k.name) + '（' + f[k.id] + '）').join('、')}：我們一起抱一抱，等一下為他禱告。</p>` : ''}`;
 }
 function iFeel() {
@@ -698,7 +742,7 @@ function cStory(T) {
   storyIdx = Math.min(storyIdx, T.story.length - 1);
   const [e, t] = T.story[storyIdx];
   return `<h2>📖 ${esc(T.title)}</h2>
-    <div class="slide"><div class="se em">${e}</div><p>${esc(t)}</p></div>
+    <div class="slide"><div class="se em">${e}</div><p>${zt(t)}</p></div>
     <div class="dots">${T.story.map((_, i) => `<i class="${i === storyIdx ? 'on' : ''}"></i>`).join('')}</div>
     <div class="row" style="justify-content:center;margin-top:12px">
       <button data-s="-1" ${storyIdx === 0 ? 'disabled' : ''}>◀ 上一張</button>${sayBtn(t, '🔊 再念一次')}
@@ -716,8 +760,8 @@ function iStory(T) {
 function cVerse(T) {
   const V = T.verse;
   return `<h2>📜 背經文</h2>
-    <div class="vkeys">${V.keys.map(([e, t]) => `<div><span class="em">${e}</span>${esc(t)}</div>`).join('')}</div>
-    <div class="vtext" id="vtext">${V.fp.map((p, i) => `<span data-i="${i}">${esc(p)}</span>`).join('')}</div>
+    <div class="vkeys">${V.keys.map(([e, t]) => `<div><span class="em">${e}</span>${zt(t)}</div>`).join('')}</div>
+    <div class="vtext" id="vtext">${V.fp.map((p, i) => `<span data-i="${i}">${zt(p)}</span>`).join('')}</div>
     <div class="vref">— ${esc(V.ref)}（和合本）</div>
     <div class="row" style="justify-content:center;margin-top:16px">
       <button data-v="all" class="pri">🔊 念全節</button>
@@ -743,7 +787,7 @@ function iVerse(T) {
     const k = b.dataset.v, n = $('#vnote');
     if (k === 'all') run(V.fp.map((_, i) => i), 0);
     if (k === 'echo') run(V.fp.map((_, i) => i), 2600);
-    if (k === 'short') { n.hidden = false; n.innerHTML = `🌱 短句：「${esc(V.sp.join(''))}」${sayBtn(V.sp.join(''))}`; speak(V.sp.join('')); }
+    if (k === 'short') { n.hidden = false; n.innerHTML = `🌱 短句：「${zt(V.sp.join(''))}」${sayBtn(V.sp.join(''))}`; speak(V.sp.join('')); }
     if (k === 'gest') { n.hidden = false; n.textContent = '👐 ' + V.gesture; speak(V.gesture); }
   };
 }
@@ -754,12 +798,12 @@ function cTalk(T) {
     <p class="muted">同一個故事，每個孩子回答自己程度的問題。哥哥姊姊先示範，弟弟妹妹用圖卡回答。</p>
     ${S.kids.map(k => {
       const q = T.talk[k.L][(new Date().getDate() + k.L) % T.talk[k.L].length];
-      return `<div class="talkq"><span class="em">${k.av}</span><div><b>${esc(k.name)}</b> ${lvChip(k.L)}<p>${esc(q)}</p></div>${sayBtn(k.name + '，' + q)}</div>`;
+      return `<div class="talkq"><span class="em">${k.av}</span><div><b>${esc(k.name)}</b> ${lvChip(k.L)}<p>${zt(q)}</p></div>${sayBtn(k.name + '，' + q)}</div>`;
     }).join('')}
     <details style="margin-top:8px"><summary>其他程度的問題</summary>${[0, 1, 2, 3, 4].filter(l => !ls.includes(l)).map(l => `<p>${lvChip(l)} ${T.talk[l].map(esc).join(' ／ ')}</p>`).join('')}</details>
     <h3 style="margin-top:14px">🗣️ 圖卡回答板（點一下就會說）</h3>
-    <div class="aac">${AAC.map(([e, t]) => `<button data-say="${t}"><span class="em">${e}</span>${t}</button>`).join('')}
-    ${T.items.map(([e, t]) => `<button data-say="${t}"><span class="em">${e}</span>${t}</button>`).join('')}</div>`;
+    <div class="aac">${AAC.map(([e, t]) => `<button data-say="${t}"><span class="em">${e}</span>${zt(t)}</button>`).join('')}
+    ${T.items.map(([e, t]) => `<button data-say="${t}"><span class="em">${e}</span>${zt(t)}</button>`).join('')}</div>`;
 }
 const THANKS = [['👨‍👩‍👧', '家人', '謝謝神賜給我們家人'], ['🍚', '食物', '謝謝神賜給我們食物'], ['💪', '身體', '謝謝神給我們身體'], ['🏠', '家', '謝謝神給我們溫暖的家'],
   ['☀️', '好天氣', '謝謝神給我們今天的天氣'], ['👫', '朋友', '謝謝神給我們朋友'], ['🧑‍⚕️', '醫生和治療師', '謝謝神給我們醫生和治療師'], ['📚', '可以學習', '謝謝神讓我們可以學習']];
@@ -768,15 +812,15 @@ function cPray() {
   const f = S.feel[ymd()] || {};
   const need = S.kids.filter(k => f[k.id] && f[k.id] !== '開心');
   return `<h2>🙏 一起禱告</h2>
-    <h3>感謝</h3><div class="aac">${THANKS.map(([e, t, s]) => `<button data-say="${s}"><span class="em">${e}</span>${t}</button>`).join('')}</div>
-    <h3 style="margin-top:14px">代禱</h3><div class="aac">${ASKS.map(([e, t, s]) => `<button data-say="${s}"><span class="em">${e}</span>${t}</button>`).join('')}
+    <h3>${zt('感謝')}</h3><div class="aac">${THANKS.map(([e, t, s]) => `<button data-say="${s}"><span class="em">${e}</span>${zt(t)}</button>`).join('')}</div>
+    <h3 style="margin-top:14px">${zt('代禱')}</h3><div class="aac">${ASKS.map(([e, t, s]) => `<button data-say="${s}"><span class="em">${e}</span>${zt(t)}</button>`).join('')}
       ${need.map(k => `<button data-say="求神幫助${esc(k.name)}，${esc(k.name)}今天覺得${f[k.id]}"><span class="em">${k.av}</span>${esc(k.name)}</button>`).join('')}</div>
-    <div class="row" style="justify-content:center;margin-top:18px"><button class="pri" id="amen" style="font-size:1.3rem;min-height:64px">🙏 奉耶穌的名禱告，阿們！</button></div>`;
+    <div class="row" style="justify-content:center;margin-top:18px"><button class="pri" id="amen" style="font-size:1.3rem;min-height:64px">🙏 ${zt('奉耶穌的名禱告，阿們！')}</button></div>`;
 }
 function iPray() { $('#amen').onclick = () => { speak('奉耶穌的名禱告，阿們！'); confetti(14); }; }
 function cMove(T) {
   return `<h2>🤸 律動時間</h2>
-    <div class="grid">${[...T.move, ...JENA_MOVES].map(m => `<div class="talkq"><span class="em">${m.split(' ')[0]}</span><div><p>${esc(m.replace(/^\S+\s/, ''))}</p></div>${sayBtn(m)}</div>`).join('')}</div>
+    <div class="grid">${[...T.move, ...JENA_MOVES].map(m => `<div class="talkq"><span class="em">${m.split(' ')[0]}</span><div><p>${zt(m.replace(/^\S+\s/, ''))}</p></div>${sayBtn(m)}</div>`).join('')}</div>
     <div class="row" style="margin-top:12px"><button class="pri" onclick="startTimer(1,'🤸','一起動一動')">⏳ 一起動 1 分鐘</button><button onclick="startTimer(3,'🤸','一起動一動')">⏳ 3 分鐘</button></div>
     <p class="note" style="margin-top:12px">肌肉張力低、平衡不穩的孩子：動作請依物理／職能治療師的建議調整次數與輔助，在軟墊上進行，大人在旁保護；孩子累了就休息，喝水。</p>`;
 }
@@ -796,11 +840,11 @@ function vTheme(id) {
       ${idx === S.theme ? '<span class="chip">⭐ 本期主題</span>' : `<button id="setCur" class="pri">⭐ 設為本期主題</button>`}
       <a href="#/games"><button tabindex="-1" id="playT">🎮 用這個主題玩遊戲</button></a>
       <button id="printT">🖨️ 列印主題教案</button><a href="#/theme">← 全部主題</a></div>`) + `
-    <section class="card"><h2>📖 聖經故事</h2><div class="storylist" style="margin-top:10px">${T.story.map(([e, t]) => `<div><span class="em">${e}</span><span>${esc(t)}</span></div>`).join('')}</div>
+    <section class="card"><h2>📖 聖經故事</h2><div class="storylist" style="margin-top:10px">${T.story.map(([e, t]) => `<div><span class="em">${e}</span><span>${zt(t)}</span></div>`).join('')}</div>
       <p class="muted">晨圈時到「⭕ 晨圈 › 故事」用大圖一張一張講。</p></section>
     <section class="card"><h2>🧭 分程度：對話・動手做・遊戲</h2><p class="muted">打勾記錄完成日期。頭像表示哪個孩子在這個程度。</p>
       ${LV.map((lv, L) => `<div class="lvl"><h3>${lvChip(L)} <small>${lv.d}</small> ${kidsAt(L)}</h3>
-        <b>💬 對話</b><ul>${T.talk[L].map(q => `<li>${esc(q)}</li>`).join('')}</ul>
+        <b>💬 對話</b><ul>${T.talk[L].map(q => `<li>${zt(q)}</li>`).join('')}</ul>
         <b>🛠️ 動手做（工作）</b>${T.work[L].map((w, i) => { const key = `${T.id}:${L}:${i}`, d = S.done[key];
           return `<label class="task"><input type="checkbox" data-key="${key}" ${d ? 'checked' : ''}><span>${esc(w)} ${d ? `<span class="when">✓ ${d}</span>` : ''}</span></label>`; }).join('')}
         <b>🎮 遊戲</b><div class="muted">${gameList(L)}</div>
@@ -966,7 +1010,9 @@ function vGames() {
       <div class="pick" id="pk">${S.kids.map(k => `<button aria-pressed="${players.includes(k.id)}" data-k="${k.id}"><span class="em">${k.av}</span><b>${esc(k.name)}</b>${lvChip(k.L)}</button>`).join('')}</div></section>
     <section class="card"><div class="sec-title"><h2>主題</h2>
       <select id="gt" class="inp">${THEMES.map((t, i) => `<option value="${i}" ${i === ti ? 'selected' : ''}>${t.e} ${esc(t.title)}${i === S.theme ? '（本期）' : ''}</option>`).join('')}</select></div>
-      <div class="acts" id="acts">${ACTS.map(a => `<button data-a="${a.k}"><span class="em">${a.e}</span><b>${a.n}</b><small>${a.d}</small>${a.min ? `<small>${lvChip(a.min)} 以上；較小的孩子自動改玩聽一聽</small>` : ''}</button>`).join('')}</div></section>`;
+      <div class="acts" id="acts">${ACTS.map(a => `<button data-a="${a.k}"><span class="em">${a.e}</span><b>${a.n}</b><small>${a.d}</small>${a.min ? `<small>${lvChip(a.min)} 以上；較小的孩子自動改玩聽一聽</small>` : ''}</button>`).join('')}</div></section>
+    <section class="card"><h2>ㄅ 注音練習</h2><p class="muted">注音另外有兩個遊戲（同一個網站的其他服務）。題目要不要加注音，可在「⚙️ 家長 › 孩子與輔助設定」為每個孩子設定。</p>
+      <div class="acts">${ZY_APPS.map(([e, n, d, u]) => `<a href="${u}" style="text-decoration:none;color:inherit"><button tabindex="-1" style="width:100%"><span class="em">${e}</span><b>${n}</b><small>${d}</small></button></a>`).join('')}</div></section>`;
   $('#pk').onclick = e => {
     const b = e.target.closest('[data-k]'); if (!b) return;
     const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on);
@@ -999,7 +1045,7 @@ function nextTurn() {
 function renderQ() {
   const { k, q, T } = G, A = ACTS.find(a => a.k === q.act);
   const multi = G.kids.length > 1;
-  const isOrder = q.ui === 'order';
+  const isOrder = q.ui === 'order', Z = !!k.zhuyin;
   const list = isOrder ? (G.order = G.order && G.orderFor === q ? G.order : shuffle(q.items.map((it, i) => ({ ...it, i }))), G.orderFor = q, G.order) : q.opts;
   const n = list.length, big = !isOrder && n <= 2;
   const cols = isOrder ? (q.text ? Math.min(n, innerWidth < 600 ? 2 : 4) : Math.min(n, innerWidth < 600 ? 2 : (n > 4 ? 4 : n))) : (q.txt ? (innerWidth < 700 ? 1 : 2) : (n === 4 && innerWidth < 900 ? 2 : n));
@@ -1007,7 +1053,7 @@ function renderQ() {
     let inner = '';
     if (o.grp != null) inner = `<span class="og">${emo(o.e, o.grp)}</span>`;
     else if (o.num != null) inner = `<span class="on">${o.num}</span>${o.dots && o.num <= 10 ? `<span class="od">${'●'.repeat(o.num)}</span>` : ''}`;
-    else inner = `${o.e ? `<span class="oe">${o.e}</span>` : ''}${o.t ? `<span>${esc(o.t)}</span>` : ''}`;
+    else inner = `${o.e ? `<span class="oe">${o.e}</span>` : ''}${o.t ? `<span>${Z ? zyText(esc(o.t)) : esc(o.t)}</span>` : ''}`;
     const cls = isOrder ? (q.text ? 'part' : 'ev') : (q.txt ? 'txt' : '');
     const lab = o.t || (o.num != null ? String(o.num) : '') || (o.grp != null ? o.grp + '個' : '') || o.e || '';
     return `<button class="opt ${cls}" data-o="${i}" aria-label="${esc(lab)}">${inner}</button>`;
@@ -1016,7 +1062,7 @@ function renderQ() {
     <div class="gtop"><button id="gx" aria-label="離開">✕</button><div class="gtitle">${T.e} ${esc(T.title)}・${A.e} ${A.n}</div>
       <div class="gdots">${G.turns.map((_, i) => `<i class="${G.marks[i] || ''} ${i === G.i ? 'cur' : ''}"></i>`).join('')}</div></div>
     <div class="gturn ${multi ? 'multi' : ''}"><span class="em">${k.av}</span>${multi ? '輪到 ' : ''}${esc(k.name)} ${lvChip(k.L)}</div>
-    <div class="gq"><div class="ph"><button class="say" id="gsay" aria-label="再念一次">🔊</button><div class="gprompt">${q.prompt}</div></div>
+    <div class="gq"><div class="ph"><button class="say" id="gsay" aria-label="再念一次">🔊</button><div class="gprompt">${Z ? zyHTML(q.prompt) : q.prompt}</div></div>
       ${q.vis ? `<div class="gvis">${q.vis}</div>` : ''}${q.line ? '<div class="gline" id="gline"></div>' : ''}</div>
     <div class="gopts" id="gopts" style="--cols:${cols}">${list.map(tile).join('')}</div>
     <div id="gexp"></div>
@@ -1050,7 +1096,7 @@ function tap(b) {
     $$('.opt').forEach(x => x !== b && x.classList.add('gone'));
     record(G.tries === 0);
     const praise = pick(['答對了！', '好棒！', '真厲害！', '太好了！', '你做到了！']);
-    if (q.exp) { speak(praise); $('#gexp').innerHTML = `<div class="gexp">💡 ${esc(q.exp)}<br><button class="pri" id="gnext">下一題 ▶</button></div>`; $('#gnext').onclick = advance; }
+    if (q.exp) { speak(praise); $('#gexp').innerHTML = `<div class="gexp">💡 ${G.k.zhuyin ? zyText(esc(q.exp)) : esc(q.exp)}<br><button class="pri" id="gnext">下一題 ▶</button></div>`; $('#gnext').onclick = advance; }
     else { const g = G; speak(praise).then(() => setTimeout(() => G === g && advance(), 300)); }
     return;
   }
@@ -1065,7 +1111,7 @@ function tapOrder(b, pos) {
   if (it.i === G.step) {
     b.classList.remove('hint'); b.classList.add('used'); b.insertAdjacentHTML('beforeend', `<span class="badge">${G.step + 1}</span>`);
     G.step++; G.stepMiss = 0; tone([520 + G.step * 60], .08);
-    if (q.line) $('#gline').textContent = q.items.slice(0, G.step).map(x => x.t).join('');
+    if (q.line) { const t = esc(q.items.slice(0, G.step).map(x => x.t).join('')); $('#gline').innerHTML = G.k.zhuyin ? zyText(t) : t; }
     else speak(it.t);
     if (G.step === q.items.length) {
       stopScan(); record(G.tries === 0); sndOk();
@@ -1242,7 +1288,7 @@ function vParty() {
         <div class="stickers" title="貼紙本">${sk.length ? sk.map(x => `<span class="em ${inWeek(x.d) ? 'new' : ''}">${x.s}</span>`).join('') : '<small>再累積星星就有貼紙（每 10 顆一張）</small>'}</div>
         <button class="pri" data-cheer="${k.id}" style="margin-top:8px">🎉 為${esc(k.name)}慶祝</button></div></section>`;
     }).join('')}</div>
-    <section class="card"><h2>📜 本週經文</h2><p class="vtext" style="font-size:1.6rem">「${esc(T.verse.fp.join(''))}」</p><p class="vref">— ${esc(T.verse.ref)} ${sayBtn(T.verse.fp.join('') + '。' + T.verse.ref)}</p>
+    <section class="card"><h2>📜 本週經文</h2><p class="vtext" style="font-size:1.6rem">「${zt(T.verse.fp.join(''))}」</p><p class="vref">— ${esc(T.verse.ref)} ${sayBtn(T.verse.fp.join('') + '。' + T.verse.ref)}</p>
       <p class="muted">每個孩子用自己的方式說出來：念全節、念短句、做動作，或指圖卡。</p></section>
     <section class="card"><h2>🛠️ 這週完成的工作</h2>${doneWeek.length ? `<ul>${doneWeek.map(x => `<li>${x.t.e} ${LV[x.L].e} ${esc(x.w)} <small>(${x.d})</small></li>`).join('')}</ul>` : '<p class="muted">到「🌍 主題」打勾完成的動手做，就會出現在這裡。</p>'}</section>
     <section class="card k-party"><h2>💡 慶典怎麼辦？</h2><ol>
@@ -1287,6 +1333,7 @@ function renderKids() {
       <label class="ck"><input type="checkbox" data-f="scan" ${k.scan ? 'checked' : ''}>掃描選擇（選項輪流亮起，按大按鈕選）</label>
       <label class="ck"><input type="checkbox" data-f="autoSay" ${k.autoSay ? 'checked' : ''}>自動念題目</label>
       <label class="ck"><input type="checkbox" data-f="slowTap" ${k.slowTap ? 'checked' : ''}>防誤觸（忽略太快的連點）</label>
+      <label class="ck"><input type="checkbox" data-f="zhuyin" ${k.zhuyin ? 'checked' : ''}>遊戲題目加注音</label>
     </div>
     <div class="row" style="margin-top:8px"><button data-del="${k.id}">🗑️ 移除</button>${n > 0 ? `<button data-up="${n}">⬆️ 往前</button>` : ''}</div></div>`).join('')}
   <button class="pri" id="addKid">＋ 新增孩子</button>`;
@@ -1303,7 +1350,7 @@ function renderKids() {
     if (d) { const k = kidById(d.dataset.del); if (S.kids.length > 1 && confirm(`移除 ${k.name}？（學習紀錄會保留）`)) { S.kids = S.kids.filter(x => x !== k); save('kids'); renderKids(); } }
     if (u) { const i = +u.dataset.up; [S.kids[i - 1], S.kids[i]] = [S.kids[i], S.kids[i - 1]]; save('kids'); renderKids(); }
     if (e.target.id === 'addKid') {
-      S.kids.push({ id: 'k' + Date.now().toString(36), name: '新朋友', av: AVATARS[S.kids.length % AVATARS.length], age: 8, L: 3, opts: 4, errorless: false, scan: false, scanMs: 2500, autoSay: false, slowTap: false });
+      S.kids.push({ id: 'k' + Date.now().toString(36), name: '新朋友', av: AVATARS[S.kids.length % AVATARS.length], age: 8, L: 3, opts: 4, errorless: false, scan: false, scanMs: 2500, autoSay: false, slowTap: false, zhuyin: false });
       save('kids'); renderKids();
     }
   };
@@ -1406,7 +1453,7 @@ const HELP_MODS = [['m-today', '🏠', '今天', '一天的節奏'], ['m-circle'
   ['m-board', '✏️', '白板', '畫畫・寫字'], ['m-party', '🎉', '慶典', '每週分享'], ['m-parent', '⚙️', '家長', '設定與紀錄'], ['m-levels', '🌱', '五個程度', '依能力設定']];
 const HELP = `
 <section class="card"><h2>📖 使用手冊</h2>
-  <p>家學堂共有 7 個功能，在畫面上方（手機在下方）切換。右上角有四個按鈕：🔊 開關聲音、🔠 放大字體（適合電子白板）、❓ 打開這本手冊、⛶ 全螢幕。</p>
+  <p>家學堂共有 7 個功能，在畫面上方（手機在下方）切換。右上角有五個按鈕：🔊 開關聲音、🔠 放大字體（適合電子白板）、ㄅ 注音開關（晨圈、故事、經文）、❓ 打開這本手冊、⛶ 全螢幕。</p>
   <div class="toc">${HELP_MODS.map(([id, e, n, d]) => `<button data-jump="${id}"><span class="em">${e}</span>${n}<small class="muted">${d}</small></button>`).join('')}</div>
   <div class="row" style="margin-top:10px"><button id="helpPrint">🖨️ 列印手冊</button></div>
 </section>
@@ -1446,6 +1493,7 @@ const HELP = `
     <li><b>選一個孩子</b>就是自己玩；<b>選兩個以上</b>就是輪流玩，每個人拿到自己程度的題目。</li>
     <li><b>🙋 小幫手提示</b>：按了正確答案會發亮，哥哥姊姊可以用來幫弟弟妹妹。</li>
     <li>玩完會得到 1～3 顆星星，每 10 顆換一張貼紙。鍵盤數字鍵 1～4 可以選答案，Esc 離開。</li>
+    <li><b>ㄅ 注音</b>：題目要不要加注音，在「家長 › 孩子與輔助設定」為每個孩子設定（預設嫩芽、小樹有注音）。遊戲頁下方另有「注音小火車大冒險」和「注音筆順小火車」兩個注音遊戲。</li>
   </ul>
   <div class="tblwrap" style="max-height:none"><table class="tbl"><tr><th>遊戲</th><th>小的孩子</th><th>大的孩子</th></tr>
     <tr><td>🎧 聽一聽</td><td>聽詞語、找圖片</td><td>讀詞語、選詞</td></tr>
@@ -1473,7 +1521,7 @@ const HELP = `
     <li><b>👧 孩子與輔助設定</b>（每個孩子分開設）：名字、頭像、年齡、程度；選項數量（2、3 或 4 選 1）；可以新增孩子。
       <ul><li><b>無錯誤學習</b>：答錯不會有失敗的聲音，錯的選項會淡掉，6 秒沒反應會提示正確答案。</li>
         <li><b>掃描選擇</b>：選項輪流亮起並念出來，按下面的大按鈕（或空白鍵、大型按鍵開關）就能選。</li>
-        <li><b>自動念題目</b>、<b>防誤觸</b>（忽略手不穩時太快的連點）。</li></ul></li>
+        <li><b>自動念題目</b>、<b>防誤觸</b>（忽略手不穩時太快的連點）、<b>遊戲題目加注音</b>。</li></ul></li>
     <li><b>🗓️ 週節奏表</b>：每天的時段可以新增、刪除、排順序，設定活動類型和分鐘數，也能複製到其他天或列印貼在牆上。</li>
     <li><b>📊 學習紀錄</b>：遊戲紀錄、心情紀錄和觀察筆記；匯出 CSV 可以拿來寫自學（實驗教育）的成果報告；備份全部資料、還原備份。</li>
     <li><b>🔊 聲音</b>：選台灣國語的語音、調整說話速度、試聽。</li>
