@@ -562,19 +562,31 @@ function warpQuad(src, quad, maxDim = 2000) {
 /* 去除陰影：估計紙張各處的「白」有多亮（光線分布），再把每個點除以它，讓整張紙亮度一致 */
 function removeShadow(c) {
   const W = c.width, H = c.height, k = Math.min(1, 480 / Math.max(W, H));
-  const sw = Math.max(8, Math.round(W * k)), sh = Math.max(8, Math.round(H * k));
+  const sw = Math.max(8, Math.round(W * k)), sh = Math.max(8, Math.round(H * k)), n = sw * sh;
   const sc = makeCanvas(sw, sh), sg = sc.getContext('2d', { willReadFrequently: true });
   sg.imageSmoothingQuality = 'high'; sg.drawImage(c, 0, 0, sw, sh);
-  const sd = sg.getImageData(0, 0, sw, sh);
+  const sd = sg.getImageData(0, 0, sw, sh), px = sd.data;
   const r = Math.max(2, Math.round(Math.max(sw, sh) * 0.008)), rb = Math.max(1, Math.round(r * 0.7));
+  // 1) 只用亮度估計光線分布（三色各自估計時，暗處紅藍雜訊較多，會讓陰影偏綠）
+  const L = new Float32Array(n);
+  for (let i = 0; i < n; i++) L[i] = 0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2];
+  let bgL = maxFilter(L, sw, sh, r);
+  bgL = boxBlur(boxBlur(bgL, sw, sh, rb), sw, sh, rb);
+  const sorted = Float32Array.from(bgL).sort(), floor = sorted[Math.floor(n * 0.9)] * 0.35;
+  for (let i = 0; i < n; i++) bgL[i] = Math.max(floor, bgL[i]);
+  // 2) 紙張顏色用「平均」估計（只取紙張、不取字跡），對雜訊不敏感
+  const rc = r * 3, den = new Float32Array(n), num = [0, 1, 2].map(() => new Float32Array(n));
+  for (let i = 0; i < n; i++) {
+    if (L[i] < bgL[i] * 0.8) continue; // 字跡、格線不算
+    den[i] = L[i]; for (let ch = 0; ch < 3; ch++) num[ch][i] = px[i * 4 + ch];
+  }
+  const denB = boxBlur(boxBlur(den, sw, sh, rc), sw, sh, rc);
   for (let ch = 0; ch < 3; ch++) {
-    let a = new Float32Array(sw * sh);
-    for (let i = 0; i < a.length; i++) a[i] = sd.data[i * 4 + ch];
-    a = maxFilter(a, sw, sh, r);            // 把字跡、格線「蓋掉」，只留紙張底色
-    a = boxBlur(boxBlur(a, sw, sh, rb), sw, sh, rb); // 讓光線變化平滑
-    // 避免大塊深色印刷（被當成陰影）被洗白：底色不可低於整體紙色的 35%
-    const sorted = Float32Array.from(a).sort(), paper = sorted[Math.floor(sorted.length * 0.9)], floor = paper * 0.35;
-    for (let i = 0; i < a.length; i++) sd.data[i * 4 + ch] = Math.max(floor, a[i]);
+    const nb = boxBlur(boxBlur(num[ch], sw, sh, rc), sw, sh, rc);
+    for (let i = 0; i < n; i++) {
+      const ratio = denB[i] > 1e-3 ? clamp(nb[i] / denB[i], 0.6, 1.6) : 1;
+      px[i * 4 + ch] = clamp(bgL[i] * ratio, 1, 255);
+    }
   }
   sg.putImageData(sd, 0, 0);
   const bc = makeCanvas(W, H), bg = bc.getContext('2d', { willReadFrequently: true });
@@ -582,7 +594,11 @@ function removeShadow(c) {
   const b = bg.getImageData(0, 0, W, H).data;
   const g = c.getContext('2d', { willReadFrequently: true }), img = g.getImageData(0, 0, W, H), d = img.data;
   for (let i = 0; i < d.length; i += 4) {
-    for (let ch = 0; ch < 3; ch++) d[i + ch] = Math.min(255, d[i + ch] * 242 / Math.max(1, b[i + ch]));
+    let R = d[i] * 242 / Math.max(1, b[i]), G = d[i + 1] * 242 / Math.max(1, b[i + 1]), B = d[i + 2] * 242 / Math.max(1, b[i + 2]);
+    // 3) 接近白色、幾乎沒有顏色的紙張 → 校正成中性白，消除殘留的淡色偏；紅藍字跡飽和度高，不受影響
+    const Y = 0.299 * R + 0.587 * G + 0.114 * B, sat = Math.max(R, G, B) - Math.min(R, G, B);
+    if (Y > 150 && sat < 30) { const t = 1 - sat / 30; R += (Y - R) * t; G += (Y - G) * t; B += (Y - B) * t; }
+    d[i] = Math.min(255, R); d[i + 1] = Math.min(255, G); d[i + 2] = Math.min(255, B);
   }
   g.putImageData(img, 0, 0);
   return c;
