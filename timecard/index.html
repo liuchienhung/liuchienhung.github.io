@@ -836,6 +836,11 @@ async function editAndSave(work, quad, ym, side, enh, shadow) {
 /* ---------------- 版面（單位：pt，A4 直式） ---------------- */
 const PAGE = { w: 595.28, h: 841.89, m: 42.52 }; // 邊界 1.5 cm
 function pageLayout(imgs) {
+  // 正反面統一尺寸：取兩張中最大的寬與最大的高，另一張拉成一樣大
+  if (imgs.length === 2) {
+    const mw = Math.max(imgs[0].w, imgs[1].w), mh = Math.max(imgs[0].h, imgs[1].h);
+    imgs = imgs.map(() => ({ w: mw, h: mh }));
+  }
   const CW = PAGE.w - PAGE.m * 2, top = PAGE.m;
   const titleSize = 20, titleH = 46, capSize = 12, capH = 22, gap = 16;
   const availH = PAGE.h - PAGE.m * 2 - titleH;
