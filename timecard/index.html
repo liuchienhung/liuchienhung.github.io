@@ -215,6 +215,7 @@ header.top .home{font-size:14px;text-decoration:none}
     <button class="btn" id="edAuto">🔍 自動偵測</button>
     <button class="btn" id="edFull">⬜ 整張</button>
     <button class="btn" id="edRotate">↻ 旋轉</button>
+    <label class="tg"><input type="checkbox" id="edShadow" checked> 去除陰影</label>
     <label class="tg"><input type="checkbox" id="edEnhance" checked> 掃描效果</label>
   </div>
 </div>
@@ -558,6 +559,46 @@ function warpQuad(src, quad, maxDim = 2000) {
   og.putImageData(img, 0, 0);
   return out;
 }
+/* 去除陰影：估計紙張各處的「白」有多亮（光線分布），再把每個點除以它，讓整張紙亮度一致 */
+function removeShadow(c) {
+  const W = c.width, H = c.height, k = Math.min(1, 480 / Math.max(W, H));
+  const sw = Math.max(8, Math.round(W * k)), sh = Math.max(8, Math.round(H * k));
+  const sc = makeCanvas(sw, sh), sg = sc.getContext('2d', { willReadFrequently: true });
+  sg.imageSmoothingQuality = 'high'; sg.drawImage(c, 0, 0, sw, sh);
+  const sd = sg.getImageData(0, 0, sw, sh);
+  const r = Math.max(2, Math.round(Math.max(sw, sh) * 0.008)), rb = Math.max(1, Math.round(r * 0.7));
+  for (let ch = 0; ch < 3; ch++) {
+    let a = new Float32Array(sw * sh);
+    for (let i = 0; i < a.length; i++) a[i] = sd.data[i * 4 + ch];
+    a = maxFilter(a, sw, sh, r);            // 把字跡、格線「蓋掉」，只留紙張底色
+    a = boxBlur(boxBlur(a, sw, sh, rb), sw, sh, rb); // 讓光線變化平滑
+    // 避免大塊深色印刷（被當成陰影）被洗白：底色不可低於整體紙色的 35%
+    const sorted = Float32Array.from(a).sort(), paper = sorted[Math.floor(sorted.length * 0.9)], floor = paper * 0.35;
+    for (let i = 0; i < a.length; i++) sd.data[i * 4 + ch] = Math.max(floor, a[i]);
+  }
+  sg.putImageData(sd, 0, 0);
+  const bc = makeCanvas(W, H), bg = bc.getContext('2d', { willReadFrequently: true });
+  bg.imageSmoothingQuality = 'high'; bg.drawImage(sc, 0, 0, W, H); // 放大回原尺寸（雙線性內插）
+  const b = bg.getImageData(0, 0, W, H).data;
+  const g = c.getContext('2d', { willReadFrequently: true }), img = g.getImageData(0, 0, W, H), d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    for (let ch = 0; ch < 3; ch++) d[i + ch] = Math.min(255, d[i + ch] * 242 / Math.max(1, b[i + ch]));
+  }
+  g.putImageData(img, 0, 0);
+  return c;
+}
+function maxFilter(a, w, h, r) {
+  const tmp = new Float32Array(a.length), out = new Float32Array(a.length);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    let m = 0; for (let k = Math.max(0, x - r), e = Math.min(w - 1, x + r); k <= e; k++) { const v = a[y * w + k]; if (v > m) m = v; }
+    tmp[y * w + x] = m;
+  }
+  for (let x = 0; x < w; x++) for (let y = 0; y < h; y++) {
+    let m = 0; for (let k = Math.max(0, y - r), e = Math.min(h - 1, y + r); k <= e; k++) { const v = tmp[k * w + x]; if (v > m) m = v; }
+    out[y * w + x] = m;
+  }
+  return out;
+}
 function enhance(c) {
   // 依亮度做色階拉伸：紙張變白、字跡變清楚，顏色（紅/藍章）保留
   const g = c.getContext('2d', { willReadFrequently: true }), img = g.getImageData(0, 0, c.width, c.height), d = img.data;
@@ -581,10 +622,11 @@ function rotateCanvas(c) {
 /* ---------------- 裁切編輯器 ---------------- */
 const Ed = {
   work: null, quad: null, ym: null, side: null, drag: -1, view: null, resolve: null,
-  open(work, quad, ym, side, enh) {
+  open(work, quad, ym, side, enh, shadow) {
     this.work = work; this.quad = quad; this.ym = ym; this.side = side;
     $('#edTitle').textContent = `${titleOf(ym).replace('的打卡紀錄', '')} ${SIDES[side]}`;
     $('#edEnhance').checked = enh !== false;
+    $('#edShadow').checked = shadow !== false;
     $('#editor').hidden = false; document.body.style.overflow = 'hidden';
     requestAnimationFrame(() => this.draw());
     return new Promise(r => { this.resolve = r; });
@@ -657,7 +699,7 @@ const Ed = {
     const H = Ed.work.height; Ed.work = rotateCanvas(Ed.work);
     Ed.quad = orderQuad(Ed.quad.map(([x, y]) => [H - y, x])); Ed.draw();
   };
-  $('#edDone').onclick = () => Ed.close({ work: Ed.work, quad: orderQuad(Ed.quad), enhance: $('#edEnhance').checked });
+  $('#edDone').onclick = () => Ed.close({ work: Ed.work, quad: orderQuad(Ed.quad), enhance: $('#edEnhance').checked, shadow: $('#edShadow').checked });
 })();
 
 /* ---------------- 主畫面 ---------------- */
@@ -752,7 +794,7 @@ $$('.slot').forEach(sl => {
       const r = recOf(ym, side); if (!r) return;
       busy(true, '載入中…');
       try { const bm = await loadBitmap(r.orig); const work = bitmapToCanvas(bm, 2400); busy(false);
-        const s = work.width / r.ow; await editAndSave(work, r.quad.map(p => [p[0] * s, p[1] * s]), ym, side, r.enhance);
+        const s = work.width / r.ow; await editAndSave(work, r.quad.map(p => [p[0] * s, p[1] * s]), ym, side, r.enhance, r.shadow);
       } catch (err) { busy(false); toast('讀取失敗：' + err.message); }
     } else if (act === 'delete') {
       if (!confirm(`確定刪除 ${state.year}年${state.month}月的${SIDES[side]}？`)) return;
@@ -771,16 +813,17 @@ $$('.slot').forEach(sl => {
   } catch (err) { busy(false); toast('無法讀取這張照片：' + err.message); }
 }));
 
-async function editAndSave(work, quad, ym, side, enh) {
-  const res = await Ed.open(work, quad, ym, side, enh);
+async function editAndSave(work, quad, ym, side, enh, shadow) {
+  const res = await Ed.open(work, quad, ym, side, enh, shadow);
   if (!res) return;
   busy(true, '裁切中…'); await nextFrame();
   try {
     let crop = warpQuad(res.work, res.quad);
+    if (res.shadow) crop = removeShadow(crop);
     if (res.enhance) crop = enhance(crop);
     const [cropBlob, origBlob] = await Promise.all([canvasToBlob(crop, 'image/jpeg', 0.9), canvasToBlob(res.work, 'image/jpeg', 0.85)]);
     const rec = { key: `${ym}-${side}`, ym, side, crop: cropBlob, cw: crop.width, ch: crop.height,
-      orig: origBlob, ow: res.work.width, oh: res.work.height, quad: res.quad, enhance: res.enhance, t: Date.now() };
+      orig: origBlob, ow: res.work.width, oh: res.work.height, quad: res.quad, enhance: res.enhance, shadow: res.shadow, t: Date.now() };
     const ok = await Store.put(rec);
     if (!ok) $('#storageWarn').hidden = false;
     renderAll();
@@ -793,6 +836,11 @@ async function editAndSave(work, quad, ym, side, enh) {
 /* ---------------- 版面（單位：pt，A4 直式） ---------------- */
 const PAGE = { w: 595.28, h: 841.89, m: 42.52 }; // 邊界 1.5 cm
 function pageLayout(imgs) {
+  // 正反面統一尺寸：取兩張中最大的寬與最大的高，另一張拉成一樣大
+  if (imgs.length === 2) {
+    const mw = Math.max(imgs[0].w, imgs[1].w), mh = Math.max(imgs[0].h, imgs[1].h);
+    imgs = imgs.map(() => ({ w: mw, h: mh }));
+  }
   const CW = PAGE.w - PAGE.m * 2, top = PAGE.m;
   const titleSize = 20, titleH = 46, capSize = 12, capH = 22, gap = 16;
   const availH = PAGE.h - PAGE.m * 2 - titleH;
