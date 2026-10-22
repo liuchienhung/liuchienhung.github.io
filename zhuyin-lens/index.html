@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>注音放大鏡</title>
+<meta name="description" content="逛街時用手機相機對準招牌、價錢牌，國字旁邊即時標上注音；也可以打字或貼上文字。帶孩子邊買東西邊認字。">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="注音放大鏡">
+<meta name="theme-color" content="#0E7C66">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F3EC; --card:#FFFFFF; --ink:#1F2A24; --muted:#5D6A63; --line:#DCD8CB; --soft:#ECE8DC;
+  --brand:#0E7C66; --brand-ink:#FFFFFF; --brand-soft:#D6EFE8; --accent:#D9822B; --accent-soft:#FBE8D3;
+  --zy:#2F4FA2; --warn:#A04A12; --warn-soft:#FCEBDD;
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 6px 18px rgba(0,0,0,.06);
+  --f-kai:"LXGW WenKai TC","BiauKai","Kaiti TC","DFKai-SB","TW-Kai",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --fs:2.6rem;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121715; --card:#1B221F; --ink:#E7EEEA; --muted:#A3B0A9; --line:#2F3A35; --soft:#232B27;
+  --brand:#5CCBB0; --brand-ink:#0B1F1A; --brand-soft:#183A32; --accent:#F0AC5C; --accent-soft:#3A2A17;
+  --zy:#9DB4FF; --warn:#F3B07A; --warn-soft:#3A2618;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#121715; --card:#1B221F; --ink:#E7EEEA; --muted:#A3B0A9; --line:#2F3A35; --soft:#232B27;
+  --brand:#5CCBB0; --brand-ink:#0B1F1A; --brand-soft:#183A32; --accent:#F0AC5C; --accent-soft:#3A2A17;
+  --zy:#9DB4FF; --warn:#F3B07A; --warn-soft:#3A2618;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding:0 max(16px,env(safe-area-inset-right,0px)) 72px max(16px,env(safe-area-inset-left,0px));
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:760px;margin:0 auto}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:var(--brand)}
+[hidden]{display:none!important}
+
+/* 頁首 */
+.top{display:flex;align-items:center;gap:8px;padding:12px 0 8px;flex-wrap:wrap}
+.top h1{margin:0;font-size:1.3rem;flex:1;min-width:8em;display:flex;align-items:center;gap:6px}
+.tbtn{min-height:40px;min-width:40px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:.95rem}
+.tbtn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--ink);font-weight:700}
+
+/* 分頁 */
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--soft);padding:5px;border-radius:16px;margin:4px 0 12px}
+.tabs button{min-height:46px;border:0;border-radius:12px;background:transparent;font-size:1rem;font-weight:500;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--card);color:var(--ink);font-weight:700;box-shadow:var(--shadow)}
+
+/* 相機 */
+.cam{position:relative;width:100%;height:min(50vh,80vw);min-height:220px;max-height:440px;border-radius:20px;overflow:hidden;background:#0D1210}
+.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.guide{position:absolute;left:6%;right:6%;top:32%;bottom:32%;border:3px solid #fff;border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.35);transition:border-color .2s}
+.cam.v .guide{left:33%;right:33%;top:7%;bottom:7%}
+.guide span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:6px;color:#fff;font-size:.88rem;white-space:nowrap;text-shadow:0 1px 3px #000}
+.cam.v .guide span{bottom:auto;top:100%;margin:6px 0 0}
+.cam.reading .guide{border-color:#FFD27A}
+.cam .idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#F1F5F3;text-align:center;padding:16px;background:linear-gradient(160deg,#173A32,#0D1210)}
+.cam .idle p{margin:0;font-size:.9rem;opacity:.85;max-width:26em}
+.camx{position:absolute;top:10px;right:10px;min-height:36px;padding:0 12px;border-radius:999px;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:.85rem}
+.cam .tag{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.6);color:#fff;border-radius:999px;padding:4px 12px;font-size:.85rem}
+.bigbtn{min-height:52px;padding:0 22px;border-radius:999px;border:0;background:var(--brand);color:var(--brand-ink);font-size:1.1rem;font-weight:700;box-shadow:var(--shadow)}
+.camBar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}
+.camBar .bigbtn{flex:1 1 9em}
+.seg{display:inline-flex;background:var(--soft);border-radius:999px;padding:4px}
+.seg button{min-height:40px;border:0;border-radius:999px;background:transparent;padding:0 14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);font-weight:700;box-shadow:var(--shadow)}
+.zoomRow{display:flex;align-items:center;gap:8px;flex:1 1 100%;font-size:.9rem;color:var(--muted)}
+.zoomRow input{flex:1;accent-color:var(--brand)}
+.status{min-height:1.6em;margin:8px 2px 0;font-size:.92rem;color:var(--muted)}
+.status.err{color:var(--warn)}
+
+/* 結果：國字＋注音（注音在右邊，像課本） */
+.result{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:6px 14px;margin-top:10px;box-shadow:var(--shadow)}
+.empty{color:var(--muted);padding:14px 0;font-size:.95rem}
+.line{padding:10px 0;border-bottom:1px dashed var(--line)}
+.line:last-child{border-bottom:0}
+.lt{display:flex;flex-wrap:wrap;align-items:center;row-gap:.3em;font-family:var(--f-kai);font-size:var(--fs);line-height:1.15;color:var(--ink);min-width:0;overflow-wrap:anywhere}
+.ch{display:inline-flex;align-items:center;background:none;border:0;padding:.04em .02em;margin:0;font:inherit;color:inherit;border-radius:.14em;line-height:inherit}
+.ch:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+.ch:active{background:var(--brand-soft)}
+.hz{display:block}
+.zb{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;position:relative;font-family:var(--f-kai);
+  font-size:.35em;line-height:1.02;margin:0 .95em 0 .1em;min-width:1em;color:var(--zy);border-radius:.25em}
+.zb i{font-style:normal;display:block}
+.zb .zt{position:absolute;left:100%;bottom:.15em;margin-left:.04em}
+.zb .zl{line-height:.62}
+.ch.nz .hz{text-decoration:underline dotted var(--muted);text-underline-offset:.16em;text-decoration-thickness:.04em}
+.ch.nz{margin-right:.15em}
+.oth{font-family:var(--f-body);font-size:.66em;margin:0 .2em;color:var(--ink);font-weight:500;white-space:pre-wrap}
+.sp{display:inline-block;width:.45em}
+.la{display:flex;justify-content:flex-end;gap:6px;margin-top:6px}
+.la button{min-height:38px;min-width:44px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font-size:.9rem}
+/* 考考你：注音先藏起來，點字才出現 */
+.qz .ch:not(.show):not(.nz) .zb i{visibility:hidden}
+.qz .ch:not(.show):not(.nz) .zb{outline:.12em dashed var(--muted);outline-offset:-.02em;background:var(--soft)}
+.fresh{animation:fresh .5s ease}
+@keyframes fresh{from{background:var(--brand-soft)}to{background:transparent}}
+@media (prefers-reduced-motion:reduce){.fresh{animation:none}.guide{transition:none}}
+
+/* 打字 */
+textarea{width:100%;min-height:96px;resize:vertical;border:1px solid var(--line);border-radius:16px;padding:12px 14px;background:var(--card);font-size:1.15rem;line-height:1.5}
+textarea:focus{outline:2px solid var(--brand);outline-offset:1px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.btn{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:.98rem}
+.btn.pri{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center;font-size:.9rem;color:var(--muted)}
+.chips button{min-height:38px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--soft);font-family:var(--f-kai);font-size:1.05rem;color:var(--ink)}
+
+/* 字卡籃 */
+h2{font-size:1.05rem;margin:22px 0 4px}
+.cardbox{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:12px 14px;box-shadow:var(--shadow)}
+.cardnav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cardnav span{color:var(--muted);font-size:.95rem}
+#res-card{border:0;box-shadow:none;padding:4px 0;margin:4px 0;--fs:calc(var(--fsb) * 1.35)}
+#res-card .lt{justify-content:center}
+.small{--fs:2rem}
+.muted{color:var(--muted);font-size:.92rem}
+
+/* 點字跳出的說明 */
+.sheet{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4)}
+.sheet .pane{width:100%;max-width:560px;background:var(--card);border-radius:22px 22px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(0,0,0,.25);max-height:85vh;overflow:auto}
+.sheet .bigch{display:flex;justify-content:center;font-family:var(--f-kai);font-size:5.2rem;line-height:1.1;margin:4px 0 8px}
+.sheet p{margin:8px 0}
+.readings{display:flex;flex-wrap:wrap;gap:8px}
+.readings button{min-height:46px;padding:0 14px;border-radius:14px;border:1px solid var(--line);background:var(--bg);font-family:var(--f-kai);font-size:1.3rem;color:var(--zy)}
+.readings button.on{border:2px solid var(--brand);background:var(--brand-soft);color:var(--ink);font-weight:700}
+.sheet .x{float:right;min-height:40px;min-width:40px;border-radius:999px;border:1px solid var(--line);background:var(--bg)}
+
+dialog{border:0;border-radius:20px;padding:0;max-width:640px;width:calc(100% - 24px);background:var(--card);color:var(--ink);box-shadow:0 10px 40px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.help{padding:18px 18px 8px}
+.fsrow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px 10px;background:var(--soft);border-radius:16px;padding:8px 12px;margin:8px 0}
+.fsrow>span:first-child{grid-column:1/-1;font-size:.95rem}
+.fsdemo{display:flex;justify-content:center;font-family:var(--f-kai);font-size:var(--fs);line-height:1.15;min-width:0;overflow:hidden}
+.help h3{margin:16px 0 4px;font-size:1.05rem}
+.help p,.help li{font-size:.95rem}
+.help ol,.help ul{padding-left:1.3em;margin:6px 0}
+.help .foot{position:sticky;bottom:0;background:var(--card);padding:10px 0 14px;display:flex;justify-content:flex-end}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:.95rem;z-index:30;box-shadow:var(--shadow);max-width:calc(100% - 32px);text-align:center}
+.foot-links{margin:28px 0 0;text-align:center;font-size:.9rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>🔍 注音放大鏡</h1>
+    <button class="tbtn" id="quizBtn" aria-pressed="false" title="把注音藏起來，點字才出現">🙈 考考你</button>
+    <button class="tbtn" id="helpBtn" aria-label="說明與字的大小">？</button>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" id="tab-cam" data-tab="cam" aria-selected="true" aria-controls="pane-cam">📷 看招牌</button>
+    <button role="tab" id="tab-type" data-tab="type" aria-selected="false" aria-controls="pane-type">⌨️ 打字</button>
+    <button role="tab" id="tab-basket" data-tab="basket" aria-selected="false" aria-controls="pane-basket">🧺 字卡<span id="basketN"></span></button>
+  </nav>
+
+  <main>
+    <section id="pane-cam" role="tabpanel" aria-labelledby="tab-cam">
+      <div class="cam" id="camBox">
+        <video id="video" playsinline muted autoplay></video>
+        <div class="guide" id="guide" hidden><span>把字放進框框裡</span></div>
+        <div class="tag" id="frozenTag" hidden>✋ 停住了</div>
+        <button class="camx" id="stopBtn" hidden aria-label="關閉相機">✕ 關相機</button>
+        <div class="idle" id="camIdle">
+          <div style="font-size:2.6rem">🏪</div>
+          <button class="bigbtn" id="camStart">📷 開啟相機</button>
+          <p>對準招牌、價錢牌、包裝上的字，注音就會出現在下面。<br>影像只在手機上辨識，不會上傳。</p>
+        </div>
+      </div>
+      <div class="camBar">
+        <button class="bigbtn" id="freezeBtn" hidden>✋ 停住</button>
+        <button class="bigbtn" id="resumeBtn" hidden>▶ 繼續看</button>
+        <div class="seg" role="group" aria-label="文字方向">
+          <button data-dir="h" aria-pressed="true">橫的字</button>
+          <button data-dir="v" aria-pressed="false">直的字</button>
+        </div>
+        <button class="tbtn" id="torchBtn" aria-pressed="false" hidden>🔦 手電筒</button>
+        <label class="zoomRow" id="zoomRow" hidden>🔎 放大 <input type="range" id="zoom"></label>
+      </div>
+      <div class="status" id="camStatus" role="status" aria-live="polite"></div>
+      <div class="result" id="res-cam"></div>
+    </section>
+
+    <section id="pane-type" role="tabpanel" aria-labelledby="tab-type" hidden>
+      <label for="txt" class="muted">打字、貼上，或按鍵盤上的 🎤 用說的，注音馬上出現：</label>
+      <textarea id="txt" placeholder="例如：今天特價，牛奶買一送一" autocomplete="off"></textarea>
+      <div class="row">
+        <button class="btn" id="pasteBtn">📋 貼上</button>
+        <button class="btn" id="clearBtn">清除</button>
+      </div>
+      <div class="chips" id="chips">試試看：</div>
+      <div class="result" id="res-type"></div>
+    </section>
+
+    <section id="pane-basket" role="tabpanel" aria-labelledby="tab-basket" hidden>
+      <div class="cardbox" id="cardBox">
+        <div class="cardnav">
+          <button class="btn" id="cardPrev" aria-label="上一張">◀</button>
+          <span id="cardPos"></span>
+          <button class="btn" id="cardNext" aria-label="下一張">▶</button>
+        </div>
+        <div class="result qz" id="res-card"></div>
+        <div class="row" style="justify-content:center">
+          <button class="btn pri" id="cardReveal">👀 看注音</button>
+          <button class="btn" id="cardSay">🔊 念</button>
+          <button class="btn" id="cardShuffle">🔀 洗牌</button>
+          <button class="btn" id="cardDel">🗑 拿出來</button>
+        </div>
+      </div>
+      <p class="muted" id="cardEmpty" hidden>字卡籃是空的。看到想記住的詞，按旁邊的 🧺 放進來，回家可以翻卡練習。</p>
+      <h2>籃子裡的字卡</h2>
+      <div class="result small" id="res-basket"></div>
+      <h2>剛剛看到的字</h2>
+      <p class="muted" style="margin:0">相機辨識到的字會自動記在這裡（最多 40 則，只存在這支手機）。</p>
+      <div class="result small" id="res-recent"></div>
+      <div class="row"><button class="btn" id="clearRecent">清除「剛剛看到的字」</button></div>
+    </section>
+  </main>
+
+  <p class="foot-links"><a href="../">← 回服務首頁</a></p>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="pane" role="dialog" aria-modal="true" aria-label="這個字">
+    <button class="x" id="sheetClose" aria-label="關閉">✕</button>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<dialog id="help">
+  <div class="help">
+    <h2 style="margin-top:0">🔍 注音放大鏡怎麼用</h2>
+    <div class="fsrow">
+      <span>字的大小</span>
+      <button class="btn" id="smallerBtn" aria-label="字變小">A−</button>
+      <span class="fsdemo" id="fsDemo"></span>
+      <button class="btn" id="biggerBtn" aria-label="字變大">A+</button>
+    </div>
+    <h3>📷 看招牌</h3>
+    <ol>
+      <li>按「開啟相機」，把招牌、價錢牌、包裝上的字放進<b>白色框框</b>，拿穩一兩秒，注音就會出現在下面。</li>
+      <li>直式招牌（字從上往下排）請切換成「<b>直的字</b>」，框框會變成直的。</li>
+      <li>按「✋ 停住」畫面會停下來，可以慢慢看、慢慢念。按「▶ 繼續看」再找下一個。</li>
+    </ol>
+    <h3>🙈 練習</h3>
+    <ul>
+      <li><b>考考你</b>：注音先藏起來，讓孩子自己念，點字才出現答案。</li>
+      <li><b>點一下字</b>：聽發音，看大字；破音字會列出所有讀音，讀音不對可以點選換掉。</li>
+      <li>看到想記住的詞按 <b>🧺</b> 放進字卡籃，回家在「🧺 字卡」翻卡練習。</li>
+    </ul>
+    <h3>💡 辨識小撇步</h3>
+    <ul>
+      <li>靠近一點讓字大一點，框框裡放一兩行字就好；手機拿正、光線要夠（暗的地方可以開 🔦）。</li>
+      <li>印刷的字最準；藝術字、手寫字、反光的招牌比較難。辨識錯了按 <b>✏️</b> 改字，或直接到「打字」輸入。</li>
+      <li>也可以先用手機相機內建的「原況文字」（iPhone）或 Google 智慧鏡頭複製文字，再貼到「打字」。</li>
+    </ul>
+    <h3>ㄅ 注音從哪裡來</h3>
+    <p>讀音取自教育部《重編國語辭典修訂本》（CC BY-ND 3.0 TW），會依前後文判斷破音字（例如「銀行」的行念 ㄏㄤˊ）。少數詞可能判斷錯，點字就能換。</p>
+    <h3>🔒 隱私</h3>
+    <p>相機影像只在手機上辨識，不會上傳。第一次開相機要下載約 5 MB 的辨識資料，之後會存在手機裡。字卡籃也只存在這支手機的瀏覽器。</p>
+    <div class="foot"><button class="btn pri" id="helpClose">知道了</button></div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="zhuyin-data.js"></script>
+<script>
+'use strict';
+/* ---------- 小工具 ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('zlens1:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('zlens1:' + k, JSON.stringify(v)); } catch (e) { /* 私密瀏覽等情況存不了，不影響使用 */ } }
+};
+let toastT = 0;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 1800);
+}
+
+/* ---------- 注音 ---------- */
+const ZC = window.ZLENS_C || {}, ZW = window.ZLENS_W || {}, MAXW = window.ZLENS_MAXW || 4;
+const HAN = /[\u3400-\u9FFF\uF900-\uFAFF]/;
+const readingsOf = c => (ZC[c] ? ZC[c].split('|') : []);
+/* 把文字切成一個一個字：先找最長的詞（詞表只收讀音和逐字預設不同的詞），找不到就用字的預設讀音 */
+function annotate(text) {
+  const a = [...String(text)], out = [];
+  let i = 0;
+  while (i < a.length) {
+    const c = a[i];
+    if (!HAN.test(c)) { out.push({ c }); i++; continue; }
+    let L = Math.min(MAXW, a.length - i), hit = null;
+    for (; L >= 2; L--) { const w = a.slice(i, i + L).join(''); if (ZW[w]) { hit = { w, r: ZW[w].split(' ') }; break; } }
+    if (hit) { for (let j = 0; j < L; j++) out.push({ c: a[i + j], z: hit.r[j], w: hit.w, han: true }); i += L; }
+    else { out.push({ c, z: readingsOf(c)[0] || '', han: true }); i++; }
+  }
+  return out;
+}
+/* 注音直排在國字右邊：輕聲點在最上面，聲調在最後一個符號右上方 */
+function zbHTML(b) {
+  if (!b) return '';
+  let light = false, tone = '';
+  if (b[0] === '˙') { light = true; b = b.slice(1); }
+  if ('ˊˇˋ'.includes(b.slice(-1))) { tone = b.slice(-1); b = b.slice(0, -1); }
+  return `<span class="zb" aria-hidden="true">${light ? '<i class="zl">˙</i>' : ''}${[...b].map(x => `<i>${x}</i>`).join('')}${tone ? `<i class="zt">${tone}</i>` : ''}</span>`;
+}
+/* 頁面上的每一行字：views[畫面] = 一行一行的文字 */
+const views = { cam: [], type: [], card: [], basket: [], recent: [] };
+const overrides = new Map();   // 使用者改過的讀音：key = 畫面|行|位置
+const shown = new Set();       // 考考你：已經點開的字
+const ACTS = {
+  cam: [['say', '🔊'], ['keep', '🧺'], ['edit', '✏️ 改字']],
+  type: [['say', '🔊'], ['keep', '🧺']],
+  card: [],
+  basket: [['say', '🔊'], ['practice', '🃏 練習'], ['del', '🗑']],
+  recent: [['say', '🔊'], ['keep', '🧺'], ['edit', '✏️']],
+};
+const ACT_LABEL = { say: '念出來', keep: '放進字卡籃', edit: '修改文字', practice: '翻卡練習', del: '拿出字卡籃' };
+const EMPTY = {
+  cam: '把招牌、價錢牌上的字放進框框，注音就會出現在這裡。',
+  type: '在上面打字，注音馬上出現在這裡。',
+  card: '', basket: '還沒有字卡。', recent: '還沒有。開相機看看招牌吧！',
+};
+function lineHTML(view, li, text) {
+  let h = '', oth = '';
+  const flush = () => { if (oth) { h += oth.trim() ? `<span class="oth">${esc(oth.trim())}</span>` : '<span class="sp"></span>'; oth = ''; } };
+  annotate(text).forEach((t, i) => {
+    if (!t.han) { oth += t.c; return; }
+    flush();
+    const key = `${view}|${li}|${i}`, z = overrides.get(key) || t.z;
+    h += `<button type="button" class="ch${z ? '' : ' nz'}${shown.has(key) ? ' show' : ''}" data-k="${key}" aria-label="${esc(t.c + (z ? '，' + z : ''))}"><span class="hz">${esc(t.c)}</span>${zbHTML(z)}</button>`;
+  });
+  flush();
+  const acts = ACTS[view].map(([a, lab]) => `<button type="button" data-act="${a}" data-v="${view}" data-l="${li}" aria-label="${ACT_LABEL[a]}">${lab}</button>`).join('');
+  return `<div class="line"><div class="lt">${h}</div>${acts ? `<div class="la">${acts}</div>` : ''}</div>`;
+}
+function renderView(view, fresh) {
+  const box = $('#res-' + view);
+  if (!box) return;
+  const lines = views[view];
+  box.innerHTML = lines.length ? lines.map((t, li) => lineHTML(view, li, t)).join('') : (EMPTY[view] ? `<div class="empty">${EMPTY[view]}</div>` : '');
+  if (fresh) { box.classList.remove('fresh'); void box.offsetWidth; box.classList.add('fresh'); }
+}
+function setLines(view, lines, fresh) {
+  views[view] = lines;
+  for (const k of [...overrides.keys()]) if (k.startsWith(view + '|')) overrides.delete(k);
+  for (const k of [...shown]) if (k.startsWith(view + '|')) shown.delete(k);
+  renderView(view, fresh);
+}
+
+/* ---------- 念出來 ---------- */
+let voice = null;
+function pickVoice() {
+  if (!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh[-_](Hant|HK)/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang)) || null;
+}
+if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(t) {
+  t = String(t || '').trim();
+  if (!t || !('speechSynthesis' in window)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = 'zh-TW'; if (voice) u.voice = voice; u.rate = 0.85;
+    speechSynthesis.speak(u);
+  } catch (e) { /* 沒有語音也沒關係 */ }
+}
+
+/* ---------- 設定：考考你、字的大小 ---------- */
+const FS = [1.8, 2.2, 2.6, 3.2, 3.9];
+let fsi = Math.min(FS.length - 1, Math.max(0, store.get('fs', 2)));
+function applyFs() {
+  document.documentElement.style.setProperty('--fs', FS[fsi] + 'rem');
+  document.documentElement.style.setProperty('--fsb', FS[fsi] + 'rem');
+  $('#smallerBtn').disabled = fsi === 0; $('#biggerBtn').disabled = fsi === FS.length - 1;
+  $('#fsDemo').innerHTML = annotate('注音').map(t => `<span class="ch show"><span class="hz">${t.c}</span>${zbHTML(t.z)}</span>`).join('');
+}
+$('#smallerBtn').onclick = () => { fsi = Math.max(0, fsi - 1); store.set('fs', fsi); applyFs(); };
+$('#biggerBtn').onclick = () => { fsi = Math.min(FS.length - 1, fsi + 1); store.set('fs', fsi); applyFs(); };
+let quiz = !!store.get('quiz', false);
+function applyQuiz() {
+  $('#quizBtn').setAttribute('aria-pressed', quiz);
+  for (const id of ['#res-cam', '#res-type']) $(id).classList.toggle('qz', quiz);
+}
+$('#quizBtn').onclick = () => {
+  quiz = !quiz; store.set('quiz', quiz);
+  for (const k of [...shown]) if (/^(cam|type)\|/.test(k)) shown.delete(k);
+  applyQuiz(); renderView('cam'); renderView('type');
+  toast(quiz ? '🙈 注音藏起來了，先念念看，點字看答案' : '注音都出現了');
+};
+
+/* ---------- 點字：考考你先揭曉，再點一次看詳細 ---------- */
+let sheetKey = '';
+function tokenAt(key) {
+  const [view, li, i] = key.split('|');
+  const text = views[view] && views[view][+li];
+  if (text == null) return null;
+  const t = annotate(text)[+i];
+  return t && t.han ? { view, li: +li, i: +i, t } : null;
+}
+function openSheet(key) {
+  const k = tokenAt(key);
+  if (!k) return;
+  sheetKey = key;
+  const { t } = k, cur = overrides.get(key) || t.z, all = readingsOf(t.c);
+  if (cur && !all.includes(cur)) all.unshift(cur);
+  let h = `<div class="bigch"><span class="ch show"><span class="hz">${esc(t.c)}</span>${zbHTML(cur)}</span></div>`;
+  h += `<div class="row" style="justify-content:center"><button class="btn pri" data-say="${esc(t.c)}">🔊 念「${esc(t.c)}」</button>`;
+  if (t.w) h += `<button class="btn" data-say="${esc(t.w)}">🔊 念「${esc(t.w)}」</button>`;
+  h += '</div>';
+  if (!all.length) h += '<p class="muted">字典裡找不到這個字的注音（可能是簡體字、很少見的字，或辨識錯了）。可以按 ✏️ 改字。</p>';
+  else if (all.length > 1) {
+    h += `<p>「${esc(t.c)}」是<b>破音字</b>，有 ${all.length} 個讀音。讀音不對的話，點一下換掉：</p>`;
+    h += `<div class="readings">${all.map(r => `<button data-rd="${esc(r)}" class="${r === cur ? 'on' : ''}">${esc(r)}</button>`).join('')}</div>`;
+    if (t.w) h += `<p class="muted">這裡依「${esc(t.w)}」這個詞判斷讀音。</p>`;
+  }
+  $('#sheetBody').innerHTML = h;
+  $('#sheet').hidden = false;
+  speak(t.c);
+}
+function closeSheet() { $('#sheet').hidden = true; sheetKey = ''; }
+$('#sheetClose').onclick = closeSheet;
+$('#sheet').addEventListener('click', e => {
+  if (e.target === $('#sheet')) return closeSheet();
+  const rd = e.target.closest('[data-rd]');
+  if (rd && sheetKey) {
+    const k = tokenAt(sheetKey);
+    if (!k) return;
+    if (rd.dataset.rd === k.t.z) overrides.delete(sheetKey); else overrides.set(sheetKey, rd.dataset.rd);
+    shown.add(sheetKey);
+    renderView(k.view);
+    openSheet(sheetKey);
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('#sheet').hidden) closeSheet(); });
+
+document.addEventListener('click', e => {
+  const say = e.target.closest('[data-say]');
+  if (say) { speak(say.dataset.say); return; }
+  const ch = e.target.closest('.result .ch');
+  if (ch) {
+    const key = ch.dataset.k, box = ch.closest('.result');
+    if (box.classList.contains('qz') && !ch.classList.contains('nz') && !shown.has(key)) {
+      shown.add(key); ch.classList.add('show');
+      const k = tokenAt(key); if (k) speak(k.t.c);
+      return;
+    }
+    openSheet(key);
+    return;
+  }
+  const act = e.target.closest('[data-act]');
+  if (act) lineAction(act.dataset.act, act.dataset.v, +act.dataset.l);
+});
+function lineAction(act, view, li) {
+  const text = views[view][li];
+  if (text == null) return;
+  if (act === 'say') speak(text);
+  else if (act === 'keep') keep(text);
+  else if (act === 'edit') {
+    showTab('type');
+    const ta = $('#txt');
+    ta.value = text; onType();
+    ta.focus();
+  } else if (act === 'practice') { cardIdx = li; showTab('basket'); renderCard(); $('#cardBox').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+  else if (act === 'del') { basket.splice(li, 1); store.set('basket', basket); renderBasket(); }
+}
+
+/* ---------- 分頁 ---------- */
+let curTab = 'cam';
+function showTab(tab) {
+  curTab = tab;
+  for (const b of $$('.tabs [role="tab"]')) b.setAttribute('aria-selected', b.dataset.tab === tab);
+  for (const t of ['cam', 'type', 'basket']) $('#pane-' + t).hidden = t !== tab;
+  if (tab !== 'cam' && cam.live) stopCam();
+  if (tab === 'basket') renderBasket();
+}
+for (const b of $$('.tabs [role="tab"]')) b.onclick = () => showTab(b.dataset.tab);
+
+/* ---------- 打字 ---------- */
+let typeT = 0;
+function onType() {
+  clearTimeout(typeT);
+  typeT = setTimeout(() => setLines('type', $('#txt').value.split(/\n+/).map(s => s.trim()).filter(Boolean)), 60);
+}
+$('#txt').addEventListener('input', onType);
+$('#clearBtn').onclick = () => { $('#txt').value = ''; onType(); $('#txt').focus(); };
+$('#pasteBtn').onclick = async () => {
+  try {
+    const t = await navigator.clipboard.readText();
+    if (t) { $('#txt').value = t; onType(); return; }
+  } catch (e) { /* 瀏覽器不讓讀剪貼簿 */ }
+  $('#txt').focus(); toast('長按輸入框，選「貼上」');
+};
+const SAMPLES = ['特價', '牛奶', '結帳', '出口', '洗手間', '便宜', '銀行', '停車場', '買一送一', '小心地滑'];
+$('#chips').insertAdjacentHTML('beforeend', SAMPLES.map(s => `<button type="button" data-sample="${s}">${s}</button>`).join(''));
+$('#chips').addEventListener('click', e => {
+  const b = e.target.closest('[data-sample]');
+  if (b) { $('#txt').value = b.dataset.sample; onType(); }
+});
+
+/* ---------- 字卡籃 ---------- */
+let basket = store.get('basket', []).filter(x => x && typeof x.t === 'string');
+let recent = store.get('recent', []).filter(x => x && typeof x.t === 'string');
+let cardIdx = 0;
+function updateBasketN() { $('#basketN').textContent = basket.length ? `（${basket.length}）` : ''; }
+function keep(text) {
+  text = String(text).trim();
+  if (!text) return;
+  const had = basket.some(x => x.t === text);
+  basket = [{ t: text, at: Date.now() }, ...basket.filter(x => x.t !== text)].slice(0, 300);
+  store.set('basket', basket); updateBasketN();
+  toast(had ? '🧺 已經在字卡籃裡了' : '🧺 放進字卡籃了');
+}
+function addRecent(lines) {
+  let changed = false;
+  for (const t of lines) {
+    if (recent[0] && recent[0].t === t) continue;
+    recent = [{ t, at: Date.now() }, ...recent.filter(x => x.t !== t)].slice(0, 40);
+    changed = true;
+  }
+  if (changed) store.set('recent', recent);
+}
+function renderCard() {
+  const n = basket.length;
+  $('#cardBox').hidden = !n; $('#cardEmpty').hidden = !!n;
+  if (!n) { setLines('card', []); return; }
+  cardIdx = (cardIdx + n) % n;
+  $('#cardPos').textContent = `${cardIdx + 1} / ${n}`;
+  setLines('card', [basket[cardIdx].t]);
+}
+function renderBasket() {
+  updateBasketN();
+  setLines('basket', basket.map(x => x.t));
+  setLines('recent', recent.map(x => x.t));
+  renderCard();
+}
+$('#cardPrev').onclick = () => { cardIdx--; renderCard(); };
+$('#cardNext').onclick = () => { cardIdx++; renderCard(); };
+$('#cardReveal').onclick = () => { $$('#res-card .ch').forEach(c => { shown.add(c.dataset.k); c.classList.add('show'); }); };
+$('#cardSay').onclick = () => { if (basket[cardIdx]) speak(basket[cardIdx].t); };
+$('#cardShuffle').onclick = () => {
+  for (let i = basket.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [basket[i], basket[j]] = [basket[j], basket[i]]; }
+  store.set('basket', basket); cardIdx = 0; renderBasket(); toast('🔀 洗好了');
+};
+$('#cardDel').onclick = () => {
+  if (!basket[cardIdx]) return;
+  basket.splice(cardIdx, 1); store.set('basket', basket); renderBasket();
+};
+$('#clearRecent').onclick = () => {
+  if (!recent.length || !confirm('清除「剛剛看到的字」？')) return;
+  recent = []; store.set('recent', recent); renderBasket();
+};
+
+/* ---------- 相機＋文字辨識（Tesseract.js，在手機上跑，不上傳） ---------- */
+const TESS_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
+const video = $('#video');
+const cam = {
+  stream: null, track: null, live: false, frozen: false, worker: null, lang: '', params: '',
+  n: 0, miss: 0, hist: [], flip: false, timer: 0, lock: null, resume: false, ready: false, token: 0,
+};
+let dir = store.get('dir', 'h') === 'v' ? 'v' : 'h';
+function setStatus(msg, err) { const s = $('#camStatus'); s.textContent = msg || ''; s.classList.toggle('err', !!err); }
+function camUI() {
+  const on = !!cam.stream;
+  $('#camIdle').hidden = on; $('#guide').hidden = !on;
+  $('#freezeBtn').hidden = !on || cam.frozen; $('#resumeBtn').hidden = !on || !cam.frozen;
+  $('#frozenTag').hidden = !on || !cam.frozen; $('#stopBtn').hidden = !on;
+  $('#camBox').classList.toggle('v', dir === 'v');
+  for (const b of $$('.seg [data-dir]')) b.setAttribute('aria-pressed', b.dataset.dir === dir);
+  if (!on) { $('#torchBtn').hidden = true; $('#zoomRow').hidden = true; $('#camBox').classList.remove('reading'); }
+}
+function loadScript(src) {
+  return new Promise((ok, no) => {
+    const s = document.createElement('script');
+    s.src = src; s.async = true; s.crossOrigin = 'anonymous';
+    s.onload = ok; s.onerror = () => no(new Error('script'));
+    document.head.appendChild(s);
+  });
+}
+function onTessLog(m) {
+  if (!m || !m.status || m.status === 'recognizing text') return;
+  const pct = typeof m.progress === 'number' ? ` ${Math.round(m.progress * 100)}%` : '';
+  if (!cam.ready) setStatus(`準備辨識工具（第一次要下載約 5 MB，之後就很快）…${pct}`);
+}
+/* 一次只做一件辨識工作 */
+let ocrQ = Promise.resolve();
+function ocrRun(canvas, opt) {
+  const p = ocrQ.then(() => doOcr(canvas, opt));
+  ocrQ = p.catch(() => {});
+  return p;
+}
+async function doOcr(canvas, { psm, th }) {
+  const lang = dir === 'v' ? 'chi_tra_vert' : 'chi_tra';
+  if (!window.Tesseract) { cam.ready = false; setStatus('準備辨識工具…'); await loadScript(TESS_URL); }
+  if (!cam.worker) {
+    cam.ready = false;
+    cam.worker = await Tesseract.createWorker(lang, 1, { logger: onTessLog });
+    cam.lang = lang; cam.params = '';
+  } else if (cam.lang !== lang) {
+    cam.ready = false; setStatus(dir === 'v' ? '換成直的字…' : '換成橫的字…');
+    await cam.worker.reinitialize(lang, 1);
+    cam.lang = lang; cam.params = '';
+  }
+  cam.ready = true;
+  const pk = psm + '/' + th;
+  if (cam.params !== pk) {
+    await cam.worker.setParameters({ tessedit_pageseg_mode: psm, thresholding_method: th, preserve_interword_spaces: '1' });
+    cam.params = pk;
+  }
+  const { data } = await cam.worker.recognize(canvas, {}, { text: true, blocks: true });
+  return parseLines(data);
+}
+/* 從辨識結果取出一行一行的字：只留國字和數字，信心太低的丟掉 */
+const KEEP_NONHAN = /^[0-9０-９.,%$:：\/\-+]+$/;
+function tidy(s) {
+  const parts = s.split(/\s+/).filter(Boolean);
+  let out = '';
+  for (const p of parts) {
+    if (!out) { out = p; continue; }
+    const a = out.slice(-1), b = p[0];
+    out += (HAN.test(a) || HAN.test(b)) ? p : ' ' + p;
+  }
+  return out.replace(/^[^\u3400-\u9FFF\uF900-\uFAFF0-9]+/, '').replace(/[^\u3400-\u9FFF\uF900-\uFAFF0-9%]+$/, '');
+}
+function parseLines(data) {
+  const out = [];
+  for (const b of data.blocks || []) for (const p of b.paragraphs || []) for (const l of p.lines || []) {
+    let txt = '', sum = 0, n = 0;
+    for (const w of l.words || []) {
+      const syms = w.symbols && w.symbols.length ? w.symbols : [{ text: w.text, confidence: w.confidence }];
+      for (const s of syms) {
+        const t = (s.text || '').trim();
+        if (!t) continue;
+        if ([...t].every(c => HAN.test(c))) {
+          if (s.confidence < 35) { txt += ' '; continue; }
+          txt += t; sum += s.confidence * t.length; n += t.length;
+        } else if (KEEP_NONHAN.test(t)) txt += t;
+        else txt += ' ';
+      }
+      txt += ' ';
+    }
+    const text = tidy(txt), conf = n ? sum / n : 0;
+    if (!n || !text) continue;
+    if (conf < 60 || (n === 1 && conf < 90)) continue;
+    out.push({ text, conf });
+  }
+  return out;
+}
+/* 從畫面上的白框位置，算出影片裡對應的範圍，切下來放大到適合辨識的大小 */
+function grabCrop() {
+  const vw = video.videoWidth, vh = video.videoHeight;
+  if (!vw || !vh) return null;
+  const box = $('#camBox').getBoundingClientRect(), g = $('#guide').getBoundingClientRect();
+  const s = Math.max(box.width / vw, box.height / vh);
+  const ox = (box.width - vw * s) / 2, oy = (box.height - vh * s) / 2;
+  let x = (g.left - box.left - ox) / s, y = (g.top - box.top - oy) / s, w = g.width / s, h = g.height / s;
+  x = Math.max(0, x); y = Math.max(0, y); w = Math.min(vw - x, w); h = Math.min(vh - y, h);
+  if (w < 16 || h < 16) return null;
+  let k = Math.min(3, Math.max(0.3, 300 / Math.min(w, h)));
+  k = Math.min(k, 1800 / Math.max(w, h));
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(w * k); cv.height = Math.round(h * k);
+  const ctx = cv.getContext('2d', { willReadFrequently: true });
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(video, x, y, w, h, 0, 0, cv.width, cv.height);
+  return cv;
+}
+function otsu(hist) {
+  let total = 0, sumAll = 0;
+  for (let i = 0; i < 256; i++) { total += hist[i]; sumAll += i * hist[i]; }
+  let wb = 0, sb = 0, best = -1, th = 127;
+  for (let t = 0; t < 256; t++) {
+    wb += hist[t]; if (!wb) continue;
+    const wf = total - wb; if (!wf) break;
+    sb += t * hist[t];
+    const mb = sb / wb, mf = (sumAll - sb) / wf, v = wb * wf * (mb - mf) * (mb - mf);
+    if (v > best) { best = v; th = t; }
+  }
+  return th;
+}
+/* 轉灰階、拉開對比；字比背景少，所以「少數的那個顏色」當成字，統一變成白底黑字。
+   接著把框框裡不像字的東西擦掉：碰到框邊的色塊（招牌外的雜物、切到一半的字）、實心方塊、招牌外框，
+   最後只留下字的範圍，四周留白。 */
+function prep(src, flip, raw) {
+  const W = src.width, H = src.height;
+  const im = src.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, W, H), d = im.data, n = W * H;
+  const g = new Uint8ClampedArray(n), hist = new Uint32Array(256);
+  for (let i = 0, j = 0; i < n; i++, j += 4) { const v = (d[j] * 77 + d[j + 1] * 150 + d[j + 2] * 29) >> 8; g[i] = v; hist[v]++; }
+  const cut = n * 0.01;
+  let lo = 0, hi = 255, acc = 0;
+  for (; lo < 254 && (acc += hist[lo]) < cut; lo++);
+  acc = 0;
+  for (; hi > lo + 1 && (acc += hist[hi]) < cut; hi--);
+  const sc = 255 / Math.max(24, hi - lo);
+  const ch = new Uint32Array(256);
+  for (let y = Math.floor(H * 0.2); y < H * 0.8; y++) for (let x = Math.floor(W * 0.1); x < W * 0.9; x++) {
+    const v = (g[y * W + x] - lo) * sc; ch[v < 0 ? 0 : v > 255 ? 255 : v | 0]++;
+  }
+  const t = otsu(ch);
+  let dark = 0, tot = 0;
+  for (let i = 0; i < 256; i++) { tot += ch[i]; if (i <= t) dark += ch[i]; }
+  let inv = dark > tot / 2;
+  if (flip) inv = !inv;
+  const o = new Uint8ClampedArray(n);
+  for (let i = 0; i < n; i++) {
+    let v = (g[i] - lo) * sc; v = v < 0 ? 0 : v > 255 ? 255 : v;
+    o[i] = inv ? 255 - v : v;
+  }
+  const box = raw ? null : isolate(o, W, H, inv ? 255 - t : t);  // 找到字就變成純黑白、只留字
+  const [bx, by, bw, bh] = box || [0, 0, W, H];
+  for (let i = 0, j = 0; i < n; i++, j += 4) { d[j] = d[j + 1] = d[j + 2] = o[i]; d[j + 3] = 255; }
+  const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H;
+  tmp.getContext('2d').putImageData(im, 0, 0);
+  const pad = Math.max(20, Math.round(Math.min(bw, bh) * 0.15)), out = document.createElement('canvas');
+  out.width = bw + pad * 2; out.height = bh + pad * 2;
+  const octx = out.getContext('2d');
+  octx.fillStyle = '#fff'; octx.fillRect(0, 0, out.width, out.height);
+  octx.drawImage(tmp, bx, by, bw, bh, pad, pad, bw, bh);
+  return out;
+}
+/* 找出黑色的連通區塊，擦掉不像字的；成功時 o 變成只有字的黑白圖，回傳字的範圍 [x, y, w, h]，找不到就回傳 null */
+function isolate(o, W, H, t) {
+  const n = W * H, lab = new Int32Array(n), stack = new Int32Array(n);
+  const comps = [];
+  for (let s0 = 0; s0 < n; s0++) {
+    if (lab[s0] || o[s0] > t) continue;
+    const id = comps.length + 1;
+    let sp = 0, x0 = W, y0 = H, x1 = -1, y1 = -1, cnt = 0;
+    stack[sp++] = s0; lab[s0] = id;
+    while (sp) {
+      const p = stack[--sp], x = p % W, y = (p / W) | 0;
+      cnt++;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+      if (x > 0 && !lab[p - 1] && o[p - 1] <= t) { lab[p - 1] = id; stack[sp++] = p - 1; }
+      if (x < W - 1 && !lab[p + 1] && o[p + 1] <= t) { lab[p + 1] = id; stack[sp++] = p + 1; }
+      if (y > 0 && !lab[p - W] && o[p - W] <= t) { lab[p - W] = id; stack[sp++] = p - W; }
+      if (y < H - 1 && !lab[p + W] && o[p + W] <= t) { lab[p + W] = id; stack[sp++] = p + W; }
+    }
+    const w = x1 - x0 + 1, h = y1 - y0 + 1, fill = cnt / (w * h);
+    const edge = x0 === 0 || y0 === 0 || x1 === W - 1 || y1 === H - 1;          // 碰到框邊：招牌外的東西或切到一半的字
+    const frame = (w > W * 0.7 && h > H * 0.5) || (w > W * 0.5 && h > H * 0.7);  // 招牌外框
+    const block = fill > 0.72 && w > 6 && h > 6 && Math.max(w / h, h / w) < 3;    // 實心方塊
+    comps.push({ x0, y0, x1, y1, w, h, keep: !(edge || frame || block || cnt < 6) });
+  }
+  // 估計字的大小：比較大的區塊（字的部件）的中位數
+  const S = Math.min(W, H);
+  const sizes = comps.filter(c => c.keep && Math.max(c.w, c.h) >= S * 0.12).map(c => Math.max(c.w, c.h)).sort((a, b) => a - b);
+  if (!sizes.length) return null;
+  const charH = sizes[sizes.length >> 1];
+  let kx0 = W, ky0 = H, kx1 = -1, ky1 = -1;
+  for (const c of comps) {
+    if (!c.keep) continue;
+    const m = Math.max(c.w, c.h);
+    if (m < Math.max(3, charH * 0.05)) { c.keep = false; continue; }   // 雜點
+    if (m >= charH * 0.3) { if (c.x0 < kx0) kx0 = c.x0; if (c.y0 < ky0) ky0 = c.y0; if (c.x1 > kx1) kx1 = c.x1; if (c.y1 > ky1) ky1 = c.y1; }
+  }
+  if (kx1 - kx0 < 8 || ky1 - ky0 < 8) return null;
+  for (const c of comps) if (c.keep && (c.x1 < kx0 || c.x0 > kx1 || c.y1 < ky0 || c.y0 > ky1)) c.keep = false;  // 字的範圍外面的小東西
+  for (let i = 0; i < n; i++) o[i] = lab[i] && comps[lab[i] - 1].keep ? 0 : 255;
+  return [kx0, ky0, kx1 - kx0 + 1, ky1 - ky0 + 1];
+}
+const psmFor = () => (dir === 'v' ? '5' : '6');
+function sameLines(a, b) { return a.length === b.length && a.every((x, i) => x === b[i]); }
+function showCam(lines) {
+  if (sameLines(lines, views.cam)) return;
+  setLines('cam', lines, true);
+  addRecent(lines);
+}
+/* 即時辨識：每次辨識完馬上看下一張；同一行字在最近幾張裡出現兩次以上才顯示，避免亂跳 */
+function schedule(ms) { clearTimeout(cam.timer); cam.timer = setTimeout(tick, ms); }
+async function tick() {
+  if (!cam.live || cam.frozen || document.hidden) return;
+  const my = cam.token;
+  const raw = grabCrop();
+  if (!raw) { schedule(300); return; }
+  // 平常用「只留字的黑白圖」；連續幾張都找不到字（例如招牌上有陰影），才改用灰階圖試試
+  const gray = cam.miss >= 2 && cam.miss % 2 === 0;
+  let lines;
+  $('#camBox').classList.add('reading');
+  try { lines = await ocrRun(prep(raw, cam.flip, gray), { psm: psmFor(), th: gray ? '2' : '0' }); }
+  catch (e) { return ocrFailed(e); }
+  finally { $('#camBox').classList.remove('reading'); }
+  if (my !== cam.token || !cam.live || cam.frozen) return;
+  if (lines.length) cam.miss = 0;
+  else { cam.miss++; if (cam.miss % 4 === 3) cam.flip = !cam.flip; }
+  const texts = lines.map(l => l.text);
+  cam.hist.push(texts); if (cam.hist.length > 4) cam.hist.shift();
+  const ok = lines.filter(l => l.conf >= 92 || cam.hist.filter(h => h.includes(l.text)).length >= 2).map(l => l.text);
+  if (ok.length) { showCam(ok); setStatus('看到了！點字可以聽發音。拿穩一點可以按「✋ 停住」。'); }
+  else setStatus(views.cam.length ? '找下一個字中…' : '對準文字，拿穩一下…');
+  schedule(200);
+}
+/* 仔細看一張：先用只留字的黑白圖，找不到再試灰階圖、反色，最後試零散文字模式 */
+async function readBest(raw, flip0) {
+  for (const flip of [flip0, !flip0]) for (const [gray, th] of [[false, '0'], [true, '2']]) {
+    const lines = (await ocrRun(prep(raw, flip, gray), { psm: psmFor(), th })).filter(l => l.conf >= 65);
+    if (lines.length) return lines;
+  }
+  if (dir === 'h') return (await ocrRun(prep(raw, flip0, true), { psm: '11', th: '2' })).filter(l => l.conf >= 65);
+  return [];
+}
+async function freeze() {
+  if (!cam.live) return;
+  cam.frozen = true; cam.token++; clearTimeout(cam.timer);
+  video.pause(); camUI();
+  const raw = grabCrop();
+  if (!raw) return;
+  setStatus('停住了，仔細看一下…');
+  const my = cam.token;
+  $('#camBox').classList.add('reading');
+  try {
+    const good = await readBest(raw, cam.flip);
+    if (my !== cam.token) return;
+    if (good.length) { showCam(good.map(l => l.text)); setStatus('停住了，慢慢看。點字可以聽發音；字不對按 ✏️ 改字。'); return; }
+    setStatus(views.cam.length ? '這張沒看清楚，下面是剛剛看到的字。靠近一點再試一次。' : '沒看清楚。靠近一點、把字放進框框裡，再按「▶ 繼續看」。');
+  } catch (e) { ocrFailed(e); }
+  finally { $('#camBox').classList.remove('reading'); }
+}
+function resume() {
+  if (!cam.stream) return;
+  cam.frozen = false; cam.hist = []; cam.token++;
+  video.play().catch(() => {});
+  camUI(); setStatus('對準文字，拿穩一下…'); schedule(150);
+}
+function ocrFailed(e) {
+  console.warn(e);
+  try { if (cam.worker) cam.worker.terminate(); } catch (err) { /* 已經壞了就算了 */ }
+  cam.worker = null; cam.lang = ''; cam.ready = false;
+  setStatus('辨識工具下載失敗，請確認網路後再開一次相機；也可以先用「打字」。', true);
+  stopCam(true);
+}
+async function startCam() {
+  if (cam.stream) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    setStatus('這個瀏覽器不能開相機（請用 https 網址，或改用 Safari、Chrome）。可以先用「打字」。', true);
+    return;
+  }
+  setStatus('開啟相機中…');
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+  } catch (e) {
+    if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) { setStatus('沒有相機權限。請在瀏覽器設定裡允許這個網頁使用相機，或先用「打字」。', true); return; }
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true }); }
+    catch (e2) { setStatus('找不到可以用的相機。可以先用「打字」。', true); return; }
+  }
+  if (curTab !== 'cam') { stream.getTracks().forEach(t => t.stop()); return; }
+  cam.stream = stream; cam.track = stream.getVideoTracks()[0];
+  video.srcObject = stream;
+  try { await video.play(); } catch (e) { /* 有些瀏覽器要等 metadata */ }
+  cam.live = true; cam.frozen = false; cam.hist = []; cam.token++;
+  camUI(); setupCaps(); keepAwake(true);
+  setStatus(cam.ready ? '對準文字，拿穩一下…' : '準備辨識工具…');
+  schedule(300);
+}
+function stopCam(keepMsg) {
+  clearTimeout(cam.timer); cam.token++;
+  if (cam.stream) cam.stream.getTracks().forEach(t => t.stop());
+  cam.stream = null; cam.track = null; cam.live = false; cam.frozen = false;
+  video.srcObject = null;
+  keepAwake(false); camUI();
+  if (!keepMsg) setStatus('');
+}
+function setupCaps() {
+  const t = cam.track, caps = t && t.getCapabilities ? t.getCapabilities() : {};
+  $('#torchBtn').hidden = !caps.torch; $('#torchBtn').setAttribute('aria-pressed', 'false');
+  const z = caps.zoom, row = $('#zoomRow'), inp = $('#zoom');
+  if (z && z.max > z.min) {
+    inp.min = z.min; inp.max = Math.min(z.max, z.min * 8 || z.max); inp.step = z.step || 0.1;
+    inp.value = (t.getSettings && t.getSettings().zoom) || z.min; row.hidden = false;
+  } else row.hidden = true;
+}
+$('#torchBtn').onclick = async () => {
+  const b = $('#torchBtn'), on = b.getAttribute('aria-pressed') !== 'true';
+  try { await cam.track.applyConstraints({ advanced: [{ torch: on }] }); b.setAttribute('aria-pressed', on); } catch (e) { toast('這支手機不能從網頁開手電筒'); }
+};
+$('#zoom').addEventListener('input', () => {
+  if (cam.track) cam.track.applyConstraints({ advanced: [{ zoom: +$('#zoom').value }] }).catch(() => {});
+});
+async function keepAwake(on) {
+  try {
+    if (on && 'wakeLock' in navigator && !cam.lock) { cam.lock = await navigator.wakeLock.request('screen'); cam.lock.addEventListener('release', () => { cam.lock = null; }); }
+    else if (!on && cam.lock) { const l = cam.lock; cam.lock = null; await l.release(); }
+  } catch (e) { /* 不支援就算了 */ }
+}
+$('#camStart').onclick = startCam;
+$('#stopBtn').onclick = () => stopCam();
+$('#freezeBtn').onclick = freeze;
+$('#resumeBtn').onclick = resume;
+for (const b of $$('.seg [data-dir]')) b.onclick = () => {
+  dir = b.dataset.dir; store.set('dir', dir); cam.hist = []; camUI();
+  if (cam.frozen) resume(); else if (cam.live) schedule(100);
+};
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (cam.live) { cam.resume = true; stopCam(true); } }
+  else if (cam.resume) { cam.resume = false; if (curTab === 'cam') startCam(); }
+});
+
+/* ---------- 說明 ---------- */
+const help = $('#help');
+$('#helpBtn').onclick = () => { if (help.showModal) help.showModal(); else help.setAttribute('open', ''); };
+$('#helpClose').onclick = () => { if (help.close) help.close(); else help.removeAttribute('open'); };
+
+/* ---------- 開始 ---------- */
+applyFs(); applyQuiz(); camUI(); updateBasketN();
+renderView('cam'); renderView('type');
+if (!Object.keys(ZC).length) setStatus('注音字典沒有載入，請重新整理頁面。', true);
+/* 給自動測試用：對一張圖片跑一次和「停住」相同的辨識流程 */
+window.ZLens = {
+  annotate,
+  async readImage(img, vertical) {
+    const cv = document.createElement('canvas'); cv.width = img.naturalWidth || img.width; cv.height = img.naturalHeight || img.height;
+    cv.getContext('2d', { willReadFrequently: true }).drawImage(img, 0, 0);
+    const keepDir = dir; dir = vertical ? 'v' : 'h';
+    try { return await readBest(cv, false); } finally { dir = keepDir; }
+  },
+};
+</script>
+</body>
+</html>
