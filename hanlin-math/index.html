@@ -1098,7 +1098,10 @@ $('#kidname').value = NAME;
 $('#savename').addEventListener('click', () => { NAME = $('#kidname').value.trim() || '大寶'; store.set('name', NAME); renderHome(); });
 $('#autoread').checked = autoRead();
 $('#autoread').addEventListener('change', e => store.set('autoread', e.target.checked));
+// 網址帶 #u3 會把火車停在第 3 站（家學堂的國數進度表會用到）
+{ const m = location.hash.match(/^#u(\d+)$/); if (m && UNITS[+m[1] - 1]) store.set('last', +m[1]); }
 renderHome();
+if (/^#u\d+$/.test(location.hash)) { const h = document.querySelector('#map .station.here'); if (h) h.scrollIntoView({ block: 'center' }); }
 </script>
 </body>
 </html>
