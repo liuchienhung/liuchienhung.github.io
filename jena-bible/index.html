@@ -186,7 +186,8 @@ main{max-width:1180px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-le
 .lvl h3{font-size:1.25rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .lvl ul{margin:6px 0;padding-left:1.2em}
 .lvl li{margin:4px 0}
-.task{display:flex;gap:10px;align-items:flex-start;padding:6px 0}
+.task{display:flex;gap:10px;align-items:flex-start;padding:6px 0;flex:1}
+.taskrow{display:flex;gap:8px;align-items:flex-start}
 .task input{width:24px;height:24px;margin-top:3px;flex:none;accent-color:var(--ok)}
 .task .when{font-size:.8rem;color:var(--ok)}
 .storylist{display:grid;gap:8px;counter-reset:s}
@@ -351,6 +352,25 @@ details.pane>div{padding:0 18px 18px}
 .form1 textarea{padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
 @media (max-width:560px){ .crow{grid-template-columns:auto 1fr} .crow>button{grid-column:1/-1} }
 
+/* 作品集與成果報告 */
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:12px}
+.wcard{display:flex;flex-direction:column;padding:0;overflow:hidden;text-align:left;border-radius:16px}
+.wcard img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--soft);display:block}
+.wcard span{display:flex;flex-direction:column;padding:6px 8px;font-size:.9rem}
+.wcard small{color:var(--muted)}
+.wthumb{width:64px;height:64px;object-fit:cover;border-radius:10px}
+#wk button[aria-pressed="true"]{color:#fff}
+.report h1{font-size:1.8rem}
+.report h2{margin-top:18px}
+.report h3{margin-top:10px;font-size:1.1rem}
+.report table{width:100%;border-collapse:collapse;margin:6px 0;font-size:.92rem}
+.report th,.report td{border:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}
+.rfigs{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:8px 0}
+.rfigs figure{margin:0}
+.rfigs img{width:100%;max-height:260px;object-fit:contain;background:var(--soft);border-radius:10px}
+.rfigs figcaption{font-size:.85rem}
+.pre{white-space:pre-wrap}
+
 /* 使用手冊 */
 .toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0 4px}
 .toc button{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:96px;border-radius:18px;font-weight:700}
@@ -370,6 +390,14 @@ details.pane>div{padding:0 18px 18px}
 /* 列印 */
 #print{display:none}
 @media print{
+  #print .rfigs{display:grid;grid-template-columns:repeat(3,1fr);gap:8pt}
+  #print figure{margin:0;break-inside:avoid}
+  #print .rfigs img{width:100%;max-height:150pt;object-fit:contain}
+  #print .pre{white-space:pre-wrap}
+  #print h2{break-after:avoid}
+  #print tr{break-inside:avoid}
+}
+@media print{
   body>*:not(#print){display:none!important}
   #print{display:block;color:#000;font-size:11pt;line-height:1.5}
   #print h1{font-size:18pt} #print h2{font-size:14pt;margin-top:12pt} #print h3{font-size:12pt;margin-top:8pt}
@@ -386,6 +414,7 @@ details.pane>div{padding:0 18px 18px}
     <a data-v="core" href="#/core"><span class="em">📚</span><span>國數</span></a>
     <a data-v="circle" href="#/circle"><span class="em">⭕</span><span>晨圈</span></a>
     <a data-v="theme" href="#/theme"><span class="em">🌍</span><span>主題</span></a>
+    <a data-v="works" href="#/works"><span class="em">📸</span><span>作品</span></a>
     <a data-v="games" href="#/games"><span class="em">🎮</span><span>遊戲</span></a>
     <a data-v="board" href="#/board"><span class="em">✏️</span><span>白板</span></a>
     <a data-v="party" href="#/party"><span class="em">🎉</span><span>慶典</span></a>
@@ -483,7 +512,7 @@ const S = {
   day: store.get('day', { d: '', cur: 0, done: [] }),
   att: store.get('att', {}), weather: store.get('weather', {}), feel: store.get('feel', {}),
   log: store.get('log', []), notes: store.get('notes', []), done: store.get('done', {}),
-  core: store.get('core', {}), coreLog: store.get('coreLog', {}),
+  core: store.get('core', {}), coreLog: store.get('coreLog', {}), report: store.get('report', {}),
   stars: store.get('stars', {}), stickers: store.get('stickers', {})
 };
 if (S.theme >= THEMES.length) S.theme = 0;
@@ -609,10 +638,11 @@ const route = () => (location.hash.replace(/^#\/?/, '') || 'today').split('/');
 function renderView() {
   const [v, a] = route(); hush(); stopTimer();
   if (G) endGame();
+  freeURLs(); closeDlg();
   $('#view').onclick = null; $('#view').onchange = null;
-  $$('#nav a').forEach(x => x.classList.toggle('on', x.dataset.v === v));
+  $$('#nav a').forEach(x => x.classList.toggle('on', x.dataset.v === (v === 'report' ? 'works' : v)));
   document.documentElement.classList.remove('fs');
-  const fn = { today: vToday, circle: vCircle, theme: vTheme, games: vGames, board: vBoard, party: vParty, parent: vParent, help: vHelp, core: vCore }[v] || vToday;
+  const fn = { today: vToday, circle: vCircle, theme: vTheme, games: vGames, board: vBoard, party: vParty, parent: vParent, help: vHelp, core: vCore, works: vWorks, report: vReport }[v] || vToday;
   fn(a); window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', renderView);
@@ -632,7 +662,7 @@ function vToday() {
   const T = curTheme(), D = today(), wd = new Date().getDay(), blocks = S.week[wd] || [];
   const cur = blocks[D.cur], next = blocks.slice(D.cur + 1).find((b, i) => !D.done.includes(D.cur + 1 + i));
   const now = new Date();
-  $('#view').innerHTML = banner(T) + `
+  $('#view').innerHTML = banner(T) + backupReminder() + `
   <section class="card">
     <div class="sec-title"><h2>今天的節奏 · ${now.getMonth() + 1} 月 ${now.getDate()} 日 星期${WD[wd]}</h2>
       <div class="row">${Object.keys(KIND).map(kindChip).join('')}</div></div>
@@ -655,13 +685,14 @@ function vToday() {
     </ol>
   </section>
   <section class="card">
-    <div class="sec-title"><h2>我們的根基小組</h2><a href="#/parent">調整程度與輔助</a></div>
+    <div class="sec-title"><h2>我們的根基小組</h2><div class="row"><button id="tAdd">📸 拍作品</button><a href="#/parent">調整程度與輔助</a></div></div>
     <div class="kids">${S.kids.map(k => `<div class="kid"><span class="av em">${k.av}</span><div><b>${esc(k.name)}</b><div class="row">${lvChip(k.L)}<span class="chip">⭐ ${S.stars[k.id] || 0}</span></div>
       ${coreLine(k)}<a href="#/games" data-solo="${k.id}">🎮 玩主題遊戲</a>${S.core[k.id] ? '' : `　<a href="#/core/${k.id}">📚 國數進度</a>`}</div></div>`).join('')}</div>
   </section>
   <p class="muted" style="text-align:center"><a href="#/help">📖 使用手冊：每個功能怎麼用</a>　·　<a href="../">← 回到服務入口</a></p>`;
   const v = $('#view');
   v.onclick = e => {
+    if (e.target.closest('#tAdd')) return addWorks();
     const t = e.target.closest('[data-timer],[data-cur],[data-done],[data-solo]'); if (!t) return;
     if (t.dataset.solo) { store.set('players', [t.dataset.solo]); return; }
     if (t.dataset.timer) { const b = blocks[+t.dataset.timer]; D.cur = +t.dataset.timer; save('day'); startTimer(b.min, b.e, b.t); vToday(); return; }
@@ -880,13 +911,18 @@ function vTheme(id) {
       ${LV.map((lv, L) => `<div class="lvl"><h3>${lvChip(L)} <small>${lv.d}</small> ${kidsAt(L)}</h3>
         <b>💬 對話</b><ul>${T.talk[L].map(q => `<li>${zt(q)}</li>`).join('')}</ul>
         <b>🛠️ 動手做（工作）</b>${T.work[L].map((w, i) => { const key = `${T.id}:${L}:${i}`, d = S.done[key];
-          return `<label class="task"><input type="checkbox" data-key="${key}" ${d ? 'checked' : ''}><span>${esc(w)} ${d ? `<span class="when">✓ ${d}</span>` : ''}</span></label>`; }).join('')}
+          return `<div class="taskrow"><label class="task"><input type="checkbox" data-key="${key}" ${d ? 'checked' : ''}><span>${esc(w)} ${d ? `<span class="when">✓ ${d}</span>` : ''}</span></label><button class="say" data-photo="${L}:${i}" aria-label="拍作品">📸</button></div>`; }).join('')}
         <b>🎮 遊戲</b><div class="muted">${gameList(L)}</div>
       </div>`).join('')}
     </section>
     <section class="card"><h2>🤸 律動</h2><ul>${T.move.map(m => `<li>${esc(m)}</li>`).join('')}</ul></section>
     <section class="card k-party"><h2>🎉 慶典</h2><p>${esc(T.party)}</p></section>`;
   const sc = $('#setCur'); if (sc) sc.onclick = () => { S.theme = idx; save('theme'); vTheme(id); };
+  $('#view').onclick = e => {
+    const b = e.target.closest('[data-photo]'); if (!b) return;
+    const [L, i] = b.dataset.photo.split(':').map(Number);
+    addWorks({ theme: T.id, title: T.work[L][i].replace(/^\S+\s/, '').slice(0, 40), domain: 'life', kids: S.kids.filter(k => k.L === L).map(k => k.id) });
+  };
   $('#playT').onclick = () => store.set('gtheme', idx);
   $('#printT').onclick = () => printTheme(T);
   $('#view').onchange = e => {
@@ -1421,7 +1457,7 @@ function vBoard() {
       <button data-t="eraser" aria-pressed="${BD.tool === 'eraser'}">🧽 擦</button>
       <button data-t="stamp" aria-pressed="${BD.tool === 'stamp'}">🖼️ 貼圖</button>
       <select id="bbg" class="inp" aria-label="背景">${[['blank', '空白'], ['lines', '橫線'], ['tian', '田字格'], ['grid', '方格'], ['dots', '點點']].map(([v, n]) => `<option value="${v}" ${BD.bg === v ? 'selected' : ''}>${n}</option>`).join('')}</select>
-      <button id="bundo">↩️ 復原</button><button id="bclear">🗑️ 清除</button><button id="bsave">💾 存圖</button><button id="bfs">⛶ 白板全螢幕</button>
+      <button id="bundo">↩️ 復原</button><button id="bclear">🗑️ 清除</button><button id="bsave">💾 存圖</button><button id="bwork">📸 存到作品集</button><button id="bfs">⛶ 白板全螢幕</button>
     </div>
     <div class="stamps" id="bst" ${BD.tool === 'stamp' ? '' : 'hidden'}>${stamps.map(s => `<button data-s="${s}" aria-pressed="${BD.stamp === s}">${s}</button>`).join('')}</div>
     <div class="board" id="board"><canvas id="bgc"></canvas><canvas id="ink"></canvas></div>`;
@@ -1482,6 +1518,10 @@ function vBoard() {
       const c = document.createElement('canvas'); c.width = bgc.width; c.height = bgc.height; const g = c.getContext('2d'); g.drawImage(bgc, 0, 0); g.drawImage(ink, 0, 0);
       const a = document.createElement('a'); a.download = `白板-${ymd()}.png`; a.href = c.toDataURL('image/png'); a.click(); return;
     }
+    else if (b.id === 'bwork') {
+      const c = document.createElement('canvas'); c.width = bgc.width; c.height = bgc.height; const g = c.getContext('2d'); g.drawImage(bgc, 0, 0); g.drawImage(ink, 0, 0);
+      c.toBlob(bl => bl && addWorks({ blobs: [bl], title: '白板作品', domain: 'life' }), 'image/png'); return;
+    }
     else if (b.id === 'bfs') { document.documentElement.classList.toggle('fs'); requestAnimationFrame(resize); return; }
     else return;
     vBoard();
@@ -1491,6 +1531,258 @@ function vBoard() {
   resize();
   if (BD.ro) BD.ro.disconnect();
   BD.ro = new ResizeObserver(() => { if (document.body.contains(wrap)) resize(); else BD.ro.disconnect(); }); BD.ro.observe(wrap);
+}
+
+/* ======================== 作品集・成果報告・備份 ======================== */
+/* 照片存在這台裝置的 IndexedDB（壓縮成最長邊 1600 像素），文字資料仍在 localStorage */
+const DOMAINS = [['zh', '📖', '國語文'], ['ma', '🔢', '數學'], ['life', '🌱', '生活課程'], ['pe', '🤸', '健康與體育'], ['local', '🗣️', '本土語文'],
+  ['bible', '📜', '聖經與品格'], ['soc', '🏘️', '社會'], ['sci', '🔬', '自然科學'], ['art', '🎨', '藝術'], ['comp', '🤝', '綜合活動'], ['en', '🔤', '英語文'], ['other', '🧩', '其他']];
+const domN = id => (DOMAINS.find(d => d[0] === id) || DOMAINS[DOMAINS.length - 1]);
+const IDB = {
+  db: null,
+  open() {
+    if (this.db) return Promise.resolve(this.db);
+    return new Promise((res, rej) => {
+      const r = indexedDB.open('jena-bible', 1);
+      r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('works')) r.result.createObjectStore('works', { keyPath: 'id' }); };
+      r.onsuccess = () => res(this.db = r.result); r.onerror = () => rej(r.error);
+    });
+  },
+  async run(mode, fn) {
+    const d = await this.open();
+    return new Promise((res, rej) => { const t = d.transaction('works', mode), q = fn(t.objectStore('works')); t.oncomplete = () => res(q && 'result' in q ? q.result : undefined); t.onerror = t.onabort = () => rej(t.error); });
+  },
+  all() { return this.run('readonly', s => s.getAll()).then(a => (a || []).sort((x, y) => (y.date + y.id).localeCompare(x.date + x.id))); },
+  get(id) { return this.run('readonly', s => s.get(id)); },
+  put(w) { return this.run('readwrite', s => s.put(w)); },
+  del(id) { return this.run('readwrite', s => s.delete(id)); }
+};
+function loadImg(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+async function shrink(blob, max) {
+  const u = URL.createObjectURL(blob);
+  try {
+    const im = await loadImg(u), k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight));
+    const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.naturalWidth * k)); c.height = Math.max(1, Math.round(im.naturalHeight * k));
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
+    return await new Promise(r => c.toBlob(b => r(b), 'image/jpeg', .82));
+  } finally { URL.revokeObjectURL(u); }
+}
+let URLS = [];
+const objURL = b => { const u = URL.createObjectURL(b); URLS.push(u); return u; };
+function freeURLs() { URLS.forEach(u => URL.revokeObjectURL(u)); URLS = []; }
+const domainOfSubj = sb => sb.id === 'zh' ? 'zh' : sb.id === 'ma' ? 'ma' : /本土|台語|臺語|客語|族語/.test(sb.n) ? 'local' : /英/.test(sb.n) ? 'en' : 'other';
+/* 選照片（或白板圖）後填資料存進作品集；preset 可帶入主題、標題、領域 */
+function addWorks(preset = {}) {
+  if (preset.blobs) return workDlg(preset.blobs, preset);
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true;
+  inp.onchange = () => { const f = [...inp.files].filter(x => /^image\//.test(x.type)); if (f.length) workDlg(f, preset); };
+  inp.click();
+}
+function workDlg(files, preset) {
+  const L = $('#layer'), kids = preset.kids || (coreKid ? [coreKid] : [S.kids[0].id]);
+  const prev = files.slice(0, 6).map(f => `<img src="${objURL(f)}" alt="" class="wthumb">`).join('');
+  L.innerHTML = `<div class="timer" role="dialog" aria-label="加入作品"><div class="card dlg form1"><h2>📸 加入作品（${files.length} 張）</h2>
+    <div class="row" style="margin-bottom:10px">${prev}</div>
+    <label>誰的作品<div class="row" id="wk">${S.kids.map(k => `<button type="button" data-k="${k.id}" aria-pressed="${kids.includes(k.id)}" class="${kids.includes(k.id) ? 'pri' : ''}">${k.av} ${esc(k.name)}</button>`).join('')}</div></label>
+    <label>領域<select class="inp" id="wd">${DOMAINS.map(([id, e, n]) => `<option value="${id}" ${id === (preset.domain || 'life') ? 'selected' : ''}>${e} ${n}</option>`).join('')}</select></label>
+    <label>主題<select class="inp" id="wt"><option value="">（不屬於聖經主題）</option>${THEMES.map((t, i) => `<option value="${t.id}" ${t.id === (preset.theme ?? curTheme().id) ? 'selected' : ''}>${t.e} ${esc(t.title)}</option>`).join('')}</select></label>
+    <label>標題<input class="inp" id="wn" value="${esc(preset.title || '')}" placeholder="例如：七天創造小書"></label>
+    <label>觀察（一句話就好，會放進成果報告）<textarea id="wo" rows="2" placeholder="例如：自己想到要用藍色畫海，還會說出第五天造了魚。"></textarea></label>
+    <label>日期<input class="inp" id="wdt" type="date" value="${ymd()}"></label>
+    <div class="row"><button class="pri" id="wsave">💾 存進作品集</button><button id="wx">取消</button></div><p class="muted" id="wmsg"></p></div></div>`;
+  L.onclick = async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.k) { const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on); b.classList.toggle('pri', on); return; }
+    if (b.id === 'wx') { freeURLs(); return closeDlg(); }
+    if (b.id !== 'wsave') return;
+    const ks = $$('#wk [aria-pressed="true"]').map(x => x.dataset.k);
+    if (!ks.length) { $('#wmsg').textContent = '請選是誰的作品。'; return; }
+    b.disabled = true; $('#wmsg').textContent = '照片壓縮中…';
+    try {
+      if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+      const base = { kids: ks, domain: $('#wd').value, theme: $('#wt').value, title: $('#wn').value.trim().slice(0, 60), note: $('#wo').value.trim().slice(0, 300), date: $('#wdt').value || ymd() };
+      for (let i = 0; i < files.length; i++) {
+        $('#wmsg').textContent = `照片壓縮中… ${i + 1} / ${files.length}`;
+        const blob = await shrink(files[i], 1600), thumb = await shrink(files[i], 360);
+        await IDB.put({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ...base, blob, thumb });
+      }
+      sndOk(); freeURLs(); closeDlg();
+      if (route()[0] === 'works') vWorks(); else { confetti(10); speak('存進作品集了'); }
+    } catch (err) { b.disabled = false; $('#wmsg').textContent = '存檔失敗：裝置空間可能不夠。可以先備份，再刪掉一些舊照片。'; }
+  };
+}
+async function vWorks() {
+  freeURLs();
+  const f = store.get('wf', { k: '', d: '' });
+  let all = [];
+  try { all = await IDB.all(); } catch { }
+  const list = all.filter(w => (!f.k || w.kids.includes(f.k)) && (!f.d || w.domain === f.d));
+  const nm = id => (kidById(id) || { av: '👤', name: '' });
+  const lb = store.get('lastBackup', '');
+  $('#view').innerHTML = `
+    <section class="card"><div class="sec-title"><h2>📸 作品集</h2><button class="pri" id="wadd">＋ 拍照／加作品</button></div>
+      <p class="muted">孩子的畫、手作、觀察日記、白板圖，拍下來加一句觀察。期末會依領域整理進成果報告。照片只存在這台裝置，記得定期備份。</p>
+      <div class="row"><select class="inp" id="fk"><option value="">全部孩子</option>${S.kids.map(k => `<option value="${k.id}" ${f.k === k.id ? 'selected' : ''}>${k.av} ${esc(k.name)}</option>`).join('')}</select>
+        <select class="inp" id="fd"><option value="">全部領域</option>${DOMAINS.map(([id, e, n]) => `<option value="${id}" ${f.d === id ? 'selected' : ''}>${e} ${n}</option>`).join('')}</select>
+        <span class="muted">${list.length} 件</span></div>
+      <div class="wgrid">${list.map(w => `<button class="wcard" data-w="${w.id}"><img src="${objURL(w.thumb || w.blob)}" alt="${esc(w.title || '作品')}">
+        <span><b>${esc(w.title || '（未命名）')}</b><small>${w.date}　${w.kids.map(id => nm(id).av).join('')}　${domN(w.domain)[1]}</small></span></button>`).join('') || '<p class="muted">還沒有作品。按「拍照／加作品」開始。</p>'}</div></section>
+    <section class="card"><div class="sec-title"><h2>📄 期末成果報告</h2><a href="#/report"><button tabindex="-1" class="pri">產生成果報告 ▶</button></a></div>
+      <p class="muted">依領域整理國數進度與檢核、主題工作、作品照片和觀察筆記，可以列印或另存 PDF。</p></section>
+    <section class="card"><h2>💾 備份（含照片）</h2>
+      <p>${lb ? `上次備份：${lb}` : '還沒有備份過。'}　<span class="muted">建議每週一次。把備份檔存到雲端硬碟或傳到 LINE「Keep」，換裝置時用「還原」。</span></p>
+      <div class="row"><button class="pri" id="bkshare">📤 備份並分享（存到雲端硬碟／LINE）</button><button id="bkdl">⬇️ 下載備份檔</button>
+        <label class="chip" style="cursor:pointer;padding:10px 14px">📂 還原備份<input type="file" id="bkrs" accept=".json,application/json" hidden></label></div><p class="muted" id="bkmsg"></p></section>`;
+  const v = $('#view');
+  v.onchange = e => {
+    if (e.target.id === 'fk' || e.target.id === 'fd') { store.set('wf', { k: $('#fk').value, d: $('#fd').value }); vWorks(); }
+    if (e.target.id === 'bkrs') restoreFile(e.target.files[0]);
+  };
+  v.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.id === 'wadd') return addWorks({ kids: f.k ? [f.k] : undefined });
+    if (b.id === 'bkshare') return backupNow(true);
+    if (b.id === 'bkdl') return backupNow(false);
+    if (b.dataset.w) return viewWork(b.dataset.w);
+  };
+}
+async function viewWork(id) {
+  const w = await IDB.get(id); if (!w) return;
+  const L = $('#layer');
+  L.innerHTML = `<div class="timer" role="dialog" aria-label="作品"><div class="card dlg form1">
+    <img src="${objURL(w.blob)}" alt="" style="width:100%;border-radius:14px;max-height:55vh;object-fit:contain;background:var(--soft)">
+    <label>標題<input class="inp" id="vn" value="${esc(w.title)}"></label>
+    <label>領域<select class="inp" id="vd">${DOMAINS.map(([i, e, n]) => `<option value="${i}" ${i === w.domain ? 'selected' : ''}>${e} ${n}</option>`).join('')}</select></label>
+    <label>觀察<textarea id="vo" rows="2">${esc(w.note)}</textarea></label>
+    <label>日期<input class="inp" id="vdt" type="date" value="${esc(w.date)}"></label>
+    <p class="muted">${w.kids.map(k => (kidById(k) || { name: '（已移除）' }).name).join('、')}${w.theme ? '　' + esc((THEMES.find(t => t.id === w.theme) || { title: '' }).title) : ''}</p>
+    <div class="row"><button class="pri" id="vok">儲存</button><button id="vx">關閉</button><button id="vdel">🗑️ 刪除</button></div></div></div>`;
+  L.onclick = async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.id === 'vok') { Object.assign(w, { title: $('#vn').value.trim().slice(0, 60), domain: $('#vd').value, note: $('#vo').value.trim().slice(0, 300), date: $('#vdt').value || w.date }); await IDB.put(w); }
+    if (b.id === 'vdel') { if (!confirm('刪除這件作品？')) return; await IDB.del(w.id); }
+    if (['vok', 'vx', 'vdel'].includes(b.id)) { closeDlg(); vWorks(); }
+  };
+}
+/* ---------- 備份（含照片）與還原 ---------- */
+const toDataURL = b => new Promise((res, rej) => { if (!b) return res(null); const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+async function backupNow(share) {
+  const msg = $('#bkmsg') || { textContent: '' };
+  msg.textContent = '備份整理中…';
+  let works = [];
+  try { works = await IDB.all(); } catch { }
+  const enc = [];
+  for (const w of works) enc.push({ ...w, blob: await toDataURL(w.blob), thumb: await toDataURL(w.thumb) });
+  const name = `家學堂備份-${ymd()}.json`;
+  const text = JSON.stringify({ app: 'jena-bible', v: 2, at: new Date().toISOString(), data: S, works: enc });
+  const file = new File([text], name, { type: 'application/json' });
+  let done = false;
+  if (share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: name }); done = true; } catch (e) { if (e && e.name === 'AbortError') { msg.textContent = '已取消分享。'; return; } }
+  }
+  if (!done) { const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+  store.set('lastBackup', ymd());
+  msg.textContent = `備份完成（${works.length} 件作品，約 ${Math.max(1, Math.round(text.length / 1048576))} MB）。`;
+  if (route()[0] === 'works') setTimeout(vWorks, 1500);
+}
+async function restoreFile(file) {
+  if (!file) return;
+  try {
+    const j = JSON.parse(await file.text()); if (j.app !== 'jena-bible') throw 0;
+    if (!confirm(`用這個備份（${(j.at || '').slice(0, 10)}）取代目前的資料？${j.works ? `\n裡面有 ${j.works.length} 件作品，會加進這台裝置的作品集。` : ''}`)) return;
+    Object.keys(S).forEach(k => { if (j.data[k] !== undefined) { S[k] = j.data[k]; save(k); } });
+    for (const w of j.works || []) {
+      const blob = w.blob ? await (await fetch(w.blob)).blob() : null, thumb = w.thumb ? await (await fetch(w.thumb)).blob() : null;
+      if (blob) await IDB.put({ ...w, blob, thumb: thumb || blob });
+    }
+    if (j.at && j.works) store.set('lastBackup', j.at.slice(0, 10));
+    alert('還原完成'); renderView();
+  } catch { alert('這不是家學堂的備份檔，或檔案不完整。'); }
+}
+/* ---------- 期末成果報告 ---------- */
+function semesterRange() {
+  const n = new Date(), y = n.getFullYear(), m = n.getMonth() + 1;
+  if (m >= 8) return [`${y}-08-01`, `${y + 1}-01-31`];
+  if (m === 1) return [`${y - 1}-08-01`, `${y}-01-31`];
+  return [`${y}-02-01`, `${y}-07-31`];
+}
+function vReport(id) {
+  const k = kidById(id) || kidById(coreKid) || S.kids[0], r = (S.report[k.id] = S.report[k.id] || {});
+  const [a0, b0] = semesterRange();
+  $('#view').innerHTML = `<section class="card form1"><div class="sec-title"><h2>📄 期末成果報告</h2><a href="#/works">← 作品集</a></div>
+    <div class="pick" id="rk">${S.kids.map(x => `<button data-k="${x.id}" aria-pressed="${x.id === k.id}"><span class="em">${x.av}</span><b>${esc(x.name)}</b></button>`).join('')}</div>
+    <div class="form" style="margin-top:12px">
+      <label>期間開始<input type="date" class="inp" id="ra" value="${esc(r.a || a0)}"></label>
+      <label>期間結束<input type="date" class="inp" id="rb" value="${esc(r.b || b0)}"></label>
+      <label>年級／階段<input type="text" class="inp" id="rg" value="${esc(r.g || '國小一年級')}"></label>
+      <label>教學者<input type="text" class="inp" id="rt" value="${esc(r.t || '')}" placeholder="例如：父母共同教學"></label>
+    </div>
+    <label style="margin-top:10px">家長總評（這學期的成長、特別的進步）<textarea id="rs1" rows="3">${esc(r.s1 || '')}</textarea></label>
+    <label>下學期方向（要加強的、想嘗試的）<textarea id="rs2" rows="3">${esc(r.s2 || '')}</textarea></label>
+    <div class="row"><button class="pri" id="rgo">📄 產生報告</button><button id="rpr" disabled>🖨️ 列印／另存 PDF</button></div></section>
+    <div id="rout"></div>`;
+  const keep = () => { Object.assign(r, { a: $('#ra').value, b: $('#rb').value, g: $('#rg').value.slice(0, 30), t: $('#rt').value.slice(0, 40), s1: $('#rs1').value.slice(0, 2000), s2: $('#rs2').value.slice(0, 2000) }); save('report'); };
+  $('#view').onchange = e => { if (e.target.closest('.form1')) keep(); };
+  $('#view').onclick = async e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.k) { keep(); coreKid = b.dataset.k; return vReport(b.dataset.k); }
+    if (b.id === 'rgo') { keep(); b.disabled = true; $('#rout').innerHTML = '<p class="muted">整理中…</p>'; $('#rout').innerHTML = await buildReport(k, r); b.disabled = false; $('#rpr').disabled = false; $('#rout').scrollIntoView({ behavior: 'smooth' }); }
+    if (b.id === 'rpr') { $('#print').innerHTML = $('#rout').innerHTML; setTimeout(() => window.print(), 300); }
+  };
+}
+async function buildReport(k, r) {
+  const a = r.a, b = r.b, inR = d => d && d >= a && d <= b;
+  let works = [];
+  try { works = (await IDB.all()).filter(w => w.kids.includes(k.id) && inR(w.date)).reverse(); } catch { }
+  const plan = S.core[k.id];
+  const att = Object.entries(S.att).filter(([d, o]) => inR(d) && o[k.id]).length;
+  const logs = S.log.filter(x => x.c === k.id && inR(x.d));
+  const days = id => Object.entries(S.coreLog).filter(([d, o]) => inR(d) && o[k.id] && o[k.id][id]).length;
+  const doneTasks = Object.entries(S.done).filter(([key, d]) => inR(d) && +key.split(':')[1] === k.L).map(([key, d]) => { const [tid, L, i] = key.split(':'), t = THEMES.find(z => z.id === tid); return t ? { t, w: t.work[+L][+i], d } : null; }).filter(Boolean);
+  const thIds = new Set([...works.map(w => w.theme), ...logs.map(x => x.th), ...doneTasks.map(x => x.t.id)].filter(Boolean));
+  const themes = THEMES.filter(t => thIds.has(t.id));
+  const notes = S.notes.filter(x => x.c === k.id && inR(x.d));
+  const fig = list => list.length ? `<div class="rfigs">${list.map(w => `<figure><img src="${objURL(w.blob)}" alt=""><figcaption><b>${esc(w.title || '作品')}</b>　${w.date}${w.note ? '<br>' + esc(w.note) : ''}</figcaption></figure>`).join('')}</div>` : '';
+  const coreTable = sb => {
+    const us = sb.units.filter(u => u.st && (inR(u.d0) || inR(u.d1) || u.st === 1));
+    if (!us.length) return '';
+    return `<p>教材：${esc(sb.src || '—')}　練習 ${days(sb.id)} 天　學會 ${us.filter(u => u.st === 2).length} 個單元</p>
+      <table><tr><th>單元</th><th>狀態</th><th>我會（檢核）</th><th>觀察</th></tr>${us.map(u => `<tr><td>${esc(u.t)}</td><td>${UST[u.st]}${u.d1 ? '<br>' + u.d1 : ''}</td>
+        <td>${u.can.map((c, i) => (u.chk && u.chk.length ? CK[u.chk[i] ?? 0][1] + '：' : '') + esc(c)).join('<br>')}</td><td>${esc(u.note || '')}</td></tr>`).join('')}</table>`;
+  };
+  const sections = [];
+  const used = new Set();
+  for (const [id, e, n] of DOMAINS) {
+    let html = '';
+    const ws = works.filter(w => w.domain === id);
+    if (plan) plan.subj.filter(sb => domainOfSubj(sb) === id).forEach(sb => { html += `<h3>${sb.e} ${esc(sb.n)}</h3>` + coreTable(sb); });
+    if (id === 'life' && doneTasks.length) html += `<h3>主題工作（世界導向）</h3><ul>${doneTasks.map(x => `<li>${x.t.e} ${esc(x.t.title)}：${esc(x.w)}（${x.d}）</li>`).join('')}</ul>`;
+    if (id === 'bible' && themes.length) html += `<h3>聖經主題與背誦經文</h3><ul>${themes.map(t => `<li>${t.e} ${esc(t.title)}（${esc(t.bible)}）：「${esc(t.verse.fp.join(''))}」${esc(t.verse.ref)}</li>`).join('')}</ul>`;
+    html += fig(ws);
+    if (html) { sections.push(`<h2>${e} ${n}</h2>${html}`); used.add(id); }
+  }
+  return `<section class="card report">
+    <h1>${esc(k.name)}　學習成果報告</h1>
+    <p>期間：${a} ～ ${b}　${esc(r.g || '')}　教學者：${esc(r.t || '—')}</p>
+    <p>課程方式：以耶拿教育的四種基本活動（晨圈對話、遊戲、主題工作、慶典）安排每日節奏，結合聖經故事為主題的統整學習；國語、數學以教科書為主線，依單元檢核學習成效。</p>
+    <h2>一、學習概況</h2>
+    <table><tr><th>晨圈參與</th><td>${att} 天</td></tr>
+      ${plan ? plan.subj.map(sb => `<tr><th>${sb.e} ${esc(sb.n)}練習</th><td>${days(sb.id)} 天</td></tr>`).join('') : ''}
+      <tr><th>學習遊戲</th><td>${logs.length} 次（第一次就答對 ${logs.reduce((s, x) => s + x.ok, 0)} / ${logs.reduce((s, x) => s + x.n, 0)} 題）</td></tr>
+      <tr><th>作品</th><td>${works.length} 件</td></tr>
+      <tr><th>主題</th><td>${themes.map(t => t.e + ' ' + esc(t.title)).join('、') || '—'}</td></tr></table>
+    <h2>二、各領域學習</h2>${sections.join('') || '<p class="muted">這段期間還沒有紀錄。</p>'}
+    <h2>三、觀察紀錄</h2>${notes.length ? `<ul>${notes.map(x => `<li>${x.d}：${esc(x.text)}</li>`).join('')}</ul>` : '<p>—</p>'}
+    <h2>四、家長總評</h2><p class="pre">${esc(r.s1 || '—')}</p>
+    <h2>五、下學期方向</h2><p class="pre">${esc(r.s2 || '—')}</p>
+    <p class="muted" style="margin-top:16px">由「橄欖栽子家學堂」整理，${ymd()}</p></section>`;
+}
+function backupReminder() {
+  const lb = store.get('lastBackup', ''), has = S.log.length || Object.keys(S.core).length || S.notes.length;
+  if (!has) return '';
+  const daysAgo = lb ? Math.floor((new Date(ymd()) - new Date(lb)) / 864e5) : 99;
+  if (daysAgo < 7) return '';
+  return `<p class="note" style="margin-bottom:16px">💾 ${lb ? `已經 ${daysAgo} 天沒有備份了。` : '還沒有備份過。'}紀錄和照片只存在這台裝置，清掉瀏覽器資料就會不見。<a href="#/works">去備份 ▶</a></p>`;
 }
 
 /* ======================== 慶典 ======================== */
@@ -1627,7 +1919,7 @@ function renderLog() {
   const days = Object.keys(S.feel).sort().slice(-14).reverse();
   box.innerHTML = `
     <div class="row"><select id="lk" class="inp"><option value="">全部孩子</option>${S.kids.map(k => `<option value="${k.id}" ${f === k.id ? 'selected' : ''}>${k.av} ${esc(k.name)}</option>`).join('')}</select>
-      <button id="csv">⬇️ 匯出 CSV</button><button id="bk">💾 備份全部資料</button><label class="chip" style="cursor:pointer">📂 還原備份<input type="file" id="rs" accept=".json" hidden></label></div>
+      <button id="csv">⬇️ 匯出 CSV</button><button id="bk">💾 備份全部資料（含照片）</button><label class="chip" style="cursor:pointer">📂 還原備份<input type="file" id="rs" accept=".json,application/json" hidden></label></div>
     <h3 style="margin-top:14px">遊戲紀錄（最近 300 筆）</h3>
     <div class="tblwrap"><table class="tbl"><tr><th>日期</th><th>孩子</th><th>主題</th><th>遊戲</th><th>程度</th><th>自己答對</th><th>星星</th></tr>
       ${rows.map(x => `<tr><td>${x.d}</td><td>${esc(nm(x.c))}</td><td>${esc(thN(x.th))}</td><td>${esc(actN(x.a))}</td><td>${LV[x.L] ? LV[x.L].e : ''}</td><td>${x.ok}/${x.n}</td><td>${'⭐'.repeat(x.st)}</td></tr>`).join('') || '<tr><td colspan="7" class="muted">還沒有紀錄</td></tr>'}</table></div>
@@ -1650,13 +1942,8 @@ function renderLog() {
     Object.entries(S.done).forEach(([key, d]) => { const [tid, L, i] = key.split(':'), t = THEMES.find(z => z.id === tid); if (t) lines.push([d, '', t.title, '動手做', LV[+L].n, '', '', t.work[+L][+i]].map(q).join(',')); });
     download('﻿' + lines.join('\r\n'), `家學堂紀錄-${ymd()}.csv`, 'text/csv');
   };
-  $('#bk').onclick = () => download(JSON.stringify({ app: 'jena-bible', v: 1, at: new Date().toISOString(), data: S }, null, 1), `家學堂備份-${ymd()}.json`, 'application/json');
-  $('#rs').onchange = async e => {
-    const file = e.target.files[0]; if (!file) return;
-    try { const j = JSON.parse(await file.text()); if (j.app !== 'jena-bible') throw 0; if (!confirm('用備份檔取代目前的資料？')) return;
-      Object.keys(S).forEach(k => { if (j.data[k] !== undefined) { S[k] = j.data[k]; save(k); } }); renderView(); alert('還原完成'); }
-    catch { alert('這不是家學堂的備份檔'); }
-  };
+  $('#bk').onclick = () => backupNow(false);
+  $('#rs').onchange = e => restoreFile(e.target.files[0]);
   $('#wipe').onclick = () => { if (confirm('清除所有遊戲紀錄、星星、貼紙、心情、筆記和國數的每日練習紀錄？（孩子設定、週節奏表和國數進度表會保留）')) { ['log', 'notes', 'feel', 'att', 'weather', 'done', 'coreLog'].forEach(k => S[k] = Array.isArray(S[k]) ? [] : {}); S.stars = {}; S.stickers = {}; save('log', 'notes', 'feel', 'att', 'weather', 'done', 'coreLog', 'stars', 'stickers'); renderLog(); } };
 }
 function download(text, name, type) {
@@ -1677,11 +1964,11 @@ function renderVoice() {
 }
 
 /* ======================== 使用手冊 ======================== */
-const HELP_MODS = [['m-today', '🏠', '今天', '一天的節奏'], ['m-core', '📚', '國數', '課本主線'], ['m-circle', '⭕', '晨圈', '全家圍坐'], ['m-theme', '🌍', '主題', '12 個聖經故事'], ['m-games', '🎮', '遊戲', '混齡輪流玩'],
+const HELP_MODS = [['m-today', '🏠', '今天', '一天的節奏'], ['m-core', '📚', '國數', '課本主線'], ['m-circle', '⭕', '晨圈', '全家圍坐'], ['m-theme', '🌍', '主題', '12 個聖經故事'], ['m-works', '📸', '作品', '作品集・成果報告'], ['m-games', '🎮', '遊戲', '混齡輪流玩'],
   ['m-board', '✏️', '白板', '畫畫・寫字'], ['m-party', '🎉', '慶典', '每週分享'], ['m-parent', '⚙️', '家長', '設定與紀錄'], ['m-levels', '🌱', '五個程度', '依能力設定']];
 const HELP = `
 <section class="card"><h2>📖 使用手冊</h2>
-  <p>家學堂共有 8 個功能，在畫面上方（手機在下方）切換。右上角有五個按鈕：🔊 開關聲音、🔠 放大字體（適合電子白板）、ㄅ 注音開關（晨圈、故事、經文）、❓ 打開這本手冊、⛶ 全螢幕。</p>
+  <p>家學堂共有 9 個功能，在畫面上方（手機在下方）切換。右上角有五個按鈕：🔊 開關聲音、🔠 放大字體（適合電子白板）、ㄅ 注音開關（晨圈、故事、經文）、❓ 打開這本手冊、⛶ 全螢幕。</p>
   <div class="toc">${HELP_MODS.map(([id, e, n, d]) => `<button data-jump="${id}"><span class="em">${e}</span>${n}<small class="muted">${d}</small></button>`).join('')}</div>
   <div class="row" style="margin-top:10px"><button id="helpPrint">🖨️ 列印手冊</button></div>
 </section>
@@ -1725,6 +2012,12 @@ const HELP = `
     <li>打開一個主題可以看到：<b>聖經故事</b>全文；<b>分程度的內容</b>（5 個程度各有對話題和動手做的工作，旁邊顯示哪個孩子在哪個程度，工作打勾後會記下完成日期）；<b>律動與慶典</b>建議。</li>
     <li><b>⭐ 設為本期主題</b>：首頁、晨圈和遊戲都會改成這個主題。</li>
     <li><b>🖨️ 列印主題教案</b>：包含各程度的活動、題目，以及給每個孩子寫觀察紀錄的欄位。</li>
+  </ul></section>
+<section class="card mod" id="m-works"><h2><span class="em">📸</span>作品：作品集・成果報告・備份<a href="#/works">前往 ▶</a></h2>
+  <ul>
+    <li><b>拍照／加作品</b>：孩子的畫、手作、觀察日記拍下來，選是誰的、哪個領域（國語文、數學、生活課程、健康與體育、本土語文、聖經與品格…），寫一句觀察。主題頁每個動手做旁邊的 📸、白板的「存到作品集」、今天頁的「拍作品」都可以直接加。</li>
+    <li><b>期末成果報告</b>：選孩子和期間，自動依領域整理國數進度與檢核、主題工作、背誦經文、作品照片和觀察筆記；再寫上家長總評與下學期方向，就能列印或另存 PDF。</li>
+    <li><b>備份（含照片）</b>：照片和紀錄只存在這台裝置。按「備份並分享」可以直接存到雲端硬碟或 LINE Keep；換裝置時用「還原」。超過一週沒備份，今天頁會提醒。</li>
   </ul></section>
 <section class="card mod" id="m-games"><h2><span class="em">🎮</span>遊戲：混齡輪流玩<a href="#/games">前往 ▶</a></h2>
   <ul>
