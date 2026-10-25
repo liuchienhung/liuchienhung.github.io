@@ -276,6 +276,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
+<script src="../tw-speech.js"></script>
 <script src="zhuyin-data.js"></script>
 <script>
 'use strict';
@@ -367,8 +368,7 @@ function setLines(view, lines, fresh) {
 let voice = null;
 function pickVoice() {
   if (!('speechSynthesis' in window)) return;
-  const vs = speechSynthesis.getVoices();
-  voice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh[-_](Hant|HK)/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang)) || null;
+  voice = TWSpeech.pickVoice(); // 台灣國語優先；香港語音會講廣東話，不會自動選到
 }
 if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 function speak(t) {
@@ -376,11 +376,14 @@ function speak(t) {
   if (!t || !('speechSynthesis' in window)) return;
   try {
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(t);
-    u.lang = 'zh-TW'; if (voice) u.voice = voice; u.rate = 0.85;
+    const u = new SpeechSynthesisUtterance(TWSpeech.text(t)); // 2件100元 → 兩件一百元
+    u.lang = TWSpeech.langOf(voice); if (voice) u.voice = voice; u.rate = 0.85;
     speechSynthesis.speak(u);
   } catch (e) { /* 沒有語音也沒關係 */ }
 }
+
+// 單獨念一個字，語音會用最常見的讀音；這個字在詞裡念法不同（例如「銀行」的「行」）就念整個詞
+const sayToken = t => speak(t.w || t.c);
 
 /* ---------- 設定：考考你、字的大小 ---------- */
 const FS = [1.8, 2.2, 2.6, 3.2, 3.9];
@@ -432,7 +435,7 @@ function openSheet(key) {
   }
   $('#sheetBody').innerHTML = h;
   $('#sheet').hidden = false;
-  speak(t.c);
+  sayToken(t);
 }
 function closeSheet() { $('#sheet').hidden = true; sheetKey = ''; }
 $('#sheetClose').onclick = closeSheet;
@@ -458,7 +461,7 @@ document.addEventListener('click', e => {
     const key = ch.dataset.k, box = ch.closest('.result');
     if (box.classList.contains('qz') && !ch.classList.contains('nz') && !shown.has(key)) {
       shown.add(key); ch.classList.add('show');
-      const k = tokenAt(key); if (k) speak(k.t.c);
+      const k = tokenAt(key); if (k) sayToken(k.t);
       return;
     }
     openSheet(key);

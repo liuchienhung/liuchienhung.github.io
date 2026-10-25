@@ -275,6 +275,7 @@ rt.mask{color:var(--sun);font-weight:700}
 </div>
 <div class="confetti" id="confetti"></div>
 
+<script src="../tw-speech.js"></script>
 <script>
 const KID = '大寶';
 const VOICE_SAMPLE = `${KID}你好，我是龜龜老師。我們今天一起玩注音和數學，好不好？加油喔！`;
@@ -293,23 +294,11 @@ const store = {
 /* ---------- 聲音 ---------- */
 let soundOn = store.get('sound', true), zhVoice = null, actx = null, voices = [];
 let voicePref = store.get('voice', ''), rate = store.get('rate', 0.88);
-// 台灣國語的語音排前面；大陸普通話、粵語排後面，不會自動選到
-function twScore(v) {
-  const s = (v.lang + ' ' + v.name).toLowerCase();
-  let sc = 0;
-  if (/zh[-_]tw|cmn[-_]hant[-_]tw|hant[-_]tw/.test(s)) sc += 100;
-  if (/臺灣|台灣|taiwan|國語/.test(s)) sc += 60;
-  if (/hsiaochen|hsiaoyu|yating|mei-?jia|zhiwei|yunjhe|hanhan/.test(s)) sc += 20;
-  if (/natural|online|neural|enhanced|premium|高品質/.test(s)) sc += 15;
-  if (/zh[-_]hk|yue|cantonese|粵|廣東/.test(s)) sc -= 80;
-  if (/zh[-_]cn|cmn[-_]hans|普通话|mainland/.test(s)) sc -= 40;
-  return sc;
-}
-const isTW = v => twScore(v) >= 60;
+// 台灣國語的語音排前面；粵語排最後、不會自動選到（共用 ../tw-speech.js）
+const isTW = TWSpeech.isTaiwanVoice;
 function loadVoice() {
-  voices = speechSynthesis.getVoices().filter(v => /^(zh|cmn|yue)/i.test(v.lang)).sort((a, b) => twScore(b) - twScore(a));
-  const tw = voices.filter(isTW);
-  zhVoice = voices.find(v => v.voiceURI === voicePref) || tw[0] || null;
+  voices = TWSpeech.chineseVoices();
+  zhVoice = TWSpeech.pickVoice(voicePref);
   renderVoicePanel();
 }
 if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
@@ -337,8 +326,9 @@ function renderVoicePanel() {
 function speak(text) {
   if (!soundOn || !('speechSynthesis' in window) || !text) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text.replace(/[ㄅ-ㄩˊˇˋ˙]+/g, ''));
-  u.lang = zhVoice ? zhVoice.lang : 'zh-TW'; u.rate = rate; u.pitch = 1.1; if (zhVoice) try { u.voice = zhVoice; } catch {}
+  // 注音符號念成相近的國字（ㄅ → 波），數字照台灣念法（2 條 → 兩條）
+  const u = new SpeechSynthesisUtterance(TWSpeech.text(text, { zhuyin: 'read' }));
+  u.lang = TWSpeech.langOf(zhVoice); u.rate = rate; u.pitch = 1.1; if (zhVoice) try { u.voice = zhVoice; } catch {}
   speechSynthesis.speak(u);
 }
 function chime(freqs, dur = .12, type = 'sine', vol = .12) {
@@ -364,7 +354,7 @@ function renderSoundBtns() { ['#soundBtn', '#soundBtn2'].forEach(s => { $(s).tex
 
 $('#voiceSel').addEventListener('change', e => {
   voicePref = e.target.value; store.set('voice', voicePref);
-  zhVoice = voices.find(v => v.voiceURI === voicePref) || null;
+  zhVoice = TWSpeech.pickVoice(voicePref);
   speak(VOICE_SAMPLE);
 });
 $('#voiceTest').addEventListener('click', () => {
@@ -386,7 +376,7 @@ const PRAISE_RETRY = [
   '答對了！你沒有放棄，好勇敢！', '再想一次就成功了，這就是最厲害的學習方法！',
   '你自己找到答案了，真的好棒！', '錯了再試，還答對了，龜龜為你拍拍手！'
 ];
-const TRY_AGAIN = ['差一點點喔，沒關係，我們再想一次。', '嗯～再看一次看看，你可以的！', '不要急，慢慢來，龜龜陪你。'];
+const TRY_AGAIN = ['差一點點喔，沒關係，我們再想一次。', '嗯～再看一次，你可以的！', '不要急，慢慢來，龜龜陪你。'];
 const REVEAL = ['這題有一點難，沒關係，我們一起看答案：', '我們一起來看看喔：'];
 const AFTER_REVEAL = '現在你學會了，下次一定記得！';
 
@@ -465,7 +455,8 @@ function genZh1() {
       say: `${w}。${w[0]}，的第一個注音，是哪一個？`,
       options: opts.map(s => ({ value: s, html: s, cls: 'sym' })), answer: ans,
       hint: `把「${w[0]}」慢慢念出來，注意嘴巴一開始的樣子喔。`,
-      explain: `「${w[0]}」的注音是 ${z}，第一個是 ${ans}。`
+      explain: `「${w[0]}」的注音是 ${z}，第一個是 ${ans}。`,
+      sayExp: `「${w[0]}」的第一個注音是 ${ans}。`
     };
   });
 }
@@ -475,7 +466,9 @@ function genZh2() {
     say: `${w}。哪一個拼音是對的？`,
     options: shuffle([ok, b1, b2]).map(z => ({ value: z, html: zyHtml(z) })), answer: ok,
     hint: '一個一個比：先看符號一樣嗎？再看聲調的小記號。',
-    explain: `「${w}」是 ${ok}。`
+    explain: `「${w}」是 ${ok}。`,
+    // 拼讀：ㄇ、ㄠ，貓；ㄇ、ㄧ，咪
+    sayExp: `「${w}」的拼音：${ok.split(' ').map((z, i) => `${z}，${[...w][i]}`).join('；')}。`
   }));
 }
 const TONE_PATH = ['', 'M6 15 H50', 'M6 26 L50 4', 'M6 8 Q22 34 50 6', 'M6 4 L50 26'];
@@ -499,7 +492,8 @@ function genZh3() {
       html: `<svg viewBox="0 0 56 30" aria-hidden="true"><path d="${TONE_PATH[n]}"/></svg><span>${TONE_NAME[n]}</span><span class="mk">${TONE_MARK[n]}</span>` })),
     answer: t, layout: 'four',
     hint: '用手比比看：一聲平平走、二聲往上爬、三聲先下再上、四聲往下跳。',
-    explain: `「${w[i]}」是${TONE_NAME[t]}，寫成 ${s}。`
+    explain: `「${w[i]}」是${TONE_NAME[t]}，寫成 ${s}。`,
+    sayExp: `「${w[i]}」是${TONE_NAME[t]}。`
   }));
 }
 function genZh4() {
@@ -519,7 +513,8 @@ function genZh4() {
       say: `拼一拼，拼起來是哪一個？`,
       options: shuffle([...set]).map(z => ({ value: z, html: z, cls: 'sym' })), answer: ans,
       hint: `照順序排好：${c} 先，然後是 ${[...f].join('、')}。`,
-      explain: `${parts} 拼成 ${ans}，就像「${ch}」（${full}）。`
+      explain: `${parts} 拼成 ${ans}，就像「${ch}」（${full}）。`,
+      sayExp: `${[c, ...f].join('、')}，拼起來就是「${ch}」。`
     };
   });
 }
@@ -769,7 +764,7 @@ $('#opts').addEventListener('click', e => {
       $('#opts').children[k].classList.add('reveal');
       const msg = pick(REVEAL);
       coach(`${msg}${q.explain}<br>${AFTER_REVEAL}`, true);
-      speak(msg + q.explain + AFTER_REVEAL);
+      speak(msg + (q.sayExp || q.explain) + AFTER_REVEAL);
       finishQ();
     }
   }

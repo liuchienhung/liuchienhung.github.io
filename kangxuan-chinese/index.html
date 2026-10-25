@@ -290,6 +290,7 @@ h2{font-size:1.1rem;margin:18px 0 8px}
       <button class="primary" id="soundtest" type="button">測試聲音</button>
       <label><input type="checkbox" id="sfx"> 遊戲音效</label>
     </div>
+    <p id="voiceTip" hidden style="font-size:.85rem;line-height:1.5;color:#B5541B;margin:6px 0 0"></p>
     <div class="row" role="radiogroup" aria-label="注音發音方式">
       <span>注音念法：</span>
       <label><input type="radio" name="vmode" value="char"> 相近國字</label>
@@ -330,6 +331,7 @@ h2{font-size:1.1rem;margin:18px 0 8px}
 
 </div>
 
+<script src="../tw-speech.js"></script>
 <script>
 // ===== 課程資料 =====
 const DEFAULT_LESSONS = [
@@ -377,7 +379,7 @@ const WORDS = [
   ['鬼','ㄍㄨㄟˇ','👻'],['褲','ㄎㄨˋ','👖'],['哭','ㄎㄨ','😭'],['白','ㄅㄞˊ','⚪'],['黑','ㄏㄟ','⚫'],
   ['雞','ㄐㄧ','🐔'],['魚','ㄩˊ','🐟','fe'],['雨','ㄩˇ','🌧️'],['西瓜','ㄒㄧ ㄍㄨㄚ','🍉','e'],['鞋','ㄒㄧㄝˊ','👟'],['蝴蝶','ㄏㄨˊ ㄉㄧㄝˊ','🦋'],
   ['腳','ㄐㄧㄠˇ','🦶'],['橋','ㄑㄧㄠˊ','🌉'],['雪','ㄒㄩㄝˇ','❄️'],['月','ㄩㄝˋ','🌙'],['家','ㄐㄧㄚ','🏡'],['爺爺','ㄧㄝˊ ˙ㄧㄝ','👴'],
-  ['葉','ㄧㄝˋ','🍃'],['七','ㄑㄧ','7️⃣'],['蝦','ㄒㄧㄚ','🦐','e'],['企鵝','ㄑㄧˇ ㄜˊ','🐧'],['吳郭魚','ㄨˊ ㄍㄨㄛ ㄩˊ','🐟','fe'],
+  ['葉','ㄧㄝˋ','🍃'],['七','ㄑㄧ','7️⃣'],['蝦','ㄒㄧㄚ','🦐','e'],['企鵝','ㄑㄧˋ ㄜˊ','🐧'],['吳郭魚','ㄨˊ ㄍㄨㄛ ㄩˊ','🐟','fe'],
   ['豬','ㄓㄨ','🐷'],['車','ㄔㄜ','🚃','f'],['書','ㄕㄨ','📚'],['獅','ㄕ','🦁'],['紙','ㄓˇ','📄'],['尺','ㄔˇ','📏'],['肉','ㄖㄡˋ','🍖','e'],
   ['牛','ㄋㄧㄡˊ','🐮'],['狗','ㄍㄡˇ','🐶'],['猴','ㄏㄡˊ','🐒'],['手','ㄕㄡˇ','✋'],['球','ㄑㄧㄡˊ','⚽'],['氣球','ㄑㄧˋ ㄑㄧㄡˊ','🎈'],
   ['樹','ㄕㄨˋ','🌳'],['水','ㄕㄨㄟˇ','💧'],['茶','ㄔㄚˊ','🍵'],['口','ㄎㄡˇ','👄'],['日','ㄖˋ','☀️'],
@@ -518,8 +520,8 @@ const zyHTML = zy => `<span class="zy">${zy.split(' ').map(s => `<span>${s}</spa
 let zhVoice = null;
 function loadVoice() {
   if (!('speechSynthesis' in window)) return;
-  const vs = speechSynthesis.getVoices();
-  zhVoice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh/i.test(v.lang)) || null;
+  zhVoice = TWSpeech.pickVoice(); // 台灣國語優先，不會選到粵語
+  TWSpeech.showTip(document.getElementById('voiceTip'));
 }
 if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
 let curAudio = null;
@@ -530,10 +532,10 @@ function stopAll() {
 function speak(text, onend) {
   if (!('speechSynthesis' in window)) { if (onend) setTimeout(onend, 300); return false; }
   stopAll();
-  const u = new SpeechSynthesisUtterance(text);
+  const u = new SpeechSynthesisUtterance(TWSpeech.text(text));
   if (onend) u.onend = onend;
   speak.last = u; // 保留參照，避免部分瀏覽器回收後不觸發 onend
-  u.lang = 'zh-TW'; u.rate = 0.85; u.volume = 1; u.pitch = 1.1; if (zhVoice) u.voice = zhVoice;
+  u.lang = TWSpeech.langOf(zhVoice); u.rate = 0.85; u.volume = 1; u.pitch = 1.1; if (zhVoice) u.voice = zhVoice;
   speechSynthesis.speak(u);
   return true;
 }
