@@ -276,7 +276,8 @@ class QuizApp {
         );
         const totalQuestions = singleCount + multiCount + aiSingleCount + aiMultiCount;
 
-        if (this.liveServiceCount) this.liveServiceCount.textContent = '11';
+        // 已上線服務：數首頁上的服務卡片，新增服務時不用再改這裡
+        if (this.liveServiceCount) this.liveServiceCount.textContent = document.querySelectorAll('.service-card.active-service').length.toString();
         if (this.subjectTotalCount) this.subjectTotalCount.textContent = subjectCount.toString();
         if (this.questionTotalCount) this.questionTotalCount.textContent = totalQuestions.toString();
         if (this.cardSubjectCount) this.cardSubjectCount.textContent = subjectCount.toString();
@@ -420,7 +421,7 @@ class QuizApp {
             button.className = 'unit-btn';
             button.innerHTML = `
                 <strong>${unit.unit}</strong><br>
-                <small>${unit.questions.length} 道題目</small>
+                <small>${unit.questions.length} 題</small>
             `;
             button.addEventListener('click', () => this.startQuiz(index, 'single'));
             this.singleUnitButtons.appendChild(button);
@@ -440,7 +441,7 @@ class QuizApp {
             allUnitsButton.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
             allUnitsButton.innerHTML = `
                 <strong>全部單元綜合測驗</strong><br>
-                <small>${totalSingle} 道題目</small>
+                <small>${totalSingle} 題</small>
             `;
             allUnitsButton.addEventListener('click', () => this.startQuiz(-1, 'single'));
             this.singleUnitButtons.appendChild(allUnitsButton);
@@ -452,7 +453,7 @@ class QuizApp {
             button.className = 'unit-btn';
             button.innerHTML = `
                 <strong>${unit.unit}</strong><br>
-                <small>${unit.questions.length} 道題目</small>
+                <small>${unit.questions.length} 題</small>
             `;
             button.addEventListener('click', () => this.startQuiz(index, 'multi'));
             this.multiUnitButtons.appendChild(button);
@@ -472,7 +473,7 @@ class QuizApp {
             allMultiBtn.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
             allMultiBtn.innerHTML = `
                 <strong>全部單元綜合測驗</strong><br>
-                <small>${totalMulti} 道題目</small>
+                <small>${totalMulti} 題</small>
             `;
             allMultiBtn.addEventListener('click', () => this.startQuiz(-1, 'multi'));
             this.multiUnitButtons.appendChild(allMultiBtn);
@@ -884,7 +885,7 @@ class QuizApp {
             this.timerElement.textContent = `剩餘時間：${min}:${sec.toString().padStart(2, '0')}`;
             if (remaining <= 0) {
                 clearInterval(this.timerInterval);
-                alert('時間到，自動提交測驗');
+                alert('時間到，自動交卷');
                 this.submitQuiz();
             }
             remaining--;

@@ -825,7 +825,7 @@ function setDots(i, total, okList = []) {
   $('#dots').innerHTML = total ? Array.from({ length: total }, (_, k) => `<i class="${okList[k] ? 'ok' : k < i ? 'on' : ''}"></i>`).join('') : '';
 }
 function sayThen(text, fn) { const ok = alive(G); speak(text, () => ok() && fn && fn()); }
-function cheer() { return one(['答對了！', '好棒！', '太厲害了！', '完全正確！', '你好聰明！']); }
+function cheer() { return one(['答對了！', '好棒！', '太厲害了！', '答對囉！', '你好聰明！']); }
 
 function startGame(id) {
   endGame(); stopAll();
