@@ -321,6 +321,36 @@ details.pane>div{padding:0 18px 18px}
 .gprompt .zb,.vtext .zb,.slide .zb,.opt .zb{color:var(--ink);opacity:.8}
 .tools button[aria-pressed="true"]{border-color:var(--olive);background:var(--olive-soft)}
 
+/* 國數主線 */
+.crow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--line)}
+.crow .ce{font-size:2.2rem}
+.wdots{display:inline-flex;gap:4px}
+.wdots i{font-style:normal;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.75rem;background:var(--soft);color:var(--muted)}
+.wdots i.on{background:var(--ok);color:#fff}
+.wdots i.td{outline:2px solid var(--star);outline-offset:1px}
+.chip.lk{text-decoration:none;padding:6px 12px;border:1px solid var(--line);font-size:.9rem}
+.cprog{margin:12px 0}
+.bar{height:12px;border-radius:999px;background:var(--soft);overflow:hidden;margin:4px 0}
+.bar i{display:block;height:100%;background:var(--ok)}
+.units{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.unit{border:2px solid var(--line);border-left-width:8px;border-radius:16px;padding:10px 12px}
+.unit.now{border-left-color:var(--k-play)} .unit.ok{border-left-color:var(--ok)}
+.unit.cur{box-shadow:0 0 0 3px color-mix(in srgb,var(--star) 45%,transparent)}
+.unit .uh{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.unit .uc{font-size:.9rem;margin:6px 0}
+.unit .ub{margin-top:6px}
+.unit .ub button{min-height:40px;padding:4px 10px}
+.addu{margin-top:12px}
+.addu summary{cursor:pointer;font-weight:700;color:var(--olive)}
+.dlg{max-width:640px;width:100%;max-height:88vh;overflow:auto;margin:0}
+.ckrow{display:grid;gap:6px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.ckrow .row{flex-wrap:nowrap;gap:6px}
+.ckrow .row button{flex:1;min-width:0;padding:8px 4px}
+.ckrow button.sel{border-color:var(--star);background:var(--hint);color:var(--hint-ink)}
+.form1 label{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;color:var(--muted)}
+.form1 textarea{padding:8px 10px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+@media (max-width:560px){ .crow{grid-template-columns:auto 1fr} .crow>button{grid-column:1/-1} }
+
 /* 使用手冊 */
 .toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:12px 0 4px}
 .toc button{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:96px;border-radius:18px;font-weight:700}
@@ -353,6 +383,7 @@ details.pane>div{padding:0 18px 18px}
   <a class="brand" href="#/today" aria-label="橄欖栽子家學堂首頁"><span class="em">🫒</span><b>橄欖栽子家學堂</b></a>
   <nav id="nav" aria-label="主要功能">
     <a data-v="today" href="#/today"><span class="em">🏠</span><span>今天</span></a>
+    <a data-v="core" href="#/core"><span class="em">📚</span><span>國數</span></a>
     <a data-v="circle" href="#/circle"><span class="em">⭕</span><span>晨圈</span></a>
     <a data-v="theme" href="#/theme"><span class="em">🌍</span><span>主題</span></a>
     <a data-v="games" href="#/games"><span class="em">🎮</span><span>遊戲</span></a>
@@ -406,7 +437,7 @@ const KIND = {
   talk: { e: '💬', n: '對話' }, play: { e: '🎈', n: '遊戲' }, work: { e: '🛠️', n: '工作' }, party: { e: '🎉', n: '慶典' }, life: { e: '🍎', n: '生活' }
 };
 const kindChip = k => `<span class="chip kind k-${k}"><span class="em">${KIND[k].e}</span>${KIND[k].n}</span>`;
-const GO = { circle: '晨圈', move: '律動', theme: '主題', games: '遊戲', zhuyin: '注音', board: '白板', party: '慶典' };
+const GO = { core: '國數', circle: '晨圈', move: '律動', theme: '主題', games: '遊戲', zhuyin: '注音', board: '白板', party: '慶典' };
 const ZY_APPS = [['🚂', '注音小火車大冒險', '聽音找符號、拼音、聲調（康軒首冊）', '../kangxuan-chinese/'], ['✍️', '注音筆順小火車', '37 個注音符號在田字格練筆順', '../zhuyin-stroke/']];
 const AVATARS = ['🚂', '🐢', '🐣', '🐑', '🦁', '🐟', '🌟', '🪲', '🐻', '🦋', '🐰', '🐬', '🦒', '🌻', '🚀', '🐱'];
 const STICKERS = ['🐑', '🕊️', '🌈', '⭐', '🐟', '🍞', '🌾', '🦁', '🐋', '👑', '🦋', '🌷', '🐣', '🚢', '🎵', '🌻', '🍇', '🐢', '🚂', '🪲', '🌙', '☀️', '🫒', '🍎'];
@@ -428,11 +459,11 @@ function defaultWeek() {
     B('🤸', '律動時間', 'play', 15, 'move'),
     B('🍎', '點心・洗手・上廁所', 'life', 15),
     mid,
-    ...(mid.go === 'games' ? [zy] : []),
+    ...(mid.go === 'core' ? [zy] : []),
     B('🎈', '自由遊戲・戶外', 'play', 40),
     extra || B('🙏', '晚圈：今天學到什麼・禱告', 'talk', 10, 'circle')
   ];
-  const course = B('📚', '課程時間：國語／數學（各自的程度）', 'work', 30, 'games');
+  const course = B('📚', '國語・數學主線（照課本進度）', 'work', 40, 'core');
   const zy = B('ㄅ', '注音時間：注音小火車・筆順練習（嫩芽、小樹）', 'work', 15, 'zhuyin');
   return {
     1: day(course), 2: day(course),
@@ -452,10 +483,13 @@ const S = {
   day: store.get('day', { d: '', cur: 0, done: [] }),
   att: store.get('att', {}), weather: store.get('weather', {}), feel: store.get('feel', {}),
   log: store.get('log', []), notes: store.get('notes', []), done: store.get('done', {}),
+  core: store.get('core', {}), coreLog: store.get('coreLog', {}),
   stars: store.get('stars', {}), stickers: store.get('stickers', {})
 };
 if (S.theme >= THEMES.length) S.theme = 0;
 S.kids.forEach(k => { if (k.zhuyin === undefined) k.zhuyin = k.L >= 1 && k.L <= 2; });
+/* 舊的週節奏表：國語數學的時段改連到國數主線 */
+Object.values(S.week).forEach(day => (day || []).forEach(b => { if (b.go === 'games' && /國語|數學/.test(b.t)) b.go = 'core'; }));
 function save(...keys) { for (const k of keys) store.set(k, S[k]); }
 function today() { const d = ymd(); if (S.day.d !== d) { S.day = { d, cur: 0, done: [] }; save('day'); } return S.day; }
 const curTheme = () => THEMES[S.theme];
@@ -578,7 +612,7 @@ function renderView() {
   $('#view').onclick = null; $('#view').onchange = null;
   $$('#nav a').forEach(x => x.classList.toggle('on', x.dataset.v === v));
   document.documentElement.classList.remove('fs');
-  const fn = { today: vToday, circle: vCircle, theme: vTheme, games: vGames, board: vBoard, party: vParty, parent: vParent, help: vHelp }[v] || vToday;
+  const fn = { today: vToday, circle: vCircle, theme: vTheme, games: vGames, board: vBoard, party: vParty, parent: vParent, help: vHelp, core: vCore }[v] || vToday;
   fn(a); window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', renderView);
@@ -623,7 +657,7 @@ function vToday() {
   <section class="card">
     <div class="sec-title"><h2>我們的根基小組</h2><a href="#/parent">調整程度與輔助</a></div>
     <div class="kids">${S.kids.map(k => `<div class="kid"><span class="av em">${k.av}</span><div><b>${esc(k.name)}</b><div class="row">${lvChip(k.L)}<span class="chip">⭐ ${S.stars[k.id] || 0}</span></div>
-      <a href="#/games" data-solo="${k.id}">🎮 玩主題遊戲</a></div></div>`).join('')}</div>
+      ${coreLine(k)}<a href="#/games" data-solo="${k.id}">🎮 玩主題遊戲</a>${S.core[k.id] ? '' : `　<a href="#/core/${k.id}">📚 國數進度</a>`}</div></div>`).join('')}</div>
   </section>
   <p class="muted" style="text-align:center"><a href="#/help">📖 使用手冊：每個功能怎麼用</a>　·　<a href="../">← 回到服務入口</a></p>`;
   const v = $('#view');
@@ -875,6 +909,199 @@ function printTheme(T) {
     <h2>律動</h2><ul>${T.move.map(m => `<li>${esc(m)}</li>`).join('')}</ul>
     <h2>慶典</h2><p>${esc(T.party)}</p>
     <h2>觀察紀錄</h2><table>${S.kids.map(k => `<tr><td style="width:20%">${esc(k.name)}（${LV[k.L].n}）</td><td style="height:60pt"></td></tr>`).join('')}</table>`;
+  window.print();
+}
+
+/* ======================== 國數主線進度 ======================== */
+/* 國語、數學要一課接一課往上學，用課本當主線；首冊與數學單元和網站上的注音、數學小火車相同 */
+const SHOUCE = [['貓咪', 'ㄅㄆㄇㄉㄧㄠ'], ['鵝寶寶', 'ㄊㄋㄜㄨ'], ['河馬和河狸', 'ㄏㄌㄈㄚㄛ'], ['', 'ㄍㄎㄞㄟ'], ['', 'ㄐㄑㄒㄩㄝ'], ['', 'ㄓㄔㄕㄖㄡ'], ['', 'ㄗㄘㄙㄢㄣ'], ['', 'ㄤㄥㄦ']];
+const MA1A = [
+  ['10以內的數', 3, ['能數出 10 以內的數量', '能讀、寫 0 到 10', '能比較兩個數的大小']],
+  ['比長短', 2, ['能直接比較長短、高矮', '能用同樣的東西（例如迴紋針）量長度，說出有幾個']],
+  ['順序與多少', 2, ['能說出排第幾個', '能比較兩組東西誰多、誰少']],
+  ['分與合', 2, ['能把 10 以內的數分成兩份（例如 7 是 3 和 4）', '能把兩份合起來，說出一共有幾個']],
+  ['認識形狀', 2, ['能認出三角形、正方形、長方形、圓形', '能找出像球、罐子、箱子的東西']],
+  ['10以內的加法', 3, ['能把「合起來」「又來了幾個」寫成加法算式', '能算出 10 以內的加法']],
+  ['10以內的減法', 3, ['能把「拿走」「比多少」寫成減法算式', '能算出 10 以內的減法']],
+  ['30以內的數', 2, ['能數到 30', '能說出是幾個十和幾個一', '能比較 30 以內兩個數的大小']],
+  ['認識時間', 2, ['能說出整點和半點', '能在鐘面上撥出指定的整點']]
+];
+const CK = [['⭕', '還不會'], ['🟡', '部分會'], ['✅', '會了']];
+const UST = ['未開始', '進行中', '學會了'];
+const unitOf = (t, w, links = [], can = []) => ({ t, w, links, can, st: 0, d0: '', d1: '', chk: [], note: '' });
+function tplZh() {
+  return [...SHOUCE.map(([t, s], i) => unitOf(`首冊第 ${i + 1} 課${t ? '　' + t : ''}（${s}）`, 1,
+      [['🚂 注音遊戲', `../kangxuan-chinese/#L${i + 1}`], ['✍️ 筆順', `../zhuyin-stroke/#${s[0]}`]],
+      [`認得本課符號：${[...s].join(' ')}`, '能拼讀本課的語詞', '能照筆順寫出本課符號'])),
+    unitOf('首冊 總複習', 2, [['🚂 注音遊戲', '../kangxuan-chinese/#L9'], ['✍️ 筆順', '../zhuyin-stroke/']],
+      ['37 個注音符號都認得', '能拼讀兩拼、三拼的語詞', '能分辨四個聲調和輕聲'])];
+}
+const tplMa = () => MA1A.map(([t, w, can], i) => unitOf(`第 ${i + 1} 單元　${t}`, w, [['🚂 數學小火車', `../hanlin-math/#u${i + 1}`]], can));
+function newPlan(kind) {
+  const g = kind === 'g1a';
+  const subj = [{ id: 'zh', n: '國語', e: '📖', src: g ? '康軒國語一上（首冊）' : '', units: g ? tplZh() : [] },
+    { id: 'ma', n: '數學', e: '🔢', src: g ? '翰林數學一上' : '', units: g ? tplMa() : [] }];
+  subj.forEach(sb => { if (sb.units[0]) { sb.units[0].st = 1; sb.units[0].d0 = ymd(); } });
+  return { start: ymd(), subj };
+}
+const curUnit = sb => sb.units.findIndex(u => u.st !== 2);
+const safeHref = h => /^\s*(javascript|data|vbscript):/i.test(h) ? '#' : h;
+const linkChips = u => u.links.map(([n, h]) => `<a class="chip lk" href="${esc(safeHref(h))}">${esc(n)}</a>`).join('');
+/* 照「學期開始」和每個單元的週數，算出這週照計畫應該在哪個單元 */
+function pace(plan, sb) {
+  const days = Math.floor((new Date(ymd()) - new Date(plan.start)) / 864e5);
+  if (!(days >= 0) || !sb.units.length) return null;
+  const wk = Math.floor(days / 7); let acc = 0, exp = sb.units.length;
+  for (let i = 0; i < sb.units.length; i++) { acc += Math.max(1, +sb.units[i].w || 1); if (wk < acc) { exp = i; break; } }
+  const c = curUnit(sb);
+  return { wk: wk + 1, diff: (c < 0 ? sb.units.length : c) - exp };
+}
+function weekDays() { const n = new Date(), s = new Date(n); s.setDate(n.getDate() - (n.getDay() + 6) % 7); return [0, 1, 2, 3, 4].map(i => { const d = new Date(s); d.setDate(s.getDate() + i); return ymd(d); }); }
+const practiced = (d, kid) => ((S.coreLog[d] || {})[kid] || {});
+function coreLine(k) {
+  const p = S.core[k.id]; if (!p) return '';
+  return `<a href="#/core/${k.id}" class="muted" style="font-size:.85rem;display:block">${p.subj.map(sb => { const u = sb.units[curUnit(sb)]; return `${sb.e} ${u ? esc(u.t.replace(/（.*?）/, '')) : '完成'}`; }).join('　')}</a>`;
+}
+let coreKid = null;
+function vCore(id) {
+  const k = kidById(id) || kidById(coreKid) || S.kids.find(x => S.core[x.id]) || S.kids[0];
+  coreKid = k.id;
+  const plan = S.core[k.id];
+  const tabs = `<div class="pick" id="ck">${S.kids.map(x => `<button aria-pressed="${x.id === k.id}" data-k="${x.id}"><span class="em">${x.av}</span><b>${esc(x.name)}</b><small class="muted">${S.core[x.id] ? '📚 有進度表' : '還沒建立'}</small></button>`).join('')}</div>`;
+  const body = plan ? coreBody(k, plan) : `<section class="card"><h2>為${esc(k.name)}建立國數進度表</h2>
+    <p>國語、數學要一課接一課往上學，所以用課本當主線；聖經主題負責生活課程、品格與藝術的統整。</p>
+    <div class="row"><button class="pri" data-new="g1a">📚 小一上學期（康軒國語首冊＋翰林數學一上）</button><button data-new="blank">📝 空白進度表（自己貼目錄）</button></div>
+    <p class="note" style="margin-top:12px">首冊各課的注音符號、數學的九個單元，和網站上的「注音小火車」「數學小火車」相同，每個單元都會連到對應的練習。首冊第 4～8 課的課名，以及首冊之後的課文、其他版本，請照課本目錄補上（可以整段貼上）。</p></section>`;
+  $('#view').innerHTML = `<section class="card"><div class="sec-title"><h2>📚 國語・數學主線</h2><span class="muted">照課本進度，一課接一課</span></div>${tabs}</section>${body}`;
+  const v = $('#view');
+  v.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.k) return vCore(b.dataset.k);
+    if (b.dataset.new) { S.core[k.id] = newPlan(b.dataset.new); save('core'); return vCore(k.id); }
+    if (!plan) return;
+    const redo = () => { save('core'); vCore(k.id); };
+    if (b.dataset.did != null) {
+      const sb = plan.subj[+b.dataset.did], d = ymd(); S.coreLog[d] = S.coreLog[d] || {};
+      const o = S.coreLog[d][k.id] = S.coreLog[d][k.id] || {}; o[sb.id] = !o[sb.id]; if (o[sb.id]) sndOk();
+      save('coreLog'); return vCore(k.id);
+    }
+    if (b.dataset.add != null) {
+      const sb = plan.subj[+b.dataset.add], ta = $(`[data-paste="${b.dataset.add}"]`);
+      const add = ta.value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const m = l.split(/[｜|]/); return unitOf(m[0].trim().slice(0, 60), Math.max(1, Math.min(20, parseInt(m[1], 10) || 1))); });
+      if (!add.length) return;
+      sb.units.push(...add); if (curUnit(sb) >= 0 && !sb.units.some(u => u.st === 1)) { const u = sb.units[curUnit(sb)]; u.st = 1; u.d0 = u.d0 || ymd(); }
+      return redo();
+    }
+    if (b.dataset.delsub != null) { const sb = plan.subj[+b.dataset.delsub]; if (confirm(`移除「${sb.n}」和它的所有單元？`)) { plan.subj.splice(+b.dataset.delsub, 1); redo(); } return; }
+    if (b.id === 'nsAdd') { const n = $('#nsN').value.trim(); if (!n) return; plan.subj.push({ id: 's' + Date.now().toString(36), n: n.slice(0, 20), e: $('#nsE').value.trim().slice(0, 4) || '📘', src: '', units: [] }); return redo(); }
+    if (b.id === 'cdel') { if (confirm(`刪除${k.name}的整份國數進度表？（練習紀錄會保留）`)) { delete S.core[k.id]; redo(); } return; }
+    if (b.id === 'cprint') return printCore(k, plan);
+    const row = b.closest('.unit'); if (!row || !b.dataset.act) return;
+    const si = +row.dataset.si, ui = +row.dataset.ui, sb = plan.subj[si], u = sb.units[ui];
+    switch (b.dataset.act) {
+      case 'start': sb.units.forEach(x => { if (x.st === 1 && x !== u) x.st = 0; }); u.st = 1; u.d0 = u.d0 || ymd(); return redo();
+      case 'check': return checkDlg(k, plan, si, ui);
+      case 'reopen': u.st = 1; return redo();
+      case 'edit': return editDlg(k, plan, si, ui);
+      case 'up': case 'down': { const j = ui + (b.dataset.act === 'up' ? -1 : 1); if (j >= 0 && j < sb.units.length) [sb.units[ui], sb.units[j]] = [sb.units[j], sb.units[ui]]; return redo(); }
+      case 'del': if (confirm(`刪除「${u.t}」？`)) { sb.units.splice(ui, 1); redo(); } return;
+    }
+  };
+  v.onchange = e => {
+    if (!plan) return;
+    if (e.target.id === 'cstart') { plan.start = e.target.value || ymd(); save('core'); vCore(k.id); }
+    if (e.target.dataset.src != null) { plan.subj[+e.target.dataset.src].src = e.target.value.slice(0, 40); save('core'); }
+  };
+}
+function coreBody(k, plan) {
+  const wd = weekDays(), td = ymd();
+  const today = plan.subj.map((sb, si) => {
+    const u = sb.units[curUnit(sb)], on = !!practiced(td, k.id)[sb.id];
+    return `<div class="crow"><span class="em ce">${sb.e}</span><div><b>${esc(sb.n)}</b>　${u ? esc(u.t) : (sb.units.length ? '🎉 這些單元都學會了' : '<span class="muted">還沒有單元</span>')}
+      <div class="row" style="margin-top:6px">${u ? linkChips(u) : ''}<span class="wdots" aria-label="這週練習">${wd.map((d, i) => `<i class="${practiced(d, k.id)[sb.id] ? 'on' : ''} ${d === td ? 'td' : ''}" title="${d}">${'一二三四五'[i]}</i>`).join('')}</span></div></div>
+      <button data-did="${si}" class="${on ? 'pri' : ''}">${on ? '✅ 今天練了' : '☐ 今天練了'}</button></div>`;
+  }).join('');
+  const prog = plan.subj.map(sb => {
+    const n = sb.units.length, d = sb.units.filter(u => u.st === 2).length, p = pace(plan, sb);
+    return `<div class="cprog"><b>${sb.e} ${esc(sb.n)}</b> <small class="muted">${esc(sb.src || '')}</small><div class="bar"><i style="width:${n ? d / n * 100 : 0}%"></i></div>
+      <small>學會 ${d} / ${n} 個單元${p ? `・第 ${p.wk} 週・${p.diff > 0 ? `比計畫快 ${p.diff} 個單元` : p.diff < 0 ? `比計畫慢 ${-p.diff} 個單元（可以調整週數，學扎實比趕進度重要）` : '照計畫進行'}` : ''}</small></div>`;
+  }).join('');
+  const subjCards = plan.subj.map((sb, si) => {
+    const ci = curUnit(sb);
+    return `<section class="card"><div class="sec-title"><h2>${sb.e} ${esc(sb.n)}</h2><label class="muted">教材 <input class="inp" data-src="${si}" value="${esc(sb.src || '')}" placeholder="例如：康軒國語一下"></label></div>
+      <ol class="units">${sb.units.map((u, ui) => unitRow(si, u, ui, ci)).join('') || '<p class="muted">還沒有單元，請在下面貼上課本目錄。</p>'}</ol>
+      <details class="addu"><summary>＋ 加入單元（貼上課本目錄）</summary>
+        <p class="muted">一行一個單元，後面可以加「｜週數」。例如：<br>第一課　上學去｜2<br>「我會」檢核項目可以之後按 ✏️ 補上。</p>
+        <textarea data-paste="${si}" rows="5" style="width:100%"></textarea><button data-add="${si}" class="pri">加入</button></details>
+      ${plan.subj.length > 1 ? `<button data-delsub="${si}" style="margin-top:8px">🗑️ 移除這個科目</button>` : ''}</section>`;
+  }).join('');
+  return `<section class="card"><h2>📅 今天</h2><p class="muted">練完按「今天練了」；小圓點是這週一到五。每天短短練，比一次練很久有效。</p>${today}</section>
+    <section class="card"><div class="sec-title"><h2>📈 學期進度</h2><div class="row"><label class="muted">學期開始 <input type="date" class="inp" id="cstart" value="${esc(plan.start)}"></label><button id="cprint">🖨️ 列印進度表</button></div></div>${prog}</section>
+    ${subjCards}
+    <section class="card"><h2>＋ 新增科目</h2><p class="muted">例如本土語文（台語、客語）、英語，或其他想記錄進度的學習。</p>
+      <div class="row"><input class="inp" id="nsE" value="🗣️" aria-label="圖示" style="width:64px;text-align:center"><input class="inp" id="nsN" placeholder="例如：本土語文（台語）" style="flex:1;min-width:180px"><button id="nsAdd">新增</button></div>
+      <button id="cdel" style="margin-top:12px">🗑️ 刪除${esc(k.name)}的整份進度表</button></section>`;
+}
+function unitRow(si, u, ui, ci) {
+  const has = u.chk && u.chk.length;
+  return `<li class="unit ${['', 'now', 'ok'][u.st]} ${ui === ci ? 'cur' : ''}" data-si="${si}" data-ui="${ui}">
+    <div class="uh"><span class="chip">${UST[u.st]}</span><b>${esc(u.t)}</b><small class="muted">${u.w} 週${u.d0 ? '・開始 ' + u.d0 : ''}${u.d1 ? '・學會 ' + u.d1 : ''}</small></div>
+    ${u.can.length && (u.st || ui === ci) ? `<div class="uc">${u.can.map((c, i) => `${has ? CK[u.chk[i] ?? 0][0] : '・'} ${esc(c)}`).join('<br>')}</div>` : ''}
+    ${u.note ? `<div class="muted">📝 ${esc(u.note)}</div>` : ''}
+    <div class="row ub">${linkChips(u)}
+      ${u.st === 0 ? '<button data-act="start">▶ 開始這個單元</button>' : ''}${u.st === 1 ? '<button data-act="check" class="pri">✅ 學會了嗎？檢核</button>' : ''}${u.st === 2 ? '<button data-act="check">🔍 檢核</button><button data-act="reopen">↩️ 還要再練</button>' : ''}
+      <button data-act="edit" aria-label="編輯">✏️</button><button data-act="up" aria-label="上移">↑</button><button data-act="down" aria-label="下移">↓</button><button data-act="del" aria-label="刪除">✕</button></div></li>`;
+}
+function closeDlg() { const L = $('#layer'); L.innerHTML = ''; L.onclick = null; }
+function checkDlg(k, plan, si, ui) {
+  const sb = plan.subj[si], u = sb.units[ui], chk = u.can.map((_, i) => u.chk[i] ?? (u.st === 2 ? 2 : 0)), L = $('#layer');
+  L.innerHTML = `<div class="timer" role="dialog" aria-label="單元檢核"><div class="card dlg">
+    <h2>${sb.e} ${esc(u.t)}</h2><p class="muted">${esc(k.name)}學會了嗎？請孩子實際做一次，一項一項看。</p>
+    ${u.can.map((c, i) => `<div class="ckrow"><div>${esc(c)}</div><div class="row">${CK.map(([e, n], v) => `<button data-i="${i}" data-v="${v}" class="${chk[i] === v ? 'sel' : ''}">${e} ${n}</button>`).join('')}</div></div>`).join('') || '<p class="muted">這個單元還沒有檢核項目，可以按 ✏️ 加上。</p>'}
+    <label class="muted" style="display:block;margin-top:10px">觀察（選填，會放進進度表）<textarea id="cknote" rows="2" style="width:100%">${esc(u.note || '')}</textarea></label>
+    <div class="row" style="margin-top:10px"><button class="pri" id="ckok">✅ 學會了，進到下一個單元</button><button id="ckmore">🔁 先記錄，還要再練</button><button id="ckx">取消</button></div></div></div>`;
+  L.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.v != null) { chk[+b.dataset.i] = +b.dataset.v; $$(`#layer [data-i="${b.dataset.i}"]`).forEach(x => x.classList.toggle('sel', x === b)); return; }
+    if (b.id === 'ckx') return closeDlg();
+    if (b.id !== 'ckok' && b.id !== 'ckmore') return;
+    if (b.id === 'ckok' && chk.some(v => v === 0) && !confirm('還有「還不會」的項目，確定標記學會了嗎？')) return;
+    u.chk = chk; u.note = $('#cknote').value.trim().slice(0, 300); u.d0 = u.d0 || ymd();
+    if (b.id === 'ckok') {
+      u.st = 2; u.d1 = ymd();
+      if (!sb.units.some(x => x.st === 1)) { const nx = sb.units.find(x => x.st === 0); if (nx) { nx.st = 1; nx.d0 = ymd(); } }
+      sndWin(); confetti(18); speak(`${k.name}學會了！`);
+    } else u.st = 1;
+    save('core'); closeDlg(); vCore(k.id);
+  };
+}
+function editDlg(k, plan, si, ui) {
+  const u = plan.subj[si].units[ui], L = $('#layer');
+  L.innerHTML = `<div class="timer" role="dialog" aria-label="編輯單元"><div class="card dlg form1"><h2>✏️ 編輯單元</h2>
+    <label>名稱<input class="inp" id="ueT" value="${esc(u.t)}"></label>
+    <label>預計週數<input class="inp" id="ueW" type="number" min="1" max="20" value="${u.w}"></label>
+    <label>「我會」檢核項目（一行一項）<textarea id="ueC" rows="4">${esc(u.can.join('\n'))}</textarea></label>
+    <label>練習連結（一行一個：名稱｜網址）<textarea id="ueL" rows="3">${esc(u.links.map(x => x.join('｜')).join('\n'))}</textarea></label>
+    <div class="row"><button class="pri" id="ueOk">儲存</button><button id="ueX">取消</button></div></div></div>`;
+  L.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.id === 'ueOk') {
+      u.t = $('#ueT').value.trim().slice(0, 60) || u.t; u.w = Math.max(1, Math.min(20, +$('#ueW').value || 1));
+      const old = u.can, oc = u.chk || []; u.can = $('#ueC').value.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 10);
+      u.chk = oc.length ? u.can.map(c => { const j = old.indexOf(c); return j >= 0 ? (oc[j] ?? 0) : 0; }) : [];
+      u.links = $('#ueL').value.split('\n').map(s => s.split(/[｜|]/).map(x => x.trim())).filter(x => x[0] && x[1]).map(x => [x[0].slice(0, 20), safeHref(x.slice(1).join('|'))]);
+      save('core');
+    }
+    if (b.id === 'ueOk' || b.id === 'ueX') { closeDlg(); vCore(k.id); }
+  };
+}
+function printCore(k, plan) {
+  const days = sb => Object.entries(S.coreLog).filter(([d, o]) => d >= plan.start && o[k.id] && o[k.id][sb.id]).length;
+  $('#print').innerHTML = `<h1>${esc(k.name)}　國語・數學學習進度</h1><p>學期開始：${esc(plan.start)}　列印日期：${ymd()}</p>` +
+    plan.subj.map(sb => `<h2>${sb.e} ${esc(sb.n)}${sb.src ? '（' + esc(sb.src) + '）' : ''}　練習 ${days(sb)} 天</h2>
+      <table><tr><th>單元</th><th>狀態</th><th>開始</th><th>學會</th><th>我會（檢核）</th><th>觀察</th></tr>
+      ${sb.units.map(u => `<tr><td>${esc(u.t)}</td><td>${UST[u.st]}</td><td>${u.d0 || ''}</td><td>${u.d1 || ''}</td>
+        <td>${u.can.map((c, i) => (u.chk && u.chk.length ? CK[u.chk[i] ?? 0][1] + '：' : '') + esc(c)).join('<br>')}</td><td>${esc(u.note || '')}</td></tr>`).join('')}</table>`).join('');
   window.print();
 }
 
@@ -1419,6 +1646,7 @@ function renderLog() {
     const lines = [['日期', '孩子', '主題', '項目', '程度', '自己答對', '題數', '星星／內容'].map(q).join(',')];
     S.log.forEach(x => lines.push([x.d, nm(x.c), thN(x.th), '遊戲：' + actN(x.a), LV[x.L] ? LV[x.L].n : '', x.ok, x.n, x.st].map(q).join(',')));
     S.notes.forEach(x => lines.push([x.d, nm(x.c), thN(x.th), '觀察筆記', '', '', '', x.text].map(q).join(',')));
+    Object.entries(S.core).forEach(([kid, p]) => p.subj.forEach(sb => sb.units.forEach(u => { if (u.st) lines.push([u.d1 || u.d0, nm(kid), '', '國數主線：' + sb.n, '', '', '', `${u.t}（${UST[u.st]}）` + (u.chk && u.chk.length ? '　' + u.can.map((c, i) => c + '：' + CK[u.chk[i] ?? 0][1]).join('；') : '') + (u.note ? '　觀察：' + u.note : '')].map(q).join(',')); })));
     Object.entries(S.done).forEach(([key, d]) => { const [tid, L, i] = key.split(':'), t = THEMES.find(z => z.id === tid); if (t) lines.push([d, '', t.title, '動手做', LV[+L].n, '', '', t.work[+L][+i]].map(q).join(',')); });
     download('﻿' + lines.join('\r\n'), `家學堂紀錄-${ymd()}.csv`, 'text/csv');
   };
@@ -1429,7 +1657,7 @@ function renderLog() {
       Object.keys(S).forEach(k => { if (j.data[k] !== undefined) { S[k] = j.data[k]; save(k); } }); renderView(); alert('還原完成'); }
     catch { alert('這不是家學堂的備份檔'); }
   };
-  $('#wipe').onclick = () => { if (confirm('清除所有遊戲紀錄、星星、貼紙、心情和筆記？（孩子設定與週節奏表會保留）')) { ['log', 'notes', 'feel', 'att', 'weather', 'done'].forEach(k => S[k] = Array.isArray(S[k]) ? [] : {}); S.stars = {}; S.stickers = {}; save('log', 'notes', 'feel', 'att', 'weather', 'done', 'stars', 'stickers'); renderLog(); } };
+  $('#wipe').onclick = () => { if (confirm('清除所有遊戲紀錄、星星、貼紙、心情、筆記和國數的每日練習紀錄？（孩子設定、週節奏表和國數進度表會保留）')) { ['log', 'notes', 'feel', 'att', 'weather', 'done', 'coreLog'].forEach(k => S[k] = Array.isArray(S[k]) ? [] : {}); S.stars = {}; S.stickers = {}; save('log', 'notes', 'feel', 'att', 'weather', 'done', 'coreLog', 'stars', 'stickers'); renderLog(); } };
 }
 function download(text, name, type) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
@@ -1449,11 +1677,11 @@ function renderVoice() {
 }
 
 /* ======================== 使用手冊 ======================== */
-const HELP_MODS = [['m-today', '🏠', '今天', '一天的節奏'], ['m-circle', '⭕', '晨圈', '全家圍坐'], ['m-theme', '🌍', '主題', '12 個聖經故事'], ['m-games', '🎮', '遊戲', '混齡輪流玩'],
+const HELP_MODS = [['m-today', '🏠', '今天', '一天的節奏'], ['m-core', '📚', '國數', '課本主線'], ['m-circle', '⭕', '晨圈', '全家圍坐'], ['m-theme', '🌍', '主題', '12 個聖經故事'], ['m-games', '🎮', '遊戲', '混齡輪流玩'],
   ['m-board', '✏️', '白板', '畫畫・寫字'], ['m-party', '🎉', '慶典', '每週分享'], ['m-parent', '⚙️', '家長', '設定與紀錄'], ['m-levels', '🌱', '五個程度', '依能力設定']];
 const HELP = `
 <section class="card"><h2>📖 使用手冊</h2>
-  <p>家學堂共有 7 個功能，在畫面上方（手機在下方）切換。右上角有五個按鈕：🔊 開關聲音、🔠 放大字體（適合電子白板）、ㄅ 注音開關（晨圈、故事、經文）、❓ 打開這本手冊、⛶ 全螢幕。</p>
+  <p>家學堂共有 8 個功能，在畫面上方（手機在下方）切換。右上角有五個按鈕：🔊 開關聲音、🔠 放大字體（適合電子白板）、ㄅ 注音開關（晨圈、故事、經文）、❓ 打開這本手冊、⛶ 全螢幕。</p>
   <div class="toc">${HELP_MODS.map(([id, e, n, d]) => `<button data-jump="${id}"><span class="em">${e}</span>${n}<small class="muted">${d}</small></button>`).join('')}</div>
   <div class="row" style="margin-top:10px"><button id="helpPrint">🖨️ 列印手冊</button></div>
 </section>
@@ -1468,6 +1696,16 @@ const HELP = `
         <li>📍 設為「現在」</li>
         <li>✅ 完成，會自動跳到下一段</li></ul></li>
     <li><b>根基小組</b>：每個孩子的程度和星星數，點「玩主題遊戲」可以直接讓那個孩子開始玩。</li>
+  </ul></section>
+<section class="card mod" id="m-core"><h2><span class="em">📚</span>國數：國語・數學主線<a href="#/core">前往 ▶</a></h2>
+  <p>國語、數學要一課接一課往上學，所以用課本當主線；聖經主題負責生活課程、品格與藝術的統整。</p>
+  <ul>
+    <li><b>建立進度表</b>：選「小一上學期」會自動放入康軒國語首冊 9 課和翰林數學一上 9 個單元，跟網站上的注音小火車、數學小火車相同，每個單元都能直接打開對應的練習。其他版本或之後的課文，把課本目錄整段貼上即可（一行一課，可加「｜週數」）。</li>
+    <li><b>今天</b>：看到每科現在上到哪一課，練完按「今天練了」；小圓點是這週一到五的練習紀錄。</li>
+    <li><b>學會了嗎？檢核</b>：每個單元有幾項「我會…」。請孩子實際做一次，選「會了／部分會／還不會」，再寫一句觀察。學會了就自動進到下一個單元。</li>
+    <li><b>學期進度</b>：依學期開始日期和每個單元的週數，告訴你比計畫快或慢。慢了可以調整週數，學扎實比趕進度重要。</li>
+    <li><b>列印進度表</b>、匯出 CSV：單元、日期、檢核結果和觀察都會放進去，可以用在期末的學習成果報告。</li>
+    <li>可以新增其他科目，例如本土語文（台語、客語）。</li>
   </ul></section>
 <section class="card mod" id="m-circle"><h2><span class="em">⭕</span>晨圈：全家圍坐，投影到白板<a href="#/circle">前往 ▶</a></h2>
   <p>照順序有 8 個步驟，按上方的分頁或下方的「下一步」切換。大約 20 分鐘；小小孩坐不住時，可以只做前三項和律動。</p>

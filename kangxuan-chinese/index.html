@@ -1217,7 +1217,10 @@ function gCards() {
   });
 }
 
+// 網址帶 #L3 會直接選第 3 課（家學堂的國數進度表會用到）
+{ const m = location.hash.match(/^#L(\d+)$/); if (m && LESSONS[+m[1] - 1]) { lessonIdx = +m[1] - 1; store.set('lesson', lessonIdx); } }
 renderHome();
+if (/^#L\d+$/.test(location.hash)) $('#gtitle-home').scrollIntoView({ block: 'start' });
 </script>
 </body>
 </html>
