@@ -120,17 +120,8 @@
             el.voiceHint.textContent = '請改用最新版 Chrome、Edge 或 Safari。';
             return;
         }
-        const all = window.speechSynthesis.getVoices() || [];
-        const rank = (voice) => {
-            const lang = (voice.lang || '').toLowerCase().replace('_', '-');
-            if (lang === 'zh-tw' || lang.includes('hant')) return 0;
-            if (lang === 'cmn-hant-tw') return 0;
-            if (lang.startsWith('zh-cn') || lang.startsWith('cmn')) return 2;
-            if (lang.startsWith('zh-hk')) return 3;
-            if (lang.startsWith('zh')) return 1;
-            return 9;
-        };
-        speech.voices = all.filter((voice) => rank(voice) < 9).sort((a, b) => rank(a) - rank(b));
+        // 台灣國語排最前面，粵語（香港）排最後、不會自動選到（共用 ../tw-speech.js）
+        speech.voices = TWSpeech.chineseVoices();
         el.voice.innerHTML = '';
         if (!speech.voices.length) {
             const option = document.createElement('option');
@@ -146,13 +137,13 @@
             option.textContent = `${voice.name}（${voice.lang}）`;
             el.voice.appendChild(option);
         });
-        const preferred = speech.voices.find((voice) => voice.voiceURI === settings.voiceURI) || speech.voices[0];
+        const preferred = TWSpeech.pickVoice(settings.voiceURI) || speech.voices[0];
         el.voice.value = preferred.voiceURI;
-        el.voiceHint.textContent = rank(preferred) === 0 ? '' : '建議選用「中文（台灣）」語音，發音較貼近國語課本。';
+        el.voiceHint.textContent = TWSpeech.isTaiwanVoice(preferred) ? '' : '建議選用「中文（台灣）」語音，發音較貼近國語課本。';
     }
 
     function currentVoice() {
-        return speech.voices.find((voice) => voice.voiceURI === el.voice.value) || speech.voices[0] || null;
+        return speech.voices.find((voice) => voice.voiceURI === el.voice.value) || TWSpeech.pickVoice();
     }
 
     function cancelSpeech() {
@@ -193,7 +184,8 @@
 
     // 注意：必須在點擊事件中「同步」呼叫，不可先 await 或 setTimeout，否則行動裝置會靜默擋下
     function speak(rawText, onDone) {
-        const text = rawText ? applyPronunciations(rawText) : rawText;
+        // 先套用使用者的讀音修正，再轉成台灣口語念法（2個 → 兩個、2:30 → 兩點半）
+        const text = rawText ? TWSpeech.text(applyPronunciations(rawText)) : rawText;
         cancelSpeech();
         const token = state.speechToken;
         if (!speech.supported || !text) {
@@ -204,8 +196,7 @@
         const voice = currentVoice();
         if (voice) utterance.voice = voice;
         // Android 回報的語言常是「zh_TW」，直接套用不是合法語言代碼，會讓語音引擎不出聲
-        const voiceLang = voice && voice.lang ? voice.lang.replace(/_/g, '-') : '';
-        utterance.lang = /^zh-(CN|HK)/i.test(voiceLang) ? voiceLang : 'zh-TW';
+        utterance.lang = TWSpeech.langOf(voice);
         utterance.rate = settings.rate;
         utterance.volume = 1;
         utterance.pitch = 1;

@@ -253,6 +253,7 @@ button.car{min-height:42px;cursor:pointer}
         <summary>⚙️ 設定</summary>
         <div class="setrow"><label for="kidname">小朋友名字</label><input type="text" id="kidname" maxlength="6"><button id="savename" type="button">儲存</button></div>
         <label class="setrow"><input type="checkbox" id="autoread"> 每題自動念題目</label>
+        <p id="voiceTip" hidden style="font-size:.85rem;line-height:1.5;color:#B5541B;margin:6px 0 0"></p>
       </details>
     </div>
     <div class="panel">
@@ -292,6 +293,7 @@ button.car{min-height:42px;cursor:pointer}
   </section>
 </div>
 
+<script src="../tw-speech.js"></script>
 <script>
 // ===== 小工具 =====
 const $ = s => document.querySelector(s);
@@ -379,9 +381,10 @@ const nextH = h => h % 12 + 1, prevH = h => (h + 10) % 12 + 1;
 
 // ===== 聲音 =====
 let zhVoice = null;
-function loadVoice() { const vs = speechSynthesis.getVoices(); zhVoice = vs.find(v => /zh[-_]TW/i.test(v.lang)) || vs.find(v => /zh/i.test(v.lang)) || null; }
+function loadVoice() { zhVoice = TWSpeech.pickVoice(); TWSpeech.showTip(document.getElementById('voiceTip')); } // 台灣國語優先，不會選到粵語
 if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
-// 算式符號轉念法；只有「= ？」念「等於多少」，其餘圖示不念
+// 算式符號轉念法；只有「= ？」念「等於多少」，其餘圖示不念。
+// 之後交給 TWSpeech 轉成台灣口語：2 條 → 兩條、2點半 → 兩點半
 function toSpeech(t) {
   return t.replace(/=\s*[？?]/g, '等於多少').replace(/\+/g, '加').replace(/−/g, '減').replace(/=/g, '等於')
     .replace(/</g, '小於').replace(/>/g, '大於').replace(/□/g, '空格').replace(/\p{Extended_Pictographic}|️/gu, '');
@@ -389,8 +392,8 @@ function toSpeech(t) {
 function speak(text) {
   if (!('speechSynthesis' in window) || !text) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(toSpeech(text));
-  speak.last = u; u.lang = 'zh-TW'; u.rate = 0.88; u.pitch = 1.1; if (zhVoice) u.voice = zhVoice;
+  const u = new SpeechSynthesisUtterance(TWSpeech.text(toSpeech(text)));
+  speak.last = u; u.lang = TWSpeech.langOf(zhVoice); u.rate = 0.88; u.pitch = 1.1; if (zhVoice) u.voice = zhVoice;
   speechSynthesis.speak(u);
 }
 let actx = null;

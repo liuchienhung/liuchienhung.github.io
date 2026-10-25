@@ -239,6 +239,7 @@ td button{min-height:32px;padding:2px 8px}
 <p class="small" style="margin-top:16px">相機量測是用影像輪廓估算，誤差約 ±2～4 cm，量到的數字都可以直接改。有皮尺量的胸圍最準。不同品牌版型差很多，以商品尺寸表為準。</p>
 </div>
 
+<script src="../tw-speech.js"></script>
 <script type="module">
 const $=id=>document.getElementById(id);
 const num=id=>{ const v=parseFloat($(id).value); return Number.isFinite(v)?v:null; };
@@ -501,12 +502,12 @@ S.facing=MOBILE?"environment":"user";
 
 function setStatus(t,cls=""){ $("status").textContent=t; $("status").className="status "+cls; }
 let voice=null;
-function loadVoice(){ const vs=speechSynthesis.getVoices(); voice=vs.find(v=>/zh[-_]TW/i.test(v.lang))||vs.find(v=>/^zh/i.test(v.lang))||null; }
+function loadVoice(){ voice=TWSpeech.pickVoice(); } /* 台灣國語優先，不會選到粵語 */
 if("speechSynthesis" in window){ loadVoice(); speechSynthesis.onvoiceschanged=loadVoice; }
 function speak(t,queue){
   if(!("speechSynthesis" in window)) return;
-  if(!queue) speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t);
-  u.lang=voice?.lang||"zh-TW"; if(voice) u.voice=voice; u.rate=1; speechSynthesis.speak(u);
+  if(!queue) speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(TWSpeech.text(t));
+  u.lang=TWSpeech.langOf(voice); if(voice) u.voice=voice; u.rate=1; speechSynthesis.speak(u);
 }
 
 async function ensureModel(){

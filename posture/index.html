@@ -364,6 +364,7 @@ button:focus-visible,select:focus-visible{outline:3px solid var(--pencil);outlin
   </div>
 </div>
 
+<script src="../tw-speech.js"></script>
 <script type="module">
 import { PoseLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
 
@@ -383,7 +384,7 @@ const METRICS={
    type reps：做 reps 次，每次維持 hold 秒（0 = 節奏動作）；type hold：維持 sec 秒 × sets 次（sides 為左右各做） */
 const EX={
   chin:{name:"烏龜縮頭（收下巴）",dose:"10 次 × 停 5 秒",how:"坐直眼睛看前方，下巴水平往後收，像做出雙下巴，後頸會感覺被拉長。不要低頭。",
-    steps:["坐直或站直，眼睛看正前方","下巴水平往後收，像烏龜把頭縮進殼裡","後脖子會感覺被拉長，眼睛不要往下看"],type:"reps",reps:10,hold:5},
+    steps:["坐直或站直，眼睛看正前方","下巴水平往後收，像烏龜把頭縮進殼裡","脖子後面會覺得被拉長，眼睛不要往下看"],type:"reps",reps:10,hold:5},
   wall:{name:"貼牆站",dose:"30 秒 × 2 次",how:"腳跟離牆約一個拳頭，後腦、肩胛、屁股貼牆，下巴微收，保持正常呼吸。",
     steps:["背對牆壁站，腳跟離牆一個拳頭","後腦勺、肩膀、屁股都貼到牆","下巴微微收，肩膀放鬆，正常呼吸"],type:"hold",sec:30,sets:2},
   angel:{name:"牆壁天使",dose:"8 次",how:"貼牆站好，手臂彎成「W」貼牆，慢慢往上滑成「Y」再滑回來，手背盡量不離開牆。",
@@ -440,7 +441,7 @@ const EX_DAILY=["chin","wall","angel","finger"];
 const exHtml=keys=>keys.map(k=>`<div class="ex"><b>${EX[k].name}</b><span class="dose">${EX[k].dose}</span><p>${EX[k].how}</p><button class="exbtn" data-ex="${k}" data-html2canvas-ignore>看教學 ▶</button></div>`).join("");
 
 const ADVICE={
-  neck:"頭頸過度前傾：眼睛離紙面保持約 30–35 cm（一尺），改用斜面寫字板或把本子墊高 10–15°，減少低頭角度。",
+  neck:"頭頸過度前傾：眼睛離紙面保持約 30–35 cm（一尺），改用斜面寫字板或把簿子墊高 10–15°，減少低頭角度。",
   trunk:"上身趴向桌面：胸口與桌緣保持一拳距離，臀部坐滿椅面、背部靠直；檢查椅子是否過低或桌子過高（手肘自然彎曲約 90° 時前臂應平放桌面），可用下方「桌椅高度建議」算出合適高度與是否需要腳踏板。",
   sh:"兩肩高低不一：非寫字手要壓住紙張、平放桌面，不要垂在桌下；紙張放在寫字手同側前方並稍微斜放，避免身體扭轉。",
   tilt:"頭部歪向一側：常因紙張擺正但握筆手擋住視線。將紙張往寫字手方向傾斜 15–30°，並確認光源在寫字手的對側，避免手影。",
@@ -749,7 +750,7 @@ const REWARD_MS=60000;
 const KID_VOICE={
   neck:["脖子往後收，像烏龜縮頭一樣","頭抬高一點，嘟嘟號才能出發喔"],
   trunk:["身體坐直，嘟嘟號才開得動","背挺起來，火車要出發囉"],
-  sh:["兩邊肩膀放平，火車才不會歪掉","肩膀放輕鬆，左手壓好本子"],
+  sh:["兩邊肩膀放平，火車才不會歪掉","肩膀放輕鬆，左手壓好簿子"],
   tilt:["頭擺正，像火車頭一樣看正前方","頭不要歪，眼睛看前面"],
   drop:["頭抬起來，手指離筆尖一寸","抬頭看前面，龜龜在等你"],
   praise:["好棒，嘟嘟號出發囉","坐得真好，火車跑起來了","姿勢好漂亮，龜龜幫你拍拍手"],
@@ -854,12 +855,12 @@ $("kidParent").onclick=()=>setKid(false);
 
 /* ===== 語音提醒 ===== */
 const VOICE={
-  neck:["頭抬高一點，眼睛離本子一尺喔","脖子伸直，頭不要太低"],
+  neck:["頭抬高一點，眼睛離簿子一尺喔","脖子伸直，頭不要太低"],
   trunk:["身體坐直，胸口離桌子一拳","屁股坐到底，背靠椅背"],
-  sh:["兩邊肩膀放平，左手壓好本子","肩膀放輕鬆，不要一邊高一邊低"],
-  tilt:["頭擺正，本子可以斜一點","頭不要歪，眼睛看正前方的字"],
+  sh:["兩邊肩膀放平，左手壓好簿子","肩膀放輕鬆，不要一邊高一邊低"],
+  tilt:["頭擺正，簿子可以斜一點","頭不要歪，眼睛看正前方的字"],
   drop:["頭抬起來，手指離筆尖一寸","握筆往上一點，才看得到筆尖"],
-  praise:["很好，姿勢正確，繼續保持","好棒，就是這樣坐","姿勢很漂亮，加油"],
+  praise:["很好喔，就是這樣，繼續保持","好棒，就是這樣坐","姿勢很漂亮，加油"],
   break:["已經寫了三十分鐘，起來休息一下，看看遠方吧","寫了三十分鐘囉，站起來做十次烏龜縮頭","休息時間到，去貼牆站三十秒吧"],
   start:["開始偵測囉，記得坐好"],
   back:["歡迎回來，記得坐好喔","回來囉，坐好繼續加油"],
@@ -874,16 +875,14 @@ const VOICE_READ={
 };
 const BREAK_MS=30*60*1000;
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-function loadVoice(){
-  const vs=speechSynthesis.getVoices();
-  state.voice=vs.find(v=>/zh[-_]TW/i.test(v.lang))||vs.find(v=>/zh[-_](HK|Hant)/i.test(v.lang))||vs.find(v=>/^zh/i.test(v.lang))||null;
-}
+/* 台灣國語優先；以前第二順位是香港語音，會講廣東話，現在不會自動選到粵語 */
+function loadVoice(){ state.voice=TWSpeech.pickVoice(); }
 if("speechSynthesis" in window){ loadVoice(); speechSynthesis.onvoiceschanged=loadVoice; }
 function speak(text){
   if(!("speechSynthesis" in window)) return false;
   speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang=state.voice?.lang||"zh-TW"; if(state.voice) u.voice=state.voice;
+  const u=new SpeechSynthesisUtterance(TWSpeech.text(text));
+  u.lang=TWSpeech.langOf(state.voice); if(state.voice) u.voice=state.voice;
   u.rate=0.95; u.pitch=1.1; u.volume=1;
   speechSynthesis.speak(u); return true;
 }
@@ -1154,8 +1153,8 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms)).then(chk);
 function sayNow(text){
   if(tut.mute||!("speechSynthesis" in window)) return;
   speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang=state.voice?.lang||"zh-TW"; if(state.voice) u.voice=state.voice; u.rate=0.95; u.pitch=1.1;
+  const u=new SpeechSynthesisUtterance(TWSpeech.text(text));
+  u.lang=TWSpeech.langOf(state.voice); if(state.voice) u.voice=state.voice; u.rate=0.95; u.pitch=1.1;
   speechSynthesis.speak(u); return u;
 }
 function say(text){

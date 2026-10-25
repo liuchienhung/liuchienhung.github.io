@@ -432,6 +432,7 @@ details.pane>div{padding:0 18px 18px}
 <div id="layer"></div>
 <div id="print"></div>
 
+<script src="../tw-speech.js"></script>
 <script src="themes.js"></script>
 <script src="zhuyin.js"></script>
 <script>
@@ -527,32 +528,24 @@ const kidById = id => S.kids.find(k => k.id === id);
 /* ---------- 聲音 ---------- */
 let soundOn = store.get('sound', true), zhVoice = null, voices = [], actx = null;
 let voicePref = store.get('voice', ''), rate = store.get('rate', 0.85), speakSeq = 0;
-function twScore(v) {
-  const s = (v.lang + ' ' + v.name).toLowerCase(); let sc = 0;
-  if (/zh[-_]tw|cmn[-_]hant[-_]tw|hant[-_]tw/.test(s)) sc += 100;
-  if (/臺灣|台灣|taiwan|國語/.test(s)) sc += 60;
-  if (/hsiaochen|hsiaoyu|yating|mei-?jia|zhiwei|yunjhe|hanhan/.test(s)) sc += 20;
-  if (/natural|online|neural|enhanced|premium|高品質/.test(s)) sc += 15;
-  if (/zh[-_]hk|yue|cantonese|粵|廣東/.test(s)) sc -= 80;
-  if (/zh[-_]cn|cmn[-_]hans|普通话|mainland/.test(s)) sc -= 40;
-  return sc;
-}
-const isTW = v => twScore(v) >= 60;
+// 台灣國語的語音排前面；粵語排最後、不會自動選到（共用 ../tw-speech.js）
+const isTW = TWSpeech.isTaiwanVoice;
 function loadVoice() {
-  voices = speechSynthesis.getVoices().filter(v => /^(zh|cmn|yue)/i.test(v.lang)).sort((a, b) => twScore(b) - twScore(a));
-  zhVoice = voices.find(v => v.voiceURI === voicePref) || voices.filter(isTW)[0] || null;
+  voices = TWSpeech.chineseVoices();
+  zhVoice = TWSpeech.pickVoice(voicePref);
   if ($('#voiceSel')) renderVoice();
 }
 if ('speechSynthesis' in window) { loadVoice(); speechSynthesis.onvoiceschanged = loadVoice; }
 const clean = t => String(t).replace(/<[^>]+>/g, '').replace(/[＿_]{2,}/g, '空格').replace(/[🌀-🫸☀-➿️‍]/gu, ' ').replace(/\s+/g, ' ').trim();
-/* 念出文字；回傳 Promise，念完（或被下一句打斷）時結束，值為「是否還是最新的一句」 */
+/* 念出文字；回傳 Promise，念完（或被下一句打斷）時結束，值為「是否還是最新的一句」。
+   TWSpeech 轉成台灣口語：創世記 1:1 → 創世記一章一節、2 隻 → 兩隻 */
 function speak(text, r) {
   return new Promise(res => {
-    const id = ++speakSeq; const t = clean(text || '');
+    const id = ++speakSeq; const t = TWSpeech.text(clean(text || ''));
     if (!soundOn || !('speechSynthesis' in window) || !t) { setTimeout(() => res(id === speakSeq), 10); return; }
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(t);
-    u.lang = zhVoice ? zhVoice.lang : 'zh-TW'; u.rate = r || rate; u.pitch = 1.05;
+    u.lang = TWSpeech.langOf(zhVoice); u.rate = r || rate; u.pitch = 1.05;
     if (zhVoice) try { u.voice = zhVoice; } catch {}
     let fin = false; const end = () => { if (!fin) { fin = true; clearTimeout(to); res(id === speakSeq); } };
     const to = setTimeout(end, 1500 + t.length * 380 / u.rate);
@@ -1958,7 +1951,7 @@ function renderVoice() {
     <p class="note" style="margin-top:10px">${!('speechSynthesis' in window) ? '這個瀏覽器不支援朗讀。' : tw.length ? `已找到 ${tw.length} 個台灣國語語音（🇹🇼），會自動使用。` :
       '這台裝置還沒有台灣國語語音：Android 到「設定 › 文字轉語音 › Google 語音服務 › 安裝語音資料 › 中文（台灣）」；iPad 到「設定 › 輔助使用 › 朗讀內容 › 聲音 › 中文（台灣）」；電腦建議用 Microsoft Edge。'}
       種子程度的孩子念題速度會再慢一點。</p>`;
-  $('#voiceSel').onchange = e => { voicePref = e.target.value; store.set('voice', voicePref); zhVoice = voices.find(v => v.voiceURI === voicePref) || null; };
+  $('#voiceSel').onchange = e => { voicePref = e.target.value; store.set('voice', voicePref); zhVoice = TWSpeech.pickVoice(voicePref); };
   $('#vtest').onclick = () => speak('耶和華是我的牧者，我必不致缺乏。');
   box.onclick = e => { const b = e.target.closest('[data-r]'); if (!b) return; rate = +b.dataset.r; store.set('rate', rate); renderVoice(); speak('這樣的速度可以嗎？'); };
 }
