@@ -141,6 +141,43 @@ rt{font-family:var(--f-kai);font-size:.46em;letter-spacing:0;color:var(--muted)}
 rt.mask{color:var(--sun);font-weight:700}
 .punc{padding:0 .1em}
 
+/* 首冊：只用注音的題目 */
+.qsec{align-self:stretch;text-align:left;font-family:var(--f-kai);font-weight:700;font-size:1.05rem;color:var(--leaf);
+  border-bottom:2px dashed var(--line);padding-bottom:6px}
+.zy{display:inline-flex;flex-wrap:wrap;justify-content:center;gap:0 .22em;font-family:var(--f-kai)}
+.zy .syl{padding:0 .04em;border-radius:8px}
+.zy .syl.hl{outline:3px solid var(--sun);outline-offset:3px}
+.zybig{font-size:2.6rem;font-weight:700;line-height:1.5}
+.blank{display:inline-block;min-width:1.05em;border:2px dashed var(--sun);border-radius:8px;color:var(--sun);
+  font-size:.75em;line-height:1.25;margin:0 .06em;text-align:center;vertical-align:middle}
+.zyw{letter-spacing:.02em}
+.opt.zyopt{font-size:1.7rem}
+.opt.picopt{flex-direction:column;gap:4px}
+.opt .pic{font-size:3rem;line-height:1.1}
+.zy.sm{font-size:1.05rem;color:var(--muted)}
+.zysent{display:flex;flex-wrap:wrap;justify-content:center;gap:.1em .3em;font-family:var(--f-kai);font-size:1.75rem;line-height:1.7}
+.zysent.q{font-size:1.4rem;color:var(--leaf)}
+.orow{display:flex;gap:10px;justify-content:center}
+.orow .cell{width:64px;height:72px;border:3px solid var(--line);border-radius:14px;display:grid;place-items:center;
+  font-family:var(--f-kai);font-size:2.4rem;font-weight:700;margin:0;min-width:0}
+.orow .cell.blank{border-style:dashed;border-color:var(--sun);color:var(--sun)}
+.opts.five{grid-template-columns:repeat(5,1fr)}
+@media (max-width:520px){.opts.five{grid-template-columns:repeat(3,1fr)}}
+.toneopt circle{fill:var(--ink)}
+.toneopt .mk.sm{font-size:.85rem;font-weight:400;color:var(--muted)}
+.match{position:relative;display:grid;grid-template-columns:1fr 1fr;column-gap:clamp(48px,20vw,140px);width:100%;max-width:520px}
+.mlines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.mlines line{stroke:var(--leaf);stroke-width:4;stroke-linecap:round}
+.mcol{display:flex;flex-direction:column;gap:12px;position:relative}
+.mbtn{min-height:72px;display:flex;align-items:center;justify-content:center;padding:6px 8px}
+.mbtn.pic{font-size:2.6rem}
+.mbtn.zyb{font-size:1.5rem}
+.mbtn.sel{border-color:var(--star);box-shadow:0 0 0 4px color-mix(in srgb,var(--star) 45%,transparent)}
+.mbtn.ok{border-color:var(--leaf);background:var(--leaf-soft)}
+.mbtn:disabled{cursor:default}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
 /* 數學圖 */
 .items{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:420px}
 .it{font-size:2.3rem;width:56px;height:56px;border-radius:14px;display:grid;place-items:center;position:relative;padding:0;min-height:0;border:2px solid transparent;background:var(--soft)}
@@ -198,7 +235,7 @@ rt.mask{color:var(--sun);font-weight:700}
   <div class="totals" id="totals"></div>
   <div class="subjects">
     <div class="subject zh">
-      <h2>國語注音 <span class="tag">照小考的五大題</span></h2>
+      <h2>國語首冊 <span class="tag">照首冊考卷的大題</span></h2>
       <div id="zhLevels" style="display:flex;flex-direction:column;gap:8px"></div>
     </div>
     <div class="subject ma">
@@ -231,7 +268,8 @@ rt.mask{color:var(--sun);font-weight:700}
     <summary>給爸爸媽媽的小紙條</summary>
     <ul>
       <li><b>先說辛苦了，再看題目。</b>例如「你很認真寫完整張考卷」「這一題你寫得好漂亮」，讓孩子知道考卷是用來找出還要練習的地方，不是在說他不聰明。</li>
-      <li><b>關卡照考卷題型設計。</b>國語：聽寫注音、看圖選拼音、聲調、拼音組合、讀句子；數學：數一數、比長短與曲直線、分與合、合起來、分合樹。考卷上紅筆比較多的「聲調」「相似符號（ㄑ／ㄒ、ㄕ／ㄙ、ㄓ／ㄗ）」「分合」都有專門關卡。</li>
+      <li><b>國語照首冊考卷的大題出題。</b>一、聽寫　二、看圖選注音　三、拼一拼（兩拼、三拼、拆一拆）　四、聲調（含輕聲）　五、補一補　六、排一排（ㄅㄆㄇ順序）　七、讀一讀　八、連連看。首冊還沒教國字，題目和選項都只用注音。「📝 模擬考卷」照考卷順序，每一大題做一題。</li>
+      <li><b>錯的選項故意出「長得像、聽起來像」的。</b>考卷上紅筆比較多的相似音（ㄓ／ㄗ、ㄕ／ㄙ、ㄣ／ㄥ、ㄢ／ㄤ）和聲調，都會出現在選項裡，而且一定是國語真的有的音。數學：數一數、比長短與曲直線、分與合、合起來、分合樹。</li>
       <li><b>答錯不打叉。</b>第一次答錯，龜龜會給提示讓他再試；第二次才一起看答案。勇敢再試也會記成藍色的「勇氣格」。</li>
       <li><b>每次玩 1～2 關就好</b>（約 10 分鐘），在他還想玩的時候停下來。每次「再玩一回」題目都會換。</li>
       <li><b>稱讚具體的努力：</b>「你剛剛有一個一個點著數，所以數對了」比「你好聰明」更能讓他願意再挑戰。</li>
@@ -383,149 +421,323 @@ const AFTER_REVEAL = '現在你學會了，下次一定記得！';
 /* ---------- 注音工具 ---------- */
 const toneOf = s => s[0] === '˙' ? 0 : ({ 'ˊ': 2, 'ˇ': 3, 'ˋ': 4 }[s.slice(-1)] || 1);
 const baseOf = s => s.replace(/[˙ˊˇˋ]/g, '');
-const zyHtml = z => z.split(' ').map(s => `<span class="syl">${s}</span>`).join('');
-function ruby(text, zy, mask = -1, maskHtml = '') {
-  const zs = zy.split(' '); let k = 0;
-  return [...text].map(ch => {
-    if (/[，。？！、]/.test(ch)) return `<span class="punc">${ch}</span>`;
-    const idx = k++;
-    return idx === mask ? `<ruby>${ch}<rt class="mask">${maskHtml}</rt></ruby>` : `<ruby>${ch}<rt>${zs[idx]}</rt></ruby>`;
-  }).join('');
-}
+const MARK = ['', '', 'ˊ', 'ˇ', 'ˋ'];
+const withTone = (b, t) => t === 0 ? '˙' + b : b + MARK[t];
+const INITIALS = 'ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙ';
 const CONF = { 'ㄅ': 'ㄆㄉ', 'ㄆ': 'ㄅㄊ', 'ㄇ': 'ㄈㄋ', 'ㄈ': 'ㄇㄏ', 'ㄉ': 'ㄊㄅ', 'ㄊ': 'ㄉㄆ', 'ㄋ': 'ㄌㄇ', 'ㄌ': 'ㄋㄖ',
   'ㄍ': 'ㄎㄐ', 'ㄎ': 'ㄍㄏ', 'ㄏ': 'ㄈㄎ', 'ㄐ': 'ㄑㄓ', 'ㄑ': 'ㄐㄒ', 'ㄒ': 'ㄑㄙ', 'ㄓ': 'ㄗㄐ', 'ㄔ': 'ㄘㄑ',
   'ㄕ': 'ㄙㄒ', 'ㄖ': 'ㄌㄙ', 'ㄗ': 'ㄓㄘ', 'ㄘ': 'ㄔㄗ', 'ㄙ': 'ㄕㄒ' };
-const FCONF = { 'ㄚ': 'ㄜ', 'ㄜ': 'ㄚ', 'ㄠ': 'ㄡ', 'ㄡ': 'ㄠ', 'ㄟ': 'ㄞ', 'ㄞ': 'ㄟ', 'ㄢ': 'ㄤ', 'ㄤ': 'ㄢ', 'ㄣ': 'ㄥ', 'ㄥ': 'ㄣ', 'ㄧ': 'ㄩ', 'ㄩ': 'ㄧ', 'ㄨ': 'ㄛ', 'ㄛ': 'ㄜ' };
+const FCONF = { 'ㄚ': 'ㄜㄛ', 'ㄜ': 'ㄚㄛ', 'ㄛ': 'ㄜㄨ', 'ㄝ': 'ㄟ', 'ㄠ': 'ㄡ', 'ㄡ': 'ㄠ', 'ㄟ': 'ㄞㄝ', 'ㄞ': 'ㄟ', 'ㄢ': 'ㄤㄣ', 'ㄤ': 'ㄢ',
+  'ㄣ': 'ㄥㄢ', 'ㄥ': 'ㄣ', 'ㄧ': 'ㄩ', 'ㄩ': 'ㄧ', 'ㄨ': 'ㄛ', 'ㄦ': 'ㄜ' };
 const TONE_NAME = ['輕聲', '一聲', '二聲', '三聲', '四聲'];
+const TONE_PATH = ['', 'M6 15 H50', 'M6 26 L50 4', 'M6 8 Q22 34 50 6', 'M6 4 L50 26'];
+const TONE_MARK = ['˙', '', 'ˊ', 'ˇ', 'ˋ'];
+// 國語真的有的音節（含聲調），錯的選項只從這裡挑，不會出現念不出來的拼音。取自教育部《重編國語辭典修訂本》所有字的讀音。
+const SYL_T = new Set('˙ㄅㄚ ˙ㄅㄛ ˙ㄅㄞ ˙ㄅㄟ ˙ㄅㄠ ˙ㄅㄣ ˙ㄅㄧㄝ ˙ㄅㄧㄢ ˙ㄅㄧㄥ ˙ㄅㄨ ˙ㄆㄚ ˙ㄆㄛ ˙ㄆㄞ ˙ㄆㄧ ˙ㄇㄚ ˙ㄇㄛ ˙ㄇㄜ ˙ㄇㄞ ˙ㄇㄟ ˙ㄇㄠ ˙ㄇㄣ ˙ㄇㄧ ˙ㄇㄧㄢ ˙ㄇㄨ ˙ㄈㄚ ˙ㄈㄟ ˙ㄈㄢ ˙ㄈㄣ ˙ㄈㄤ ˙ㄈㄥ ˙ㄈㄨ ˙ㄉㄚ ˙ㄉㄜ ˙ㄉㄞ ˙ㄉㄠ ˙ㄉㄢ ˙ㄉㄤ ˙ㄉㄥ ˙ㄉㄧ ˙ㄉㄧㄢ ˙ㄉㄧㄥ ˙ㄉㄨ ˙ㄉㄨㄛ ˙ㄉㄨㄟ ˙ㄉㄨㄣ ˙ㄉㄨㄥ ˙ㄊㄚ ˙ㄊㄞ ˙ㄊㄠ ˙ㄊㄡ ˙ㄊㄢ ˙ㄊㄤ ˙ㄊㄥ ˙ㄊㄧ ˙ㄊㄧㄠ ˙ㄊㄧㄢ ˙ㄊㄧㄥ ˙ㄊㄨ ˙ㄊㄨㄛ ˙ㄊㄨㄥ ˙ㄋㄚ ˙ㄋㄜ ˙ㄋㄞ ˙ㄋㄠ ˙ㄋㄤ ˙ㄋㄧㄡ ˙ㄋㄧㄢ ˙ㄋㄧㄤ ˙ㄋㄨㄥ ˙ㄌㄚ ˙ㄌㄛ ˙ㄌㄜ ˙ㄌㄞ ˙ㄌㄠ ˙ㄌㄡ ˙ㄌㄧ ˙ㄌㄧㄡ ˙ㄌㄧㄢ ˙ㄌㄧㄤ ˙ㄌㄧㄥ ˙ㄌㄨ ˙ㄌㄨㄛ ˙ㄌㄨㄥ ˙ㄍㄚ ˙ㄍㄜ ˙ㄍㄞ ˙ㄍㄠ ˙ㄍㄨ ˙ㄍㄨㄚ ˙ㄍㄨㄛ ˙ㄍㄨㄟ ˙ㄍㄨㄣ ˙ㄍㄨㄥ ˙ㄎㄜ ˙ㄎㄞ ˙ㄎㄡ ˙ㄎㄨㄞ ˙ㄏㄜ ˙ㄏㄞ ˙ㄏㄠ ˙ㄏㄡ ˙ㄏㄨ ˙ㄏㄨㄚ ˙ㄏㄨㄛ ˙ㄏㄨㄟ ˙ㄏㄨㄢ ˙ㄏㄨㄤ ˙ㄏㄨㄥ ˙ㄐㄧ ˙ㄐㄧㄚ ˙ㄐㄧㄝ ˙ㄐㄧㄠ ˙ㄐㄧㄡ ˙ㄐㄧㄢ ˙ㄐㄧㄤ ˙ㄐㄧㄥ ˙ㄐㄩ ˙ㄑ ˙ㄑㄧ ˙ㄑㄧㄠ ˙ㄑㄧㄡ ˙ㄑㄧㄢ ˙ㄑㄧㄥ ˙ㄑㄩ ˙ㄒㄧ ˙ㄒㄧㄚ ˙ㄒㄧㄝ ˙ㄒㄧㄢ ˙ㄒㄧㄣ ˙ㄒㄧㄤ ˙ㄒㄧㄥ ˙ㄓ ˙ㄓㄜ ˙ㄓㄠ ˙ㄓㄡ ˙ㄓㄤ ˙ㄓㄥ ˙ㄓㄨ ˙ㄓㄨㄚ ˙ㄓㄨㄛ ˙ㄓㄨㄤ ˙ㄔ ˙ㄔㄢ ˙ㄔㄣ ˙ㄔㄤ ˙ㄔㄥ ˙ㄔㄨ ˙ㄕ ˙ㄕㄚ ˙ㄕㄞ ˙ㄕㄡ ˙ㄕㄣ ˙ㄕㄤ ˙ㄕㄥ ˙ㄕㄨ ˙ㄕㄨㄛ ˙ㄕㄨㄟ ˙ㄖㄜ ˙ㄖㄣ ˙ㄗ ˙ㄗㄞ ˙ㄗㄢ ˙ㄗㄨㄛ ˙ㄘㄞ ˙ㄙ ˙ㄙㄚ ˙ㄙㄜ ˙ㄙㄤ ˙ㄙㄨㄛ ˙ㄙㄨㄥ ˙ㄚ ˙ㄣ ˙ㄧ ˙ㄧㄝ ˙ㄧㄠ ˙ㄧㄡ ˙ㄧㄢ ˙ㄧㄤ ˙ㄧㄥ ˙ㄨ ˙ㄨㄚ ˙ㄨㄛ ˙ㄨㄟ ˙ㄨㄤ ˙ㄩ ˙ㄩㄝ ˙ㄩㄥ ㄅㄚ ㄅㄚˇ ㄅㄚˊ ㄅㄚˋ ㄅㄛ ㄅㄛˇ ㄅㄛˊ ㄅㄛˋ ㄅㄞ ㄅㄞˇ ㄅㄞˊ ㄅㄞˋ ㄅㄟ ㄅㄟˇ ㄅㄟˋ ㄅㄠ ㄅㄠˇ ㄅㄠˊ ㄅㄠˋ ㄅㄢ ㄅㄢˇ ㄅㄢˋ ㄅㄣ ㄅㄣˇ ㄅㄣˋ ㄅㄤ ㄅㄤˇ ㄅㄤˋ ㄅㄥ ㄅㄥˇ ㄅㄥˊ ㄅㄥˋ ㄅㄧ ㄅㄧˇ ㄅㄧˊ ㄅㄧˋ ㄅㄧㄝ ㄅㄧㄝˇ ㄅㄧㄝˊ ㄅㄧㄝˋ ㄅㄧㄠ ㄅㄧㄠˇ ㄅㄧㄠˋ ㄅㄧㄢ ㄅㄧㄢˇ ㄅㄧㄢˋ ㄅㄧㄣ ㄅㄧㄣˋ ㄅㄧㄥ ㄅㄧㄥˇ ㄅㄧㄥˋ ㄅㄨ ㄅㄨˇ ㄅㄨˊ ㄅㄨˋ ㄆㄚ ㄆㄚˊ ㄆㄚˋ ㄆㄛ ㄆㄛˇ ㄆㄛˊ ㄆㄛˋ ㄆㄞ ㄆㄞˇ ㄆㄞˊ ㄆㄞˋ ㄆㄟ ㄆㄟˊ ㄆㄟˋ ㄆㄠ ㄆㄠˇ ㄆㄠˊ ㄆㄠˋ ㄆㄡ ㄆㄡˇ ㄆㄡˊ ㄆㄢ ㄆㄢˊ ㄆㄢˋ ㄆㄣ ㄆㄣˊ ㄆㄣˋ ㄆㄤ ㄆㄤˇ ㄆㄤˊ ㄆㄤˋ ㄆㄥ ㄆㄥˇ ㄆㄥˊ ㄆㄥˋ ㄆㄧ ㄆㄧˇ ㄆㄧˊ ㄆㄧˋ ㄆㄧㄚ ㄆㄧㄝ ㄆㄧㄝˇ ㄆㄧㄝˋ ㄆㄧㄠ ㄆㄧㄠˇ ㄆㄧㄠˊ ㄆㄧㄠˋ ㄆㄧㄢ ㄆㄧㄢˇ ㄆㄧㄢˊ ㄆㄧㄢˋ ㄆㄧㄣ ㄆㄧㄣˇ ㄆㄧㄣˊ ㄆㄧㄣˋ ㄆㄧㄥ ㄆㄧㄥˊ ㄆㄧㄥˋ ㄆㄨ ㄆㄨˇ ㄆㄨˊ ㄆㄨˋ ㄇㄚ ㄇㄚˇ ㄇㄚˊ ㄇㄚˋ ㄇㄛ ㄇㄛˇ ㄇㄛˊ ㄇㄛˋ ㄇㄞˇ ㄇㄞˊ ㄇㄞˋ ㄇㄟˇ ㄇㄟˊ ㄇㄟˋ ㄇㄠ ㄇㄠˇ ㄇㄠˊ ㄇㄠˋ ㄇㄡˇ ㄇㄡˊ ㄇㄡˋ ㄇㄢ ㄇㄢˇ ㄇㄢˊ ㄇㄢˋ ㄇㄣ ㄇㄣˇ ㄇㄣˊ ㄇㄣˋ ㄇㄤˇ ㄇㄤˊ ㄇㄥ ㄇㄥˇ ㄇㄥˊ ㄇㄥˋ ㄇㄧ ㄇㄧˇ ㄇㄧˊ ㄇㄧˋ ㄇㄧㄝ ㄇㄧㄝˋ ㄇㄧㄠ ㄇㄧㄠˇ ㄇㄧㄠˊ ㄇㄧㄠˋ ㄇㄧㄡˋ ㄇㄧㄢˇ ㄇㄧㄢˊ ㄇㄧㄢˋ ㄇㄧㄣˇ ㄇㄧㄣˊ ㄇㄧㄥˇ ㄇㄧㄥˊ ㄇㄧㄥˋ ㄇㄨˇ ㄇㄨˊ ㄇㄨˋ ㄈㄚ ㄈㄚˇ ㄈㄚˊ ㄈㄚˋ ㄈㄛˊ ㄈㄟ ㄈㄟˇ ㄈㄟˊ ㄈㄟˋ ㄈㄡ ㄈㄡˇ ㄈㄡˊ ㄈㄡˋ ㄈㄢ ㄈㄢˇ ㄈㄢˊ ㄈㄢˋ ㄈㄣ ㄈㄣˇ ㄈㄣˊ ㄈㄣˋ ㄈㄤ ㄈㄤˇ ㄈㄤˊ ㄈㄤˋ ㄈㄥ ㄈㄥˇ ㄈㄥˊ ㄈㄥˋ ㄈㄨ ㄈㄨˇ ㄈㄨˊ ㄈㄨˋ ㄉㄚ ㄉㄚˇ ㄉㄚˊ ㄉㄚˋ ㄉㄜ ㄉㄜˊ ㄉㄞ ㄉㄞˇ ㄉㄞˋ ㄉㄟˇ ㄉㄠ ㄉㄠˇ ㄉㄠˊ ㄉㄠˋ ㄉㄡ ㄉㄡˇ ㄉㄡˋ ㄉㄢ ㄉㄢˇ ㄉㄢˋ ㄉㄣˋ ㄉㄤ ㄉㄤˇ ㄉㄤˋ ㄉㄥ ㄉㄥˇ ㄉㄥˋ ㄉㄧ ㄉㄧˇ ㄉㄧˊ ㄉㄧˋ ㄉㄧㄝ ㄉㄧㄝˊ ㄉㄧㄠ ㄉㄧㄠˇ ㄉㄧㄠˋ ㄉㄧㄡ ㄉㄧㄢ ㄉㄧㄢˇ ㄉㄧㄢˋ ㄉㄧㄥ ㄉㄧㄥˇ ㄉㄧㄥˋ ㄉㄨ ㄉㄨˇ ㄉㄨˊ ㄉㄨˋ ㄉㄨㄛ ㄉㄨㄛˇ ㄉㄨㄛˊ ㄉㄨㄛˋ ㄉㄨㄟ ㄉㄨㄟˋ ㄉㄨㄢ ㄉㄨㄢˇ ㄉㄨㄢˋ ㄉㄨㄣ ㄉㄨㄣˇ ㄉㄨㄣˋ ㄉㄨㄥ ㄉㄨㄥˇ ㄉㄨㄥˋ ㄊㄚ ㄊㄚˇ ㄊㄚˋ ㄊㄜˋ ㄊㄞ ㄊㄞˊ ㄊㄞˋ ㄊㄠ ㄊㄠˇ ㄊㄠˊ ㄊㄠˋ ㄊㄡ ㄊㄡˇ ㄊㄡˊ ㄊㄡˋ ㄊㄢ ㄊㄢˇ ㄊㄢˊ ㄊㄢˋ ㄊㄤ ㄊㄤˇ ㄊㄤˊ ㄊㄤˋ ㄊㄥ ㄊㄥˊ ㄊㄧ ㄊㄧˇ ㄊㄧˊ ㄊㄧˋ ㄊㄧㄝ ㄊㄧㄝˇ ㄊㄧㄝˋ ㄊㄧㄠ ㄊㄧㄠˇ ㄊㄧㄠˊ ㄊㄧㄠˋ ㄊㄧㄢ ㄊㄧㄢˇ ㄊㄧㄢˊ ㄊㄧㄢˋ ㄊㄧㄥ ㄊㄧㄥˇ ㄊㄧㄥˊ ㄊㄧㄥˋ ㄊㄨ ㄊㄨˇ ㄊㄨˊ ㄊㄨˋ ㄊㄨㄛ ㄊㄨㄛˇ ㄊㄨㄛˊ ㄊㄨㄛˋ ㄊㄨㄟ ㄊㄨㄟˇ ㄊㄨㄟˊ ㄊㄨㄟˋ ㄊㄨㄢ ㄊㄨㄢˇ ㄊㄨㄢˊ ㄊㄨㄢˋ ㄊㄨㄣ ㄊㄨㄣˇ ㄊㄨㄣˊ ㄊㄨㄣˋ ㄊㄨㄥ ㄊㄨㄥˇ ㄊㄨㄥˊ ㄊㄨㄥˋ ㄋㄚ ㄋㄚˇ ㄋㄚˊ ㄋㄚˋ ㄋㄜˋ ㄋㄞˇ ㄋㄞˋ ㄋㄟˇ ㄋㄟˋ ㄋㄠ ㄋㄠˇ ㄋㄠˊ ㄋㄠˋ ㄋㄡˊ ㄋㄡˋ ㄋㄢ ㄋㄢˇ ㄋㄢˊ ㄋㄢˋ ㄋㄣˋ ㄋㄤˇ ㄋㄤˊ ㄋㄤˋ ㄋㄥˊ ㄋㄧˇ ㄋㄧˊ ㄋㄧˋ ㄋㄧㄝ ㄋㄧㄝˊ ㄋㄧㄝˋ ㄋㄧㄠˇ ㄋㄧㄠˋ ㄋㄧㄡ ㄋㄧㄡˇ ㄋㄧㄡˊ ㄋㄧㄡˋ ㄋㄧㄢ ㄋㄧㄢˇ ㄋㄧㄢˊ ㄋㄧㄢˋ ㄋㄧㄣˊ ㄋㄧㄤˊ ㄋㄧㄤˋ ㄋㄧㄥˇ ㄋㄧㄥˊ ㄋㄧㄥˋ ㄋㄨˇ ㄋㄨˊ ㄋㄨˋ ㄋㄨㄛˇ ㄋㄨㄛˊ ㄋㄨㄛˋ ㄋㄨㄢˇ ㄋㄨㄣˊ ㄋㄨㄥˊ ㄋㄨㄥˋ ㄋㄩˇ ㄋㄩˋ ㄋㄩㄝˋ ㄌㄚ ㄌㄚˇ ㄌㄚˊ ㄌㄚˋ ㄌㄜˋ ㄌㄞˊ ㄌㄞˋ ㄌㄟ ㄌㄟˇ ㄌㄟˊ ㄌㄟˋ ㄌㄠ ㄌㄠˇ ㄌㄠˊ ㄌㄠˋ ㄌㄡ ㄌㄡˇ ㄌㄡˊ ㄌㄡˋ ㄌㄢˇ ㄌㄢˊ ㄌㄢˋ ㄌㄤ ㄌㄤˇ ㄌㄤˊ ㄌㄤˋ ㄌㄥ ㄌㄥˇ ㄌㄥˊ ㄌㄥˋ ㄌㄧ ㄌㄧˇ ㄌㄧˊ ㄌㄧˋ ㄌㄧㄚˇ ㄌㄧㄝ ㄌㄧㄝˇ ㄌㄧㄝˊ ㄌㄧㄝˋ ㄌㄧㄠ ㄌㄧㄠˇ ㄌㄧㄠˊ ㄌㄧㄠˋ ㄌㄧㄡ ㄌㄧㄡˇ ㄌㄧㄡˊ ㄌㄧㄡˋ ㄌㄧㄢˇ ㄌㄧㄢˊ ㄌㄧㄢˋ ㄌㄧㄣˇ ㄌㄧㄣˊ ㄌㄧㄣˋ ㄌㄧㄤˇ ㄌㄧㄤˊ ㄌㄧㄤˋ ㄌㄧㄥ ㄌㄧㄥˇ ㄌㄧㄥˊ ㄌㄧㄥˋ ㄌㄨ ㄌㄨˇ ㄌㄨˊ ㄌㄨˋ ㄌㄨㄛ ㄌㄨㄛˇ ㄌㄨㄛˊ ㄌㄨㄛˋ ㄌㄨㄢˇ ㄌㄨㄢˊ ㄌㄨㄢˋ ㄌㄨㄣ ㄌㄨㄣˊ ㄌㄨㄣˋ ㄌㄨㄥˇ ㄌㄨㄥˊ ㄌㄨㄥˋ ㄌㄩˇ ㄌㄩˊ ㄌㄩˋ ㄌㄩㄝˋ ㄌㄩㄢˇ ㄌㄩㄢˊ ㄍㄚ ㄍㄚˇ ㄍㄚˊ ㄍㄚˋ ㄍㄜ ㄍㄜˇ ㄍㄜˊ ㄍㄜˋ ㄍㄞ ㄍㄞˇ ㄍㄞˋ ㄍㄟˇ ㄍㄠ ㄍㄠˇ ㄍㄠˋ ㄍㄡ ㄍㄡˇ ㄍㄡˋ ㄍㄢ ㄍㄢˇ ㄍㄢˋ ㄍㄣ ㄍㄣˇ ㄍㄣˊ ㄍㄣˋ ㄍㄤ ㄍㄤˇ ㄍㄤˋ ㄍㄥ ㄍㄥˇ ㄍㄥˋ ㄍㄨ ㄍㄨˇ ㄍㄨˊ ㄍㄨˋ ㄍㄨㄚ ㄍㄨㄚˇ ㄍㄨㄚˋ ㄍㄨㄛ ㄍㄨㄛˇ ㄍㄨㄛˊ ㄍㄨㄛˋ ㄍㄨㄞ ㄍㄨㄞˇ ㄍㄨㄞˋ ㄍㄨㄟ ㄍㄨㄟˇ ㄍㄨㄟˋ ㄍㄨㄢ ㄍㄨㄢˇ ㄍㄨㄢˋ ㄍㄨㄣˇ ㄍㄨㄣˋ ㄍㄨㄤ ㄍㄨㄤˇ ㄍㄨㄤˋ ㄍㄨㄥ ㄍㄨㄥˇ ㄍㄨㄥˋ ㄎㄚ ㄎㄚˇ ㄎㄚˋ ㄎㄜ ㄎㄜˇ ㄎㄜˊ ㄎㄜˋ ㄎㄞ ㄎㄞˇ ㄎㄞˋ ㄎㄠ ㄎㄠˇ ㄎㄠˋ ㄎㄡ ㄎㄡˇ ㄎㄡˋ ㄎㄢ ㄎㄢˇ ㄎㄢˋ ㄎㄣˇ ㄎㄣˋ ㄎㄤ ㄎㄤˇ ㄎㄤˊ ㄎㄤˋ ㄎㄥ ㄎㄥˇ ㄎㄨ ㄎㄨˇ ㄎㄨˋ ㄎㄨㄚ ㄎㄨㄚˇ ㄎㄨㄚˋ ㄎㄨㄛˋ ㄎㄨㄞ ㄎㄨㄞˇ ㄎㄨㄞˋ ㄎㄨㄟ ㄎㄨㄟˇ ㄎㄨㄟˊ ㄎㄨㄟˋ ㄎㄨㄢ ㄎㄨㄢˇ ㄎㄨㄣ ㄎㄨㄣˇ ㄎㄨㄣˋ ㄎㄨㄤ ㄎㄨㄤˇ ㄎㄨㄤˊ ㄎㄨㄤˋ ㄎㄨㄥ ㄎㄨㄥˇ ㄎㄨㄥˋ ㄏㄚ ㄏㄚˇ ㄏㄚˊ ㄏㄜ ㄏㄜˊ ㄏㄜˋ ㄏㄞ ㄏㄞˇ ㄏㄞˊ ㄏㄞˋ ㄏㄟ ㄏㄟˇ ㄏㄠ ㄏㄠˇ ㄏㄠˊ ㄏㄠˋ ㄏㄡ ㄏㄡˇ ㄏㄡˊ ㄏㄡˋ ㄏㄢ ㄏㄢˇ ㄏㄢˊ ㄏㄢˋ ㄏㄣ ㄏㄣˇ ㄏㄣˊ ㄏㄣˋ ㄏㄤ ㄏㄤˊ ㄏㄤˋ ㄏㄥ ㄏㄥˊ ㄏㄥˋ ㄏㄨ ㄏㄨˇ ㄏㄨˊ ㄏㄨˋ ㄏㄨㄚ ㄏㄨㄚˊ ㄏㄨㄚˋ ㄏㄨㄛ ㄏㄨㄛˇ ㄏㄨㄛˊ ㄏㄨㄛˋ ㄏㄨㄞˊ ㄏㄨㄞˋ ㄏㄨㄟ ㄏㄨㄟˇ ㄏㄨㄟˊ ㄏㄨㄟˋ ㄏㄨㄢ ㄏㄨㄢˇ ㄏㄨㄢˊ ㄏㄨㄢˋ ㄏㄨㄣ ㄏㄨㄣˇ ㄏㄨㄣˊ ㄏㄨㄣˋ ㄏㄨㄤ ㄏㄨㄤˇ ㄏㄨㄤˊ ㄏㄨㄤˋ ㄏㄨㄥ ㄏㄨㄥˇ ㄏㄨㄥˊ ㄏㄨㄥˋ ㄐㄧ ㄐㄧˇ ㄐㄧˊ ㄐㄧˋ ㄐㄧㄚ ㄐㄧㄚˇ ㄐㄧㄚˊ ㄐㄧㄚˋ ㄐㄧㄝ ㄐㄧㄝˇ ㄐㄧㄝˊ ㄐㄧㄝˋ ㄐㄧㄠ ㄐㄧㄠˇ ㄐㄧㄠˊ ㄐㄧㄠˋ ㄐㄧㄡ ㄐㄧㄡˇ ㄐㄧㄡˋ ㄐㄧㄢ ㄐㄧㄢˇ ㄐㄧㄢˋ ㄐㄧㄣ ㄐㄧㄣˇ ㄐㄧㄣˋ ㄐㄧㄤ ㄐㄧㄤˇ ㄐㄧㄤˋ ㄐㄧㄥ ㄐㄧㄥˇ ㄐㄧㄥˋ ㄐㄩ ㄐㄩˇ ㄐㄩˊ ㄐㄩˋ ㄐㄩㄝ ㄐㄩㄝˇ ㄐㄩㄝˊ ㄐㄩㄝˋ ㄐㄩㄢ ㄐㄩㄢˇ ㄐㄩㄢˋ ㄐㄩㄣ ㄐㄩㄣˇ ㄐㄩㄣˋ ㄐㄩㄥ ㄐㄩㄥˇ ㄑㄧ ㄑㄧˇ ㄑㄧˊ ㄑㄧˋ ㄑㄧㄚ ㄑㄧㄚˇ ㄑㄧㄚˋ ㄑㄧㄝ ㄑㄧㄝˇ ㄑㄧㄝˊ ㄑㄧㄝˋ ㄑㄧㄠ ㄑㄧㄠˇ ㄑㄧㄠˊ ㄑㄧㄠˋ ㄑㄧㄡ ㄑㄧㄡˇ ㄑㄧㄡˊ ㄑㄧㄢ ㄑㄧㄢˇ ㄑㄧㄢˊ ㄑㄧㄢˋ ㄑㄧㄣ ㄑㄧㄣˇ ㄑㄧㄣˊ ㄑㄧㄣˋ ㄑㄧㄤ ㄑㄧㄤˇ ㄑㄧㄤˊ ㄑㄧㄤˋ ㄑㄧㄥ ㄑㄧㄥˇ ㄑㄧㄥˊ ㄑㄧㄥˋ ㄑㄩ ㄑㄩˇ ㄑㄩˊ ㄑㄩˋ ㄑㄩㄝ ㄑㄩㄝˊ ㄑㄩㄝˋ ㄑㄩㄢ ㄑㄩㄢˇ ㄑㄩㄢˊ ㄑㄩㄢˋ ㄑㄩㄣ ㄑㄩㄣˊ ㄑㄩㄥ ㄑㄩㄥˊ ㄒㄧ ㄒㄧˇ ㄒㄧˊ ㄒㄧˋ ㄒㄧㄚ ㄒㄧㄚˊ ㄒㄧㄚˋ ㄒㄧㄝ ㄒㄧㄝˇ ㄒㄧㄝˊ ㄒㄧㄝˋ ㄒㄧㄠ ㄒㄧㄠˇ ㄒㄧㄠˊ ㄒㄧㄠˋ ㄒㄧㄡ ㄒㄧㄡˇ ㄒㄧㄡˋ ㄒㄧㄢ ㄒㄧㄢˇ ㄒㄧㄢˊ ㄒㄧㄢˋ ㄒㄧㄣ ㄒㄧㄣˇ ㄒㄧㄣˊ ㄒㄧㄣˋ ㄒㄧㄤ ㄒㄧㄤˇ ㄒㄧㄤˊ ㄒㄧㄤˋ ㄒㄧㄥ ㄒㄧㄥˇ ㄒㄧㄥˊ ㄒㄧㄥˋ ㄒㄩ ㄒㄩˇ ㄒㄩˊ ㄒㄩˋ ㄒㄩㄝ ㄒㄩㄝˇ ㄒㄩㄝˊ ㄒㄩㄝˋ ㄒㄩㄢ ㄒㄩㄢˇ ㄒㄩㄢˊ ㄒㄩㄢˋ ㄒㄩㄣ ㄒㄩㄣˊ ㄒㄩㄣˋ ㄒㄩㄥ ㄒㄩㄥˊ ㄒㄩㄥˋ ㄓ ㄓˇ ㄓˊ ㄓˋ ㄓㄚ ㄓㄚˇ ㄓㄚˊ ㄓㄚˋ ㄓㄜ ㄓㄜˇ ㄓㄜˊ ㄓㄜˋ ㄓㄞ ㄓㄞˇ ㄓㄞˊ ㄓㄞˋ ㄓㄟˋ ㄓㄠ ㄓㄠˇ ㄓㄠˊ ㄓㄠˋ ㄓㄡ ㄓㄡˇ ㄓㄡˊ ㄓㄡˋ ㄓㄢ ㄓㄢˇ ㄓㄢˋ ㄓㄣ ㄓㄣˇ ㄓㄣˋ ㄓㄤ ㄓㄤˇ ㄓㄤˋ ㄓㄥ ㄓㄥˇ ㄓㄥˋ ㄓㄨ ㄓㄨˇ ㄓㄨˊ ㄓㄨˋ ㄓㄨㄚ ㄓㄨㄚˇ ㄓㄨㄛ ㄓㄨㄛˊ ㄓㄨㄞ ㄓㄨㄞˇ ㄓㄨㄞˋ ㄓㄨㄟ ㄓㄨㄟˋ ㄓㄨㄢ ㄓㄨㄢˇ ㄓㄨㄢˋ ㄓㄨㄣ ㄓㄨㄣˇ ㄓㄨㄣˋ ㄓㄨㄤ ㄓㄨㄤˇ ㄓㄨㄤˋ ㄓㄨㄥ ㄓㄨㄥˇ ㄓㄨㄥˋ ㄔ ㄔˇ ㄔˊ ㄔˋ ㄔㄚ ㄔㄚˇ ㄔㄚˊ ㄔㄚˋ ㄔㄜ ㄔㄜˇ ㄔㄜˋ ㄔㄞ ㄔㄞˇ ㄔㄞˊ ㄔㄞˋ ㄔㄠ ㄔㄠˇ ㄔㄠˊ ㄔㄠˋ ㄔㄡ ㄔㄡˇ ㄔㄡˊ ㄔㄡˋ ㄔㄢ ㄔㄢˇ ㄔㄢˊ ㄔㄢˋ ㄔㄣ ㄔㄣˇ ㄔㄣˊ ㄔㄣˋ ㄔㄤ ㄔㄤˇ ㄔㄤˊ ㄔㄤˋ ㄔㄥ ㄔㄥˇ ㄔㄥˊ ㄔㄥˋ ㄔㄨ ㄔㄨˇ ㄔㄨˊ ㄔㄨˋ ㄔㄨㄚ ㄔㄨㄚˇ ㄔㄨㄚˋ ㄔㄨㄛ ㄔㄨㄛˋ ㄔㄨㄞ ㄔㄨㄞˇ ㄔㄨㄞˊ ㄔㄨㄞˋ ㄔㄨㄟ ㄔㄨㄟˊ ㄔㄨㄟˋ ㄔㄨㄢ ㄔㄨㄢˇ ㄔㄨㄢˊ ㄔㄨㄢˋ ㄔㄨㄣ ㄔㄨㄣˇ ㄔㄨㄣˊ ㄔㄨㄤ ㄔㄨㄤˇ ㄔㄨㄤˊ ㄔㄨㄤˋ ㄔㄨㄥ ㄔㄨㄥˇ ㄔㄨㄥˊ ㄔㄨㄥˋ ㄕ ㄕˇ ㄕˊ ㄕˋ ㄕㄚ ㄕㄚˇ ㄕㄚˊ ㄕㄚˋ ㄕㄜ ㄕㄜˇ ㄕㄜˊ ㄕㄜˋ ㄕㄞ ㄕㄞˇ ㄕㄞˋ ㄕㄟˊ ㄕㄠ ㄕㄠˇ ㄕㄠˊ ㄕㄠˋ ㄕㄡ ㄕㄡˇ ㄕㄡˊ ㄕㄡˋ ㄕㄢ ㄕㄢˇ ㄕㄢˋ ㄕㄣ ㄕㄣˇ ㄕㄣˊ ㄕㄣˋ ㄕㄤ ㄕㄤˇ ㄕㄤˋ ㄕㄥ ㄕㄥˇ ㄕㄥˊ ㄕㄥˋ ㄕㄨ ㄕㄨˇ ㄕㄨˊ ㄕㄨˋ ㄕㄨㄚ ㄕㄨㄚˇ ㄕㄨㄚˋ ㄕㄨㄛ ㄕㄨㄛˋ ㄕㄨㄞ ㄕㄨㄞˇ ㄕㄨㄞˋ ㄕㄨㄟˇ ㄕㄨㄟˊ ㄕㄨㄟˋ ㄕㄨㄢ ㄕㄨㄢˋ ㄕㄨㄣˇ ㄕㄨㄣˋ ㄕㄨㄤ ㄕㄨㄤˇ ㄕㄨㄤˋ ㄖˋ ㄖㄜˇ ㄖㄜˋ ㄖㄠˇ ㄖㄠˊ ㄖㄠˋ ㄖㄡˇ ㄖㄡˊ ㄖㄡˋ ㄖㄢˇ ㄖㄢˊ ㄖㄣˇ ㄖㄣˊ ㄖㄣˋ ㄖㄤ ㄖㄤˇ ㄖㄤˊ ㄖㄤˋ ㄖㄥ ㄖㄥˇ ㄖㄥˊ ㄖㄥˋ ㄖㄨˇ ㄖㄨˊ ㄖㄨˋ ㄖㄨㄛˋ ㄖㄨㄟˇ ㄖㄨㄟˊ ㄖㄨㄟˋ ㄖㄨㄢˇ ㄖㄨㄢˊ ㄖㄨㄣˊ ㄖㄨㄣˋ ㄖㄨㄥˇ ㄖㄨㄥˊ ㄗ ㄗˇ ㄗˋ ㄗㄚ ㄗㄚˊ ㄗㄜˇ ㄗㄜˊ ㄗㄜˋ ㄗㄞ ㄗㄞˇ ㄗㄞˋ ㄗㄟˊ ㄗㄠ ㄗㄠˇ ㄗㄠˊ ㄗㄠˋ ㄗㄡ ㄗㄡˇ ㄗㄡˋ ㄗㄢ ㄗㄢˇ ㄗㄢˊ ㄗㄢˋ ㄗㄣ ㄗㄣˇ ㄗㄣˋ ㄗㄤ ㄗㄤˇ ㄗㄤˋ ㄗㄥ ㄗㄥˋ ㄗㄨ ㄗㄨˇ ㄗㄨˊ ㄗㄨˋ ㄗㄨㄛ ㄗㄨㄛˇ ㄗㄨㄛˊ ㄗㄨㄛˋ ㄗㄨㄟ ㄗㄨㄟˇ ㄗㄨㄟˋ ㄗㄨㄢ ㄗㄨㄢˇ ㄗㄨㄢˋ ㄗㄨㄣ ㄗㄨㄣˇ ㄗㄨㄣˋ ㄗㄨㄥ ㄗㄨㄥˇ ㄗㄨㄥˋ ㄘ ㄘˇ ㄘˊ ㄘˋ ㄘㄚ ㄘㄚˇ ㄘㄚˋ ㄘㄜˋ ㄘㄞ ㄘㄞˇ ㄘㄞˊ ㄘㄞˋ ㄘㄠ ㄘㄠˇ ㄘㄠˊ ㄘㄠˋ ㄘㄡˋ ㄘㄢ ㄘㄢˇ ㄘㄢˊ ㄘㄢˋ ㄘㄣ ㄘㄣˊ ㄘㄤ ㄘㄤˇ ㄘㄤˊ ㄘㄥ ㄘㄥˇ ㄘㄥˊ ㄘㄥˋ ㄘㄨ ㄘㄨˊ ㄘㄨˋ ㄘㄨㄛ ㄘㄨㄛˇ ㄘㄨㄛˊ ㄘㄨㄛˋ ㄘㄨㄟ ㄘㄨㄟˇ ㄘㄨㄟˋ ㄘㄨㄢ ㄘㄨㄢˊ ㄘㄨㄢˋ ㄘㄨㄣ ㄘㄨㄣˇ ㄘㄨㄣˊ ㄘㄨㄣˋ ㄘㄨㄥ ㄘㄨㄥˊ ㄘㄨㄥˋ ㄙ ㄙˇ ㄙˋ ㄙㄚ ㄙㄚˇ ㄙㄚˋ ㄙㄜˋ ㄙㄞ ㄙㄞˊ ㄙㄞˋ ㄙㄟ ㄙㄠ ㄙㄠˇ ㄙㄠˋ ㄙㄡ ㄙㄡˇ ㄙㄡˋ ㄙㄢ ㄙㄢˇ ㄙㄢˋ ㄙㄣ ㄙㄤ ㄙㄤˇ ㄙㄤˋ ㄙㄥ ㄙㄨ ㄙㄨˊ ㄙㄨˋ ㄙㄨㄛ ㄙㄨㄛˇ ㄙㄨㄛˊ ㄙㄨㄛˋ ㄙㄨㄟ ㄙㄨㄟˇ ㄙㄨㄟˊ ㄙㄨㄟˋ ㄙㄨㄢ ㄙㄨㄢˇ ㄙㄨㄢˋ ㄙㄨㄣ ㄙㄨㄣˇ ㄙㄨㄣˋ ㄙㄨㄥ ㄙㄨㄥˇ ㄙㄨㄥˊ ㄙㄨㄥˋ ㄚ ㄚˊ ㄚˋ ㄛ ㄛˇ ㄛˊ ㄜ ㄜˇ ㄜˊ ㄜˋ ㄝˋ ㄞ ㄞˇ ㄞˊ ㄞˋ ㄟˋ ㄠ ㄠˇ ㄠˊ ㄠˋ ㄡ ㄡˇ ㄡˊ ㄡˋ ㄢ ㄢˇ ㄢˊ ㄢˋ ㄣ ㄣˋ ㄤ ㄤˊ ㄤˋ ㄥ ㄦˇ ㄦˊ ㄦˋ ㄧ ㄧˇ ㄧˊ ㄧˋ ㄧㄚ ㄧㄚˇ ㄧㄚˊ ㄧㄚˋ ㄧㄛ ㄧㄝ ㄧㄝˇ ㄧㄝˊ ㄧㄝˋ ㄧㄞˊ ㄧㄠ ㄧㄠˇ ㄧㄠˊ ㄧㄠˋ ㄧㄡ ㄧㄡˇ ㄧㄡˊ ㄧㄡˋ ㄧㄢ ㄧㄢˇ ㄧㄢˊ ㄧㄢˋ ㄧㄣ ㄧㄣˇ ㄧㄣˊ ㄧㄣˋ ㄧㄤ ㄧㄤˇ ㄧㄤˊ ㄧㄤˋ ㄧㄥ ㄧㄥˇ ㄧㄥˊ ㄧㄥˋ ㄨ ㄨˇ ㄨˊ ㄨˋ ㄨㄚ ㄨㄚˇ ㄨㄚˊ ㄨㄚˋ ㄨㄛ ㄨㄛˇ ㄨㄛˋ ㄨㄞ ㄨㄞˇ ㄨㄞˋ ㄨㄟ ㄨㄟˇ ㄨㄟˊ ㄨㄟˋ ㄨㄢ ㄨㄢˇ ㄨㄢˊ ㄨㄢˋ ㄨㄣ ㄨㄣˇ ㄨㄣˊ ㄨㄣˋ ㄨㄤ ㄨㄤˇ ㄨㄤˊ ㄨㄤˋ ㄨㄥ ㄨㄥˇ ㄨㄥˋ ㄩ ㄩˇ ㄩˊ ㄩˋ ㄩㄝ ㄩㄝˋ ㄩㄢ ㄩㄢˇ ㄩㄢˊ ㄩㄢˋ ㄩㄣ ㄩㄣˇ ㄩㄣˊ ㄩㄣˋ ㄩㄥ ㄩㄥˇ ㄩㄥˊ ㄩㄥˋ'.split(' '));
+const SYL = new Set([...SYL_T].map(baseOf));
+const isSyl = s => toneOf(s) === 0 ? SYL.has(baseOf(s)) : SYL_T.has(s);
 
-/* ---------- 國語題庫 ---------- */
-// 聽字找第一個注音：[字詞, 圖, 第一個字的注音]
-const FIRST_SOUND = [
-  ['杯子', '🥤', 'ㄅㄟ'], ['鼻子', '👃', 'ㄅㄧˊ'], ['葡萄', '🍇', 'ㄆㄨˊ'], ['蘋果', '🍎', 'ㄆㄧㄥˊ'], ['貓', '🐱', 'ㄇㄠ'],
-  ['馬', '🐴', 'ㄇㄚˇ'], ['飛機', '✈️', 'ㄈㄟ'], ['房子', '🏠', 'ㄈㄤˊ'], ['蛋', '🥚', 'ㄉㄢˋ'], ['兔子', '🐰', 'ㄊㄨˋ'],
-  ['太陽', '☀️', 'ㄊㄞˋ'], ['牛', '🐮', 'ㄋㄧㄡˊ'], ['鳥', '🐦', 'ㄋㄧㄠˇ'], ['老虎', '🐯', 'ㄌㄠˇ'], ['籃球', '🏀', 'ㄌㄢˊ'],
-  ['狗', '🐶', 'ㄍㄡˇ'], ['褲子', '👖', 'ㄎㄨˋ'], ['恐龍', '🦖', 'ㄎㄨㄥˇ'], ['花', '🌸', 'ㄏㄨㄚ'], ['火車', '🚂', 'ㄏㄨㄛˇ'],
-  ['猴子', '🐵', 'ㄏㄡˊ'], ['雞', '🐔', 'ㄐㄧ'], ['橘子', '🍊', 'ㄐㄩˊ'], ['企鵝', '🐧', 'ㄑㄧˋ'], ['球', '⚽', 'ㄑㄧㄡˊ'],
-  ['西瓜', '🍉', 'ㄒㄧ'], ['香蕉', '🍌', 'ㄒㄧㄤ'], ['熊', '🐻', 'ㄒㄩㄥˊ'], ['豬', '🐷', 'ㄓㄨ'], ['蜘蛛', '🕷️', 'ㄓ'],
-  ['車子', '🚗', 'ㄔㄜ'], ['船', '🚢', 'ㄔㄨㄢˊ'], ['書', '📖', 'ㄕㄨ'], ['獅子', '🦁', 'ㄕ'], ['薯條', '🍟', 'ㄕㄨˇ'],
-  ['肉', '🍖', 'ㄖㄡˋ'], ['嘴巴', '👄', 'ㄗㄨㄟˇ'], ['草', '🌱', 'ㄘㄠˇ'], ['傘', '☂️', 'ㄙㄢˇ'], ['松鼠', '🐿️', 'ㄙㄨㄥ']
-];
-// 看圖找拼音：[詞, 圖, 正確, 錯1, 錯2]
-const WORDS = [
-  ['貓咪', '🐱', 'ㄇㄠ ㄇㄧ', 'ㄇㄠˊ ㄇㄧ', 'ㄈㄠ ㄇㄧ'], ['小鳥', '🐦', 'ㄒㄧㄠˇ ㄋㄧㄠˇ', 'ㄒㄧㄠˋ ㄋㄧㄠˇ', 'ㄑㄧㄠˇ ㄋㄧㄠˇ'],
-  ['茶壺', '🫖', 'ㄔㄚˊ ㄏㄨˊ', 'ㄔㄚˇ ㄏㄨˊ', 'ㄘㄚˊ ㄏㄨˊ'], ['企鵝', '🐧', 'ㄑㄧˋ ㄜˊ', 'ㄑㄧˇ ㄜˊ', 'ㄐㄧˋ ㄜˊ'],
-  ['葡萄', '🍇', 'ㄆㄨˊ ㄊㄠˊ', 'ㄅㄨˊ ㄊㄠˊ', 'ㄆㄨˋ ㄊㄠˊ'], ['西瓜', '🍉', 'ㄒㄧ ㄍㄨㄚ', 'ㄒㄧˊ ㄍㄨㄚ', 'ㄒㄧ ㄎㄨㄚ'],
-  ['火車', '🚂', 'ㄏㄨㄛˇ ㄔㄜ', 'ㄏㄨㄛˋ ㄔㄜ', 'ㄏㄨㄛˇ ㄘㄜ'], ['烏龜', '🐢', 'ㄨ ㄍㄨㄟ', 'ㄨˊ ㄍㄨㄟ', 'ㄨ ㄎㄨㄟ'],
-  ['香蕉', '🍌', 'ㄒㄧㄤ ㄐㄧㄠ', 'ㄒㄧㄤˇ ㄐㄧㄠ', 'ㄒㄧㄤ ㄑㄧㄠ'], ['蘋果', '🍎', 'ㄆㄧㄥˊ ㄍㄨㄛˇ', 'ㄆㄧㄣˊ ㄍㄨㄛˇ', 'ㄆㄧㄥˊ ㄍㄨㄛˋ'],
-  ['薯條', '🍟', 'ㄕㄨˇ ㄊㄧㄠˊ', 'ㄙㄨˇ ㄊㄧㄠˊ', 'ㄕㄨˋ ㄊㄧㄠˊ'], ['兔子', '🐰', 'ㄊㄨˋ ˙ㄗ', 'ㄊㄨˇ ˙ㄗ', 'ㄉㄨˋ ˙ㄗ'],
-  ['書包', '🎒', 'ㄕㄨ ㄅㄠ', 'ㄙㄨ ㄅㄠ', 'ㄕㄨ ㄆㄠ'], ['雨傘', '☂️', 'ㄩˇ ㄙㄢˇ', 'ㄩˋ ㄙㄢˇ', 'ㄩˇ ㄕㄢˇ'],
-  ['地瓜', '🍠', 'ㄉㄧˋ ㄍㄨㄚ', 'ㄊㄧˋ ㄍㄨㄚ', 'ㄉㄧˇ ㄍㄨㄚ'], ['甲蟲', '🪲', 'ㄐㄧㄚˇ ㄔㄨㄥˊ', 'ㄑㄧㄚˇ ㄔㄨㄥˊ', 'ㄐㄧㄚˇ ㄔㄨㄥˋ'],
-  ['蚯蚓', '🪱', 'ㄑㄧㄡ ㄧㄣˇ', 'ㄐㄧㄡ ㄧㄣˇ', 'ㄑㄧㄡ ㄧㄥˇ'], ['河馬', '🦛', 'ㄏㄜˊ ㄇㄚˇ', 'ㄏㄜˋ ㄇㄚˇ', 'ㄏㄜˊ ㄈㄚˇ'],
-  ['大象', '🐘', 'ㄉㄚˋ ㄒㄧㄤˋ', 'ㄉㄚˇ ㄒㄧㄤˋ', 'ㄉㄚˋ ㄑㄧㄤˋ'], ['老虎', '🐯', 'ㄌㄠˇ ㄏㄨˇ', 'ㄋㄠˇ ㄏㄨˇ', 'ㄌㄠˋ ㄏㄨˇ'],
-  ['獅子', '🦁', 'ㄕ ˙ㄗ', 'ㄙ ˙ㄗ', 'ㄕˇ ˙ㄗ']
-];
-// 拼音魔法：[聲母, 韻母, 字, 字的注音]
-const COMBOS = [
-  ['ㄅ', 'ㄠ', '包', 'ㄅㄠ'], ['ㄇ', 'ㄠ', '貓', 'ㄇㄠ'], ['ㄐ', 'ㄧ', '雞', 'ㄐㄧ'], ['ㄒ', 'ㄧ', '西', 'ㄒㄧ'], ['ㄑ', 'ㄧ', '七', 'ㄑㄧ'],
-  ['ㄉ', 'ㄚ', '大', 'ㄉㄚˋ'], ['ㄊ', 'ㄨ', '兔', 'ㄊㄨˋ'], ['ㄌ', 'ㄠ', '老', 'ㄌㄠˇ'], ['ㄕ', 'ㄨ', '書', 'ㄕㄨ'], ['ㄓ', 'ㄨ', '豬', 'ㄓㄨ'],
-  ['ㄆ', 'ㄠ', '跑', 'ㄆㄠˇ'], ['ㄈ', 'ㄟ', '飛', 'ㄈㄟ'], ['ㄏ', 'ㄨㄚ', '花', 'ㄏㄨㄚ'], ['ㄒ', 'ㄧㄚ', '下', 'ㄒㄧㄚˋ'], ['ㄐ', 'ㄧㄚ', '家', 'ㄐㄧㄚ'],
-  ['ㄍ', 'ㄨㄚ', '瓜', 'ㄍㄨㄚ'], ['ㄉ', 'ㄨㄛ', '多', 'ㄉㄨㄛ'], ['ㄍ', 'ㄡ', '狗', 'ㄍㄡˇ'], ['ㄋ', 'ㄧㄡ', '牛', 'ㄋㄧㄡˊ'], ['ㄙ', 'ㄢ', '三', 'ㄙㄢ'],
-  ['ㄏ', 'ㄜ', '喝', 'ㄏㄜ'], ['ㄇ', 'ㄚ', '媽', 'ㄇㄚ'], ['ㄅ', 'ㄟ', '杯', 'ㄅㄟ'], ['ㄒ', 'ㄧㄠ', '小', 'ㄒㄧㄠˇ']
-];
-// 讀句子：句子、注音、問題、問題注音、選項[圖, 字]（第一個是答案）
+// 注音一行一行顯示（首冊還沒教國字，題目只用注音）。o.mask=[第幾個音, 第幾個符號] 換成框框；o.toneMask=第幾個音的聲調換成框框；o.hl=框起來的音
+function zyLine(z, o = {}) {
+  return `<span class="zy">${z.split(' ').map((s, i) => {
+    let inner = s;
+    if (o.toneMask === i) inner = `${baseOf(s)}<span class="blank">？</span>`;
+    else if (o.mask && o.mask[0] === i) {
+      const t = toneOf(s), b = [...baseOf(s)];
+      b[o.mask[1]] = '<span class="blank">？</span>';
+      inner = (t === 0 ? '˙' : '') + b.join('') + MARK[t];
+    }
+    return `<span class="syl${o.hl === i ? ' hl' : ''}">${inner}</span>`;
+  }).join('')}</span>`;
+}
+// 句子：注音以空白分開；標點黏在前一個音後面，才不會自己換到下一行
+function zySent(z) {
+  const out = [];
+  z.split(' ').forEach(t => { if (/^[，。？！、]$/.test(t) && out.length) out[out.length - 1] += `<span class="punc">${t}</span>`; else out.push(t); });
+  return out.map(t => `<span class="syl">${t}</span>`).join('');
+}
+// 拼讀給耳朵聽：ㄏ、ㄨ、ㄚ，花（念的時候注音會換成相近的國字，例如 ㄏ 念「喝」）
+const spellSyl = (s, ch) => `${[...baseOf(s)].join('、')}，${ch}`;
+const spell = (z, w) => z.split(' ').map((s, i) => spellSyl(s, [...w][i])).join('；');
+// 拼一拼的組成：聲符、介符、韻符，再加聲調符號（一聲不寫）
+const parts = s => [...baseOf(s)].concat(toneOf(s) > 1 ? [MARK[toneOf(s)]] : []);
+
+// 一個音的錯誤選項：換相似的聲符或韻符（sound），或換聲調（tone）
+function sylWrongs(s) {
+  const t = toneOf(s), syms = [...baseOf(s)], out = [];
+  const add = (b, tt, kind) => { const v = withTone(b, tt); if (v !== s && isSyl(v) && !out.some(o => o.v === v)) out.push({ v, kind }); };
+  if (INITIALS.includes(syms[0])) for (const c of CONF[syms[0]] || '') add(c + syms.slice(1).join(''), t, 'sound');
+  syms.forEach((c, i) => { if (!INITIALS.includes(c)) for (const d of FCONF[c] || '') add(syms.map((x, j) => j === i ? d : x).join(''), t, 'sound'); });
+  if (t > 0) for (const tt of [1, 2, 3, 4]) if (tt !== t) add(syms.join(''), tt, 'tone');
+  return shuffle(out);
+}
+// 整個詞的錯誤選項：一次只改一個音，盡量一個改音、一個改聲調
+function wordWrongs(z, n = 2) {
+  const zs = z.split(' '), sound = [], tone = [];
+  zs.forEach((s, i) => sylWrongs(s).forEach(w => (w.kind === 'sound' ? sound : tone).push(zs.map((x, j) => j === i ? w.v : x).join(' '))));
+  const a = shuffle(sound), b = shuffle(tone), out = [];
+  while (out.length < n && (a.length || b.length)) {
+    const src = out.length % 2 === 0 ? (a.length ? a : b) : (b.length ? b : a);
+    const v = src.shift(); if (!out.includes(v)) out.push(v);
+  }
+  return out;
+}
+
+/* ---------- 國語題庫：照首冊考卷的大題 ---------- */
+// 首冊詞語：[詞, 注音, 圖]。注音依教育部《重編國語辭典修訂本》（輕聲照辭典），改了請跑 tools/check-exam-cheer-zhuyin.js
+const BANK = [
+  ['貓', 'ㄇㄠ', '🐱'], ['狗', 'ㄍㄡˇ', '🐶'], ['牛', 'ㄋㄧㄡˊ', '🐮'], ['羊', 'ㄧㄤˊ', '🐑'], ['馬', 'ㄇㄚˇ', '🐴'], ['鳥', 'ㄋㄧㄠˇ', '🐦'],
+  ['魚', 'ㄩˊ', '🐟'], ['鴨', 'ㄧㄚ', '🦆'], ['雞', 'ㄐㄧ', '🐔'], ['豬', 'ㄓㄨ', '🐷'], ['兔子', 'ㄊㄨˋ ˙ㄗ', '🐰'], ['猴子', 'ㄏㄡˊ ˙ㄗ', '🐒'],
+  ['老虎', 'ㄌㄠˇ ㄏㄨˇ', '🐯'], ['大象', 'ㄉㄚˋ ㄒㄧㄤˋ', '🐘'], ['河馬', 'ㄏㄜˊ ㄇㄚˇ', '🦛'], ['烏龜', 'ㄨ ㄍㄨㄟ', '🐢'], ['青蛙', 'ㄑㄧㄥ ㄨㄚ', '🐸'],
+  ['蝴蝶', 'ㄏㄨˊ ㄉㄧㄝˊ', '🦋'], ['蜜蜂', 'ㄇㄧˋ ㄈㄥ', '🐝'], ['螃蟹', 'ㄆㄤˊ ㄒㄧㄝˋ', '🦀'], ['企鵝', 'ㄑㄧˋ ㄜˊ', '🐧'], ['熊貓', 'ㄒㄩㄥˊ ㄇㄠ', '🐼'],
+  ['獅子', 'ㄕ ˙ㄗ', '🦁'], ['蛇', 'ㄕㄜˊ', '🐍'], ['蚯蚓', 'ㄑㄧㄡ ㄧㄣˇ', '🪱'], ['甲蟲', 'ㄐㄧㄚˇ ㄔㄨㄥˊ', '🪲'], ['長頸鹿', 'ㄔㄤˊ ㄐㄧㄥˇ ㄌㄨˋ', '🦒'],
+  ['公雞', 'ㄍㄨㄥ ㄐㄧ', '🐓'], ['香蕉', 'ㄒㄧㄤ ㄐㄧㄠ', '🍌'], ['蘋果', 'ㄆㄧㄥˊ ㄍㄨㄛˇ', '🍎'], ['西瓜', 'ㄒㄧ ㄍㄨㄚ', '🍉'], ['葡萄', 'ㄆㄨˊ ㄊㄠˊ', '🍇'],
+  ['地瓜', 'ㄉㄧˋ ㄍㄨㄚ', '🍠'], ['薯條', 'ㄕㄨˇ ㄊㄧㄠˊ', '🍟'], ['蛋', 'ㄉㄢˋ', '🥚'], ['麵包', 'ㄇㄧㄢˋ ㄅㄠ', '🍞'], ['牛奶', 'ㄋㄧㄡˊ ㄋㄞˇ', '🥛'],
+  ['草莓', 'ㄘㄠˇ ㄇㄟˊ', '🍓'], ['橘子', 'ㄐㄩˊ ˙ㄗ', '🍊'], ['蘿蔔', 'ㄌㄨㄛˊ ˙ㄅㄛ', '🥕'], ['火車', 'ㄏㄨㄛˇ ㄔㄜ', '🚂'], ['飛機', 'ㄈㄟ ㄐㄧ', '✈️'],
+  ['船', 'ㄔㄨㄢˊ', '🚢'], ['汽車', 'ㄑㄧˋ ㄔㄜ', '🚗'], ['書包', 'ㄕㄨ ㄅㄠ', '🎒'], ['雨傘', 'ㄩˇ ㄙㄢˇ', '☂️'], ['杯子', 'ㄅㄟ ˙ㄗ', '🥤'],
+  ['帽子', 'ㄇㄠˋ ˙ㄗ', '🧢'], ['鞋子', 'ㄒㄧㄝˊ ˙ㄗ', '👟'], ['褲子', 'ㄎㄨˋ ˙ㄗ', '👖'], ['衣服', 'ㄧ ˙ㄈㄨ', '👕'], ['球', 'ㄑㄧㄡˊ', '⚽'],
+  ['氣球', 'ㄑㄧˋ ㄑㄧㄡˊ', '🎈'], ['鉛筆', 'ㄑㄧㄢ ㄅㄧˇ', '✏️'], ['時鐘', 'ㄕˊ ㄓㄨㄥ', '⏰'], ['門', 'ㄇㄣˊ', '🚪'], ['燈', 'ㄉㄥ', '💡'],
+  ['花', 'ㄏㄨㄚ', '🌸'], ['樹', 'ㄕㄨˋ', '🌳'], ['太陽', 'ㄊㄞˋ ㄧㄤˊ', '☀️'], ['星星', 'ㄒㄧㄥ ˙ㄒㄧㄥ', '⭐'], ['雲', 'ㄩㄣˊ', '☁️'], ['山', 'ㄕㄢ', '⛰️'],
+  ['爸爸', 'ㄅㄚˋ ˙ㄅㄚ', '👨'], ['媽媽', 'ㄇㄚ ˙ㄇㄚ', '👩'], ['奶奶', 'ㄋㄞˇ ˙ㄋㄞ', '👵'], ['爺爺', 'ㄧㄝˊ ˙ㄧㄝ', '👴'], ['耳朵', 'ㄦˇ ˙ㄉㄨㄛ', '👂'],
+  ['鼻子', 'ㄅㄧˊ ˙ㄗ', '👃'], ['嘴巴', 'ㄗㄨㄟˇ ˙ㄅㄚ', '👄'], ['手', 'ㄕㄡˇ', '✋'], ['腳', 'ㄐㄧㄠˇ', '🦶'], ['跑步', 'ㄆㄠˇ ㄅㄨˋ', '🏃'],
+  ['唱歌', 'ㄔㄤˋ ㄍㄜ', '🎤'], ['睡覺', 'ㄕㄨㄟˋ ㄐㄧㄠˋ', '😴']
+].map(([w, z, e]) => ({ w, z, e }));
+// 讀一讀的句子：句子、注音、問題、問題注音、選項[圖, 詞, 注音]（第一個是答案）
 const SENTENCES = [
-  { s: '小烏龜愛吃香蕉。', z: 'ㄒㄧㄠˇ ㄨ ㄍㄨㄟ ㄞˋ ㄔ ㄒㄧㄤ ㄐㄧㄠ', q: '小烏龜愛吃什麼？', qz: 'ㄒㄧㄠˇ ㄨ ㄍㄨㄟ ㄞˋ ㄔ ㄕㄣˊ ˙ㄇㄜ', o: [['🍌', '香蕉'], ['🍎', '蘋果'], ['🍟', '薯條']] },
-  { s: '火車在山下跑。', z: 'ㄏㄨㄛˇ ㄔㄜ ㄗㄞˋ ㄕㄢ ㄒㄧㄚˋ ㄆㄠˇ', q: '什麼在跑？', qz: 'ㄕㄣˊ ˙ㄇㄜ ㄗㄞˋ ㄆㄠˇ', o: [['🚂', '火車'], ['✈️', '飛機'], ['🚢', '船']] },
-  { s: '小鳥在樹上唱歌。', z: 'ㄒㄧㄠˇ ㄋㄧㄠˇ ㄗㄞˋ ㄕㄨˋ ㄕㄤˋ ㄔㄤˋ ㄍㄜ', q: '小鳥在哪裡？', qz: 'ㄒㄧㄠˇ ㄋㄧㄠˇ ㄗㄞˋ ㄋㄚˇ ˙ㄌㄧ', o: [['🌳', '樹上'], ['🌊', '水裡'], ['🏠', '家裡']] },
-  { s: '蜜蜂在花上飛。', z: 'ㄇㄧˋ ㄈㄥ ㄗㄞˋ ㄏㄨㄚ ㄕㄤˋ ㄈㄟ', q: '誰在花上飛？', qz: 'ㄕㄟˊ ㄗㄞˋ ㄏㄨㄚ ㄕㄤˋ ㄈㄟ', o: [['🐝', '蜜蜂'], ['🐟', '小魚'], ['🐢', '烏龜']] },
-  { s: '下雨了，弟弟拿雨傘。', z: 'ㄒㄧㄚˋ ㄩˇ ˙ㄌㄜ ㄉㄧˋ ˙ㄉㄧ ㄋㄚˊ ㄩˇ ㄙㄢˇ', q: '弟弟拿什麼？', qz: 'ㄉㄧˋ ˙ㄉㄧ ㄋㄚˊ ㄕㄣˊ ˙ㄇㄜ', o: [['☂️', '雨傘'], ['🎈', '氣球'], ['⚽', '球']] },
-  { s: '大寶挖到三條蚯蚓。', z: 'ㄉㄚˋ ㄅㄠˇ ㄨㄚ ㄉㄠˋ ㄙㄢ ㄊㄧㄠˊ ㄑㄧㄡ ㄧㄣˇ', q: '大寶挖到幾條蚯蚓？', qz: 'ㄉㄚˋ ㄅㄠˇ ㄨㄚ ㄉㄠˋ ㄐㄧˇ ㄊㄧㄠˊ ㄑㄧㄡ ㄧㄣˇ', o: [['🪱🪱🪱', '三條'], ['🪱🪱', '兩條'], ['🪱🪱🪱🪱🪱', '五條']] },
-  { s: '媽媽買了紅蘋果。', z: 'ㄇㄚ ˙ㄇㄚ ㄇㄞˇ ˙ㄌㄜ ㄏㄨㄥˊ ㄆㄧㄥˊ ㄍㄨㄛˇ', q: '媽媽買了什麼？', qz: 'ㄇㄚ ˙ㄇㄚ ㄇㄞˇ ˙ㄌㄜ ㄕㄣˊ ˙ㄇㄜ', o: [['🍎', '蘋果'], ['🍌', '香蕉'], ['🍉', '西瓜']] },
-  { s: '甲蟲爬到大樹上。', z: 'ㄐㄧㄚˇ ㄔㄨㄥˊ ㄆㄚˊ ㄉㄠˋ ㄉㄚˋ ㄕㄨˋ ㄕㄤˋ', q: '誰爬到大樹上？', qz: 'ㄕㄟˊ ㄆㄚˊ ㄉㄠˋ ㄉㄚˋ ㄕㄨˋ ㄕㄤˋ', o: [['🪲', '甲蟲'], ['🐢', '烏龜'], ['🐟', '吳郭魚']] }
+  { s: '小烏龜愛吃香蕉。', z: 'ㄒㄧㄠˇ ㄨ ㄍㄨㄟ ㄞˋ ㄔ ㄒㄧㄤ ㄐㄧㄠ 。', q: '小烏龜愛吃什麼？', qz: 'ㄒㄧㄠˇ ㄨ ㄍㄨㄟ ㄞˋ ㄔ ㄕㄣˊ ˙ㄇㄜ ？',
+    o: [['🍌', '香蕉', 'ㄒㄧㄤ ㄐㄧㄠ'], ['🍎', '蘋果', 'ㄆㄧㄥˊ ㄍㄨㄛˇ'], ['🍟', '薯條', 'ㄕㄨˇ ㄊㄧㄠˊ']] },
+  { s: '火車在山下跑。', z: 'ㄏㄨㄛˇ ㄔㄜ ㄗㄞˋ ㄕㄢ ㄒㄧㄚˋ ㄆㄠˇ 。', q: '什麼在跑？', qz: 'ㄕㄣˊ ˙ㄇㄜ ㄗㄞˋ ㄆㄠˇ ？',
+    o: [['🚂', '火車', 'ㄏㄨㄛˇ ㄔㄜ'], ['✈️', '飛機', 'ㄈㄟ ㄐㄧ'], ['🚢', '船', 'ㄔㄨㄢˊ']] },
+  { s: '小鳥在樹上唱歌。', z: 'ㄒㄧㄠˇ ㄋㄧㄠˇ ㄗㄞˋ ㄕㄨˋ ㄕㄤˋ ㄔㄤˋ ㄍㄜ 。', q: '小鳥在哪裡？', qz: 'ㄒㄧㄠˇ ㄋㄧㄠˇ ㄗㄞˋ ㄋㄚˇ ˙ㄌㄧ ？',
+    o: [['🌳', '樹上', 'ㄕㄨˋ ㄕㄤˋ'], ['⛰️', '山上', 'ㄕㄢ ㄕㄤˋ'], ['🏠', '家裡', 'ㄐㄧㄚ ˙ㄌㄧ']] },
+  { s: '蜜蜂在花上飛。', z: 'ㄇㄧˋ ㄈㄥ ㄗㄞˋ ㄏㄨㄚ ㄕㄤˋ ㄈㄟ 。', q: '誰在花上飛？', qz: 'ㄕㄟˊ ㄗㄞˋ ㄏㄨㄚ ㄕㄤˋ ㄈㄟ ？',
+    o: [['🐝', '蜜蜂', 'ㄇㄧˋ ㄈㄥ'], ['🐟', '小魚', 'ㄒㄧㄠˇ ㄩˊ'], ['🐢', '烏龜', 'ㄨ ㄍㄨㄟ']] },
+  { s: '下雨了，弟弟拿雨傘。', z: 'ㄒㄧㄚˋ ㄩˇ ˙ㄌㄜ ， ㄉㄧˋ ˙ㄉㄧ ㄋㄚˊ ㄩˇ ㄙㄢˇ 。', q: '弟弟拿什麼？', qz: 'ㄉㄧˋ ˙ㄉㄧ ㄋㄚˊ ㄕㄣˊ ˙ㄇㄜ ？',
+    o: [['☂️', '雨傘', 'ㄩˇ ㄙㄢˇ'], ['🎈', '氣球', 'ㄑㄧˋ ㄑㄧㄡˊ'], ['⚽', '球', 'ㄑㄧㄡˊ']] },
+  { s: '大寶挖到三條蚯蚓。', z: 'ㄉㄚˋ ㄅㄠˇ ㄨㄚ ㄉㄠˋ ㄙㄢ ㄊㄧㄠˊ ㄑㄧㄡ ㄧㄣˇ 。', q: '大寶挖到幾條蚯蚓？', qz: 'ㄉㄚˋ ㄅㄠˇ ㄨㄚ ㄉㄠˋ ㄐㄧˇ ㄊㄧㄠˊ ㄑㄧㄡ ㄧㄣˇ ？',
+    o: [['🪱🪱🪱', '三條', 'ㄙㄢ ㄊㄧㄠˊ'], ['🪱🪱', '兩條', 'ㄌㄧㄤˇ ㄊㄧㄠˊ'], ['🪱🪱🪱🪱🪱', '五條', 'ㄨˇ ㄊㄧㄠˊ']] },
+  { s: '媽媽買了紅蘋果。', z: 'ㄇㄚ ˙ㄇㄚ ㄇㄞˇ ˙ㄌㄜ ㄏㄨㄥˊ ㄆㄧㄥˊ ㄍㄨㄛˇ 。', q: '媽媽買了什麼？', qz: 'ㄇㄚ ˙ㄇㄚ ㄇㄞˇ ˙ㄌㄜ ㄕㄣˊ ˙ㄇㄜ ？',
+    o: [['🍎', '蘋果', 'ㄆㄧㄥˊ ㄍㄨㄛˇ'], ['🍌', '香蕉', 'ㄒㄧㄤ ㄐㄧㄠ'], ['🍉', '西瓜', 'ㄒㄧ ㄍㄨㄚ']] },
+  { s: '甲蟲爬到大樹上。', z: 'ㄐㄧㄚˇ ㄔㄨㄥˊ ㄆㄚˊ ㄉㄠˋ ㄉㄚˋ ㄕㄨˋ ㄕㄤˋ 。', q: '誰爬到大樹上？', qz: 'ㄕㄟˊ ㄆㄚˊ ㄉㄠˋ ㄉㄚˋ ㄕㄨˋ ㄕㄤˋ ？',
+    o: [['🪲', '甲蟲', 'ㄐㄧㄚˇ ㄔㄨㄥˊ'], ['🐢', '烏龜', 'ㄨ ㄍㄨㄟ'], ['🐟', '吳郭魚', 'ㄨˊ ㄍㄨㄛ ㄩˊ']] },
+  { s: '貓咪愛吃魚。', z: 'ㄇㄠ ㄇㄧ ㄞˋ ㄔ ㄩˊ 。', q: '貓咪愛吃什麼？', qz: 'ㄇㄠ ㄇㄧ ㄞˋ ㄔ ㄕㄣˊ ˙ㄇㄜ ？',
+    o: [['🐟', '魚', 'ㄩˊ'], ['🍌', '香蕉', 'ㄒㄧㄤ ㄐㄧㄠ'], ['🌿', '草', 'ㄘㄠˇ']] },
+  { s: '哥哥騎腳踏車。', z: 'ㄍㄜ ˙ㄍㄜ ㄑㄧˊ ㄐㄧㄠˇ ㄊㄚˋ ㄔㄜ 。', q: '哥哥騎什麼？', qz: 'ㄍㄜ ˙ㄍㄜ ㄑㄧˊ ㄕㄣˊ ˙ㄇㄜ ？',
+    o: [['🚲', '腳踏車', 'ㄐㄧㄠˇ ㄊㄚˋ ㄔㄜ'], ['🚂', '火車', 'ㄏㄨㄛˇ ㄔㄜ'], ['🐴', '馬', 'ㄇㄚˇ']] },
+  { s: '天上有白白的雲。', z: 'ㄊㄧㄢ ㄕㄤˋ ㄧㄡˇ ㄅㄞˊ ㄅㄞˊ ˙ㄉㄜ ㄩㄣˊ 。', q: '天上有什麼？', qz: 'ㄊㄧㄢ ㄕㄤˋ ㄧㄡˇ ㄕㄣˊ ˙ㄇㄜ ？',
+    o: [['☁️', '雲', 'ㄩㄣˊ'], ['🐟', '魚', 'ㄩˊ'], ['🚗', '汽車', 'ㄑㄧˋ ㄔㄜ']] },
+  { s: '妹妹戴紅色的帽子。', z: 'ㄇㄟˋ ˙ㄇㄟ ㄉㄞˋ ㄏㄨㄥˊ ㄙㄜˋ ˙ㄉㄜ ㄇㄠˋ ˙ㄗ 。', q: '妹妹戴什麼？', qz: 'ㄇㄟˋ ˙ㄇㄟ ㄉㄞˋ ㄕㄣˊ ˙ㄇㄜ ？',
+    o: [['🧢', '帽子', 'ㄇㄠˋ ˙ㄗ'], ['👟', '鞋子', 'ㄒㄧㄝˊ ˙ㄗ'], ['🎒', '書包', 'ㄕㄨ ㄅㄠ']] },
+  { s: '小狗在門口叫。', z: 'ㄒㄧㄠˇ ㄍㄡˇ ㄗㄞˋ ㄇㄣˊ ㄎㄡˇ ㄐㄧㄠˋ 。', q: '誰在門口叫？', qz: 'ㄕㄟˊ ㄗㄞˋ ㄇㄣˊ ㄎㄡˇ ㄐㄧㄠˋ ？',
+    o: [['🐶', '小狗', 'ㄒㄧㄠˇ ㄍㄡˇ'], ['🐱', '小貓', 'ㄒㄧㄠˇ ㄇㄠ'], ['🐢', '烏龜', 'ㄨ ㄍㄨㄟ']] }
 ];
+// 注音符號的順序（一列一列，順序不會有爭議）
+const ORDER_ROWS = ['ㄅㄆㄇㄈ', 'ㄉㄊㄋㄌ', 'ㄍㄎㄏ', 'ㄐㄑㄒ', 'ㄓㄔㄕㄖ', 'ㄗㄘㄙ', 'ㄧㄨㄩ', 'ㄚㄛㄜㄝ', 'ㄞㄟㄠㄡ', 'ㄢㄣㄤㄥ'];
+// 考卷上的大題（模擬考卷也照這個順序）
+const SEC = {
+  listen: '一、聽寫：聽一聽，選出聽到的注音',
+  pic: '二、看圖選注音：選出正確的注音',
+  spell: '三、拼一拼：把符號拼起來',
+  tone: '四、聲調：選出正確的聲調',
+  fill: '五、補一補：看圖，補上缺少的符號',
+  order: '六、排一排：照注音符號的順序填空',
+  read: '七、讀一讀：讀注音，選出正確的圖',
+  match: '八、連連看：把圖和注音連起來'
+};
+const zyOpts = list => list.map(z => ({ value: z, html: zyLine(z), cls: 'zyopt' }));
+const longLayout = list => list.some(z => z.split(' ').length > 2) ? 'col' : '';
+// 和答案不一樣的詞，也不要同一個圖
+const otherWords = (b, n) => sample(BANK.filter(x => x.w !== b.w && x.e !== b.e), n);
+// 看注音選的錯誤選項；相似的音不夠時，補別的詞
+function wrongsFor(b) {
+  const out = wordWrongs(b.z, 2);
+  for (const x of otherWords(b, 4)) { if (out.length >= 2) break; if (x.z !== b.z && !out.includes(x.z)) out.push(x.z); }
+  return out;
+}
 
-function genZh1() {
-  return sample(FIRST_SOUND, 6).map(([w, e, z]) => {
-    const ans = z[0];
-    const conf = [...(CONF[ans] || '')];
-    const opts = shuffle([ans, ...conf.slice(0, 2)]);
+function genListen(n = 6) {
+  return sample(BANK, n).map(b => {
+    const list = shuffle([b.z, ...wrongsFor(b)]);
     return {
-      prompt: `<div class="bigpic em">${e}</div><div class="word">${w}</div>
-        <div class="qtext">「${w[0]}」的第一個注音是哪一個？</div>`,
-      say: `${w}。${w[0]}，的第一個注音，是哪一個？`,
-      options: opts.map(s => ({ value: s, html: s, cls: 'sym' })), answer: ans,
-      hint: `把「${w[0]}」慢慢念出來，注意嘴巴一開始的樣子喔。`,
-      explain: `「${w[0]}」的注音是 ${z}，第一個是 ${ans}。`,
-      sayExp: `「${w[0]}」的第一個注音是 ${ans}。`
+      sec: SEC.listen,
+      prompt: `<div class="bigpic em" aria-hidden="true">👂</div><div class="qtext">老師念的是哪一個？</div>`,
+      say: `聽一聽：${b.w}。${b.w}。`,
+      options: zyOpts(list), answer: b.z, layout: longLayout(list),
+      hint: '再聽一次，一個音一個音慢慢比。', sayHint: `再聽一次：${b.w}。`,
+      explain: `老師念「${b.w}」，注音是 ${b.z}。`, sayExp: `「${b.w}」：${spell(b.z, b.w)}。`
     };
   });
 }
-function genZh2() {
-  return sample(WORDS, 6).map(([w, e, ok, b1, b2]) => ({
-    prompt: `<div class="bigpic em">${e}</div><div class="word">${w}</div><div class="qtext">哪一個拼音是對的？</div>`,
-    say: `${w}。哪一個拼音是對的？`,
-    options: shuffle([ok, b1, b2]).map(z => ({ value: z, html: zyHtml(z) })), answer: ok,
-    hint: '一個一個比：先看符號一樣嗎？再看聲調的小記號。',
-    explain: `「${w}」是 ${ok}。`,
-    // 拼讀：ㄇ、ㄠ，貓；ㄇ、ㄧ，咪
-    sayExp: `「${w}」的拼音：${ok.split(' ').map((z, i) => `${z}，${[...w][i]}`).join('；')}。`
-  }));
+function genPic(n = 6) {
+  return sample(BANK, n).map(b => {
+    const list = shuffle([b.z, ...wrongsFor(b)]);
+    return {
+      sec: SEC.pic,
+      prompt: `<div class="bigpic em">${b.e}</div><div class="qtext">這是什麼？選出正確的注音。</div>`,
+      say: '看圖，選出正確的注音。',
+      options: zyOpts(list), answer: b.z, layout: longLayout(list),
+      hint: `這是「${b.w}」，慢慢念念看。`,
+      explain: `「${b.w}」的注音是 ${b.z}。`, sayExp: `「${b.w}」：${spell(b.z, b.w)}。`
+    };
+  });
 }
-const TONE_PATH = ['', 'M6 15 H50', 'M6 26 L50 4', 'M6 8 Q22 34 50 6', 'M6 4 L50 26'];
-const TONE_MARK = ['', '（不寫）', 'ˊ', 'ˇ', 'ˋ'];
-function genZh3() {
+// 拼一拼（看符號選拼音）和拆一拆（看拼音選符號），一半一半。
+// 這兩題會單獨念一個字；破音字單念時語音可能念成別的音（長、頸、覺、蘋），不拿來考
+const LONE_BAD = '長頸覺蘋';
+function genSpell(n = 6) {
+  const seen = new Set(), pool = [];
+  BANK.forEach(b => b.z.split(' ').forEach((s, i) => {
+    const ch = [...b.w][i];
+    if (toneOf(s) > 0 && baseOf(s).length >= 2 && !seen.has(s) && !LONE_BAD.includes(ch)) { seen.add(s); pool.push({ s, ch }); }
+  }));
+  return sample(pool, n).map(({ s, ch }, k) => {
+    const syms = [...baseOf(s)], t = toneOf(s);
+    // 少一個符號也是常見的錯
+    const drop = syms.length >= 3 ? withTone(syms[0] + syms.slice(2).join(''), t) : null;
+    const sw = sylWrongs(s), snd = sw.filter(w => w.kind === 'sound').map(w => w.v), tn = sw.filter(w => w.kind === 'tone').map(w => w.v);
+    const wrongs = [...new Set([drop && isSyl(drop) ? drop : '', snd[0], tn[0], ...snd.slice(1), ...tn.slice(1)].filter(Boolean))].slice(0, 2);
+    const ps = parts(s).join(' ＋ ');
+    if (k % 2 === 0) {
+      return {
+        sec: SEC.spell,
+        prompt: `<div class="word zyw">${ps} ＝ ？</div><div class="qtext">拼起來是哪一個？</div>`,
+        say: `拼一拼：${syms.join('、')}，拼起來是哪一個？`,
+        options: shuffle([s, ...wrongs]).map(v => ({ value: v, html: v, cls: 'sym' })), answer: s,
+        hint: `照順序念：先念 ${syms[0]}，再很快接上後面的音${t > 1 ? '，最後別忘了聲調' : ''}。`,
+        explain: `${ps} 拼成 ${s}，就像「${ch}」。`, sayExp: `${syms.join('、')}，拼起來就是「${ch}」。`
+      };
+    }
+    const show = v => parts(v).join(' ＋ ');
+    return {
+      sec: '三、拼一拼：拆一拆，是哪幾個符號拼成的',
+      prompt: `<div class="word zyw">${s}</div><div class="qtext">是哪幾個符號拼成的？</div>`,
+      say: `拆一拆：${ch}，是哪幾個符號拼成的？`,
+      options: shuffle([s, ...wrongs]).map(v => ({ value: v, html: show(v), cls: 'zyopt' })), answer: s, layout: 'col',
+      hint: '慢慢念，聽聽看開頭是什麼音，中間有沒有ㄧ、ㄨ、ㄩ。',
+      explain: `${s} 是 ${ps}。`, sayExp: `${ch}，是 ${syms.join('、')}。`
+    };
+  });
+}
+function genTone(n = 6) {
+  // 三聲連在一起會變調、「一」「不」也會變調，先不考
   const pool = [];
-  WORDS.forEach(([w, e, ok]) => {
-    const zs = ok.split(' ');
+  BANK.forEach(b => {
+    const zs = b.z.split(' ');
     zs.forEach((s, i) => {
-      const t = toneOf(s); if (!t) return;
-      if (i === 0 && t === 3 && toneOf(zs[1] || '') === 3) return; // 三聲連念會變調，先不考
-      pool.push({ w, e, ok, i, s, t });
+      const t = toneOf(s);
+      if (t === 3 && toneOf(zs[i + 1] || '') === 3) return;
+      if ('一不'.includes([...b.w][i])) return;
+      pool.push({ b, i, s, t, multi: zs.length > 1 });
     });
   });
-  return sample(pool, 6).map(({ w, e, ok, i, s, t }) => ({
-    prompt: `<div class="bigpic em">${e}</div>
-      <div class="sent big">${ruby(w, ok, i, baseOf(s) + '？')}</div>
-      <div class="qtext">「${w[i]}」是第幾聲？</div>`,
-    say: `${w}。${w[i]}，是第幾聲？`,
-    options: [1, 2, 3, 4].map(n => ({ value: n, cls: 'toneopt',
-      html: `<svg viewBox="0 0 56 30" aria-hidden="true"><path d="${TONE_PATH[n]}"/></svg><span>${TONE_NAME[n]}</span><span class="mk">${TONE_MARK[n]}</span>` })),
-    answer: t, layout: 'four',
-    hint: '用手比比看：一聲平平走、二聲往上爬、三聲先下再上、四聲往下跳。',
-    explain: `「${w[i]}」是${TONE_NAME[t]}，寫成 ${s}。`,
-    sayExp: `「${w[i]}」是${TONE_NAME[t]}。`
+  // 每種聲調都考到，輕聲至少一題
+  const byTone = [0, 1, 2, 3, 4].map(t => shuffle(pool.filter(p => p.t === t)));
+  const picks = [];
+  for (let r = 0; picks.length < n; r = (r + 1) % 5) {
+    const p = byTone[[0, 4, 2, 3, 1][r]].shift(); if (p && !picks.some(x => x.b === p.b)) picks.push(p);
+    if (byTone.every(l => !l.length)) break;
+  }
+  return shuffle(picks).map(({ b, i, s, t, multi }) => ({
+    sec: SEC.tone,
+    prompt: `<div class="bigpic em">${b.e}</div><div class="zybig">${zyLine(b.z, { toneMask: i, hl: multi ? i : -1 })}</div>
+      <div class="qtext">${multi ? '框起來的音' : '這個音'}是第幾聲？</div>`,
+    say: `聽一聽：${b.w}。${multi ? '框起來的音' : '這個音'}，是第幾聲？`,
+    options: [1, 2, 3, 4, 0].map(v => ({ value: v, cls: 'toneopt',
+      html: `<svg viewBox="0 0 56 30" aria-hidden="true">${v ? `<path d="${TONE_PATH[v]}"/>` : '<circle cx="28" cy="15" r="5"/>'}</svg><span>${TONE_NAME[v]}</span>${v === 1 ? '<span class="mk sm">不寫</span>' : `<span class="mk">${TONE_MARK[v]}</span>`}` })),
+    answer: t, layout: 'five',
+    hint: '用手比比看：一聲平平走、二聲往上爬、三聲先下再上、四聲往下跳；輕聲又輕又短。',
+    explain: `「${b.w}」的「${[...b.w][i]}」是${TONE_NAME[t]}，寫成 ${s}。`, sayExp: `「${b.w}」，框起來的音是${TONE_NAME[t]}。`
   }));
 }
-function genZh4() {
-  return sample(COMBOS, 6).map(([c, f, ch, full]) => {
-    const ans = c + f;
-    const set = new Set([ans]);
-    const cands = shuffle([
-      (CONF[c] || 'ㄅ')[0] + f,
-      c + f.slice(0, -1) + (FCONF[f.slice(-1)] || 'ㄚ'),
-      f + c,
-      (CONF[c] || 'ㄅ')[1] + f
-    ]);
-    for (const x of cands) { if (set.size >= 3) break; if (x !== ans) set.add(x); }
-    const parts = [c, ...f].join(' ＋ ');
+function genFill(n = 6) {
+  const pool = [];
+  BANK.forEach(b => b.z.split(' ').forEach((s, i) => { if (baseOf(s).length >= 2) pool.push({ b, i, s }); }));
+  const picks = [];
+  for (const p of shuffle(pool)) { if (picks.length >= n) break; if (!picks.some(x => x.b === p.b)) picks.push(p); }
+  return picks.map(({ b, i, s }) => {
+    const syms = [...baseOf(s)], j = rnd(syms.length), ans = syms[j];
+    const same = INITIALS.includes(ans) ? INITIALS : 'ㄧㄨㄩㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥ';
+    const cand = [...(INITIALS.includes(ans) ? CONF[ans] : FCONF[ans] || ''), ...shuffle([...same])].filter(c => c !== ans);
+    const wrongs = [...new Set(cand)].slice(0, 2);
     return {
-      prompt: `<div class="word" style="letter-spacing:.04em">${parts} ＝ ？</div><div class="qtext">拼起來是哪一個？</div>`,
-      say: `拼一拼，拼起來是哪一個？`,
-      options: shuffle([...set]).map(z => ({ value: z, html: z, cls: 'sym' })), answer: ans,
-      hint: `照順序排好：${c} 先，然後是 ${[...f].join('、')}。`,
-      explain: `${parts} 拼成 ${ans}，就像「${ch}」（${full}）。`,
-      sayExp: `${[c, ...f].join('、')}，拼起來就是「${ch}」。`
+      sec: SEC.fill,
+      prompt: `<div class="bigpic em">${b.e}</div><div class="zybig">${zyLine(b.z, { mask: [i, j] })}</div><div class="qtext">框框裡要填哪一個符號？</div>`,
+      say: '看圖，框框裡要填哪一個注音符號？',
+      options: shuffle([ans, ...wrongs]).map(v => ({ value: v, html: v, cls: 'sym' })), answer: ans,
+      hint: `這是「${b.w}」，念念看，聽聽框框那裡是什麼音。`,
+      explain: `「${b.w}」是 ${b.z}，框框裡是 ${ans}。`, sayExp: `「${b.w}」：${spell(b.z, b.w)}。框框裡是 ${ans}。`
     };
   });
 }
-function genZh5() {
-  return sample(SENTENCES, 5).map(S => ({
-    prompt: `<div class="sent">${ruby(S.s, S.z)}</div><div class="sent q">${ruby(S.q, S.qz)}</div>`,
-    say: `${S.s}。${S.q}`,
-    options: shuffle(S.o).map(([e, w]) => ({ value: w, html: `<span class="em">${e}</span><span>${w}</span>` })), answer: S.o[0][1],
-    hint: '再讀一次句子，答案就藏在句子裡喔！',
+function genOrder(n = 6) {
+  const all = ORDER_ROWS.join('');
+  return sample(ORDER_ROWS, n).map(row => {
+    const syms = [...row], k = rnd(syms.length), ans = syms[k];
+    // 錯的選項用前後幾列的符號，才不會一看就刪掉
+    const near = [...all].filter(c => !row.includes(c) && Math.abs(all.indexOf(c) - all.indexOf(ans)) <= 6);
+    const wrongs = sample(near, 2);
+    return {
+      sec: SEC.order,
+      prompt: `<div class="orow">${syms.map((c, i) => i === k ? '<span class="cell blank">？</span>' : `<span class="cell">${c}</span>`).join('')}</div>
+        <div class="qtext">照順序，框框裡是哪一個？</div>`,
+      say: `照注音符號的順序念念看：${syms.map((c, i) => i === k ? '什麼' : c).join('、')}。框框裡是哪一個？`,
+      options: shuffle([ans, ...wrongs]).map(v => ({ value: v, html: v, cls: 'sym' })), answer: ans,
+      hint: k ? `從頭念念看：${syms.slice(0, k).join('、')}，接下來是……` : `念念看後面：${syms.slice(1).join('、')}，前面是……`,
+      explain: `順序是 ${syms.join(' ')}，框框裡是 ${ans}。`
+    };
+  });
+}
+// 讀一讀：一半讀詞選圖、一半讀句子回答問題
+function genRead(n = 6) {
+  const words = sample(BANK, Math.ceil(n / 2)).map(b => {
+    const list = shuffle([b, ...otherWords(b, 2)]);
+    return {
+      sec: SEC.read,
+      prompt: `<div class="zybig">${zyLine(b.z)}</div><div class="qtext">讀一讀，這是什麼？</div>`,
+      say: '讀一讀，選出對的圖。',
+      options: list.map(x => ({ value: x.w, html: `<span class="em pic">${x.e}</span>`, cls: 'picopt' })), answer: b.w,
+      hint: '一個音一個音拼拼看，再想想是什麼東西。',
+      explain: `${b.z} 是「${b.w}」。`, sayExp: `${spell(b.z, b.w)}，是「${b.w}」。`
+    };
+  });
+  const sents = sample(SENTENCES, Math.floor(n / 2)).map(S => ({
+    sec: SEC.read,
+    prompt: `<div class="zysent">${zySent(S.z)}</div><div class="zysent q">${zySent(S.qz)}</div>`,
+    say: '讀一讀句子，回答問題。',
+    options: shuffle(S.o).map(([e, w, z]) => ({ value: w, html: `<span class="em pic">${e}</span><span class="zy sm">${zyLine(z)}</span>`, cls: 'picopt' })), answer: S.o[0][1],
+    hint: '再讀一次句子，答案就藏在句子裡喔！', sayHint: `再聽一次：${S.s}${S.q}`,
     explain: `句子說「${S.s}」，所以是「${S.o[0][1]}」。`
   }));
+  return shuffle([...words, ...sents]);
+}
+// 連連看：一張三組，圖在左、注音在右
+function genMatch(n = 4) {
+  const used = new Set();
+  return Array.from({ length: n }, () => {
+    const set = [];
+    for (const b of shuffle(BANK)) {
+      if (set.length >= 3) break;
+      if (used.has(b.w) || set.some(x => x.e === b.e || x.z.split(' ')[0] === b.z.split(' ')[0])) continue;
+      set.push(b); used.add(b.w);
+    }
+    const right = shuffle(set.map((_, k) => k));
+    return {
+      sec: SEC.match, type: 'match', pairs: set,
+      prompt: `<div class="qtext">先點圖，再點它的注音</div>
+        <div class="match" id="match"><svg class="mlines" aria-hidden="true"></svg>
+          <div class="mcol">${set.map((b, k) => `<button type="button" class="mbtn pic em" data-k="${k}" aria-label="圖片：${b.w}">${b.e}</button>`).join('')}</div>
+          <div class="mcol">${right.map(k => `<button type="button" class="mbtn zyb" data-k="${k}" data-r="1">${zyLine(set[k].z)}</button>`).join('')}</div>
+        </div>`,
+      say: '連連看，先點圖，再點它的注音。',
+      options: [], answer: null,
+      hint: '先想想圖是什麼，再找開頭的音一樣的注音。',
+      explain: set.map(b => `${b.e} ${b.z}`).join('　'), sayExp: '一起看，每一個圖都連到它的注音了。'
+    };
+  });
+}
+// 模擬考卷：照考卷順序，每一大題一題
+function genMock() {
+  return [genListen, genPic, genSpell, genTone, genFill, genOrder, genRead, genMatch].map(g => g(1)[0]);
 }
 
 /* ---------- 數學題庫 ---------- */
@@ -652,12 +864,17 @@ function genMa5() {
 }
 
 const ROUNDS = {
+  // 國語照首冊考卷的大題（no 是考卷上的題號）；id 沿用舊關卡，星星紀錄才會留著
   zh: [
-    { id: 'zh1', name: '注音小偵探', icon: '🔍', desc: '聽字，找出第一個注音（聽寫）', gen: genZh1 },
-    { id: 'zh2', name: '看圖找拼音', icon: '🖼️', desc: '看圖念一念，選出對的拼音', gen: genZh2 },
-    { id: 'zh3', name: '聲調甲蟲飛', icon: '🪲', desc: '一二三四聲，聽出是第幾聲', gen: genZh3 },
-    { id: 'zh4', name: '拼音魔法', icon: '🪄', desc: '把符號拼起來', gen: genZh4 },
-    { id: 'zh5', name: '讀句子找答案', icon: '📖', desc: '讀句子，選出正確的圖', gen: genZh5 }
+    { id: 'zp', mock: true, name: '模擬考卷', icon: '📝', desc: '照考卷順序，八大題各做一題', gen: genMock },
+    { id: 'zl', no: '一', name: '聽寫', icon: '👂', desc: '聽一聽，選出聽到的注音', gen: genListen },
+    { id: 'zh2', no: '二', name: '看圖選注音', icon: '🖼️', desc: '看圖，選出正確的注音', gen: genPic },
+    { id: 'zh4', no: '三', name: '拼一拼', icon: '🪄', desc: '兩拼、三拼，還有拆一拆', gen: genSpell },
+    { id: 'zh3', no: '四', name: '聲調', icon: '🪲', desc: '一二三四聲和輕聲', gen: genTone },
+    { id: 'zf', no: '五', name: '補一補', icon: '🧩', desc: '看圖，補上缺少的符號', gen: genFill },
+    { id: 'zo', no: '六', name: '排一排', icon: '🚃', desc: '照ㄅㄆㄇ的順序填空', gen: genOrder },
+    { id: 'zh5', no: '七', name: '讀一讀', icon: '📖', desc: '讀注音，選出正確的圖', gen: genRead },
+    { id: 'zm', no: '八', name: '連連看', icon: '🔗', desc: '把圖和注音連起來', gen: genMatch }
   ],
   ma: [
     { id: 'ma1', name: '數一數', icon: '🪱', desc: '點一點，數到 10', gen: genMa1 },
@@ -676,6 +893,7 @@ const GREETINGS = [
   `${KID}回來了！龜龜好想你。每多練一次，你的小腦袋就長大一點點喔。`
 ];
 function starsText(n) { return '★'.repeat(n) + '☆'.repeat(3 - n); }
+const roundLabel = (r, i) => r.mock ? r.name : r.no ? `${r.no}、${r.name}` : `第 ${i + 1} 關　${r.name}`;
 function renderHome() {
   const best = store.get('best', {}), plays = store.get('plays', 0);
   $('#homeBubble').textContent = plays ? pick(GREETINGS.slice(1)) : GREETINGS[0];
@@ -685,7 +903,7 @@ function renderHome() {
     $('#' + subj + 'Levels').innerHTML = ROUNDS[subj].map((r, i) => `
       <button type="button" class="level" data-s="${subj}" data-i="${i}">
         <span class="li em">${r.icon}</span>
-        <span class="lb"><span class="ln">第 ${i + 1} 關　${r.name}</span><span class="ld">${r.desc}</span></span>
+        <span class="lb"><span class="ln">${roundLabel(r, i)}</span><span class="ld">${r.desc}</span></span>
         <span class="ls" aria-label="${best[r.id] || 0} 顆星">${starsText(best[r.id] || 0)}</span>
       </button>`).join('');
   }
@@ -710,7 +928,7 @@ function startRound(subj, idx) {
   const R = ROUNDS[subj][idx];
   $('#confetti').innerHTML = '';
   G = { subj, idx, R, qs: R.gen(), i: 0, tries: 0, results: [], brave: 0, done: false };
-  $('#gTitle').textContent = `${R.icon} ${R.name}`;
+  $('#gTitle').textContent = `${R.icon} ${roundLabel(R, idx)}`;
   $('#nextBtn').classList.toggle('ma', subj === 'ma');
   show('#game');
   renderQ();
@@ -723,8 +941,9 @@ function renderDots() {
 }
 function renderQ() {
   const q = G.qs[G.i];
-  G.tries = 0; G.done = false;
-  $('#prompt').innerHTML = q.prompt + `<button type="button" class="say" id="sayBtn"><span class="em">🔊</span>再聽一次</button>`;
+  G.tries = 0; G.done = false; G.redraw = null;
+  $('#prompt').innerHTML = (q.sec ? `<div class="qsec">${q.sec}</div>` : '') + q.prompt +
+    `<button type="button" class="say" id="sayBtn"><span class="em">🔊</span>再聽一次</button>`;
   const o = $('#opts');
   o.className = 'opts' + (q.layout ? ' ' + q.layout : '');
   o.innerHTML = q.options.map((op, k) => `<button type="button" class="opt ${op.cls || ''}" data-k="${k}">${op.html}</button>`).join('');
@@ -734,43 +953,89 @@ function renderQ() {
   speak(q.say);
   $('#sayBtn').onclick = () => speak(q.say);
   $('#prompt').querySelectorAll('.tap').forEach(t => t.addEventListener('click', () => t.classList.toggle('done')));
+  if (q.type === 'match') bindMatch(q);
 }
+// 答對、答錯（第一次給提示再試，第二次一起看答案；reveal 負責把答案標出來）
+function onRight() {
+  const q = G.qs[G.i];
+  G.done = true;
+  const first = G.tries === 0;
+  G.results[G.i] = first ? 'star' : 'brave';
+  const msg = first ? pick(PRAISE) : pick(PRAISE_RETRY);
+  coach(`${msg}<br><small>${q.explain}</small>`, false, true);
+  chime([660, 880, 1320]);
+  speak(msg);
+  finishQ();
+}
+function onWrong(reveal, canRetry) {
+  const q = G.qs[G.i];
+  G.tries++; G.brave++;
+  chime([392, 330], .14, 'triangle', .07);
+  if (G.tries === 1 && canRetry) {
+    const msg = pick(TRY_AGAIN);
+    coach(`${msg}<br>💡 ${q.hint}`, true);
+    speak(msg + (q.sayHint || q.hint));
+    return;
+  }
+  G.done = true;
+  G.results[G.i] = 'brave';
+  reveal();
+  const msg = pick(REVEAL);
+  coach(`${msg}${q.explain}<br>${AFTER_REVEAL}`, true);
+  speak(msg + (q.sayExp || q.explain) + AFTER_REVEAL);
+  finishQ();
+}
+// 連連看：點一個圖、再點一個注音；連對畫線，連錯晃一下
+function bindMatch(q) {
+  const box = $('#match'), done = new Set();
+  let sel = null;
+  const btn = (k, right) => box.querySelector(`.mbtn[data-k="${k}"]${right ? '[data-r]' : ':not([data-r])'}`);
+  G.redraw = () => {
+    const svg = box.querySelector('.mlines'), r0 = box.getBoundingClientRect();
+    svg.setAttribute('viewBox', `0 0 ${r0.width} ${r0.height}`);
+    svg.innerHTML = [...done].map(k => {
+      const a = btn(k, false).getBoundingClientRect(), b = btn(k, true).getBoundingClientRect();
+      return `<line x1="${a.right - r0.left}" y1="${a.top + a.height / 2 - r0.top}" x2="${b.left - r0.left}" y2="${b.top + b.height / 2 - r0.top}"/>`;
+    }).join('');
+  };
+  box.addEventListener('click', e => {
+    const b = e.target.closest('.mbtn');
+    if (!b || G.done || b.classList.contains('ok')) return;
+    if (!sel || sel.dataset.r === b.dataset.r) {
+      if (sel) sel.classList.remove('sel');
+      sel = sel === b ? null : b;
+      if (sel) sel.classList.add('sel');
+      return;
+    }
+    const a = sel; sel = null; a.classList.remove('sel');
+    if (a.dataset.k === b.dataset.k) {
+      done.add(a.dataset.k); a.classList.add('ok'); b.classList.add('ok'); G.redraw();
+      chime([660, 880], .08);
+      if (done.size === q.pairs.length) onRight();
+      return;
+    }
+    [a, b].forEach(x => { x.classList.remove('shake'); void x.offsetWidth; x.classList.add('shake'); });
+    onWrong(() => {
+      q.pairs.forEach((_, k) => done.add(String(k)));
+      box.querySelectorAll('.mbtn').forEach(x => x.classList.add('ok'));
+      G.redraw();
+    }, true);
+  });
+}
+window.addEventListener('resize', () => G && G.redraw && G.redraw());
 $('#opts').addEventListener('click', e => {
   const btn = e.target.closest('.opt');
   if (!btn || !G || G.done || btn.disabled) return;
   const q = G.qs[G.i], op = q.options[+btn.dataset.k];
-  if (String(op.value) === String(q.answer)) {
-    G.done = true;
-    btn.classList.add('right');
-    const first = G.tries === 0;
-    G.results[G.i] = first ? 'star' : 'brave';
-    const msg = first ? pick(PRAISE) : pick(PRAISE_RETRY);
-    coach(`${msg}<br><small>${q.explain}</small>`, false, true);
-    chime([660, 880, 1320]);
-    speak(msg);
-    finishQ();
-  } else {
-    G.tries++; G.brave++;
-    btn.classList.add('tried'); btn.disabled = true;
-    chime([392, 330], .14, 'triangle', .07);
-    if (G.tries === 1 && q.options.length > 2) {
-      const msg = pick(TRY_AGAIN);
-      coach(`${msg}<br>💡 ${q.hint}`, true);
-      speak(msg + q.hint);
-    } else {
-      G.done = true;
-      G.results[G.i] = 'brave';
-      const k = q.options.findIndex(x => String(x.value) === String(q.answer));
-      $('#opts').children[k].classList.add('reveal');
-      const msg = pick(REVEAL);
-      coach(`${msg}${q.explain}<br>${AFTER_REVEAL}`, true);
-      speak(msg + (q.sayExp || q.explain) + AFTER_REVEAL);
-      finishQ();
-    }
-  }
+  if (String(op.value) === String(q.answer)) { btn.classList.add('right'); onRight(); return; }
+  btn.classList.add('tried'); btn.disabled = true;
+  onWrong(() => {
+    const k = q.options.findIndex(x => String(x.value) === String(q.answer));
+    $('#opts').children[k].classList.add('reveal');
+  }, q.options.length > 2);
 });
 function finishQ() {
-  [...$('#opts').children].forEach(b => b.disabled = true);
+  [...$('#opts').children, ...$('#prompt').querySelectorAll('.mbtn')].forEach(b => b.disabled = true);
   renderDots();
   const nb = $('#nextBtn');
   nb.textContent = G.i === G.qs.length - 1 ? '看看我的成果 🎉' : '下一題 ➜';
