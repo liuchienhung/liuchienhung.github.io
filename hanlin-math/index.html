@@ -431,7 +431,7 @@ const shake = el => { el.classList.remove('wrong'); void el.offsetWidth; el.styl
 // ===== 遊戲框架 =====
 let G = null;
 const autoRead = () => store.get('autoread', true);
-const PRAISE = ['答對了！', '好厲害！', '太棒了！', '完全正確！', '讚喔！'];
+const PRAISE = ['答對了！', '好厲害！', '太棒了！', '答對囉！', '讚喔！'];
 
 function newApi() {
   const stage = $('#stage');
@@ -1032,7 +1032,7 @@ function endSpeed() {
   const loot = Object.entries(g.earned).map(([k, n]) => `<span>${icon(k)}<small>×${n}</small></span>`).join('');
   $('#stage').innerHTML = `<div class="result"><div class="stars">🚂</div>
     <div class="score">60 秒答對 ${g.score} 題${nb ? '　🎉 新紀錄！' : `（最佳 ${Math.max(best, g.score)} 題）`}</div>
-    <div>每答對 3 題得到 1 份食物：</div><div class="loot">${loot || '（再接再厲！）'}</div>
+    <div>每答對 3 題得到 1 份食物：</div><div class="loot">${loot || '（下次再加油喔！）'}</div>
     <div class="actions"><button class="primary" id="again" type="button">再衝一次</button><button id="toPond" type="button">🐢 去餵烏龜</button><button id="toMap" type="button">🗺️ 地圖</button></div></div>`;
   speak(`時間到！${NAME}答對了 ${g.score} 題`);
   $('#again').addEventListener('click', startSpeed);

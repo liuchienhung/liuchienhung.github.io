@@ -445,7 +445,7 @@ const ADVICE={
   trunk:"上身趴向桌面：胸口與桌緣保持一拳距離，臀部坐滿椅面、背部靠直；檢查椅子是否過低或桌子過高（手肘自然彎曲約 90° 時前臂應平放桌面），可用下方「桌椅高度建議」算出合適高度與是否需要腳踏板。",
   sh:"兩肩高低不一：非寫字手要壓住紙張、平放桌面，不要垂在桌下；紙張放在寫字手同側前方並稍微斜放，避免身體扭轉。",
   tilt:"頭部歪向一側：常因紙張擺正但握筆手擋住視線。將紙張往寫字手方向傾斜 15–30°，並確認光源在寫字手的對側，避免手影。",
-  drop:"頭部垂得太低：多半是握筆太靠近筆尖，看不到筆尖只好低頭。手指離筆尖約 3 cm（一寸），並檢查視力是否需要檢查。",
+  drop:"頭部垂得太低：多半是握筆太靠近筆尖，看不到筆尖只好低頭。手指離筆尖約 3 cm（一寸）；也建議帶孩子檢查一下視力。",
 };
 
 const state={running:false,landmarker:null,stream:null,facing:"environment",alertMode:"voice",voice:null,goodSince:null,alerted:false,lastBreak:0,
@@ -1060,7 +1060,7 @@ function report(){
     <p class="small">快照只存在這個頁面、不會上傳；重新偵測或關閉頁面就會消失，要留存請下載 PDF。</p>
     <h3>優先改善</h3>
     ${issues.length?`<ol>${issues.map(i=>`<li>${ADVICE[i.k]}<span class="small">（不良 ${i.pb.toFixed(0)}%）</span>${exHtml(EX_FOR[i.k])}</li>`).join("")}</ol>`
-      :'<p class="small">偵測到的項目皆良好，繼續保持。</p>'}
+      :'<p class="small">每一項姿勢都很好，繼續保持！</p>'}
     <h3>每日 5 分鐘矯正操</h3>
     <p class="small">寫功課前或休息時做一輪，建議家長陪著做、確認動作正確。</p>
     ${exHtml(EX_DAILY)}
@@ -1106,7 +1106,7 @@ function fitCalc(){
     const d=chairF-chair;
     if(d>1.5) acts.push(`椅子調高 ${cm(d)}，不能調就加硬一點的坐墊。`);
     else if(d<-1.5) acts.push(`椅子調低 ${cm(-d)}${foot?"":"，讓雙腳能平踩地面"}；不能調就換椅子${desk!=null?"或調整桌高":""}。`);
-    else acts.push("椅子高度合適，維持現狀。");
+    else acts.push("椅子高度剛好，不用調整。");
   }
   if(foot) acts.push(`需要腳踏板，高度約 ${cm(foot)}：踏面要能放雙腳、止滑、穩固不晃，坐下時膝約 90°、大腿與椅面平貼。${foot>15?"超過 15 cm 上下椅子不方便，建議優先降低桌面或改用可調高度的兒童書桌。":""}`);
   else acts.push("雙腳能平踩地面，不需要腳踏板。");
