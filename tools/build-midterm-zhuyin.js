@@ -32,6 +32,9 @@ data.M4.flat().forEach(c => texts.add(c.t));
 data.M7.forEach(b => { b.ends.forEach(e => texts.add(e)); b.q.forEach(q => texts.add(q.t)); });
 data.M8.flat().forEach(c => texts.add(c.t));
 data.M10.forEach(r => texts.add(r[1]));
+// 做題順序引導的話
+const walk = v => typeof v === 'string' ? texts.add(v) : v && typeof v === 'object' && Object.values(v).forEach(walk);
+walk(data.GUIDE);
 for (const m of html.matchAll(/\bT\('([^']+)'\)/g)) texts.add(m[1]);
 const parts = [...texts].flatMap(t => t.split(/\{[a-z]\}/));
 const isHan = c => /[㐀-鿿]/.test(c);
