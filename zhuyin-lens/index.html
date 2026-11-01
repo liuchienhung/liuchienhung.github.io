@@ -91,11 +91,9 @@ a{color:var(--brand)}
 .ch:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
 .ch:active{background:var(--brand-soft)}
 .hz{display:block}
-.zb{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;position:relative;font-family:var(--f-kai);
-  font-size:.35em;line-height:1.02;margin:0 .95em 0 .1em;min-width:1em;color:var(--zy);border-radius:.25em}
-.zb i{font-style:normal;display:block}
-.zb .zt{position:absolute;left:100%;bottom:.15em;margin-left:.04em}
-.zb .zl{line-height:.62}
+/* 注音照課本直式排在國字右邊（../zhuyin-layout.js）：符號由上往下，聲調在最後一個符號右上方，輕聲點在最上面 */
+:root{--zy-font:var(--f-kai)}
+.zb{font-size:.35em;margin:0 .45em 0 .1em;color:var(--zy);border-radius:.25em}
 .ch.nz .hz{text-decoration:underline dotted var(--muted);text-underline-offset:.16em;text-decoration-thickness:.04em}
 .ch.nz{margin-right:.15em}
 .oth{font-family:var(--f-body);font-size:.66em;margin:0 .2em;color:var(--ink);font-weight:500;white-space:pre-wrap}
@@ -103,7 +101,7 @@ a{color:var(--brand)}
 .la{display:flex;justify-content:flex-end;gap:6px;margin-top:6px}
 .la button{min-height:38px;min-width:44px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font-size:.9rem}
 /* 考考你：注音先藏起來，點字才出現 */
-.qz .ch:not(.show):not(.nz) .zb i{visibility:hidden}
+.qz .ch:not(.show):not(.nz) .zb>*{visibility:hidden}
 .qz .ch:not(.show):not(.nz) .zb{outline:.12em dashed var(--muted);outline-offset:-.02em;background:var(--soft)}
 .fresh{animation:fresh .5s ease}
 @keyframes fresh{from{background:var(--brand-soft)}to{background:transparent}}
@@ -134,7 +132,7 @@ h2{font-size:1.05rem;margin:22px 0 4px}
 .sheet .bigch{display:flex;justify-content:center;font-family:var(--f-kai);font-size:5.2rem;line-height:1.1;margin:4px 0 8px}
 .sheet p{margin:8px 0}
 .readings{display:flex;flex-wrap:wrap;gap:8px}
-.readings button{min-height:46px;padding:0 14px;border-radius:14px;border:1px solid var(--line);background:var(--bg);font-family:var(--f-kai);font-size:1.3rem;color:var(--zy)}
+.readings button{min-height:46px;padding:8px 12px;border-radius:14px;border:1px solid var(--line);background:var(--bg);font-family:var(--f-kai);font-size:1.3rem;color:var(--zy)}
 .readings button.on{border:2px solid var(--brand);background:var(--brand-soft);color:var(--ink);font-weight:700}
 .sheet .x{float:right;min-height:40px;min-width:40px;border-radius:999px;border:1px solid var(--line);background:var(--bg)}
 
@@ -267,7 +265,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
       <li>也可以先用手機相機內建的「原況文字」（iPhone）或 Google 智慧鏡頭複製文字，再貼到「打字」。</li>
     </ul>
     <h3>ㄅ 注音從哪裡來</h3>
-    <p>讀音取自教育部《重編國語辭典修訂本》（CC BY-ND 3.0 TW），會依前後文判斷破音字（例如「銀行」的行念 ㄏㄤˊ）。少數詞可能判斷錯，點字就能換。</p>
+    <p class="zyapply">讀音取自教育部《重編國語辭典修訂本》（CC BY-ND 3.0 TW），會依前後文判斷破音字（例如「銀行」的行念 ㄏㄤˊ）。少數詞可能判斷錯，點字就能換。</p>
     <h3>🔒 隱私</h3>
     <p>相機影像只在手機上辨識，不會上傳。第一次開相機要下載約 5 MB 的辨識資料，之後會存在手機裡。字卡籃也只存在這支手機的瀏覽器。</p>
     <div class="foot"><button class="btn pri" id="helpClose">知道了</button></div>
@@ -277,6 +275,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="../tw-speech.js"></script>
+<script src="../zhuyin-layout.js"></script>
 <script src="zhuyin-data.js"></script>
 <script>
 'use strict';
@@ -312,14 +311,8 @@ function annotate(text) {
   }
   return out;
 }
-/* 注音直排在國字右邊：輕聲點在最上面，聲調在最後一個符號右上方 */
-function zbHTML(b) {
-  if (!b) return '';
-  let light = false, tone = '';
-  if (b[0] === '˙') { light = true; b = b.slice(1); }
-  if ('ˊˇˋ'.includes(b.slice(-1))) { tone = b.slice(-1); b = b.slice(0, -1); }
-  return `<span class="zb" aria-hidden="true">${light ? '<i class="zl">˙</i>' : ''}${[...b].map(x => `<i>${x}</i>`).join('')}${tone ? `<i class="zt">${tone}</i>` : ''}</span>`;
-}
+/* 注音直排在國字右邊：輕聲點在最上面，聲調在最後一個符號右上方（共用 ../zhuyin-layout.js） */
+const zbHTML = b => b ? ZhuyinLayout.syl(b, { cls: 'zb', attr: ' aria-hidden="true"' }) : '';
 /* 頁面上的每一行字：views[畫面] = 一行一行的文字 */
 const views = { cam: [], type: [], card: [], basket: [], recent: [] };
 const overrides = new Map();   // 使用者改過的讀音：key = 畫面|行|位置
@@ -430,7 +423,7 @@ function openSheet(key) {
   if (!all.length) h += '<p class="muted">字典裡找不到這個字的注音（可能是簡體字、很少見的字，或辨識錯了）。可以按 ✏️ 改字。</p>';
   else if (all.length > 1) {
     h += `<p>「${esc(t.c)}」是<b>破音字</b>，有 ${all.length} 個讀音。讀音不對的話，點一下換掉：</p>`;
-    h += `<div class="readings">${all.map(r => `<button data-rd="${esc(r)}" class="${r === cur ? 'on' : ''}">${esc(r)}</button>`).join('')}</div>`;
+    h += `<div class="readings">${all.map(r => `<button data-rd="${esc(r)}" class="${r === cur ? 'on' : ''}" aria-label="${esc(r)}">${ZhuyinLayout.syl(r)}</button>`).join('')}</div>`;
     if (t.w) h += `<p class="muted">這裡依「${esc(t.w)}」這個詞判斷讀音。</p>`;
   }
   $('#sheetBody').innerHTML = h;
@@ -934,6 +927,8 @@ window.ZLens = {
     try { return await readBest(cv, false); } finally { dir = keepDir; }
   },
 };
+// 說明文字裡的注音也照直式
+document.querySelectorAll('.zyapply').forEach(el => ZhuyinLayout.apply(el));
 </script>
 </body>
 </html>
