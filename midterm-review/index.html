@@ -364,6 +364,51 @@ body.g-run .gi.gnow{opacity:1}
 .say.pulse,.gnow.pulse{animation:pulse 1.2s ease-in-out infinite}
 @keyframes pulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--star) 55%,transparent)}}
 
+/* ---------- 模擬考：全部寫完再檢查、交卷、訂正 ---------- */
+.xsec{border-radius:22px;transition:opacity .25s}
+.xsec + .xsec{margin-top:22px}
+.xintro{border-style:solid}
+body.x-check .xsec:not(.xnow){opacity:.45}
+body.x-write .rowdone,body.x-write .cgroup .step{display:none}
+.popt.pk .mk i{visibility:visible;color:var(--ink)}
+.cho.pk{border-color:var(--ink)}
+.bopt.pk,.qopt.pk{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink)}
+.ci.pk{border-color:var(--ink)}
+.nb.pk{border-color:var(--ink)}
+.mbox.pk{color:var(--ink)}
+.tb.pk{border-color:var(--ink)}
+.tb.pk .tm{stroke:var(--ink)}
+.tb.pk .lt{background:var(--ink)}
+.tb .t1{font-size:.5em;color:var(--muted)}
+.pkbad{text-decoration:line-through;text-decoration-color:var(--red)}
+.popt.pkbad .mk i,.qopt.pkbad .cn{color:var(--red)}
+.cho.pkbad,.bopt.pkbad,.qopt.pkbad{border-color:var(--red);border-style:dashed}
+.nb.pkbad,.tb.pkbad{border-color:var(--red);border-style:dashed;color:var(--red)}
+.tb.pkbad .tm{stroke:var(--red)}
+.llines line.pk{stroke:var(--ink)}
+.miss{outline:3px dashed var(--red)!important;outline-offset:3px;border-radius:12px}
+.xi{position:relative}
+.xmark{position:absolute;top:-10px;right:-8px;z-index:3;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
+  font-weight:700;font-size:18px;background:var(--paper);border:2px solid currentColor;pointer-events:none;font-family:var(--f-body)}
+.xmark.ok{color:var(--ok)} .xmark.bad{color:var(--sun)} .xmark.fixed{color:var(--brave)}
+.xbar{position:fixed;left:0;right:0;bottom:0;z-index:35;background:var(--paper);border-top:2px solid var(--line);box-shadow:0 -6px 20px rgba(0,0,0,.12);
+  display:flex;align-items:center;gap:10px;padding:8px max(14px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+.xbar .xt{flex:1;min-width:0;font-size:.95rem;line-height:1.35}
+.xbar .xt b{font-variant-numeric:tabular-nums}
+.xbar button{flex:none;min-height:46px;font-weight:700;background:var(--zh);border-color:var(--zh);color:var(--paper)}
+.ma .xbar button{background:var(--ma);border-color:var(--ma)}
+.xbar button:disabled{opacity:.45}
+body.xmode{padding-bottom:110px}
+body.xmode .coach{bottom:calc(74px + env(safe-area-inset-bottom,0px))}
+body.xmode.padopen .xbar{display:none}
+.xend{text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+.xend .big{font-size:2.6rem;font-weight:700;font-family:var(--f-kai)}
+.xend .gact{width:100%;max-width:420px}
+.xlist{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.xlist button{min-height:40px;padding:2px 12px;font-size:.95rem}
+.secbtn.xbtn{border-style:dashed}
+.zh .secbtn.xbtn{border-color:var(--zh)} .ma .secbtn.xbtn{border-color:var(--ma)}
+
 /* ---------- 完成、答案 ---------- */
 .donecard{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
 .donecard .big{font-size:3.4rem;line-height:1.1}
@@ -434,7 +479,7 @@ body.padopen .coach{bottom:calc(var(--padh,300px) + 8px)}
 const KID = '大寶';
 const VOICE_SAMPLE = `${KID}你好，我是龜龜老師。期中考快到了，我們一起複習，加油喔！`;
 // 考試日期（民國 115 年 = 2026 年）
-const EXAM = { zh: { d: '2026-11-03', label: '11月3日（星期二）' }, ma: { d: '2026-11-04', label: '11月4日（星期三）' } };
+const EXAM_DAY = { zh: { d: '2026-11-03', label: '11月3日（星期二）' }, ma: { d: '2026-11-04', label: '11月4日（星期三）' } };
 
 /* ---------- 小工具 ---------- */
 const $ = (s, r = document) => r.querySelector(s);
@@ -503,7 +548,7 @@ const word = (z, cls = '') => ZY.word(sylsOf(z).join(' '), { cls });
 
 /* ---------- 國字注音（題目說明用；讀音取自教育部《重編國語辭典修訂本》，再照考卷念法調整） ---------- */
 // ZY_C：字 → 讀音（由 zhuyin-lens/zhuyin-data.js 取出這一頁用到的字）；ZY_W：照考卷念法的詞（變調、輕聲、破音字）
-const ZY_C = /*ZY_C*/{"一":"ㄧ","七":"ㄑㄧ","三":"ㄙㄢ","上":"ㄕㄤˋ","下":"ㄒㄧㄚˋ","不":"ㄅㄨˋ","中":"ㄓㄨㄥ","串":"ㄔㄨㄢˋ","九":"ㄐㄧㄡˇ","了":"˙ㄌㄜ","二":"ㄦˋ","亮":"ㄌㄧㄤˋ","人":"ㄖㄣˊ","什":"ㄕㄣˊ","代":"ㄉㄞˋ","以":"ㄧˇ","來":"ㄌㄞˊ","例":"ㄌㄧˋ","個":"ㄍㄜˋ","做":"ㄗㄨㄛˋ","先":"ㄒㄧㄢ","兔":"ㄊㄨˋ","兩":"ㄌㄧㄤˇ","八":"ㄅㄚ","共":"ㄍㄨㄥˋ","再":"ㄗㄞˋ","出":"ㄔㄨ","分":"ㄈㄣ","到":"ㄉㄠˋ","前":"ㄑㄧㄢˊ","動":"ㄉㄨㄥˋ","勾":"ㄍㄡ","十":"ㄕˊ","厚":"ㄏㄡˋ","句":"ㄐㄩˋ","只":"ㄓˇ","可":"ㄎㄜˇ","右":"ㄧㄡˋ","司":"ㄙ","吃":"ㄔ","合":"ㄏㄜˊ","名":"ㄇㄧㄥˊ","和":"ㄏㄜˊ","咪":"ㄇㄧ","哪":"ㄋㄚˇ","喔":"ㄛ","嘻":"ㄒㄧ","四":"ㄙˋ","圈":"ㄑㄩㄢ","國":"ㄍㄨㄛˊ","圖":"ㄊㄨˊ","在":"ㄗㄞˋ","塊":"ㄎㄨㄞˋ","填":"ㄊㄧㄢˊ","多":"ㄉㄨㄛ","大":"ㄉㄚˋ","套":"ㄊㄠˋ","好":"ㄏㄠˇ","如":"ㄖㄨˊ","始":"ㄕˇ","子":"ㄗˇ","字":"ㄗˋ","學":"ㄒㄩㄝˊ","它":"ㄊㄨㄛ","完":"ㄨㄢˊ","察":"ㄔㄚˊ","寫":"ㄒㄧㄝˇ","寶":"ㄅㄠˇ","對":"ㄉㄨㄟˋ","小":"ㄒㄧㄠˇ","少":"ㄕㄠˇ","就":"ㄐㄧㄡˋ","尺":"ㄔˇ","左":"ㄗㄨㄛˇ","已":"ㄧˇ","師":"ㄕ","幾":"ㄐㄧˇ","序":"ㄒㄩˋ","往":"ㄨㄤˇ","後":"ㄏㄡˋ","從":"ㄘㄨㄥˊ","念":"ㄋㄧㄢˋ","怎":"ㄗㄣˇ","想":"ㄒㄧㄤˇ","懂":"ㄉㄨㄥˇ","成":"ㄔㄥˊ","或":"ㄏㄨㄛˋ","所":"ㄙㄨㄛˇ","手":"ㄕㄡˇ","才":"ㄘㄞˊ","打":"ㄉㄚˇ","找":"ㄓㄠˇ","把":"ㄅㄚˇ","拔":"ㄅㄚˊ","括":"ㄍㄨㄚ","拼":"ㄆㄧㄣ","指":"ㄓˇ","排":"ㄆㄞˊ","改":"ㄍㄞˇ","放":"ㄈㄤˋ","數":"ㄕㄨˋ","方":"ㄈㄤ","旁":"ㄆㄤˊ","是":"ㄕˋ","最":"ㄗㄨㄟˋ","會":"ㄏㄨㄟˋ","有":"ㄧㄡˇ","板":"ㄅㄢˇ","枝":"ㄓ","查":"ㄔㄚˊ","根":"ㄍㄣ","格":"ㄍㄜˊ","桃":"ㄊㄠˊ","框":"ㄎㄨㄤ","案":"ㄢˋ","條":"ㄊㄧㄠˊ","楚":"ㄔㄨˇ","樣":"ㄧㄤˋ","檢":"ㄐㄧㄢˇ","櫻":"ㄧㄥ","次":"ㄘˋ","歡":"ㄏㄨㄢ","正":"ㄓㄥˋ","步":"ㄅㄨˋ","每":"ㄇㄟˇ","比":"ㄅㄧˇ","毛":"ㄇㄠˊ","沒":"ㄇㄟˊ","河":"ㄏㄜˊ","法":"ㄈㄚˇ","注":"ㄓㄨˋ","清":"ㄑㄧㄥ","照":"ㄓㄠˋ","物":"ㄨˋ","狂":"ㄎㄨㄤˊ","狸":"ㄌㄧˊ","現":"ㄒㄧㄢˋ","用":"ㄩㄥˋ","白":"ㄅㄞˊ","的":"˙ㄉㄜ","盤":"ㄆㄢˊ","目":"ㄇㄨˋ","看":"ㄎㄢˋ","知":"ㄓ","短":"ㄉㄨㄢˇ","矮":"ㄞˇ","確":"ㄑㄩㄝˋ","碼":"ㄇㄚˇ","空":"ㄎㄨㄥ","笑":"ㄒㄧㄠˋ","符":"ㄈㄨˊ","第":"ㄉㄧˋ","答":"ㄉㄚˊ","算":"ㄙㄨㄢˋ","糕":"ㄍㄠ","紅":"ㄏㄨㄥˊ","經":"ㄐㄧㄥ","翹":"ㄑㄧㄠˊ","老":"ㄌㄠˇ","聲":"ㄕㄥ","聽":"ㄊㄧㄥ","能":"ㄋㄥˊ","與":"ㄩˇ","萄":"ㄊㄠˊ","葡":"ㄆㄨˊ","蔔":"˙ㄅㄛ","薄":"ㄅㄛˊ","蘿":"ㄌㄨㄛˊ","號":"ㄏㄠˋ","蛋":"ㄉㄢˋ","衣":"ㄧ","裡":"ㄌㄧˇ","要":"ㄧㄠˋ","觀":"ㄍㄨㄢ","詞":"ㄘˊ","語":"ㄩˇ","說":"ㄕㄨㄛ","調":"ㄊㄧㄠˊ","謝":"ㄒㄧㄝˋ","讀":"ㄉㄨˊ","變":"ㄅㄧㄢˋ","貓":"ㄇㄠ","賽":"ㄙㄞˋ","起":"ㄑㄧˇ","跑":"ㄆㄠˇ","路":"ㄌㄨˋ","跳":"ㄊㄧㄠˋ","較":"ㄐㄧㄠˋ","近":"ㄐㄧㄣˋ","這":"ㄓㄜˋ","通":"ㄊㄨㄥ","造":"ㄗㄠˋ","連":"ㄌㄧㄢˊ","進":"ㄐㄧㄣˋ","遍":"ㄅㄧㄢˋ","過":"ㄍㄨㄛˋ","道":"ㄉㄠˋ","選":"ㄒㄩㄢˇ","還":"ㄏㄞˊ","邊":"ㄅㄧㄢ","都":"ㄉㄡ","長":"ㄔㄤˊ","開":"ㄎㄞ","隻":"ㄓ","雙":"ㄕㄨㄤ","面":"ㄇㄧㄢˋ","鞋":"ㄒㄧㄝˊ","音":"ㄧㄣ","順":"ㄕㄨㄣˋ","顆":"ㄎㄜ","題":"ㄊㄧˊ","馬":"ㄇㄚˇ","高":"ㄍㄠ","鵝":"ㄜˊ","麼":"˙ㄇㄜ","點":"ㄉㄧㄢˇ","鼠":"ㄕㄨˇ","龜":"ㄍㄨㄟ"}/*END*/;
+const ZY_C = /*ZY_C*/{"一":"ㄧ","七":"ㄑㄧ","三":"ㄙㄢ","上":"ㄕㄤˋ","下":"ㄒㄧㄚˋ","不":"ㄅㄨˋ","中":"ㄓㄨㄥ","串":"ㄔㄨㄢˋ","九":"ㄐㄧㄡˇ","了":"˙ㄌㄜ","二":"ㄦˋ","交":"ㄐㄧㄠ","亮":"ㄌㄧㄤˋ","人":"ㄖㄣˊ","什":"ㄕㄣˊ","代":"ㄉㄞˋ","以":"ㄧˇ","你":"ㄋㄧˇ","來":"ㄌㄞˊ","例":"ㄌㄧˋ","個":"ㄍㄜˋ","候":"ㄏㄡˋ","做":"ㄗㄨㄛˋ","像":"ㄒㄧㄤˋ","先":"ㄒㄧㄢ","兔":"ㄊㄨˋ","全":"ㄑㄩㄢˊ","兩":"ㄌㄧㄤˇ","八":"ㄅㄚ","共":"ㄍㄨㄥˋ","再":"ㄗㄞˋ","出":"ㄔㄨ","分":"ㄈㄣ","到":"ㄉㄠˋ","前":"ㄑㄧㄢˊ","動":"ㄉㄨㄥˋ","勾":"ㄍㄡ","十":"ㄕˊ","卷":"ㄐㄩㄢˋ","厚":"ㄏㄡˋ","句":"ㄐㄩˋ","只":"ㄓˇ","可":"ㄎㄜˇ","右":"ㄧㄡˋ","司":"ㄙ","吃":"ㄔ","合":"ㄏㄜˊ","名":"ㄇㄧㄥˊ","告":"ㄍㄠˋ","和":"ㄏㄜˊ","咪":"ㄇㄧ","哪":"ㄋㄚˇ","喔":"ㄛ","單":"ㄉㄢ","嘻":"ㄒㄧ","四":"ㄙˋ","回":"ㄏㄨㄟˊ","圈":"ㄑㄩㄢ","國":"ㄍㄨㄛˊ","圖":"ㄊㄨˊ","在":"ㄗㄞˋ","塊":"ㄎㄨㄞˋ","填":"ㄊㄧㄢˊ","多":"ㄉㄨㄛ","大":"ㄉㄚˋ","套":"ㄊㄠˋ","好":"ㄏㄠˇ","如":"ㄖㄨˊ","始":"ㄕˇ","子":"ㄗˇ","字":"ㄗˋ","學":"ㄒㄩㄝˊ","它":"ㄊㄨㄛ","完":"ㄨㄢˊ","察":"ㄔㄚˊ","寫":"ㄒㄧㄝˇ","寶":"ㄅㄠˇ","對":"ㄉㄨㄟˋ","小":"ㄒㄧㄠˇ","少":"ㄕㄠˇ","就":"ㄐㄧㄡˋ","尺":"ㄔˇ","左":"ㄗㄨㄛˇ","已":"ㄧˇ","師":"ㄕ","幾":"ㄐㄧˇ","序":"ㄒㄩˋ","往":"ㄨㄤˇ","後":"ㄏㄡˋ","從":"ㄘㄨㄥˊ","忘":"ㄨㄤˋ","念":"ㄋㄧㄢˋ","怎":"ㄗㄣˇ","想":"ㄒㄧㄤˇ","懂":"ㄉㄨㄥˇ","成":"ㄔㄥˊ","或":"ㄏㄨㄛˋ","所":"ㄙㄨㄛˇ","手":"ㄕㄡˇ","才":"ㄘㄞˊ","打":"ㄉㄚˇ","找":"ㄓㄠˇ","把":"ㄅㄚˇ","拔":"ㄅㄚˊ","括":"ㄍㄨㄚ","拼":"ㄆㄧㄣ","指":"ㄓˇ","排":"ㄆㄞˊ","接":"ㄐㄧㄝ","提":"ㄊㄧˊ","擬":"ㄋㄧˇ","改":"ㄍㄞˇ","放":"ㄈㄤˋ","數":"ㄕㄨˋ","方":"ㄈㄤ","旁":"ㄆㄤˊ","是":"ㄕˋ","時":"ㄕˊ","最":"ㄗㄨㄟˋ","會":"ㄏㄨㄟˋ","有":"ㄧㄡˇ","板":"ㄅㄢˇ","枝":"ㄓ","查":"ㄔㄚˊ","根":"ㄍㄣ","格":"ㄍㄜˊ","桃":"ㄊㄠˊ","框":"ㄎㄨㄤ","案":"ㄢˋ","條":"ㄊㄧㄠˊ","棒":"ㄅㄤˋ","楚":"ㄔㄨˇ","模":"ㄇㄛˊ","樣":"ㄧㄤˋ","檢":"ㄐㄧㄢˇ","櫻":"ㄧㄥ","次":"ㄘˋ","歡":"ㄏㄨㄢ","正":"ㄓㄥˋ","步":"ㄅㄨˋ","每":"ㄇㄟˇ","比":"ㄅㄧˇ","毛":"ㄇㄠˊ","沒":"ㄇㄟˊ","河":"ㄏㄜˊ","法":"ㄈㄚˇ","注":"ㄓㄨˋ","清":"ㄑㄧㄥ","照":"ㄓㄠˋ","物":"ㄨˋ","狂":"ㄎㄨㄤˊ","狸":"ㄌㄧˊ","現":"ㄒㄧㄢˋ","用":"ㄩㄥˋ","白":"ㄅㄞˊ","的":"˙ㄉㄜ","盤":"ㄆㄢˊ","目":"ㄇㄨˋ","直":"ㄓˊ","看":"ㄎㄢˋ","真":"ㄓㄣ","知":"ㄓ","短":"ㄉㄨㄢˇ","矮":"ㄞˇ","確":"ㄑㄩㄝˋ","碼":"ㄇㄚˇ","示":"ㄕˋ","空":"ㄎㄨㄥ","笑":"ㄒㄧㄠˋ","符":"ㄈㄨˊ","第":"ㄉㄧˋ","答":"ㄉㄚˊ","算":"ㄙㄨㄢˋ","糕":"ㄍㄠ","紅":"ㄏㄨㄥˊ","經":"ㄐㄧㄥ","翹":"ㄑㄧㄠˊ","老":"ㄌㄠˇ","考":"ㄎㄠˇ","聲":"ㄕㄥ","聽":"ㄊㄧㄥ","能":"ㄋㄥˊ","與":"ㄩˇ","色":"ㄙㄜˋ","萄":"ㄊㄠˊ","葡":"ㄆㄨˊ","蔔":"˙ㄅㄛ","薄":"ㄅㄛˊ","蘿":"ㄌㄨㄛˊ","號":"ㄏㄠˋ","蛋":"ㄉㄢˋ","衣":"ㄧ","補":"ㄅㄨˇ","裡":"ㄌㄧˇ","要":"ㄧㄠˋ","觀":"ㄍㄨㄢ","訂":"ㄉㄧㄥˋ","記":"ㄐㄧˋ","訴":"ㄙㄨˋ","詞":"ㄘˊ","試":"ㄕˋ","語":"ㄩˇ","說":"ㄕㄨㄛ","調":"ㄊㄧㄠˊ","謝":"ㄒㄧㄝˋ","讀":"ㄉㄨˊ","變":"ㄅㄧㄢˋ","貓":"ㄇㄠ","賽":"ㄙㄞˋ","起":"ㄑㄧˇ","跑":"ㄆㄠˇ","路":"ㄌㄨˋ","跳":"ㄊㄧㄠˋ","較":"ㄐㄧㄠˋ","近":"ㄐㄧㄣˋ","這":"ㄓㄜˋ","通":"ㄊㄨㄥ","造":"ㄗㄠˋ","連":"ㄌㄧㄢˊ","進":"ㄐㄧㄣˋ","遍":"ㄅㄧㄢˋ","過":"ㄍㄨㄛˋ","道":"ㄉㄠˋ","選":"ㄒㄩㄢˇ","還":"ㄏㄞˊ","邊":"ㄅㄧㄢ","部":"ㄅㄨˋ","都":"ㄉㄡ","錯":"ㄘㄨㄛˋ","長":"ㄔㄤˊ","開":"ㄎㄞ","隻":"ㄓ","雙":"ㄕㄨㄤ","面":"ㄇㄧㄢˋ","鞋":"ㄒㄧㄝˊ","音":"ㄧㄣ","項":"ㄒㄧㄤˋ","順":"ㄕㄨㄣˋ","顆":"ㄎㄜ","題":"ㄊㄧˊ","馬":"ㄇㄚˇ","高":"ㄍㄠ","鵝":"ㄜˊ","麼":"˙ㄇㄜ","點":"ㄉㄧㄢˇ","鼠":"ㄕㄨˇ","龜":"ㄍㄨㄟ"}/*END*/;
 const ZY_W = {
   '數一數': 'ㄕㄨˇ ㄧˋ ㄕㄨˇ', '數起': 'ㄕㄨˇ ㄑㄧˇ', '數到': 'ㄕㄨˇ ㄉㄠˋ', '數字': 'ㄕㄨˋ ㄗˋ', '數學': 'ㄕㄨˋ ㄒㄩㄝˊ',
   '一樣': 'ㄧˊ ㄧㄤˋ', '一條': 'ㄧˋ ㄊㄧㄠˊ', '一個': 'ㄧˊ ˙ㄍㄜ', '一遍': 'ㄧˊ ㄅㄧㄢˋ', '一選': 'ㄧˋ ㄒㄩㄢˇ', '一念': 'ㄧˊ ㄋㄧㄢˋ',
@@ -513,7 +558,8 @@ const ZY_W = {
   '什麼': 'ㄕㄣˊ ˙ㄇㄜ', '怎麼': 'ㄗㄣˇ ˙ㄇㄜ', '空白': 'ㄎㄨㄥˋ ㄅㄞˊ', '空格': 'ㄎㄨㄥˋ ㄍㄜˊ', '還是': 'ㄏㄞˊ ㄕˋ', '不要': 'ㄅㄨˊ ㄧㄠˋ',
   '不是': 'ㄅㄨˊ ㄕˋ', '一想': 'ㄧˋ ㄒㄧㄤˇ', '一排': 'ㄧˋ ㄆㄞˊ', '一大': 'ㄧˊ ㄉㄚˋ', '一題': 'ㄧˋ ㄊㄧˊ', '一邊': 'ㄧˋ ㄅㄧㄢ',
   '一次': 'ㄧˊ ㄘˋ', '一雙': 'ㄧˋ ㄕㄨㄤ', '一盤': 'ㄧˋ ㄆㄢˊ', '一串': 'ㄧˊ ㄔㄨㄢˋ', '一塊': 'ㄧˊ ㄎㄨㄞˋ', '這樣數': 'ㄓㄜˋ ㄧㄤˋ ㄕㄨˇ',
-  '格子': 'ㄍㄜˊ ˙ㄗ', '括號': 'ㄎㄨㄛˋ ㄏㄠˋ', '算算': 'ㄙㄨㄢˋ ˙ㄙㄨㄢ', '看看': 'ㄎㄢˋ ˙ㄎㄢ', '念好': 'ㄋㄧㄢˋ ㄏㄠˇ', '看懂': 'ㄎㄢˋ ㄉㄨㄥˇ'
+  '格子': 'ㄍㄜˊ ˙ㄗ', '括號': 'ㄎㄨㄛˋ ㄏㄠˋ', '算算': 'ㄙㄨㄢˋ ˙ㄙㄨㄢ', '看看': 'ㄎㄢˋ ˙ㄎㄢ', '念好': 'ㄋㄧㄢˋ ㄏㄠˇ', '看懂': 'ㄎㄢˋ ㄉㄨㄥˇ',
+  '一勾': 'ㄧˋ ㄍㄡ', '不會': 'ㄅㄨˊ ㄏㄨㄟˋ', '對不對': 'ㄉㄨㄟˋ ˙ㄅㄨ ㄉㄨㄟˋ', '找找': 'ㄓㄠˇ ˙ㄓㄠ', '交卷': 'ㄐㄧㄠ ㄐㄩㄢˋ', '模擬': 'ㄇㄛˊ ㄋㄧˇ'
 };
 const ZY_FIX = { '它': 'ㄊㄚ', '個': '˙ㄍㄜ', '和': 'ㄏㄢˋ', '的': '˙ㄉㄜ', '數': 'ㄕㄨˋ', '薄': 'ㄅㄛˊ', '單': 'ㄉㄢ', '元': 'ㄩㄢˊ', '少': 'ㄕㄠˇ', '狸': 'ㄌㄧˊ' };
 const isHan = c => /[㐀-鿿]/.test(c);
@@ -865,6 +911,14 @@ const GUIDE = {
   now: '亮起來的就是現在要做的題目。',
   check: '第四步：寫完了，從第一題再看一遍。',
   checks: ['每一題都寫了，沒有空白', '題號照順序，沒有跳過', '答案再看一次，寫清楚'],
+  exam: {
+    write: '像真的考試一樣：照題號一題一題寫，全部寫完再檢查。寫的時候不會告訴你對不對喔！',
+    miss: '開始檢查：先找找看有沒有忘記寫的題目，紅色框框的要補寫。',
+    sec: '一大題一大題檢查：從第一題再看一遍，看看有沒有寫錯，寫錯可以直接改。',
+    list: '最後勾一勾三個檢查項目，就可以交卷了。',
+    done: '交卷了！打 ✓ 的是對的；有 ✎ 的要訂正，再寫一次，會有提示。',
+    fixed: '全部訂正好了，你好棒！'
+  },
   z1: { how: '看圖，念一念兩個注音，對的在上面的（　）打勾。', ex: '例題的圖是毛衣，念 ㄇㄠˊ ㄧ 才對，所以在它上面打勾。' },
   z2: { how: '看圖念句子，括號裡有兩個拼音，把對的圈起來。', ex: '例題是「第一名」，念 ㄉㄧˋ ㄧ ㄇㄧㄥˊ，所以圈 ㄧ。' },
   z3: { how: '用上面的音造一個詞，聲調不能改。這裡從三個詞選一個。', ex: '例題的 ㄇㄠ 可以造「貓咪」，寫在格子裡。' },
@@ -928,6 +982,7 @@ function saveSec() {
   store.set('st:' + SEC.id, m);
 }
 function progress() {
+  if (EXAM) return xRefresh();
   const us = SEC.units, done = us.filter(u => u.st), ok1 = us.filter(u => u.st === 'ok1').length;
   const ok2 = us.filter(u => u.st === 'ok2').length, sh = us.filter(u => u.st === 'shown').length;
   store.set('tot:' + SEC.id, [us.length, done.length, ok1]);
@@ -962,9 +1017,10 @@ const GD = { step: -1, items: [], checks: [] };
 const ITEM_SEL = '.pitem,.scard,.bitem,.qitem,.titem,.fcard,.crow-row,.cgroup,.seq,.tree,.oq,.wcell,.mcell,.mouse';
 const EX_SEL = '.pitem.ex,.scard.ex,.bitem.ex,.lit.ex,.wcell.ex';
 function itemOf(u) {
-  if (u.link) return $(`#lk-${u.g} [data-side="a"][data-k="${u.a}"]`);
+  if (u.item && u.item.isConnected) return u.item;
+  if (u.link) return (u.item = $(`#lk-${u.g} [data-side="a"][data-k="${u.a}"]`));
   const el = $('#u-' + u.id) || $(`[data-u="${u.id}"]`) || (u.grp ? $('#' + u.grp) : null);
-  return el && (el.closest(ITEM_SEL) || el);
+  return (u.item = el && (el.closest(ITEM_SEL) || el));
 }
 const curUnit = () => SEC.units.find(u => !u.st);
 // 引導的話加注音（國字右邊直排注音，句子裡的注音也直排）
@@ -1042,6 +1098,223 @@ function guideSkip() {
   showEl(now, true);
   now.classList.remove('pulse'); void now.offsetWidth; now.classList.add('pulse');
 }
+/* =================================================================
+ * 模擬考：一科全部的大題接成一張考卷，像真的考試
+ *   write 作答（不說對錯）→ check 檢查（先補寫沒寫的 → 一大題一大題再看一遍、可以改 → 勾三個檢查項目）
+ *   → 交卷批改（對的 ✓、錯的 ✎）→ fix 訂正（錯的題目照平常的方法再寫，答錯有提示）
+ * 每一格的答案記在 u.pick；打勾小題的記號記在 EXAM.marks[組]。紀錄存在 x:國語/數學
+ * ================================================================= */
+let EXAM = null;
+const xWriting = () => !!EXAM && (EXAM.phase === 'write' || EXAM.phase === 'check');
+const xSecs = () => SECS.filter(s => s.subj === EXAM.subj);
+function answered(u) {
+  if (u.step != null) return (EXAM.marks[u.grp] || []).includes(u.mk);
+  if (u.count) return !!(u.pick && u.pick.length);
+  return u.pick != null;
+}
+function isRight(u) {
+  const v = u.pick;
+  if (u.step != null) { const m = EXAM.marks[u.grp] || []; return m[u.ans] === u.mk && m.filter(x => x === u.mk).length === 1; }
+  if (u.count) return !!v && v.length === u.ans;
+  if (u.set) return u.set.includes(v) && !SEC.units.some(x => x !== u && x.grp === u.grp && x.pick === v && SEC.units.indexOf(x) < SEC.units.indexOf(u));
+  if (u.kind === 'tone') return v === u.ans || (u.alt || []).includes(v);
+  return v === u.ans;
+}
+// 把孩子寫的答案畫出來（還沒批改）；bad＝批改後錯的，用紅色虛線標出來
+function xShow(u, bad) {
+  const v = u.pick, cls = bad ? 'pkbad' : 'pk';
+  if (u.kind === 'num') { const el = $('#u-' + u.id); el.querySelector('.nv').textContent = v ?? ''; el.classList.toggle(cls, v != null); }
+  else if (u.kind === 'tone') { const el = $('#u-' + u.id); el.innerHTML = v == null ? '' : v === 5 ? '<span class="lt"></span>' : v === 1 ? '<span class="t1">－</span>' : ZY.toneSVG(v); el.classList.toggle(cls, v != null); }
+  else if (u.link) drawLinks($('#lk-' + u.g));
+  else if (u.step != null) { const m = EXAM.marks[u.grp] || []; $$(`#${u.grp} .mbox`).forEach((b, i) => { b.textContent = m[i] || ''; b.className = 'mbox' + (m[i] ? ' pk' : ''); }); }
+  else if (u.count) $$(`#u-${u.id} .ci`).forEach((x, i) => x.classList.toggle('on', !!v && v.includes(i)));
+  else { $$(`[data-u="${u.id}"][data-v]`).forEach(x => x.classList.toggle(cls, v != null && +x.dataset.v === v)); if (u.showPick) u.showPick(bad ? null : v); }
+}
+function xSave() {
+  const picks = {}; SEC.units.forEach(u => { if (u.pick != null) picks[u.id] = u.pick; });
+  store.set('x:' + EXAM.subj, { phase: EXAM.phase, cstep: EXAM.cstep, checks: EXAM.checks, marks: EXAM.marks, picks, graded: EXAM.graded, fixed: EXAM.fixed, score: EXAM.score });
+}
+function xChanged() { chime([740], .05, .06); xSave(); xRefresh(); }
+const xItems = () => [...new Set(SEC.units.map(itemOf).filter(Boolean))];
+// 第幾大題（國語用一、二…）
+const xSecOf = u => xSecs().find(s => s.id === u.sec);
+
+function renderExam(subj) {
+  closePad(); U = {}; KEYS = []; LINK.g = null; GD.step = -1;
+  SEC = { id: 'x-' + subj, units: [], subj, restored: true };
+  const secs = SECS.filter(s => s.subj === subj), name = subj === 'zh' ? '國語' : '數學';
+  const body = secs.map(s => {
+    const n0 = SEC.units.length, k0 = KEYS.length, h = s.render();
+    SEC.units.slice(n0).forEach(u => { u.sec = s.id; });
+    KEYS.splice(k0, 0, `【${s.no}】`);
+    return `<section class="xsec" id="xs-${s.id}"><div class="ins"><span class="pn">${s.no}、</span>${T(s.title)}<button type="button" class="say" data-act="say" data-say="${esc(s.title.replace(/[（(]\s*[）)]/g, '括號'))}">🔊 念題目</button></div>${h}</section>`;
+  }).join('');
+  document.title = `${name}模擬考・期中考總復習`;
+  app.className = subj;
+  app.innerHTML = `<div class="topbar"><button class="iconbtn" type="button" data-act="home" aria-label="回選單">←</button>
+      <h1>${name}${T('模擬考')}</h1><span class="score" id="xcount"></span>
+      <button class="iconbtn" type="button" data-act="sound" aria-label="聲音開關">${soundOn ? '🔊' : '🔈'}</button></div>
+    <div class="pbar"><i id="pbar"></i></div>
+    <div class="guide xintro"><div class="gmsg" id="xmsg"></div></div>
+    ${body}
+    <div class="paper xend" id="xend"></div>
+    <details class="paper key" id="xkey" hidden><summary>給家長看的答案</summary><ol>${KEYS.map(k => `<li>${esc(k.trim())}</li>`).join('')}</ol></details>`;
+  ZY.apply($('#xkey'));
+  let bar = $('#xbar');
+  if (!bar) { bar = document.createElement('div'); bar.id = 'xbar'; bar.className = 'xbar'; bar.innerHTML = '<span class="xt" id="xbarTxt"></span><button type="button" id="xbarBtn" data-act="xgo"></button>'; document.body.appendChild(bar); }
+  bar.hidden = false;
+  document.body.classList.add('xmode');
+  // 還原：寫到哪、檢查到哪、批改結果
+  const sv = store.get('x:' + subj, null) || {};
+  EXAM = { subj, phase: sv.phase || 'write', cstep: sv.cstep || 0, checks: sv.checks || [], marks: sv.marks || {}, graded: sv.graded || null, fixed: sv.fixed || {}, score: sv.score ?? null };
+  const picks = sv.picks || {};
+  SEC.units.forEach(u => { if (picks[u.id] != null) u.pick = picks[u.id]; });
+  if (EXAM.phase === 'fix') { xApplyGrade(); EXAM.allFixed = SEC.units.every(u => u.st); }
+  else SEC.units.forEach(u => xShow(u));
+  $$('.lk').forEach(drawLinks);
+  SEC.restored = false;
+  xStep(!!sv.phase);
+  requestAnimationFrame(() => $$('.lk').forEach(drawLinks));
+  if (document.fonts) document.fonts.ready.then(() => $$('.lk').forEach(drawLinks));
+  scrollTo(0, 0);
+}
+// 換階段：上面的說明、下面的按鈕、要不要說話
+function xStep(quiet) {
+  const ph = EXAM.phase, secs = xSecs(), msg = $('#xmsg'), end = $('#xend');
+  document.body.classList.toggle('x-write', xWriting());
+  document.body.classList.toggle('x-check', ph === 'check' && EXAM.cstep >= 1 && EXAM.cstep <= secs.length);
+  $$('.xsec').forEach(el => el.classList.remove('xnow'));
+  $$('.miss').forEach(el => el.classList.remove('miss'));
+  let say = '';
+  if (ph === 'write') {
+    gtext(msg, GUIDE.exam.write); say = GUIDE.exam.write;
+    end.innerHTML = `<button type="button" class="next" data-act="xgo">✍️ ${T('全部寫完了，開始檢查')}</button>`;
+  } else if (ph === 'check' && EXAM.cstep === 0) {
+    gtext(msg, GUIDE.exam.miss); say = GUIDE.exam.miss; end.innerHTML = '';
+  } else if (ph === 'check' && EXAM.cstep <= secs.length) {
+    const s = secs[EXAM.cstep - 1];
+    gtext(msg, GUIDE.exam.sec); say = `檢查第${s.no}大題：從第一題再看一遍。`;
+    const el = $('#xs-' + s.id); el.classList.add('xnow'); showEl(el, true);
+    end.innerHTML = '';
+  } else if (ph === 'check') {
+    gtext(msg, GUIDE.exam.list); say = GUIDE.exam.list;
+    end.innerHTML = `<div class="gmsg">${T(GUIDE.check)}</div><div class="gact col">${GUIDE.checks.map((c, i) => `<button type="button" class="ck${EXAM.checks[i] ? ' on' : ''}" data-act="xck" data-i="${i}"><span class="bx">${EXAM.checks[i] ? '✓' : ''}</span>${T(c)}</button>`).join('')}</div>
+      <button type="button" class="next" data-act="xsubmit" ${GUIDE.checks.every((_, i) => EXAM.checks[i]) ? '' : 'disabled'}>📝 ${T('交卷')}</button>`;
+    showEl(end, true);
+  } else {
+    gtext(msg, GUIDE.exam.done);
+    const bad = SEC.units.filter(u => !EXAM.graded[u.id]);
+    const left = bad.filter(u => !u.st);
+    say = quiet ? '' : `交卷了！你考了 ${EXAM.score} 分。${bad.length ? '有 ✎ 的要訂正。' : '全部都對，太厲害了！'}`;
+    const bySec = secs.map(s => [s, bad.filter(u => u.sec === s.id)]).filter(([, l]) => l.length);
+    end.innerHTML = `<div class="big">${EXAM.score} 分</div><p>${T('對')} ${SEC.units.length - bad.length} ／ 共 ${SEC.units.length} 格${bad.length ? `，${T('要訂正')} ${bad.length} 格` : ''}</p>
+      ${bySec.length ? `<ul class="xlist">${bySec.map(([s, l]) => `<li><button type="button" data-act="xjump" data-s="${s.id}">${s.no}、${l.filter(u => !u.st).length ? `✎ ${l.filter(u => !u.st).length}` : '✓ 訂正好了'}</button></li>`).join('')}</ul>` : ''}
+      ${left.length ? '' : `<p>${T(GUIDE.exam.fixed)}</p>`}
+      <div class="btnrow"><button type="button" data-act="xredo">🔁 ${T('再考一次')}</button><button type="button" data-act="home">${T('回選單')}</button></div>`;
+    ZY.apply(end);
+    $('#xkey').hidden = false;
+  }
+  xRefresh();
+  if (say && !quiet) { coach(say, 'guide'); speak(say); }
+}
+// 更新數量、下面的提示列；檢查時標出沒寫的；訂正時更新記號
+function xRefresh() {
+  if (!EXAM) return;
+  const items = xItems(), us = SEC.units, secs = xSecs();
+  const txt = $('#xbarTxt'), btn = $('#xbarBtn'), bar = $('#pbar');
+  if (EXAM.phase === 'fix') {
+    us.forEach(u => {
+      if (EXAM.graded[u.id] || !u.st) return;
+      EXAM.fixed[u.id] = u.st;
+      // 數字、聲調訂正好了：同一格的紅色刪除線拿掉（選擇題保留原本選錯的，對照著看）
+      if (u.kind === 'num' || u.kind === 'tone') { const el = $('#u-' + u.id); if (el) el.classList.remove('pkbad'); }
+    });
+    xBadges(); xSave();
+    const left = us.filter(u => !u.st).length;
+    $('#xcount').innerHTML = `<b>${EXAM.score}</b> 分`;
+    if (bar) bar.style.width = (us.filter(u => u.st).length / us.length * 100) + '%';
+    txt.innerHTML = left ? `得分 <b>${EXAM.score}</b> 分・訂正還有 <b>${left}</b> 格` : `得分 <b>${EXAM.score}</b> 分・全部訂正好了 🎉`;
+    btn.textContent = left ? '👉 下一個訂正' : '🔁 再考一次'; btn.dataset.do = left ? 'nextfix' : 'redo';
+    if (!left && !EXAM.allFixed && !SEC.restored) { EXAM.allFixed = true; confetti(); coach(GUIDE.exam.fixed, 'ok'); speak(GUIDE.exam.fixed); xStep(true); }
+    return;
+  }
+  const done = items.filter(el => us.every(u => itemOf(u) !== el || answered(u))).length;
+  $('#xcount').innerHTML = `已寫 <b>${done}</b>/${items.length} 題`;
+  if (bar) bar.style.width = (done / items.length * 100) + '%';
+  if (EXAM.phase === 'write') {
+    txt.innerHTML = `已寫 <b>${done}</b> / ${items.length} 題，全部寫完再檢查`;
+    btn.textContent = '✍️ 寫完了'; btn.dataset.do = 'check'; btn.disabled = false;
+  } else if (EXAM.cstep === 0) {
+    const miss = us.filter(u => !answered(u));
+    $$('.miss').forEach(el => el.classList.remove('miss'));
+    miss.forEach(u => { const el = itemOf(u); if (el) el.classList.add('miss'); });
+    if (!miss.length) { EXAM.cstep = 1; xSave(); coach('都寫完了！接著一大題一大題檢查。', 'ok'); xStep(); return; }
+    const n = new Set(miss.map(itemOf)).size;
+    txt.innerHTML = `還有 <b>${n}</b> 題沒寫（紅色框框）`;
+    btn.textContent = '👉 去補寫'; btn.dataset.do = 'miss'; btn.disabled = false;
+  } else if (EXAM.cstep <= secs.length) {
+    const s = secs[EXAM.cstep - 1];
+    txt.innerHTML = `檢查第 <b>${s.no}</b> 大題（${EXAM.cstep}/${secs.length}）：再看一遍，可以改`;
+    btn.textContent = EXAM.cstep < secs.length ? '看過了 ➜' : '看過了，勾檢查 ➜'; btn.dataset.do = 'secok'; btn.disabled = false;
+  } else {
+    const all = GUIDE.checks.every((_, i) => EXAM.checks[i]);
+    txt.innerHTML = all ? '檢查好了，可以交卷！' : '勾完三個檢查項目就可以交卷';
+    btn.textContent = '📝 交卷'; btn.dataset.do = 'submit'; btn.disabled = !all;
+  }
+}
+// 批改：對的直接顯示答案；錯的保留孩子寫的（紅色虛線），等著訂正
+function xGrade() {
+  EXAM.graded = {}; SEC.units.forEach(u => { EXAM.graded[u.id] = isRight(u) ? 1 : 0; });
+  const ok = SEC.units.filter(u => EXAM.graded[u.id]).length;
+  EXAM.score = Math.round(ok / SEC.units.length * 100); EXAM.phase = 'fix'; EXAM.fixed = {}; EXAM.allFixed = ok === SEC.units.length;
+  const best = store.get('xbest:' + EXAM.subj, null);
+  if (!best || EXAM.score >= best.score) store.set('xbest:' + EXAM.subj, { score: EXAM.score, d: new Date().toISOString().slice(0, 10) });
+  xApplyGrade(); xSave();
+  if (EXAM.score === 100) confetti();
+  xStep(); scrollTo({ top: 0, behavior: 'smooth' });
+}
+function xApplyGrade() {
+  // 打勾的小題：先清掉，再把對的畫上去
+  [...new Set(SEC.units.filter(u => u.step != null).map(u => u.grp))].forEach(g => $$(`#${g} .mbox`).forEach(b => { b.textContent = ''; b.className = 'mbox'; }));
+  SEC.units.forEach(u => {
+    const right = EXAM.graded[u.id], fixed = EXAM.fixed[u.id];
+    $$(`[data-u="${u.id}"].pk, #u-${u.id}.pk`).forEach(x => x.classList.remove('pk'));
+    if (right || fixed) { u.st = fixed || 'ok1'; u.solve(fixed === 'shown'); return; }
+    u.st = null; u.tries = 0;
+    if (u.count) { $$(`#u-${u.id} .ci`).forEach(x => x.classList.remove('on')); u.pick = null; }
+    else if (u.step == null && !u.link) xShow(u, true);
+  });
+  $$('.cgroup').forEach(g => stepPrompt(g.id));
+  $$('.lk').forEach(drawLinks);
+  xBadges();
+}
+// 每一題的右上角：✓ 對、✎ 要訂正、✓（藍）訂正好了
+function xBadges() {
+  if (!EXAM || EXAM.phase !== 'fix') return;
+  xItems().forEach(el => {
+    const us = SEC.units.filter(u => itemOf(u) === el), ok = us.every(u => EXAM.graded[u.id]), fixed = us.every(u => u.st);
+    const cls = ok ? 'ok' : fixed ? 'fixed' : 'bad';
+    el.classList.add('xi');
+    let m = el.querySelector(':scope > .xmark');
+    if (!m) { m = document.createElement('span'); el.appendChild(m); }
+    m.className = 'xmark ' + cls; m.textContent = ok ? '✓' : fixed ? '✓' : '✎';
+    m.setAttribute('aria-label', ok ? '答對' : fixed ? '訂正好了' : '要訂正');
+  });
+}
+function xGo(what) {
+  if (what === 'check') { EXAM.phase = 'check'; EXAM.cstep = 0; xSave(); xStep(); const m = $('.miss'); if (m) showEl(m, true); }
+  else if (what === 'miss') { const m = $('.miss'); if (m) showEl(m, true); }
+  else if (what === 'secok') { EXAM.cstep++; xSave(); xStep(); }
+  else if (what === 'submit') { if (SEC.units.some(u => !answered(u))) { EXAM.cstep = 0; xSave(); xStep(); return; } xGrade(); }
+  else if (what === 'nextfix') { const u = SEC.units.find(x => !x.st); if (u) showEl(itemOf(u), true); }
+  else if (what === 'redo') xRedo();
+}
+function xRedo() {
+  if (!confirm('要把這張考卷全部擦掉，重新考一次嗎？')) return;
+  store.del('x:' + EXAM.subj); renderExam(EXAM.subj);
+}
+function xLeave() { EXAM = null; document.body.classList.remove('xmode', 'x-write', 'x-check'); const b = $('#xbar'); if (b) b.hidden = true; }
+
 function showEl(el, force) {
   if (!el) return;
   const r = el.getBoundingClientRect(), bottom = innerHeight - 110;
@@ -1083,7 +1356,7 @@ function openPad(u, mode) {
   }
 }
 function closePad(keep) {
-  if (PAD.u) { const el = $('#u-' + PAD.u.id); el && el.classList.remove('act'); if (PAD.mode === 'num' && !PAD.u.st && el) el.querySelector('.nv').textContent = ''; }
+  if (PAD.u) { const el = $('#u-' + PAD.u.id); el && el.classList.remove('act'); if (PAD.mode === 'num' && !PAD.u.st && el) el.querySelector('.nv').textContent = xWriting() ? PAD.u.pick ?? '' : ''; }
   PAD.u = null; PAD.val = '';
   if (!keep) { $('#pad').hidden = true; document.body.classList.remove('padopen'); }
 }
@@ -1093,6 +1366,7 @@ function padKey(k) {
   if (k === 'bk') PAD.val = PAD.val.slice(0, -1);
   else if (k === 'ok') {
     if (!PAD.val) { coach('先按數字，再按「好了」。', 'hint'); return; }
+    if (xWriting()) { u.pick = +PAD.val; closePad(true); xShow(u); xChanged(u); nextBlank(u) || closePad(); return; }
     const v = +PAD.val, ok = numOk(u, v);
     if (ok) u.val = v;
     judge(u, ok, v, el);
@@ -1110,7 +1384,7 @@ function numOk(u, v) {
 function nextBlank(u) {
   const el = $('#u-' + u.id), paper = el && el.closest('.paper'); if (!paper) return false;
   const all = $$('.nb', paper), i = all.indexOf(el);
-  const nx = all.slice(i + 1).find(b => { const x = U[b.dataset.u]; return x && !x.st; });
+  const nx = all.slice(i + 1).find(b => { const x = U[b.dataset.u]; return x && !x.st && !(xWriting() && x.pick != null); });
   if (!nx) return false;
   // 這段時間裡孩子自己點了別的格子（或已經寫好了），就不要再跳，免得把剛按的數字清掉
   const x = U[nx.dataset.u];
@@ -1230,6 +1504,7 @@ function rZ4() {
       ans: it.a,
       hint: () => '把句子念一遍，看看圖，想想哪一個放進框框最通順。',
       say: () => it.w, explain: () => `答案是 ${'①②③'[it.a]}「${w}」：${it.w}。`,
+      showPick(v) { $('#u-' + id + ' .ansp b').textContent = v == null ? '' : '①②③'[v]; },
       solve(rev) {
         markOn(id, it.a, rev); const el = $('#u-' + id);
         el.querySelector('.ansp b').textContent = '①②③'[it.a];
@@ -1287,6 +1562,8 @@ function linkTap(t) {
     LINK.g = null;
     const u = U[`${g}-${a}`];
     if (!u || u.st) return;
+    // 模擬考：只畫線記下來；一個點只能連一條
+    if (xWriting()) { SEC.units.forEach(x => { if (x.g === g && x !== u && x.pick === b) x.pick = null; }); u.pick = b; drawLinks(lk); xChanged(u); return; }
     judge(u, u.ans === b, b, lk.querySelector(`[data-side="b"][data-k="${b}"]`));
     return;
   }
@@ -1300,8 +1577,9 @@ function drawLinks(lk) {
   const dot = (side, k) => { const d = lk.querySelector(`[data-side="${side}"][data-k="${k}"] .ldot`).getBoundingClientRect(); return [d.left + d.width / 2 - box.left, d.top + d.height / 2 - box.top]; };
   const lines = [];
   if (lk.dataset.ex !== '-1' && lk.dataset.ex != null) lines.push([+lk.dataset.ex, +lk.dataset.exb, false]);
-  SEC.units.filter(u => u.g === g && u.st).forEach(u => lines.push([u.a, u.ans, u.st === 'shown']));
-  svg.innerHTML = lines.map(([a, b, rv]) => { const [x1, y1] = dot('a', a), [x2, y2] = dot('b', b); return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"${rv ? ' class="rv"' : ''}/>`; }).join('');
+  SEC.units.filter(u => u.g === g && u.st).forEach(u => lines.push([u.a, u.ans, u.st === 'shown' ? 'rv' : '']));
+  if (xWriting()) SEC.units.filter(u => u.g === g && !u.st && u.pick != null).forEach(u => lines.push([u.a, u.pick, 'pk']));
+  svg.innerHTML = lines.map(([a, b, c]) => { const [x1, y1] = dot('a', a), [x2, y2] = dot('b', b); return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"${c ? ` class="${c}"` : ''}/>`; }).join('');
 }
 
 function rZ6() {
@@ -1361,7 +1639,7 @@ function slab(th, c, label = '') {
 function markGroup(id, lab, pics, steps, rest) {
   steps.forEach(([a, m, prompt, why], si) => {
     mkUnit(`${id}-${si}`, {
-      ans: a, grp: id, step: si,
+      ans: a, grp: id, step: si, mk: m,
       hint: () => why, explain: () => why,
       solve(rev) {
         const box = $(`#${id} [data-v="${a}"] .mbox`); box.textContent = m; box.classList.add(m === '✓' ? 'y' : 'n');
@@ -1371,7 +1649,7 @@ function markGroup(id, lab, pics, steps, rest) {
       }
     });
   });
-  return `<div class="cgroup" id="${id}"><span class="lab">${lab}</span><div class="step" data-steps='${esc(JSON.stringify(steps.map(s => s[2])))}'></div>
+  return `<div class="cgroup" id="${id}" data-x="${steps.some(x => x[1] === '✗') || rest ? 1 : 0}"><span class="lab">${lab}</span><div class="step" data-steps='${esc(JSON.stringify(steps.map(s => s[2])))}'></div>
     <div class="cpics">${pics.map((h, v) => `<button type="button" class="cpic" data-act="mk" data-g="${id}" data-v="${v}">${h}<span class="mbox"></span></button>`).join('')}</div></div>`;
 }
 function stepPrompt(id) {
@@ -1407,6 +1685,7 @@ function rM2() {
   const id = 'm2-e';
   mkUnit(id, {
     ans: 1, hint: () => '彎彎曲曲的路走起來比較遠，哪一條比較直？', explain: () => '直直的路比較近。',
+    showPick(v) { $$(`#${id} .mbox`).forEach(x => { x.textContent = +x.dataset.v === v ? '✓' : ''; }); },
     solve(rev) { const b = $(`#${id} [data-v="1"]`); b.textContent = '✓'; b.classList.add('y'); if (rev) b.classList.add('reveal'); $$(`#${id} .mbox`).forEach(x => { x.disabled = true; }); }
   });
   h += `<div class="paper"><div class="sub">${T('小老鼠想吃起司，哪一條路比較近？在□中打✓。')}</div>
@@ -1533,7 +1812,7 @@ function rM10() {
  * ================================================================= */
 const app = $('#app');
 function daysTo(d) { const t = new Date(); t.setHours(0, 0, 0, 0); return Math.round((new Date(d + 'T00:00:00') - t) / 864e5); }
-function countText(subj) { const n = daysTo(EXAM[subj].d); return n > 0 ? `還有 ${n} 天` : n === 0 ? '就是今天，加油！' : '考完了，辛苦了！'; }
+function countText(subj) { const n = daysTo(EXAM_DAY[subj].d); return n > 0 ? `還有 ${n} 天` : n === 0 ? '就是今天，加油！' : '考完了，辛苦了！'; }
 function secStatus(s) {
   const t = store.get('tot:' + s.id, null);
   if (!t) return '<span class="st">還沒寫</span>';
@@ -1541,19 +1820,26 @@ function secStatus(s) {
   if (!done) return '<span class="st">還沒寫</span>';
   return done >= tot ? `<span class="st done">✓ 寫完了<br>⭐ ${ok1}/${tot}</span>` : `<span class="st">寫到 ${done}/${tot}</span>`;
 }
+// 首頁的模擬考按鈕：寫到哪、最好的分數
+function xHomeBtn(k) {
+  const sv = store.get('x:' + k, null), best = store.get('xbest:' + k, null);
+  const st = sv && sv.phase === 'fix' ? `<span class="st done">${sv.score} 分${best ? `<br>最好 ${best.score}` : ''}</span>`
+    : sv && sv.phase ? `<span class="st">${sv.phase === 'check' ? '檢查中' : '寫到一半'}</span>` : best ? `<span class="st">最好 ${best.score} 分</span>` : '<span class="st">還沒考</span>';
+  return `<button type="button" class="secbtn xbtn" data-act="go" data-to="exam/${k}"><span class="no">📝</span><span class="nm">${T('模擬考：全部寫完再檢查')}</span>${st}</button>`;
+}
 function renderHome() {
   closePad(); SEC = null; U = {}; GD.step = -1; document.body.classList.remove('g-lock', 'g-run');
   document.title = '期中考總復習';
   const subj = (k, name, sub, scope, src) => `<section class="subj ${k}">
-    <h2>${T(name)} <small>${EXAM[k].label}・${countText(k)}</small></h2>
+    <h2>${T(name)} <small>${EXAM_DAY[k].label}・${countText(k)}</small></h2>
     <p class="src">範圍：${sub}</p>
     <ul class="scope">${scope}</ul>
-    <div class="secs">${SECS.filter(s => s.subj === k).map(s => `<button type="button" class="secbtn" data-act="go" data-to="${s.id}"><span class="no">${s.no}</span><span class="nm">${T(s.title)}</span>${secStatus(s)}</button>`).join('')}</div>
+    <div class="secs">${xHomeBtn(k)}${SECS.filter(s => s.subj === k).map(s => `<button type="button" class="secbtn" data-act="go" data-to="${s.id}"><span class="no">${s.no}</span><span class="nm">${T(s.title)}</span>${secStatus(s)}</button>`).join('')}</div>
     <p class="src">命題參考出處：${src}</p></section>`;
   app.innerHTML = `<div class="hero">
       <div style="display:flex;align-items:center;gap:8px"><h1 style="flex:1">期中考總復習</h1><button class="iconbtn" type="button" data-act="sound" aria-label="聲音開關">${soundOn ? '🔊' : '🔈'}</button></div>
       <p>照老師發的「期中評量參考題型」一大題一大題練習，題目和注音排法都跟考卷一樣（注音直的寫，聲調在右上方）。答錯先給提示，第二次再一起看答案。</p>
-      <div class="count"><span class="chip zh">國語 ${EXAM.zh.label}　${countText('zh')}</span><span class="chip ma">數學 ${EXAM.ma.label}　${countText('ma')}</span></div>
+      <div class="count"><span class="chip zh">國語 ${EXAM_DAY.zh.label}　${countText('zh')}</span><span class="chip ma">數學 ${EXAM_DAY.ma.label}　${countText('ma')}</span></div>
     </div>
     <div class="subjects">
       ${subj('zh', '國語', '首冊全', LESSONS.map((l, i) => `<li><span class="ln">第${CN_NUM[i]}課</span> ${T(l)}</li>`).join(''), '國語課本、國語習作、國語練習簿、國語練習卷、歷屆試題（含小考）、自編講義（作業）')}
@@ -1572,6 +1858,7 @@ function renderHome() {
       <li><b>國語三「造詞」</b>考卷要自己寫，這裡改成從三個詞選一個「同一個音、聲調也一樣」的詞，選對會寫進格子；每題答案下面也列出還可以造的詞，可以讓孩子口頭再說一個。</li>
       <li><b>數學七的紅字</b>（例如「第10個」「第3個」「第8個」「第13個」）是老師在題目上加的變化：排在最前面的那一個已經是第幾個了，從前面數要接著往下數；從後面數則不受影響。</li>
       <li><b>考卷上有一個打錯的注音：</b>國語四「天空上有月亮」印成「ㄊㄧㄢ ㄊㄨㄥ」，這裡已改成「ㄊㄧㄢ ㄎㄨㄥ」。國語六「豆腐」「玉米」「好朋友」的最後一個字，辭典念輕聲，填三聲或輕聲都算對。</li>
+      <li><b>📝 模擬考：全部寫完再檢查。</b>國語、數學各有一張把全部大題接在一起的考卷。寫的時候不告訴對錯；按「寫完了」先找出沒寫的題目（紅框）補寫，再一大題一大題檢查、可以改，勾完三個檢查項目才能交卷。交卷後打分數，對的打 ✓，錯的標 ✎ 讓孩子訂正（訂正時答錯有提示）。寫到一半離開，下次會接著寫。</li>
       <li><b>做題的順序。</b>考試時最常丟分的是沒看清楚題目、看錯例題、跳題漏寫。打開「🧭 照順序引導」，每一大題都會先念題目、看例題，再照題號一題一題亮起來（國語從右往左、數學從左往右），跳到後面的題目會提醒先做亮起來的那一題；寫完再勾三個檢查項目才算完成。熟練了可以改成「✏️ 自由寫」。</li>
       <li>每一大題最下面有「給家長看的答案」。紀錄只存在這台裝置的瀏覽器；想重寫可以按大題最下面的「重新寫一次」。</li>
     </ul></details>`;
@@ -1612,8 +1899,10 @@ function renderSec(id) {
   scrollTo(0, 0);
 }
 function route() {
-  const id = location.hash.replace(/^#\/?/, '');
-  if (SECS.some(s => s.id === id)) renderSec(id); else { app.className = ''; renderHome(); }
+  const id = location.hash.replace(/^#\/?/, ''), xm = id.match(/^exam\/(zh|ma)$/);
+  if (!xm) xLeave();
+  if (xm) renderExam(xm[1]);
+  else if (SECS.some(s => s.id === id)) renderSec(id); else { app.className = ''; renderHome(); }
 }
 addEventListener('hashchange', route);
 addEventListener('resize', () => { clearTimeout(route.t); route.t = setTimeout(() => $$('.lk').forEach(drawLinks), 120); });
@@ -1627,6 +1916,19 @@ document.addEventListener('click', e => {
     const tu = a === 'mk' ? SEC.units.find(x => x.grp === t.dataset.g && x.step != null && !x.st) : a === 'lk' ? U[`${t.dataset.g}-${t.dataset.k}`] : u;
     const cu = curUnit();
     if (tu && cu && !tu.st && itemOf(tu) !== itemOf(cu)) { guideSkip(); return; }
+  }
+  if (xWriting() && ['opt', 'mk', 'ci', 'tone'].includes(a)) {
+    if (a === 'opt') { if (!u || u.st) return; u.pick = +t.dataset.v; xShow(u); xChanged(); }
+    else if (a === 'mk') {
+      const g = t.dataset.g, v = +t.dataset.v, m = EXAM.marks[g] = EXAM.marks[g] || [];
+      const cyc = $('#' + g).dataset.x === '1' ? ['', '✓', '✗'] : ['', '✓'];
+      m[v] = cyc[(cyc.indexOf(m[v] || '') + 1) % cyc.length];
+      xShow(SEC.units.find(x => x.grp === g)); xChanged();
+    } else if (a === 'ci') {
+      if (!u || u.st) return; const v = +t.dataset.v, p = u.pick || [];
+      u.pick = p.includes(v) ? p.filter(x => x !== v) : [...p, v]; xShow(u); xChanged();
+    } else { const v = +t.dataset.t, x = PAD.u; if (!x) return; x.pick = v; closePad(); xShow(x); xChanged(); }
+    return;
   }
   if (a === 'opt') {
     if (!u || u.st) return;
@@ -1662,6 +1964,16 @@ document.addEventListener('click', e => {
     if (GD.step === 0) { const st = SEC.id; setTimeout(() => { if (GD.step === 0 && SEC && SEC.id === st) guideStep(1); }, Math.min(7000, 1500 + t.dataset.say.length * 260 / rate)); }
   }
   else if (a === 'gnext') guideStep(GD.step + 1);
+  else if (a === 'xgo') xGo(t.dataset.do || (EXAM && EXAM.phase === 'write' ? 'check' : ''));
+  else if (a === 'xsubmit') xGo('submit');
+  else if (a === 'xredo') xRedo();
+  else if (a === 'xjump') { const u = SEC.units.find(x => x.sec === t.dataset.s && !x.st) || SEC.units.find(x => x.sec === t.dataset.s); if (u) showEl(itemOf(u), true); }
+  else if (a === 'xck') {
+    const i = +t.dataset.i; EXAM.checks[i] = !EXAM.checks[i]; chime([660, 880]); xSave();
+    t.classList.toggle('on', EXAM.checks[i]); t.querySelector('.bx').textContent = EXAM.checks[i] ? '✓' : '';
+    const sb = $('#xend [data-act="xsubmit"]'); if (sb) sb.disabled = !GUIDE.checks.every((_, k) => EXAM.checks[k]);
+    xRefresh();
+  }
   else if (a === 'gck') {
     const i = +t.dataset.i; if (GD.checks[i]) return;
     GD.checks[i] = true; t.classList.add('on'); t.querySelector('.bx').textContent = '✓'; chime([660, 880]);
