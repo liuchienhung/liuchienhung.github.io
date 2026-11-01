@@ -123,40 +123,37 @@ details.parent li{color:var(--muted)} details.parent li b{color:var(--ink)}
 .opt.reveal{border-color:var(--star);box-shadow:0 0 0 4px color-mix(in srgb,var(--star) 45%,transparent);animation:glow 1.2s ease-in-out 2}
 @keyframes glow{50%{transform:scale(1.04)}}
 .opt:disabled{cursor:default}
-.syl{display:inline-block;padding:0 .12em}
 .toneopt{flex-direction:column;gap:2px;font-size:1.05rem}
 .toneopt svg{width:56px;height:30px}
 .toneopt path{fill:none;stroke:var(--ink);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
-.toneopt .mk{font-size:2.2rem;line-height:1;font-weight:700}
+.toneopt .mk{font-size:2.2rem;line-height:1;font-weight:700;display:grid;place-items:center;height:2.2rem}
+.toneopt .mk svg{width:1.1rem;height:1.1rem;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.toneopt .mk path{stroke:currentColor;stroke-width:1.5}
+.toneopt .mk .dot{width:.5rem;height:.5rem;border-radius:50%;background:currentColor}
 .next{align-self:center;font-family:var(--f-kai);font-size:1.3rem;font-weight:700;padding:12px 28px;border-color:var(--leaf);background:var(--leaf);color:var(--card)}
 .next.ma{border-color:var(--sun);background:var(--sun)}
 
-/* 句子注音 */
-.sent{font-family:var(--f-kai);font-size:1.75rem;line-height:2.4;letter-spacing:.06em}
-.sent.q{font-size:1.4rem}
-.sent.big{font-size:2.6rem;line-height:2.2;font-weight:700}
-.sent.big rt{font-size:.36em;font-weight:400}
-ruby{ruby-position:over}
-rt{font-family:var(--f-kai);font-size:.46em;letter-spacing:0;color:var(--muted)}
-rt.mask{color:var(--sun);font-weight:700}
-.punc{padding:0 .1em}
 
 /* 首冊：只用注音的題目 */
 .qsec{align-self:stretch;text-align:left;font-family:var(--f-kai);font-weight:700;font-size:1.05rem;color:var(--leaf);
   border-bottom:2px dashed var(--line);padding-bottom:6px}
-.zy{display:inline-flex;flex-wrap:wrap;justify-content:center;gap:0 .22em;font-family:var(--f-kai)}
-.zy .syl{padding:0 .04em;border-radius:8px}
-.zy .syl.hl{outline:3px solid var(--sun);outline-offset:3px}
-.zybig{font-size:2.6rem;font-weight:700;line-height:1.5}
+/* 注音照課本直式排（../zhuyin-layout.js）：符號由上往下，聲調在最後一個符號右上方，輕聲點在最上面；詞由上往下，句子由右往左 */
+:root{--zy-font:var(--f-kai)}
+.zv.hl{outline:3px solid var(--sun);outline-offset:4px;border-radius:8px}
+.zybig{font-size:2.3rem;font-weight:700;line-height:1}
 .blank{display:inline-block;min-width:1.05em;border:2px dashed var(--sun);border-radius:8px;color:var(--sun);
   font-size:.75em;line-height:1.25;margin:0 .06em;text-align:center;vertical-align:middle}
+.zs>.blank{position:absolute;inset:.04em .02em;min-width:0;margin:0;font-size:.62em;line-height:1;display:flex;align-items:center;justify-content:center}
+.zv .zq{color:var(--sun)}
 .zyw{letter-spacing:.02em}
-.opt.zyopt{font-size:1.7rem}
-.opt.picopt{flex-direction:column;gap:4px}
+.opt.zyopt{font-size:1.45rem;padding:10px 4px}
+.opt.sym .zv{font-size:.9em}
+.opt.picopt{flex-direction:column;gap:6px}
 .opt .pic{font-size:3rem;line-height:1.1}
-.zy.sm{font-size:1.05rem;color:var(--muted)}
-.zysent{display:flex;flex-wrap:wrap;justify-content:center;gap:.1em .3em;font-family:var(--f-kai);font-size:1.75rem;line-height:1.7}
-.zysent.q{font-size:1.4rem;color:var(--leaf)}
+.opt .zw.sm{font-size:1.05rem;color:var(--muted)}
+.zyread{display:flex;flex-direction:row-reverse;justify-content:center;align-items:flex-start;gap:1.4em;font-size:1.45rem;font-weight:700}
+.zyread .zsent.q{color:var(--leaf);padding-right:1em;border-right:2px dashed var(--line)}
+.bubble .zw.in{font-size:.8em}
 .orow{display:flex;gap:10px;justify-content:center}
 .orow .cell{width:64px;height:72px;border:3px solid var(--line);border-radius:14px;display:grid;place-items:center;
   font-family:var(--f-kai);font-size:2.4rem;font-weight:700;margin:0;min-width:0}
@@ -314,6 +311,7 @@ rt.mask{color:var(--sun);font-weight:700}
 <div class="confetti" id="confetti"></div>
 
 <script src="../tw-speech.js"></script>
+<script src="../zhuyin-layout.js"></script>
 <script>
 const KID = '大寶';
 const VOICE_SAMPLE = `${KID}你好，我是龜龜老師。我們今天一起玩注音和數學，好不好？加油喔！`;
@@ -431,31 +429,24 @@ const FCONF = { 'ㄚ': 'ㄜㄛ', 'ㄜ': 'ㄚㄛ', 'ㄛ': 'ㄜㄨ', 'ㄝ': 'ㄟ',
   'ㄣ': 'ㄥㄢ', 'ㄥ': 'ㄣ', 'ㄧ': 'ㄩ', 'ㄩ': 'ㄧ', 'ㄨ': 'ㄛ', 'ㄦ': 'ㄜ' };
 const TONE_NAME = ['輕聲', '一聲', '二聲', '三聲', '四聲'];
 const TONE_PATH = ['', 'M6 15 H50', 'M6 26 L50 4', 'M6 8 Q22 34 50 6', 'M6 4 L50 26'];
-const TONE_MARK = ['˙', '', 'ˊ', 'ˇ', 'ˋ'];
 // 國語真的有的音節（含聲調），錯的選項只從這裡挑，不會出現念不出來的拼音。取自教育部《重編國語辭典修訂本》所有字的讀音。
 const SYL_T = new Set('˙ㄅㄚ ˙ㄅㄛ ˙ㄅㄞ ˙ㄅㄟ ˙ㄅㄠ ˙ㄅㄣ ˙ㄅㄧㄝ ˙ㄅㄧㄢ ˙ㄅㄧㄥ ˙ㄅㄨ ˙ㄆㄚ ˙ㄆㄛ ˙ㄆㄞ ˙ㄆㄧ ˙ㄇㄚ ˙ㄇㄛ ˙ㄇㄜ ˙ㄇㄞ ˙ㄇㄟ ˙ㄇㄠ ˙ㄇㄣ ˙ㄇㄧ ˙ㄇㄧㄢ ˙ㄇㄨ ˙ㄈㄚ ˙ㄈㄟ ˙ㄈㄢ ˙ㄈㄣ ˙ㄈㄤ ˙ㄈㄥ ˙ㄈㄨ ˙ㄉㄚ ˙ㄉㄜ ˙ㄉㄞ ˙ㄉㄠ ˙ㄉㄢ ˙ㄉㄤ ˙ㄉㄥ ˙ㄉㄧ ˙ㄉㄧㄢ ˙ㄉㄧㄥ ˙ㄉㄨ ˙ㄉㄨㄛ ˙ㄉㄨㄟ ˙ㄉㄨㄣ ˙ㄉㄨㄥ ˙ㄊㄚ ˙ㄊㄞ ˙ㄊㄠ ˙ㄊㄡ ˙ㄊㄢ ˙ㄊㄤ ˙ㄊㄥ ˙ㄊㄧ ˙ㄊㄧㄠ ˙ㄊㄧㄢ ˙ㄊㄧㄥ ˙ㄊㄨ ˙ㄊㄨㄛ ˙ㄊㄨㄥ ˙ㄋㄚ ˙ㄋㄜ ˙ㄋㄞ ˙ㄋㄠ ˙ㄋㄤ ˙ㄋㄧㄡ ˙ㄋㄧㄢ ˙ㄋㄧㄤ ˙ㄋㄨㄥ ˙ㄌㄚ ˙ㄌㄛ ˙ㄌㄜ ˙ㄌㄞ ˙ㄌㄠ ˙ㄌㄡ ˙ㄌㄧ ˙ㄌㄧㄡ ˙ㄌㄧㄢ ˙ㄌㄧㄤ ˙ㄌㄧㄥ ˙ㄌㄨ ˙ㄌㄨㄛ ˙ㄌㄨㄥ ˙ㄍㄚ ˙ㄍㄜ ˙ㄍㄞ ˙ㄍㄠ ˙ㄍㄨ ˙ㄍㄨㄚ ˙ㄍㄨㄛ ˙ㄍㄨㄟ ˙ㄍㄨㄣ ˙ㄍㄨㄥ ˙ㄎㄜ ˙ㄎㄞ ˙ㄎㄡ ˙ㄎㄨㄞ ˙ㄏㄜ ˙ㄏㄞ ˙ㄏㄠ ˙ㄏㄡ ˙ㄏㄨ ˙ㄏㄨㄚ ˙ㄏㄨㄛ ˙ㄏㄨㄟ ˙ㄏㄨㄢ ˙ㄏㄨㄤ ˙ㄏㄨㄥ ˙ㄐㄧ ˙ㄐㄧㄚ ˙ㄐㄧㄝ ˙ㄐㄧㄠ ˙ㄐㄧㄡ ˙ㄐㄧㄢ ˙ㄐㄧㄤ ˙ㄐㄧㄥ ˙ㄐㄩ ˙ㄑ ˙ㄑㄧ ˙ㄑㄧㄠ ˙ㄑㄧㄡ ˙ㄑㄧㄢ ˙ㄑㄧㄥ ˙ㄑㄩ ˙ㄒㄧ ˙ㄒㄧㄚ ˙ㄒㄧㄝ ˙ㄒㄧㄢ ˙ㄒㄧㄣ ˙ㄒㄧㄤ ˙ㄒㄧㄥ ˙ㄓ ˙ㄓㄜ ˙ㄓㄠ ˙ㄓㄡ ˙ㄓㄤ ˙ㄓㄥ ˙ㄓㄨ ˙ㄓㄨㄚ ˙ㄓㄨㄛ ˙ㄓㄨㄤ ˙ㄔ ˙ㄔㄢ ˙ㄔㄣ ˙ㄔㄤ ˙ㄔㄥ ˙ㄔㄨ ˙ㄕ ˙ㄕㄚ ˙ㄕㄞ ˙ㄕㄡ ˙ㄕㄣ ˙ㄕㄤ ˙ㄕㄥ ˙ㄕㄨ ˙ㄕㄨㄛ ˙ㄕㄨㄟ ˙ㄖㄜ ˙ㄖㄣ ˙ㄗ ˙ㄗㄞ ˙ㄗㄢ ˙ㄗㄨㄛ ˙ㄘㄞ ˙ㄙ ˙ㄙㄚ ˙ㄙㄜ ˙ㄙㄤ ˙ㄙㄨㄛ ˙ㄙㄨㄥ ˙ㄚ ˙ㄣ ˙ㄧ ˙ㄧㄝ ˙ㄧㄠ ˙ㄧㄡ ˙ㄧㄢ ˙ㄧㄤ ˙ㄧㄥ ˙ㄨ ˙ㄨㄚ ˙ㄨㄛ ˙ㄨㄟ ˙ㄨㄤ ˙ㄩ ˙ㄩㄝ ˙ㄩㄥ ㄅㄚ ㄅㄚˇ ㄅㄚˊ ㄅㄚˋ ㄅㄛ ㄅㄛˇ ㄅㄛˊ ㄅㄛˋ ㄅㄞ ㄅㄞˇ ㄅㄞˊ ㄅㄞˋ ㄅㄟ ㄅㄟˇ ㄅㄟˋ ㄅㄠ ㄅㄠˇ ㄅㄠˊ ㄅㄠˋ ㄅㄢ ㄅㄢˇ ㄅㄢˋ ㄅㄣ ㄅㄣˇ ㄅㄣˋ ㄅㄤ ㄅㄤˇ ㄅㄤˋ ㄅㄥ ㄅㄥˇ ㄅㄥˊ ㄅㄥˋ ㄅㄧ ㄅㄧˇ ㄅㄧˊ ㄅㄧˋ ㄅㄧㄝ ㄅㄧㄝˇ ㄅㄧㄝˊ ㄅㄧㄝˋ ㄅㄧㄠ ㄅㄧㄠˇ ㄅㄧㄠˋ ㄅㄧㄢ ㄅㄧㄢˇ ㄅㄧㄢˋ ㄅㄧㄣ ㄅㄧㄣˋ ㄅㄧㄥ ㄅㄧㄥˇ ㄅㄧㄥˋ ㄅㄨ ㄅㄨˇ ㄅㄨˊ ㄅㄨˋ ㄆㄚ ㄆㄚˊ ㄆㄚˋ ㄆㄛ ㄆㄛˇ ㄆㄛˊ ㄆㄛˋ ㄆㄞ ㄆㄞˇ ㄆㄞˊ ㄆㄞˋ ㄆㄟ ㄆㄟˊ ㄆㄟˋ ㄆㄠ ㄆㄠˇ ㄆㄠˊ ㄆㄠˋ ㄆㄡ ㄆㄡˇ ㄆㄡˊ ㄆㄢ ㄆㄢˊ ㄆㄢˋ ㄆㄣ ㄆㄣˊ ㄆㄣˋ ㄆㄤ ㄆㄤˇ ㄆㄤˊ ㄆㄤˋ ㄆㄥ ㄆㄥˇ ㄆㄥˊ ㄆㄥˋ ㄆㄧ ㄆㄧˇ ㄆㄧˊ ㄆㄧˋ ㄆㄧㄚ ㄆㄧㄝ ㄆㄧㄝˇ ㄆㄧㄝˋ ㄆㄧㄠ ㄆㄧㄠˇ ㄆㄧㄠˊ ㄆㄧㄠˋ ㄆㄧㄢ ㄆㄧㄢˇ ㄆㄧㄢˊ ㄆㄧㄢˋ ㄆㄧㄣ ㄆㄧㄣˇ ㄆㄧㄣˊ ㄆㄧㄣˋ ㄆㄧㄥ ㄆㄧㄥˊ ㄆㄧㄥˋ ㄆㄨ ㄆㄨˇ ㄆㄨˊ ㄆㄨˋ ㄇㄚ ㄇㄚˇ ㄇㄚˊ ㄇㄚˋ ㄇㄛ ㄇㄛˇ ㄇㄛˊ ㄇㄛˋ ㄇㄞˇ ㄇㄞˊ ㄇㄞˋ ㄇㄟˇ ㄇㄟˊ ㄇㄟˋ ㄇㄠ ㄇㄠˇ ㄇㄠˊ ㄇㄠˋ ㄇㄡˇ ㄇㄡˊ ㄇㄡˋ ㄇㄢ ㄇㄢˇ ㄇㄢˊ ㄇㄢˋ ㄇㄣ ㄇㄣˇ ㄇㄣˊ ㄇㄣˋ ㄇㄤˇ ㄇㄤˊ ㄇㄥ ㄇㄥˇ ㄇㄥˊ ㄇㄥˋ ㄇㄧ ㄇㄧˇ ㄇㄧˊ ㄇㄧˋ ㄇㄧㄝ ㄇㄧㄝˋ ㄇㄧㄠ ㄇㄧㄠˇ ㄇㄧㄠˊ ㄇㄧㄠˋ ㄇㄧㄡˋ ㄇㄧㄢˇ ㄇㄧㄢˊ ㄇㄧㄢˋ ㄇㄧㄣˇ ㄇㄧㄣˊ ㄇㄧㄥˇ ㄇㄧㄥˊ ㄇㄧㄥˋ ㄇㄨˇ ㄇㄨˊ ㄇㄨˋ ㄈㄚ ㄈㄚˇ ㄈㄚˊ ㄈㄚˋ ㄈㄛˊ ㄈㄟ ㄈㄟˇ ㄈㄟˊ ㄈㄟˋ ㄈㄡ ㄈㄡˇ ㄈㄡˊ ㄈㄡˋ ㄈㄢ ㄈㄢˇ ㄈㄢˊ ㄈㄢˋ ㄈㄣ ㄈㄣˇ ㄈㄣˊ ㄈㄣˋ ㄈㄤ ㄈㄤˇ ㄈㄤˊ ㄈㄤˋ ㄈㄥ ㄈㄥˇ ㄈㄥˊ ㄈㄥˋ ㄈㄨ ㄈㄨˇ ㄈㄨˊ ㄈㄨˋ ㄉㄚ ㄉㄚˇ ㄉㄚˊ ㄉㄚˋ ㄉㄜ ㄉㄜˊ ㄉㄞ ㄉㄞˇ ㄉㄞˋ ㄉㄟˇ ㄉㄠ ㄉㄠˇ ㄉㄠˊ ㄉㄠˋ ㄉㄡ ㄉㄡˇ ㄉㄡˋ ㄉㄢ ㄉㄢˇ ㄉㄢˋ ㄉㄣˋ ㄉㄤ ㄉㄤˇ ㄉㄤˋ ㄉㄥ ㄉㄥˇ ㄉㄥˋ ㄉㄧ ㄉㄧˇ ㄉㄧˊ ㄉㄧˋ ㄉㄧㄝ ㄉㄧㄝˊ ㄉㄧㄠ ㄉㄧㄠˇ ㄉㄧㄠˋ ㄉㄧㄡ ㄉㄧㄢ ㄉㄧㄢˇ ㄉㄧㄢˋ ㄉㄧㄥ ㄉㄧㄥˇ ㄉㄧㄥˋ ㄉㄨ ㄉㄨˇ ㄉㄨˊ ㄉㄨˋ ㄉㄨㄛ ㄉㄨㄛˇ ㄉㄨㄛˊ ㄉㄨㄛˋ ㄉㄨㄟ ㄉㄨㄟˋ ㄉㄨㄢ ㄉㄨㄢˇ ㄉㄨㄢˋ ㄉㄨㄣ ㄉㄨㄣˇ ㄉㄨㄣˋ ㄉㄨㄥ ㄉㄨㄥˇ ㄉㄨㄥˋ ㄊㄚ ㄊㄚˇ ㄊㄚˋ ㄊㄜˋ ㄊㄞ ㄊㄞˊ ㄊㄞˋ ㄊㄠ ㄊㄠˇ ㄊㄠˊ ㄊㄠˋ ㄊㄡ ㄊㄡˇ ㄊㄡˊ ㄊㄡˋ ㄊㄢ ㄊㄢˇ ㄊㄢˊ ㄊㄢˋ ㄊㄤ ㄊㄤˇ ㄊㄤˊ ㄊㄤˋ ㄊㄥ ㄊㄥˊ ㄊㄧ ㄊㄧˇ ㄊㄧˊ ㄊㄧˋ ㄊㄧㄝ ㄊㄧㄝˇ ㄊㄧㄝˋ ㄊㄧㄠ ㄊㄧㄠˇ ㄊㄧㄠˊ ㄊㄧㄠˋ ㄊㄧㄢ ㄊㄧㄢˇ ㄊㄧㄢˊ ㄊㄧㄢˋ ㄊㄧㄥ ㄊㄧㄥˇ ㄊㄧㄥˊ ㄊㄧㄥˋ ㄊㄨ ㄊㄨˇ ㄊㄨˊ ㄊㄨˋ ㄊㄨㄛ ㄊㄨㄛˇ ㄊㄨㄛˊ ㄊㄨㄛˋ ㄊㄨㄟ ㄊㄨㄟˇ ㄊㄨㄟˊ ㄊㄨㄟˋ ㄊㄨㄢ ㄊㄨㄢˇ ㄊㄨㄢˊ ㄊㄨㄢˋ ㄊㄨㄣ ㄊㄨㄣˇ ㄊㄨㄣˊ ㄊㄨㄣˋ ㄊㄨㄥ ㄊㄨㄥˇ ㄊㄨㄥˊ ㄊㄨㄥˋ ㄋㄚ ㄋㄚˇ ㄋㄚˊ ㄋㄚˋ ㄋㄜˋ ㄋㄞˇ ㄋㄞˋ ㄋㄟˇ ㄋㄟˋ ㄋㄠ ㄋㄠˇ ㄋㄠˊ ㄋㄠˋ ㄋㄡˊ ㄋㄡˋ ㄋㄢ ㄋㄢˇ ㄋㄢˊ ㄋㄢˋ ㄋㄣˋ ㄋㄤˇ ㄋㄤˊ ㄋㄤˋ ㄋㄥˊ ㄋㄧˇ ㄋㄧˊ ㄋㄧˋ ㄋㄧㄝ ㄋㄧㄝˊ ㄋㄧㄝˋ ㄋㄧㄠˇ ㄋㄧㄠˋ ㄋㄧㄡ ㄋㄧㄡˇ ㄋㄧㄡˊ ㄋㄧㄡˋ ㄋㄧㄢ ㄋㄧㄢˇ ㄋㄧㄢˊ ㄋㄧㄢˋ ㄋㄧㄣˊ ㄋㄧㄤˊ ㄋㄧㄤˋ ㄋㄧㄥˇ ㄋㄧㄥˊ ㄋㄧㄥˋ ㄋㄨˇ ㄋㄨˊ ㄋㄨˋ ㄋㄨㄛˇ ㄋㄨㄛˊ ㄋㄨㄛˋ ㄋㄨㄢˇ ㄋㄨㄣˊ ㄋㄨㄥˊ ㄋㄨㄥˋ ㄋㄩˇ ㄋㄩˋ ㄋㄩㄝˋ ㄌㄚ ㄌㄚˇ ㄌㄚˊ ㄌㄚˋ ㄌㄜˋ ㄌㄞˊ ㄌㄞˋ ㄌㄟ ㄌㄟˇ ㄌㄟˊ ㄌㄟˋ ㄌㄠ ㄌㄠˇ ㄌㄠˊ ㄌㄠˋ ㄌㄡ ㄌㄡˇ ㄌㄡˊ ㄌㄡˋ ㄌㄢˇ ㄌㄢˊ ㄌㄢˋ ㄌㄤ ㄌㄤˇ ㄌㄤˊ ㄌㄤˋ ㄌㄥ ㄌㄥˇ ㄌㄥˊ ㄌㄥˋ ㄌㄧ ㄌㄧˇ ㄌㄧˊ ㄌㄧˋ ㄌㄧㄚˇ ㄌㄧㄝ ㄌㄧㄝˇ ㄌㄧㄝˊ ㄌㄧㄝˋ ㄌㄧㄠ ㄌㄧㄠˇ ㄌㄧㄠˊ ㄌㄧㄠˋ ㄌㄧㄡ ㄌㄧㄡˇ ㄌㄧㄡˊ ㄌㄧㄡˋ ㄌㄧㄢˇ ㄌㄧㄢˊ ㄌㄧㄢˋ ㄌㄧㄣˇ ㄌㄧㄣˊ ㄌㄧㄣˋ ㄌㄧㄤˇ ㄌㄧㄤˊ ㄌㄧㄤˋ ㄌㄧㄥ ㄌㄧㄥˇ ㄌㄧㄥˊ ㄌㄧㄥˋ ㄌㄨ ㄌㄨˇ ㄌㄨˊ ㄌㄨˋ ㄌㄨㄛ ㄌㄨㄛˇ ㄌㄨㄛˊ ㄌㄨㄛˋ ㄌㄨㄢˇ ㄌㄨㄢˊ ㄌㄨㄢˋ ㄌㄨㄣ ㄌㄨㄣˊ ㄌㄨㄣˋ ㄌㄨㄥˇ ㄌㄨㄥˊ ㄌㄨㄥˋ ㄌㄩˇ ㄌㄩˊ ㄌㄩˋ ㄌㄩㄝˋ ㄌㄩㄢˇ ㄌㄩㄢˊ ㄍㄚ ㄍㄚˇ ㄍㄚˊ ㄍㄚˋ ㄍㄜ ㄍㄜˇ ㄍㄜˊ ㄍㄜˋ ㄍㄞ ㄍㄞˇ ㄍㄞˋ ㄍㄟˇ ㄍㄠ ㄍㄠˇ ㄍㄠˋ ㄍㄡ ㄍㄡˇ ㄍㄡˋ ㄍㄢ ㄍㄢˇ ㄍㄢˋ ㄍㄣ ㄍㄣˇ ㄍㄣˊ ㄍㄣˋ ㄍㄤ ㄍㄤˇ ㄍㄤˋ ㄍㄥ ㄍㄥˇ ㄍㄥˋ ㄍㄨ ㄍㄨˇ ㄍㄨˊ ㄍㄨˋ ㄍㄨㄚ ㄍㄨㄚˇ ㄍㄨㄚˋ ㄍㄨㄛ ㄍㄨㄛˇ ㄍㄨㄛˊ ㄍㄨㄛˋ ㄍㄨㄞ ㄍㄨㄞˇ ㄍㄨㄞˋ ㄍㄨㄟ ㄍㄨㄟˇ ㄍㄨㄟˋ ㄍㄨㄢ ㄍㄨㄢˇ ㄍㄨㄢˋ ㄍㄨㄣˇ ㄍㄨㄣˋ ㄍㄨㄤ ㄍㄨㄤˇ ㄍㄨㄤˋ ㄍㄨㄥ ㄍㄨㄥˇ ㄍㄨㄥˋ ㄎㄚ ㄎㄚˇ ㄎㄚˋ ㄎㄜ ㄎㄜˇ ㄎㄜˊ ㄎㄜˋ ㄎㄞ ㄎㄞˇ ㄎㄞˋ ㄎㄠ ㄎㄠˇ ㄎㄠˋ ㄎㄡ ㄎㄡˇ ㄎㄡˋ ㄎㄢ ㄎㄢˇ ㄎㄢˋ ㄎㄣˇ ㄎㄣˋ ㄎㄤ ㄎㄤˇ ㄎㄤˊ ㄎㄤˋ ㄎㄥ ㄎㄥˇ ㄎㄨ ㄎㄨˇ ㄎㄨˋ ㄎㄨㄚ ㄎㄨㄚˇ ㄎㄨㄚˋ ㄎㄨㄛˋ ㄎㄨㄞ ㄎㄨㄞˇ ㄎㄨㄞˋ ㄎㄨㄟ ㄎㄨㄟˇ ㄎㄨㄟˊ ㄎㄨㄟˋ ㄎㄨㄢ ㄎㄨㄢˇ ㄎㄨㄣ ㄎㄨㄣˇ ㄎㄨㄣˋ ㄎㄨㄤ ㄎㄨㄤˇ ㄎㄨㄤˊ ㄎㄨㄤˋ ㄎㄨㄥ ㄎㄨㄥˇ ㄎㄨㄥˋ ㄏㄚ ㄏㄚˇ ㄏㄚˊ ㄏㄜ ㄏㄜˊ ㄏㄜˋ ㄏㄞ ㄏㄞˇ ㄏㄞˊ ㄏㄞˋ ㄏㄟ ㄏㄟˇ ㄏㄠ ㄏㄠˇ ㄏㄠˊ ㄏㄠˋ ㄏㄡ ㄏㄡˇ ㄏㄡˊ ㄏㄡˋ ㄏㄢ ㄏㄢˇ ㄏㄢˊ ㄏㄢˋ ㄏㄣ ㄏㄣˇ ㄏㄣˊ ㄏㄣˋ ㄏㄤ ㄏㄤˊ ㄏㄤˋ ㄏㄥ ㄏㄥˊ ㄏㄥˋ ㄏㄨ ㄏㄨˇ ㄏㄨˊ ㄏㄨˋ ㄏㄨㄚ ㄏㄨㄚˊ ㄏㄨㄚˋ ㄏㄨㄛ ㄏㄨㄛˇ ㄏㄨㄛˊ ㄏㄨㄛˋ ㄏㄨㄞˊ ㄏㄨㄞˋ ㄏㄨㄟ ㄏㄨㄟˇ ㄏㄨㄟˊ ㄏㄨㄟˋ ㄏㄨㄢ ㄏㄨㄢˇ ㄏㄨㄢˊ ㄏㄨㄢˋ ㄏㄨㄣ ㄏㄨㄣˇ ㄏㄨㄣˊ ㄏㄨㄣˋ ㄏㄨㄤ ㄏㄨㄤˇ ㄏㄨㄤˊ ㄏㄨㄤˋ ㄏㄨㄥ ㄏㄨㄥˇ ㄏㄨㄥˊ ㄏㄨㄥˋ ㄐㄧ ㄐㄧˇ ㄐㄧˊ ㄐㄧˋ ㄐㄧㄚ ㄐㄧㄚˇ ㄐㄧㄚˊ ㄐㄧㄚˋ ㄐㄧㄝ ㄐㄧㄝˇ ㄐㄧㄝˊ ㄐㄧㄝˋ ㄐㄧㄠ ㄐㄧㄠˇ ㄐㄧㄠˊ ㄐㄧㄠˋ ㄐㄧㄡ ㄐㄧㄡˇ ㄐㄧㄡˋ ㄐㄧㄢ ㄐㄧㄢˇ ㄐㄧㄢˋ ㄐㄧㄣ ㄐㄧㄣˇ ㄐㄧㄣˋ ㄐㄧㄤ ㄐㄧㄤˇ ㄐㄧㄤˋ ㄐㄧㄥ ㄐㄧㄥˇ ㄐㄧㄥˋ ㄐㄩ ㄐㄩˇ ㄐㄩˊ ㄐㄩˋ ㄐㄩㄝ ㄐㄩㄝˇ ㄐㄩㄝˊ ㄐㄩㄝˋ ㄐㄩㄢ ㄐㄩㄢˇ ㄐㄩㄢˋ ㄐㄩㄣ ㄐㄩㄣˇ ㄐㄩㄣˋ ㄐㄩㄥ ㄐㄩㄥˇ ㄑㄧ ㄑㄧˇ ㄑㄧˊ ㄑㄧˋ ㄑㄧㄚ ㄑㄧㄚˇ ㄑㄧㄚˋ ㄑㄧㄝ ㄑㄧㄝˇ ㄑㄧㄝˊ ㄑㄧㄝˋ ㄑㄧㄠ ㄑㄧㄠˇ ㄑㄧㄠˊ ㄑㄧㄠˋ ㄑㄧㄡ ㄑㄧㄡˇ ㄑㄧㄡˊ ㄑㄧㄢ ㄑㄧㄢˇ ㄑㄧㄢˊ ㄑㄧㄢˋ ㄑㄧㄣ ㄑㄧㄣˇ ㄑㄧㄣˊ ㄑㄧㄣˋ ㄑㄧㄤ ㄑㄧㄤˇ ㄑㄧㄤˊ ㄑㄧㄤˋ ㄑㄧㄥ ㄑㄧㄥˇ ㄑㄧㄥˊ ㄑㄧㄥˋ ㄑㄩ ㄑㄩˇ ㄑㄩˊ ㄑㄩˋ ㄑㄩㄝ ㄑㄩㄝˊ ㄑㄩㄝˋ ㄑㄩㄢ ㄑㄩㄢˇ ㄑㄩㄢˊ ㄑㄩㄢˋ ㄑㄩㄣ ㄑㄩㄣˊ ㄑㄩㄥ ㄑㄩㄥˊ ㄒㄧ ㄒㄧˇ ㄒㄧˊ ㄒㄧˋ ㄒㄧㄚ ㄒㄧㄚˊ ㄒㄧㄚˋ ㄒㄧㄝ ㄒㄧㄝˇ ㄒㄧㄝˊ ㄒㄧㄝˋ ㄒㄧㄠ ㄒㄧㄠˇ ㄒㄧㄠˊ ㄒㄧㄠˋ ㄒㄧㄡ ㄒㄧㄡˇ ㄒㄧㄡˋ ㄒㄧㄢ ㄒㄧㄢˇ ㄒㄧㄢˊ ㄒㄧㄢˋ ㄒㄧㄣ ㄒㄧㄣˇ ㄒㄧㄣˊ ㄒㄧㄣˋ ㄒㄧㄤ ㄒㄧㄤˇ ㄒㄧㄤˊ ㄒㄧㄤˋ ㄒㄧㄥ ㄒㄧㄥˇ ㄒㄧㄥˊ ㄒㄧㄥˋ ㄒㄩ ㄒㄩˇ ㄒㄩˊ ㄒㄩˋ ㄒㄩㄝ ㄒㄩㄝˇ ㄒㄩㄝˊ ㄒㄩㄝˋ ㄒㄩㄢ ㄒㄩㄢˇ ㄒㄩㄢˊ ㄒㄩㄢˋ ㄒㄩㄣ ㄒㄩㄣˊ ㄒㄩㄣˋ ㄒㄩㄥ ㄒㄩㄥˊ ㄒㄩㄥˋ ㄓ ㄓˇ ㄓˊ ㄓˋ ㄓㄚ ㄓㄚˇ ㄓㄚˊ ㄓㄚˋ ㄓㄜ ㄓㄜˇ ㄓㄜˊ ㄓㄜˋ ㄓㄞ ㄓㄞˇ ㄓㄞˊ ㄓㄞˋ ㄓㄟˋ ㄓㄠ ㄓㄠˇ ㄓㄠˊ ㄓㄠˋ ㄓㄡ ㄓㄡˇ ㄓㄡˊ ㄓㄡˋ ㄓㄢ ㄓㄢˇ ㄓㄢˋ ㄓㄣ ㄓㄣˇ ㄓㄣˋ ㄓㄤ ㄓㄤˇ ㄓㄤˋ ㄓㄥ ㄓㄥˇ ㄓㄥˋ ㄓㄨ ㄓㄨˇ ㄓㄨˊ ㄓㄨˋ ㄓㄨㄚ ㄓㄨㄚˇ ㄓㄨㄛ ㄓㄨㄛˊ ㄓㄨㄞ ㄓㄨㄞˇ ㄓㄨㄞˋ ㄓㄨㄟ ㄓㄨㄟˋ ㄓㄨㄢ ㄓㄨㄢˇ ㄓㄨㄢˋ ㄓㄨㄣ ㄓㄨㄣˇ ㄓㄨㄣˋ ㄓㄨㄤ ㄓㄨㄤˇ ㄓㄨㄤˋ ㄓㄨㄥ ㄓㄨㄥˇ ㄓㄨㄥˋ ㄔ ㄔˇ ㄔˊ ㄔˋ ㄔㄚ ㄔㄚˇ ㄔㄚˊ ㄔㄚˋ ㄔㄜ ㄔㄜˇ ㄔㄜˋ ㄔㄞ ㄔㄞˇ ㄔㄞˊ ㄔㄞˋ ㄔㄠ ㄔㄠˇ ㄔㄠˊ ㄔㄠˋ ㄔㄡ ㄔㄡˇ ㄔㄡˊ ㄔㄡˋ ㄔㄢ ㄔㄢˇ ㄔㄢˊ ㄔㄢˋ ㄔㄣ ㄔㄣˇ ㄔㄣˊ ㄔㄣˋ ㄔㄤ ㄔㄤˇ ㄔㄤˊ ㄔㄤˋ ㄔㄥ ㄔㄥˇ ㄔㄥˊ ㄔㄥˋ ㄔㄨ ㄔㄨˇ ㄔㄨˊ ㄔㄨˋ ㄔㄨㄚ ㄔㄨㄚˇ ㄔㄨㄚˋ ㄔㄨㄛ ㄔㄨㄛˋ ㄔㄨㄞ ㄔㄨㄞˇ ㄔㄨㄞˊ ㄔㄨㄞˋ ㄔㄨㄟ ㄔㄨㄟˊ ㄔㄨㄟˋ ㄔㄨㄢ ㄔㄨㄢˇ ㄔㄨㄢˊ ㄔㄨㄢˋ ㄔㄨㄣ ㄔㄨㄣˇ ㄔㄨㄣˊ ㄔㄨㄤ ㄔㄨㄤˇ ㄔㄨㄤˊ ㄔㄨㄤˋ ㄔㄨㄥ ㄔㄨㄥˇ ㄔㄨㄥˊ ㄔㄨㄥˋ ㄕ ㄕˇ ㄕˊ ㄕˋ ㄕㄚ ㄕㄚˇ ㄕㄚˊ ㄕㄚˋ ㄕㄜ ㄕㄜˇ ㄕㄜˊ ㄕㄜˋ ㄕㄞ ㄕㄞˇ ㄕㄞˋ ㄕㄟˊ ㄕㄠ ㄕㄠˇ ㄕㄠˊ ㄕㄠˋ ㄕㄡ ㄕㄡˇ ㄕㄡˊ ㄕㄡˋ ㄕㄢ ㄕㄢˇ ㄕㄢˋ ㄕㄣ ㄕㄣˇ ㄕㄣˊ ㄕㄣˋ ㄕㄤ ㄕㄤˇ ㄕㄤˋ ㄕㄥ ㄕㄥˇ ㄕㄥˊ ㄕㄥˋ ㄕㄨ ㄕㄨˇ ㄕㄨˊ ㄕㄨˋ ㄕㄨㄚ ㄕㄨㄚˇ ㄕㄨㄚˋ ㄕㄨㄛ ㄕㄨㄛˋ ㄕㄨㄞ ㄕㄨㄞˇ ㄕㄨㄞˋ ㄕㄨㄟˇ ㄕㄨㄟˊ ㄕㄨㄟˋ ㄕㄨㄢ ㄕㄨㄢˋ ㄕㄨㄣˇ ㄕㄨㄣˋ ㄕㄨㄤ ㄕㄨㄤˇ ㄕㄨㄤˋ ㄖˋ ㄖㄜˇ ㄖㄜˋ ㄖㄠˇ ㄖㄠˊ ㄖㄠˋ ㄖㄡˇ ㄖㄡˊ ㄖㄡˋ ㄖㄢˇ ㄖㄢˊ ㄖㄣˇ ㄖㄣˊ ㄖㄣˋ ㄖㄤ ㄖㄤˇ ㄖㄤˊ ㄖㄤˋ ㄖㄥ ㄖㄥˇ ㄖㄥˊ ㄖㄥˋ ㄖㄨˇ ㄖㄨˊ ㄖㄨˋ ㄖㄨㄛˋ ㄖㄨㄟˇ ㄖㄨㄟˊ ㄖㄨㄟˋ ㄖㄨㄢˇ ㄖㄨㄢˊ ㄖㄨㄣˊ ㄖㄨㄣˋ ㄖㄨㄥˇ ㄖㄨㄥˊ ㄗ ㄗˇ ㄗˋ ㄗㄚ ㄗㄚˊ ㄗㄜˇ ㄗㄜˊ ㄗㄜˋ ㄗㄞ ㄗㄞˇ ㄗㄞˋ ㄗㄟˊ ㄗㄠ ㄗㄠˇ ㄗㄠˊ ㄗㄠˋ ㄗㄡ ㄗㄡˇ ㄗㄡˋ ㄗㄢ ㄗㄢˇ ㄗㄢˊ ㄗㄢˋ ㄗㄣ ㄗㄣˇ ㄗㄣˋ ㄗㄤ ㄗㄤˇ ㄗㄤˋ ㄗㄥ ㄗㄥˋ ㄗㄨ ㄗㄨˇ ㄗㄨˊ ㄗㄨˋ ㄗㄨㄛ ㄗㄨㄛˇ ㄗㄨㄛˊ ㄗㄨㄛˋ ㄗㄨㄟ ㄗㄨㄟˇ ㄗㄨㄟˋ ㄗㄨㄢ ㄗㄨㄢˇ ㄗㄨㄢˋ ㄗㄨㄣ ㄗㄨㄣˇ ㄗㄨㄣˋ ㄗㄨㄥ ㄗㄨㄥˇ ㄗㄨㄥˋ ㄘ ㄘˇ ㄘˊ ㄘˋ ㄘㄚ ㄘㄚˇ ㄘㄚˋ ㄘㄜˋ ㄘㄞ ㄘㄞˇ ㄘㄞˊ ㄘㄞˋ ㄘㄠ ㄘㄠˇ ㄘㄠˊ ㄘㄠˋ ㄘㄡˋ ㄘㄢ ㄘㄢˇ ㄘㄢˊ ㄘㄢˋ ㄘㄣ ㄘㄣˊ ㄘㄤ ㄘㄤˇ ㄘㄤˊ ㄘㄥ ㄘㄥˇ ㄘㄥˊ ㄘㄥˋ ㄘㄨ ㄘㄨˊ ㄘㄨˋ ㄘㄨㄛ ㄘㄨㄛˇ ㄘㄨㄛˊ ㄘㄨㄛˋ ㄘㄨㄟ ㄘㄨㄟˇ ㄘㄨㄟˋ ㄘㄨㄢ ㄘㄨㄢˊ ㄘㄨㄢˋ ㄘㄨㄣ ㄘㄨㄣˇ ㄘㄨㄣˊ ㄘㄨㄣˋ ㄘㄨㄥ ㄘㄨㄥˊ ㄘㄨㄥˋ ㄙ ㄙˇ ㄙˋ ㄙㄚ ㄙㄚˇ ㄙㄚˋ ㄙㄜˋ ㄙㄞ ㄙㄞˊ ㄙㄞˋ ㄙㄟ ㄙㄠ ㄙㄠˇ ㄙㄠˋ ㄙㄡ ㄙㄡˇ ㄙㄡˋ ㄙㄢ ㄙㄢˇ ㄙㄢˋ ㄙㄣ ㄙㄤ ㄙㄤˇ ㄙㄤˋ ㄙㄥ ㄙㄨ ㄙㄨˊ ㄙㄨˋ ㄙㄨㄛ ㄙㄨㄛˇ ㄙㄨㄛˊ ㄙㄨㄛˋ ㄙㄨㄟ ㄙㄨㄟˇ ㄙㄨㄟˊ ㄙㄨㄟˋ ㄙㄨㄢ ㄙㄨㄢˇ ㄙㄨㄢˋ ㄙㄨㄣ ㄙㄨㄣˇ ㄙㄨㄣˋ ㄙㄨㄥ ㄙㄨㄥˇ ㄙㄨㄥˊ ㄙㄨㄥˋ ㄚ ㄚˊ ㄚˋ ㄛ ㄛˇ ㄛˊ ㄜ ㄜˇ ㄜˊ ㄜˋ ㄝˋ ㄞ ㄞˇ ㄞˊ ㄞˋ ㄟˋ ㄠ ㄠˇ ㄠˊ ㄠˋ ㄡ ㄡˇ ㄡˊ ㄡˋ ㄢ ㄢˇ ㄢˊ ㄢˋ ㄣ ㄣˋ ㄤ ㄤˊ ㄤˋ ㄥ ㄦˇ ㄦˊ ㄦˋ ㄧ ㄧˇ ㄧˊ ㄧˋ ㄧㄚ ㄧㄚˇ ㄧㄚˊ ㄧㄚˋ ㄧㄛ ㄧㄝ ㄧㄝˇ ㄧㄝˊ ㄧㄝˋ ㄧㄞˊ ㄧㄠ ㄧㄠˇ ㄧㄠˊ ㄧㄠˋ ㄧㄡ ㄧㄡˇ ㄧㄡˊ ㄧㄡˋ ㄧㄢ ㄧㄢˇ ㄧㄢˊ ㄧㄢˋ ㄧㄣ ㄧㄣˇ ㄧㄣˊ ㄧㄣˋ ㄧㄤ ㄧㄤˇ ㄧㄤˊ ㄧㄤˋ ㄧㄥ ㄧㄥˇ ㄧㄥˊ ㄧㄥˋ ㄨ ㄨˇ ㄨˊ ㄨˋ ㄨㄚ ㄨㄚˇ ㄨㄚˊ ㄨㄚˋ ㄨㄛ ㄨㄛˇ ㄨㄛˋ ㄨㄞ ㄨㄞˇ ㄨㄞˋ ㄨㄟ ㄨㄟˇ ㄨㄟˊ ㄨㄟˋ ㄨㄢ ㄨㄢˇ ㄨㄢˊ ㄨㄢˋ ㄨㄣ ㄨㄣˇ ㄨㄣˊ ㄨㄣˋ ㄨㄤ ㄨㄤˇ ㄨㄤˊ ㄨㄤˋ ㄨㄥ ㄨㄥˇ ㄨㄥˋ ㄩ ㄩˇ ㄩˊ ㄩˋ ㄩㄝ ㄩㄝˋ ㄩㄢ ㄩㄢˇ ㄩㄢˊ ㄩㄢˋ ㄩㄣ ㄩㄣˇ ㄩㄣˊ ㄩㄣˋ ㄩㄥ ㄩㄥˇ ㄩㄥˊ ㄩㄥˋ'.split(' '));
 const SYL = new Set([...SYL_T].map(baseOf));
 const isSyl = s => toneOf(s) === 0 ? SYL.has(baseOf(s)) : SYL_T.has(s);
 
-// 注音一行一行顯示（首冊還沒教國字，題目只用注音）。o.mask=[第幾個音, 第幾個符號] 換成框框；o.toneMask=第幾個音的聲調換成框框；o.hl=框起來的音
+// 注音照課本直式排（共用 ../zhuyin-layout.js）。首冊還沒教國字，題目只用注音，詞由上往下。
+// o.mask=[第幾個音, 第幾個符號] 換成框框；o.toneMask=第幾個音的聲調換成框框；o.hl=框起來的音；o.cls 加在外層
+const ZY = ZhuyinLayout;
+const BLANK = '<span class="blank">？</span>';
 function zyLine(z, o = {}) {
-  return `<span class="zy">${z.split(' ').map((s, i) => {
-    let inner = s;
-    if (o.toneMask === i) inner = `${baseOf(s)}<span class="blank">？</span>`;
-    else if (o.mask && o.mask[0] === i) {
-      const t = toneOf(s), b = [...baseOf(s)];
-      b[o.mask[1]] = '<span class="blank">？</span>';
-      inner = (t === 0 ? '˙' : '') + b.join('') + MARK[t];
-    }
-    return `<span class="syl${o.hl === i ? ' hl' : ''}">${inner}</span>`;
-  }).join('')}</span>`;
+  return ZY.word(z, { cls: o.cls, each: (s, i) => ({
+    box: o.toneMask === i ? '<span class="zq">？</span>' : undefined,
+    mask: o.mask && o.mask[0] === i ? [o.mask[1], BLANK] : undefined,
+    cls: o.hl === i ? 'hl' : ''
+  }) });
 }
-// 句子：注音以空白分開；標點黏在前一個音後面，才不會自己換到下一行
-function zySent(z) {
-  const out = [];
-  z.split(' ').forEach(t => { if (/^[，。？！、]$/.test(t) && out.length) out[out.length - 1] += `<span class="punc">${t}</span>`; else out.push(t); });
-  return out.map(t => `<span class="syl">${t}</span>`).join('');
-}
+// 句子：直式，一行最多 5 個音，由右往左換行
+const zySent = (z, cls = '') => ZY.sentence(z, { per: 5, cls });
 // 拼讀給耳朵聽：ㄏ、ㄨ、ㄚ，花（念的時候注音會換成相近的國字，例如 ㄏ 念「喝」）
 const spellSyl = (s, ch) => `${[...baseOf(s)].join('、')}，${ch}`;
 const spell = (z, w) => z.split(' ').map((s, i) => spellSyl(s, [...w][i])).join('；');
@@ -545,7 +536,6 @@ const SEC = {
   match: '八、連連看：把圖和注音連起來'
 };
 const zyOpts = list => list.map(z => ({ value: z, html: zyLine(z), cls: 'zyopt' }));
-const longLayout = list => list.some(z => z.split(' ').length > 2) ? 'col' : '';
 // 和答案不一樣的詞，也不要同一個圖
 const otherWords = (b, n) => sample(BANK.filter(x => x.w !== b.w && x.e !== b.e), n);
 // 看注音選的錯誤選項；相似的音不夠時，補別的詞
@@ -562,7 +552,7 @@ function genListen(n = 6) {
       sec: SEC.listen,
       prompt: `<div class="bigpic em" aria-hidden="true">👂</div><div class="qtext">老師念的是哪一個？</div>`,
       say: `聽一聽：${b.w}。${b.w}。`,
-      options: zyOpts(list), answer: b.z, layout: longLayout(list),
+      options: zyOpts(list), answer: b.z,
       hint: '再聽一次，一個音一個音慢慢比。', sayHint: `再聽一次：${b.w}。`,
       explain: `老師念「${b.w}」，注音是 ${b.z}。`, sayExp: `「${b.w}」：${spell(b.z, b.w)}。`
     };
@@ -575,7 +565,7 @@ function genPic(n = 6) {
       sec: SEC.pic,
       prompt: `<div class="bigpic em">${b.e}</div><div class="qtext">這是什麼？選出正確的注音。</div>`,
       say: '看圖，選出正確的注音。',
-      options: zyOpts(list), answer: b.z, layout: longLayout(list),
+      options: zyOpts(list), answer: b.z,
       hint: `這是「${b.w}」，慢慢念念看。`,
       explain: `「${b.w}」的注音是 ${b.z}。`, sayExp: `「${b.w}」：${spell(b.z, b.w)}。`
     };
@@ -602,7 +592,7 @@ function genSpell(n = 6) {
         sec: SEC.spell,
         prompt: `<div class="word zyw">${ps} ＝ ？</div><div class="qtext">拼起來是哪一個？</div>`,
         say: `拼一拼：${syms.join('、')}，拼起來是哪一個？`,
-        options: shuffle([s, ...wrongs]).map(v => ({ value: v, html: v, cls: 'sym' })), answer: s,
+        options: shuffle([s, ...wrongs]).map(v => ({ value: v, html: ZY.syl(v), cls: 'sym' })), answer: s,
         hint: `照順序念：先念 ${syms[0]}，再很快接上後面的音${t > 1 ? '，最後別忘了聲調' : ''}。`,
         explain: `${ps} 拼成 ${s}，就像「${ch}」。`, sayExp: `${syms.join('、')}，拼起來就是「${ch}」。`
       };
@@ -610,7 +600,7 @@ function genSpell(n = 6) {
     const show = v => parts(v).join(' ＋ ');
     return {
       sec: '三、拼一拼：拆一拆，是哪幾個符號拼成的',
-      prompt: `<div class="word zyw">${s}</div><div class="qtext">是哪幾個符號拼成的？</div>`,
+      prompt: `<div class="word zyw">${ZY.syl(s)}</div><div class="qtext">是哪幾個符號拼成的？</div>`,
       say: `拆一拆：${ch}，是哪幾個符號拼成的？`,
       options: shuffle([s, ...wrongs]).map(v => ({ value: v, html: show(v), cls: 'zyopt' })), answer: s, layout: 'col',
       hint: '慢慢念，聽聽看開頭是什麼音，中間有沒有ㄧ、ㄨ、ㄩ。',
@@ -643,7 +633,7 @@ function genTone(n = 6) {
       <div class="qtext">${multi ? '框起來的音' : '這個音'}是第幾聲？</div>`,
     say: `聽一聽：${b.w}。${multi ? '框起來的音' : '這個音'}，是第幾聲？`,
     options: [1, 2, 3, 4, 0].map(v => ({ value: v, cls: 'toneopt',
-      html: `<svg viewBox="0 0 56 30" aria-hidden="true">${v ? `<path d="${TONE_PATH[v]}"/>` : '<circle cx="28" cy="15" r="5"/>'}</svg><span>${TONE_NAME[v]}</span>${v === 1 ? '<span class="mk sm">不寫</span>' : `<span class="mk">${TONE_MARK[v]}</span>`}` })),
+      html: `<svg viewBox="0 0 56 30" aria-hidden="true">${v ? `<path d="${TONE_PATH[v]}"/>` : '<circle cx="28" cy="15" r="5"/>'}</svg><span>${TONE_NAME[v]}</span>${v === 1 ? '<span class="mk sm">不寫</span>' : `<span class="mk">${v ? ZY.toneSVG(v, '') : '<i class="dot"></i>'}</span>`}` })),
     answer: t, layout: 'five',
     hint: '用手比比看：一聲平平走、二聲往上爬、三聲先下再上、四聲往下跳；輕聲又輕又短。',
     explain: `「${b.w}」的「${[...b.w][i]}」是${TONE_NAME[t]}，寫成 ${s}。`, sayExp: `「${b.w}」，框起來的音是${TONE_NAME[t]}。`
@@ -702,9 +692,9 @@ function genRead(n = 6) {
   });
   const sents = sample(SENTENCES, Math.floor(n / 2)).map(S => ({
     sec: SEC.read,
-    prompt: `<div class="zysent">${zySent(S.z)}</div><div class="zysent q">${zySent(S.qz)}</div>`,
+    prompt: `<div class="zyread">${zySent(S.z)}${zySent(S.qz, 'q')}</div>`,
     say: '讀一讀句子，回答問題。',
-    options: shuffle(S.o).map(([e, w, z]) => ({ value: w, html: `<span class="em pic">${e}</span><span class="zy sm">${zyLine(z)}</span>`, cls: 'picopt' })), answer: S.o[0][1],
+    options: shuffle(S.o).map(([e, w, z]) => ({ value: w, html: `<span class="em pic">${e}</span>${zyLine(z, { cls: 'sm' })}`, cls: 'picopt' })), answer: S.o[0][1],
     hint: '再讀一次句子，答案就藏在句子裡喔！', sayHint: `再聽一次：${S.s}${S.q}`,
     explain: `句子說「${S.s}」，所以是「${S.o[0][1]}」。`
   }));
@@ -962,7 +952,7 @@ function onRight() {
   const first = G.tries === 0;
   G.results[G.i] = first ? 'star' : 'brave';
   const msg = first ? pick(PRAISE) : pick(PRAISE_RETRY);
-  coach(`${msg}<br><small>${q.explain}</small>`, false, true);
+  coach(`${msg}<br><small>${ZY.text(q.explain)}</small>`, false, true);
   chime([660, 880, 1320]);
   speak(msg);
   finishQ();
@@ -973,7 +963,7 @@ function onWrong(reveal, canRetry) {
   chime([392, 330], .14, 'triangle', .07);
   if (G.tries === 1 && canRetry) {
     const msg = pick(TRY_AGAIN);
-    coach(`${msg}<br>💡 ${q.hint}`, true);
+    coach(`${msg}<br>💡 ${ZY.text(q.hint)}`, true);
     speak(msg + (q.sayHint || q.hint));
     return;
   }
@@ -981,7 +971,7 @@ function onWrong(reveal, canRetry) {
   G.results[G.i] = 'brave';
   reveal();
   const msg = pick(REVEAL);
-  coach(`${msg}${q.explain}<br>${AFTER_REVEAL}`, true);
+  coach(`${msg}${ZY.text(q.explain)}<br>${AFTER_REVEAL}`, true);
   speak(msg + (q.sayExp || q.explain) + AFTER_REVEAL);
   finishQ();
 }

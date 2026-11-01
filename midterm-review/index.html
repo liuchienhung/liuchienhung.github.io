@@ -46,19 +46,11 @@ button:disabled{cursor:default}
 h1,h2,h3{font-family:var(--f-kai);margin:0;text-wrap:balance}
 #app{max-width:900px;margin:0 auto}
 
-/* ---------- 直式注音 ---------- */
-.zv{display:inline-flex;flex-direction:column;align-items:center;position:relative;line-height:1;padding:0 .48em 0 .04em;
-  font-family:var(--f-kai);font-weight:400;font-style:normal;vertical-align:middle}
-.zs{position:relative;display:block;width:1em;height:1.04em;line-height:1.04em;text-align:center}
-.zl{display:block;width:1em;height:.42em;position:relative}
-.zl::after{content:"";position:absolute;left:50%;top:.1em;width:.19em;height:.19em;margin-left:-.095em;border-radius:50%;background:currentColor}
-.tm{position:absolute;left:92%;top:-.2em;width:.5em;height:.5em;overflow:visible;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
-.zw{display:inline-flex;flex-direction:column;align-items:center;gap:.55em}
+/* ---------- 直式注音（排法在 ../zhuyin-layout.js，這裡只調字型與大小） ---------- */
+:root{--zy-font:var(--f-kai)}
+.zv{font-weight:400}
 /* 國字注音：注音直排在國字右邊 */
-.tx{font-family:var(--f-kai);line-height:2.3}
-.hz{display:inline-flex;align-items:center;white-space:nowrap;vertical-align:middle}
-.hz>.zv{font-size:.46em;padding-right:.55em;margin-left:.05em}
-.hz>.zv .tm{stroke-width:1.7}
+.tx{font-family:var(--f-kai);line-height:2.3;--zr-size:.46em}
 .tx .dg{font-family:var(--f-body);font-weight:500;padding:0 .12em}
 
 /* ---------- 頁首 ---------- */
@@ -396,6 +388,7 @@ body.padopen .coach{bottom:calc(var(--padh,300px) + 8px)}
 <div class="confetti" id="confetti"></div>
 
 <script src="../tw-speech.js"></script>
+<script src="../zhuyin-layout.js"></script>
 <script>
 'use strict';
 const KID = '大寶';
@@ -459,33 +452,14 @@ function chime(freqs, dur = .12, vol = .12) {
   } catch {}
 }
 
-/* ---------- 注音：直式（符號由上往下，聲調在最後一個符號右上方，輕聲點在最上面） ---------- */
-const TONE_OF = { 'ˊ': 2, 'ˇ': 3, 'ˋ': 4 };
-const TONE_NAME = ['', '一聲', '二聲', '三聲', '四聲', '輕聲'];
-const MARK_CH = ['', '', 'ˊ', 'ˇ', 'ˋ', '˙'];
-const MARK_SVG = {
-  2: '<svg class="tm" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.6 8.8 7.6 1.6"/></svg>',
-  3: '<svg class="tm" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.8 3.2 4.8 8.6 8.6 1.6"/></svg>',
-  4: '<svg class="tm" viewBox="0 0 10 10" aria-hidden="true"><path d="M2.4 1.6 7.4 8.8"/></svg>'
-};
-function parseSyl(s) {
-  const light = s[0] === '˙';
-  let b = light ? s.slice(1) : s, t = light ? 5 : 1;
-  if (TONE_OF[b.slice(-1)]) { t = TONE_OF[b.slice(-1)]; b = b.slice(0, -1); }
-  return { b: [...b], t };
-}
-const baseOf = s => s.replace(/[˙ˊˇˋ]/g, '');
-const withTone = (b, t) => t === 5 ? '˙' + b : b + MARK_CH[t];
-// 一個音節。o.box = 聲調位置放框框（HTML）；o.cls、o.attr 加在外層
-function syl(s, o = {}) {
-  const { b, t } = parseSyl(s), last = b.length - 1, hasBox = o.box != null;
-  const mark = hasBox ? o.box : (t >= 2 && t <= 4 ? MARK_SVG[t] : '');
-  return `<span class="zv${hasBox ? ' hb' : ''}${o.cls ? ' ' + o.cls : ''}"${o.attr || ''}>${t === 5 && !hasBox ? '<span class="zl"></span>' : ''}${
-    b.map((c, i) => `<span class="zs">${c}${i === last ? mark : ''}</span>`).join('')}</span>`;
-}
-// 一個詞：音節由上往下（考卷上的詞也是直的）
+/* ---------- 注音：直式（共用 ../zhuyin-layout.js：符號由上往下，聲調在最後一個符號右上方，輕聲點在最上面） ---------- */
+const ZY = ZhuyinLayout;
+const TONE_NAME = ZY.TONE_NAME;
+const { syl, baseOf } = ZY;
+// 選項裡 _ 連起同一個選項的兩個音
 const sylsOf = z => z.split(/[ _]/).filter(Boolean);
-const word = (z, cls = '') => `<span class="zw${cls ? ' ' + cls : ''}">${sylsOf(z).map(s => syl(s)).join('')}</span>`;
+// 一個詞：音節由上往下（考卷上的詞也是直的）
+const word = (z, cls = '') => ZY.word(sylsOf(z).join(' '), { cls });
 
 /* ---------- 國字注音（題目說明用；讀音取自教育部《重編國語辭典修訂本》，再照考卷念法調整） ---------- */
 // ZY_C：字 → 讀音（由 zhuyin-lens/zhuyin-data.js 取出這一頁用到的字）；ZY_W：照考卷念法的詞（變調、輕聲、破音字）
@@ -515,7 +489,7 @@ function annotate(s) {
 // 國字右邊加直式注音
 function T(s, cls = '') {
   const ch = [...s], zy = annotate(s);
-  return `<span class="tx${cls ? ' ' + cls : ''}">${ch.map((c, i) => zy[i] ? `<span class="hz">${c}${syl(zy[i])}</span>`
+  return `<span class="tx${cls ? ' ' + cls : ''}">${ch.map((c, i) => zy[i] ? ZY.ruby(c, zy[i])
     : /[0-9]/.test(c) ? `<span class="dg">${c}</span>` : esc(c)).join('')}</span>`;
 }
 // 句子樣板：{b} 填數字的框、{i} 小圖、{x} 方框
@@ -912,7 +886,7 @@ function diffHint(wrong, right) {
     if (A[k] === B[k]) continue;
     const pos = B.length > 1 ? `第${CN_NUM[k]}個音` : '這個音';
     if (!A[k] || !B[k]) return `${pos}再念念看。`;
-    const a = parseSyl(A[k]), b = parseSyl(B[k]);
+    const a = ZY.parse(A[k]), b = ZY.parse(B[k]);
     if (a.b.join('') === b.b.join('')) return `${pos}的聲調再聽一次，是${TONE_NAME[a.t]}嗎？`;
     if (a.b.length < b.b.length) return `${pos}好像少了一個符號喔。`;
     if (a.b.length > b.b.length) return `${pos}好像多了一個符號喔。`;
@@ -969,11 +943,13 @@ function nextBlank(u) {
   const all = $$('.nb', paper), i = all.indexOf(el);
   const nx = all.slice(i + 1).find(b => { const x = U[b.dataset.u]; return x && !x.st; });
   if (!nx) return false;
-  setTimeout(() => openPad(U[nx.dataset.u], 'num'), 350); return true;
+  // 這段時間裡孩子自己點了別的格子（或已經寫好了），就不要再跳，免得把剛按的數字清掉
+  const x = U[nx.dataset.u];
+  setTimeout(() => { if (!PAD.u && !x.st && !$('#pad').hidden) openPad(x, 'num'); }, 350); return true;
 }
 function renderToneKeys() {
   $('#toneKeys').innerHTML = [1, 2, 3, 4, 5].map(t => `<button type="button" data-act="tone" data-t="${t}">
-    <span class="mk2">${t === 1 ? '－' : t === 5 ? '<span class="lt"></span>' : MARK_SVG[t].replace('class="tm"', '')}</span>${TONE_NAME[t]}${t === 1 ? '<small>（不寫）</small>' : ''}</button>`).join('');
+    <span class="mk2">${t === 1 ? '－' : t === 5 ? '<span class="lt"></span>' : ZY.toneSVG(t, '')}</span>${TONE_NAME[t]}${t === 1 ? '<small>（不寫）</small>' : ''}</button>`).join('');
 }
 // 數字空格
 function nbHTML(id, cls = '') { return `<button type="button" class="nb${cls ? ' ' + cls : ''}" id="u-${id}" data-act="nb" data-u="${id}" aria-label="填數字"><span class="nv"></span></button>`; }
@@ -1163,8 +1139,8 @@ function rZ6() {
   return Z6.map((B, bi) => `<div class="paper"><div class="tgrid">${B.items.map((it, ii) => {
     const id = `z6-${bi}-${ii}`, ss = it.z.split(' ');
     const cells = ss.map((tok, k) => {
-      const box = tok.endsWith('?'), exm = tok.endsWith('!'), s = tok.replace(/[?!]$/, ''), { b, t } = parseSyl(s);
-      if (exm) return syl(b.join(''), { box: `<span class="tb exm">${MARK_SVG[t].replace('class="tm"', 'class="tm"')}</span>` });
+      const box = tok.endsWith('?'), exm = tok.endsWith('!'), s = tok.replace(/[?!]$/, ''), { b, t } = ZY.parse(s);
+      if (exm) return syl(b.join(''), { box: `<span class="tb exm">${ZY.toneSVG(t)}</span>` });
       if (!box) return syl(s);
       const uid = `${id}-${k}`, alt = (it.alt && it.alt[k]) || [];
       mkUnit(uid, {
@@ -1174,7 +1150,7 @@ function rZ6() {
         say: () => it.w,
         solve(rev) {
           const v = this.val ?? t, el = $('#u-' + uid); if (!el) return;
-          el.innerHTML = v === 5 ? '<span class="lt"></span>' : MARK_SVG[v] || '';
+          el.innerHTML = v === 5 ? '<span class="lt"></span>' : ZY.toneSVG(v);
           el.classList.add('ok'); el.disabled = true; if (rev) el.classList.add('reveal');
           const all = SEC.units.filter(x => x.card === id); if (all.every(x => x.st)) $('#u-' + id).classList.add('done');
         },
@@ -1426,6 +1402,7 @@ function renderHome() {
       <li><b>考卷上有一個打錯的注音：</b>國語四「天空上有月亮」印成「ㄊㄧㄢ ㄊㄨㄥ」，這裡已改成「ㄊㄧㄢ ㄎㄨㄥ」。國語六「豆腐」「玉米」「好朋友」的最後一個字，辭典念輕聲，填三聲或輕聲都算對。</li>
       <li>每一大題最下面有「給家長看的答案」。紀錄只存在這台裝置的瀏覽器；想重寫可以按大題最下面的「重新寫一次」。</li>
     </ul></details>`;
+  ZY.apply($('details.parent'));
   renderVoicePanel();
 }
 function renderSec(id) {
@@ -1446,6 +1423,7 @@ function renderSec(id) {
       <div class="btnrow">${nx ? `<button type="button" class="next" data-act="go" data-to="${nx.id}">下一大題（${nx.no}）➜</button>` : ''}<button type="button" data-act="home">回選單</button></div></div>
     <details class="paper key"><summary>給家長看的答案</summary><ol>${KEYS.map(k => `<li>${esc(k.trim())}</li>`).join('')}</ol>
       <button type="button" data-act="reset" style="margin-top:8px">重新寫一次</button></details>`;
+  ZY.apply($('details.key'));
   // 還原上次寫到哪裡
   const saved = store.get('st:' + id, {});
   SEC.units.forEach(u => { const r = saved[u.id]; if (r) { u.st = r[0]; if (r[1] != null) u.val = r[1]; } });

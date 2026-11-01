@@ -314,11 +314,8 @@ details.pane>div{padding:0 18px 18px}
 
 /* 注音（標在國字右邊，像課本一樣） */
 .zy{display:inline-flex;align-items:center;white-space:nowrap;vertical-align:baseline}
-.zb{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;position:relative;font:400 .3em/1.02 var(--f-body);
-  margin:0 .62em 0 .08em;color:var(--muted);letter-spacing:0;text-indent:0}
-.zb i{font-style:normal;display:block}
-.zb .zt{position:absolute;left:100%;bottom:.15em;margin-left:.05em}
-.zb .zl{line-height:.7}
+/* 直排、聲調在最後一個符號右上方、輕聲點在最上面：共用 ../zhuyin-layout.js */
+.zb{font-size:.3em;font-weight:400;font-family:var(--f-body);margin:0 .14em 0 .08em;color:var(--muted)}
 .gprompt .zb,.vtext .zb,.slide .zb,.opt .zb{color:var(--ink);opacity:.8}
 .tools button[aria-pressed="true"]{border-color:var(--olive);background:var(--olive-soft)}
 
@@ -433,6 +430,7 @@ details.pane>div{padding:0 18px 18px}
 <div id="print"></div>
 
 <script src="../tw-speech.js"></script>
+<script src="../zhuyin-layout.js"></script>
 <script src="themes.js"></script>
 <script src="zhuyin.js"></script>
 <script>
@@ -584,13 +582,8 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-say]
 const ZYC = window.JENA_ZY_C || {}, ZYW = window.JENA_ZY_W || {}, ZY_MAX = 5;
 const HANC = /[㐀-鿿豈-﫿]/;
 const zyOn = () => store.get('zy', true);
-function zyRuby(c, b) {
-  if (!b) return c;
-  let light = false, tone = '';
-  if (b[0] === '˙') { light = true; b = b.slice(1); }
-  if ('ˊˇˋ'.includes(b.slice(-1))) { tone = b.slice(-1); b = b.slice(0, -1); }
-  return `<span class="zy">${c}<span class="zb" aria-hidden="true">${light ? '<i class="zl">˙</i>' : ''}${[...b].map(x => `<i>${x}</i>`).join('')}${tone ? `<i class="zt">${tone}</i>` : ''}</span></span>`;
-}
+// 國字右邊直排注音（共用 ../zhuyin-layout.js）
+const zyRuby = (c, b) => b ? `<span class="zy">${c}${ZhuyinLayout.syl(b, { cls: 'zb', attr: ' aria-hidden="true"' })}</span>` : c;
 /* 對已跳脫、不含標籤的文字加注音：先找最長的詞，找不到再用字的預設讀音 */
 function zyText(s) {
   const a = [...String(s)]; let out = '', i = 0;

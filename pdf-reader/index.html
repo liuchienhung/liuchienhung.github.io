@@ -183,7 +183,7 @@ select{border:1.5px solid var(--line);background:var(--card);border-radius:10px;
     </fieldset>
     <fieldset class="pron">
       <legend>讀音修正</legend>
-      <p class="hint">語音遇到破音字可能念錯（例如「抹布」念成ㄇㄚ布）。在這裡設定「遇到某個詞就改念成另一個寫法」，用同音字代替即可。</p>
+      <p class="hint zyapply">語音遇到破音字可能念錯（例如「抹布」念成ㄇㄚ布）。在這裡設定「遇到某個詞就改念成另一個寫法」，用同音字代替即可。</p>
       <ul id="pron-list" class="pron-list"></ul>
       <form id="pron-form" class="pron-form">
         <input id="pron-from" type="text" placeholder="原詞，如：抹布" aria-label="原詞" maxlength="20" required>
@@ -207,7 +207,9 @@ select{border:1.5px solid var(--line);background:var(--card);border-radius:10px;
 
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <script src="../tw-speech.js"></script>
+<script src="../zhuyin-layout.js"></script>
 <script src="layout.js"></script>
 <script src="app.js"></script>
+<script>document.querySelectorAll('.zyapply').forEach(el => ZhuyinLayout.apply(el));</script>
 </body>
 </html>

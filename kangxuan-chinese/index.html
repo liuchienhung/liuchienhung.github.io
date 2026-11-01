@@ -150,7 +150,10 @@ h2{font-size:1.1rem;margin:18px 0 8px}
 .leaf{min-height:86px;font-size:1.45rem;font-weight:900;letter-spacing:1px;background:#E3F6DA;border:3px solid #7CC35A;border-radius:40px 8px 40px 8px;color:#2B2620;padding:6px;transition:transform .5s,opacity .5s}
 .leaf.ok{background:#BFF0B0;border-color:var(--good)}
 .leaf.hint{animation:pulse 1s infinite}
-.zy{display:inline-flex;flex-wrap:wrap;gap:2px 8px;justify-content:center}
+/* 注音照課本直式排（../zhuyin-layout.js）：符號由上往下，聲調在最後一個符號右上方，輕聲點在最上面；詞由上往下 */
+.leaf .zw{font-weight:700}
+.qsyl .zv .zq{opacity:.45}
+.fb .zw.in{font-size:1.15em}
 
 /* 拼音火車 */
 .spellscene{height:150px;background:linear-gradient(#BFE6FF 0 70%,#9ED07A 70%)}
@@ -332,6 +335,7 @@ h2{font-size:1.1rem;margin:18px 0 8px}
 </div>
 
 <script src="../tw-speech.js"></script>
+<script src="../zhuyin-layout.js"></script>
 <script>
 // ===== 課程資料 =====
 const DEFAULT_LESSONS = [
@@ -514,7 +518,8 @@ function distractZy(w, n = 2) {
   }
   return [...out];
 }
-const zyHTML = zy => `<span class="zy">${zy.split(' ').map(s => `<span>${s}</span>`).join('')}</span>`;
+// 注音直式排（共用 ../zhuyin-layout.js）：一個詞由上往下
+const zyHTML = zy => ZhuyinLayout.word(zy);
 
 // ===== 語音 =====
 let zhVoice = null;
@@ -778,6 +783,7 @@ function renderRecord() {
       <button data-a="del" aria-label="刪除 ${s} 的錄音" ${REC[s] ? '' : 'disabled'}>🗑</button>
     </div>`).join('')}</div>
     <div class="row" style="margin-top:10px"><button id="recclear" type="button">刪除全部錄音</button></div>`;
+  ZhuyinLayout.apply($('#stage .hint-text'));
   $('#recrows').addEventListener('click', async e => {
     const b = e.target.closest('button'); if (!b) return;
     const row = b.closest('.recrow'), s = row.dataset.s;
@@ -1133,7 +1139,7 @@ function spellDone() {
   G.lock = true;
   if (!G.miss) { G.score++; G.oks[G.i] = true; }
   SFX.ding(); SFX.toot();
-  $('#fb').className = 'fb ok'; $('#fb').textContent = `${withTone(G.chars.join(''), G.tone)}　${cheer()}`;
+  $('#fb').className = 'fb ok'; $('#fb').innerHTML = ZhuyinLayout.text(`${withTone(G.chars.join(''), G.tone)}　${cheer()}`);
   speak(G.w.w);
   later(() => {
     const tr = $('#train'); tr.style.transition = 'transform 1.3s cubic-bezier(.6,0,.9,.5)';
@@ -1168,7 +1174,7 @@ function gTone() {
     fly(t, right ? '#2E9E5B' : '#D9483B', () => {
       if (right) {
         G.score++; G.oks[G.i] = true; SFX.chomp(); SFX.ding();
-        $('#fb').className = 'fb ok'; $('#fb').textContent = `${withTone(bare(G.w.zy), G.tone)}　${TONE_NAME[G.tone]}！${cheer()}`;
+        $('#fb').className = 'fb ok'; $('#fb').innerHTML = ZhuyinLayout.text(`${withTone(bare(G.w.zy), G.tone)}　${TONE_NAME[G.tone]}！${cheer()}`);
         speak(G.w.w + '，' + TONE_NAME[G.tone]);
         later(() => { G.i++; toneRound(); }, 1900);
       } else {
@@ -1185,7 +1191,7 @@ function toneRound(first) {
   setDots(G.i, G.total, G.oks);
   const w = G.w = G.qs[G.i]; G.tone = toneOf(w.zy); G.lock = false;
   $('#qpic').textContent = w.pic; $('#qword').textContent = w.w;
-  $('#qsyl').innerHTML = `${bare(w.zy)}<span style="opacity:.3">？</span>`;
+  $('#qsyl').innerHTML = ZhuyinLayout.syl(bare(w.zy), { box: '<span class="zq">？</span>' });
   $('#fb').textContent = '';
   $('#flypath').setAttribute('d', ''); $('#apple').setAttribute('opacity', 0);
   const bt = $('#beetle'); bt.setAttribute('x', 30); bt.setAttribute('y', 105); bt.textContent = '🪲';
