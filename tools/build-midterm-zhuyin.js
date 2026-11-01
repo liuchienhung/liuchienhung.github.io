@@ -36,6 +36,9 @@ data.M10.forEach(r => texts.add(r[1]));
 const walk = v => typeof v === 'string' ? texts.add(v) : v && typeof v === 'object' && Object.values(v).forEach(walk);
 walk(data.GUIDE);
 for (const m of html.matchAll(/\bT\('([^']+)'\)/g)) texts.add(m[1]);
+// 手寫（寫字板、工具列）的字也要有注音
+const hwSrc = fs.readFileSync(path.join(ROOT, 'midterm-review/handwrite.js'), 'utf8');
+for (const m of hwSrc.matchAll(/\bT\('([^']+)'\)/g)) texts.add(m[1]);
 const parts = [...texts].flatMap(t => t.split(/\{[a-z]\}/));
 const isHan = c => /[㐀-鿿]/.test(c);
 

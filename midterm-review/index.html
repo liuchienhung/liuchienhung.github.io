@@ -55,9 +55,9 @@ h1,h2,h3{font-family:var(--f-kai);margin:0;text-wrap:balance}
 
 /* ---------- 頁首 ---------- */
 .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:8px;padding:8px 0;background:var(--bg)}
-.topbar h1{flex:1;min-width:0;font-size:1.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar h1{flex:1 1 0;min-width:5em;font-size:1.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .iconbtn{min-width:46px;min-height:46px;padding:4px 8px;font-size:1.2rem;display:grid;place-items:center}
-.score{font-size:.9rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.score{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:.85rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .score b{color:var(--ink)}
 .pbar{height:8px;border-radius:4px;background:var(--soft);overflow:hidden;margin:0 0 10px}
 .pbar i{display:block;height:100%;width:0;background:var(--zh);transition:width .3s}
@@ -409,6 +409,14 @@ body.xmode.padopen .xbar{display:none}
 .secbtn.xbtn{border-style:dashed}
 .zh .secbtn.xbtn{border-color:var(--zh)} .ma .secbtn.xbtn{border-color:var(--ma)}
 
+/* ---------- 手寫（寫字板與考卷上畫的筆跡在 handwrite.js） ---------- */
+button.tzs,button.lwr,button.ansp{border:none;background:none;padding:0;min-height:0;font:inherit;color:inherit;cursor:pointer}
+.hwon button.tzs,.hwon button.lwr .tall,.hwon button.lwr .tz{outline:3px dashed color-mix(in srgb,var(--zh) 55%,transparent);outline-offset:2px}
+.hwon button.ansp b{display:inline-block;min-width:1.8em;border-bottom:2px dashed var(--zh)}
+.hwon .nb .nv:empty::after{content:"✎"}
+.tz .pk,.tall .pk{color:var(--ink)} .tz .pkbad,.tall .pkbad{color:var(--red);text-decoration:line-through}
+body.hwon #app{padding-right:66px}
+
 /* ---------- 完成、答案 ---------- */
 .donecard{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
 .donecard .big{font-size:3.4rem;line-height:1.1}
@@ -474,6 +482,7 @@ body.padopen .coach{bottom:calc(var(--padh,300px) + 8px)}
 
 <script src="../tw-speech.js"></script>
 <script src="../zhuyin-layout.js"></script>
+<script src="handwrite.js"></script>
 <script>
 'use strict';
 const KID = '大寶';
@@ -548,7 +557,7 @@ const word = (z, cls = '') => ZY.word(sylsOf(z).join(' '), { cls });
 
 /* ---------- 國字注音（題目說明用；讀音取自教育部《重編國語辭典修訂本》，再照考卷念法調整） ---------- */
 // ZY_C：字 → 讀音（由 zhuyin-lens/zhuyin-data.js 取出這一頁用到的字）；ZY_W：照考卷念法的詞（變調、輕聲、破音字）
-const ZY_C = /*ZY_C*/{"一":"ㄧ","七":"ㄑㄧ","三":"ㄙㄢ","上":"ㄕㄤˋ","下":"ㄒㄧㄚˋ","不":"ㄅㄨˋ","中":"ㄓㄨㄥ","串":"ㄔㄨㄢˋ","九":"ㄐㄧㄡˇ","了":"˙ㄌㄜ","二":"ㄦˋ","交":"ㄐㄧㄠ","亮":"ㄌㄧㄤˋ","人":"ㄖㄣˊ","什":"ㄕㄣˊ","代":"ㄉㄞˋ","以":"ㄧˇ","你":"ㄋㄧˇ","來":"ㄌㄞˊ","例":"ㄌㄧˋ","個":"ㄍㄜˋ","候":"ㄏㄡˋ","做":"ㄗㄨㄛˋ","像":"ㄒㄧㄤˋ","先":"ㄒㄧㄢ","兔":"ㄊㄨˋ","全":"ㄑㄩㄢˊ","兩":"ㄌㄧㄤˇ","八":"ㄅㄚ","共":"ㄍㄨㄥˋ","再":"ㄗㄞˋ","出":"ㄔㄨ","分":"ㄈㄣ","到":"ㄉㄠˋ","前":"ㄑㄧㄢˊ","動":"ㄉㄨㄥˋ","勾":"ㄍㄡ","十":"ㄕˊ","卷":"ㄐㄩㄢˋ","厚":"ㄏㄡˋ","句":"ㄐㄩˋ","只":"ㄓˇ","可":"ㄎㄜˇ","右":"ㄧㄡˋ","司":"ㄙ","吃":"ㄔ","合":"ㄏㄜˊ","名":"ㄇㄧㄥˊ","告":"ㄍㄠˋ","和":"ㄏㄜˊ","咪":"ㄇㄧ","哪":"ㄋㄚˇ","喔":"ㄛ","單":"ㄉㄢ","嘻":"ㄒㄧ","四":"ㄙˋ","回":"ㄏㄨㄟˊ","圈":"ㄑㄩㄢ","國":"ㄍㄨㄛˊ","圖":"ㄊㄨˊ","在":"ㄗㄞˋ","塊":"ㄎㄨㄞˋ","填":"ㄊㄧㄢˊ","多":"ㄉㄨㄛ","大":"ㄉㄚˋ","套":"ㄊㄠˋ","好":"ㄏㄠˇ","如":"ㄖㄨˊ","始":"ㄕˇ","子":"ㄗˇ","字":"ㄗˋ","學":"ㄒㄩㄝˊ","它":"ㄊㄨㄛ","完":"ㄨㄢˊ","察":"ㄔㄚˊ","寫":"ㄒㄧㄝˇ","寶":"ㄅㄠˇ","對":"ㄉㄨㄟˋ","小":"ㄒㄧㄠˇ","少":"ㄕㄠˇ","就":"ㄐㄧㄡˋ","尺":"ㄔˇ","左":"ㄗㄨㄛˇ","已":"ㄧˇ","師":"ㄕ","幾":"ㄐㄧˇ","序":"ㄒㄩˋ","往":"ㄨㄤˇ","後":"ㄏㄡˋ","從":"ㄘㄨㄥˊ","忘":"ㄨㄤˋ","念":"ㄋㄧㄢˋ","怎":"ㄗㄣˇ","想":"ㄒㄧㄤˇ","懂":"ㄉㄨㄥˇ","成":"ㄔㄥˊ","或":"ㄏㄨㄛˋ","所":"ㄙㄨㄛˇ","手":"ㄕㄡˇ","才":"ㄘㄞˊ","打":"ㄉㄚˇ","找":"ㄓㄠˇ","把":"ㄅㄚˇ","拔":"ㄅㄚˊ","括":"ㄍㄨㄚ","拼":"ㄆㄧㄣ","指":"ㄓˇ","排":"ㄆㄞˊ","接":"ㄐㄧㄝ","提":"ㄊㄧˊ","擬":"ㄋㄧˇ","改":"ㄍㄞˇ","放":"ㄈㄤˋ","數":"ㄕㄨˋ","方":"ㄈㄤ","旁":"ㄆㄤˊ","是":"ㄕˋ","時":"ㄕˊ","最":"ㄗㄨㄟˋ","會":"ㄏㄨㄟˋ","有":"ㄧㄡˇ","板":"ㄅㄢˇ","枝":"ㄓ","查":"ㄔㄚˊ","根":"ㄍㄣ","格":"ㄍㄜˊ","桃":"ㄊㄠˊ","框":"ㄎㄨㄤ","案":"ㄢˋ","條":"ㄊㄧㄠˊ","棒":"ㄅㄤˋ","楚":"ㄔㄨˇ","模":"ㄇㄛˊ","樣":"ㄧㄤˋ","檢":"ㄐㄧㄢˇ","櫻":"ㄧㄥ","次":"ㄘˋ","歡":"ㄏㄨㄢ","正":"ㄓㄥˋ","步":"ㄅㄨˋ","每":"ㄇㄟˇ","比":"ㄅㄧˇ","毛":"ㄇㄠˊ","沒":"ㄇㄟˊ","河":"ㄏㄜˊ","法":"ㄈㄚˇ","注":"ㄓㄨˋ","清":"ㄑㄧㄥ","照":"ㄓㄠˋ","物":"ㄨˋ","狂":"ㄎㄨㄤˊ","狸":"ㄌㄧˊ","現":"ㄒㄧㄢˋ","用":"ㄩㄥˋ","白":"ㄅㄞˊ","的":"˙ㄉㄜ","盤":"ㄆㄢˊ","目":"ㄇㄨˋ","直":"ㄓˊ","看":"ㄎㄢˋ","真":"ㄓㄣ","知":"ㄓ","短":"ㄉㄨㄢˇ","矮":"ㄞˇ","確":"ㄑㄩㄝˋ","碼":"ㄇㄚˇ","示":"ㄕˋ","空":"ㄎㄨㄥ","笑":"ㄒㄧㄠˋ","符":"ㄈㄨˊ","第":"ㄉㄧˋ","答":"ㄉㄚˊ","算":"ㄙㄨㄢˋ","糕":"ㄍㄠ","紅":"ㄏㄨㄥˊ","經":"ㄐㄧㄥ","翹":"ㄑㄧㄠˊ","老":"ㄌㄠˇ","考":"ㄎㄠˇ","聲":"ㄕㄥ","聽":"ㄊㄧㄥ","能":"ㄋㄥˊ","與":"ㄩˇ","色":"ㄙㄜˋ","萄":"ㄊㄠˊ","葡":"ㄆㄨˊ","蔔":"˙ㄅㄛ","薄":"ㄅㄛˊ","蘿":"ㄌㄨㄛˊ","號":"ㄏㄠˋ","蛋":"ㄉㄢˋ","衣":"ㄧ","補":"ㄅㄨˇ","裡":"ㄌㄧˇ","要":"ㄧㄠˋ","觀":"ㄍㄨㄢ","訂":"ㄉㄧㄥˋ","記":"ㄐㄧˋ","訴":"ㄙㄨˋ","詞":"ㄘˊ","試":"ㄕˋ","語":"ㄩˇ","說":"ㄕㄨㄛ","調":"ㄊㄧㄠˊ","謝":"ㄒㄧㄝˋ","讀":"ㄉㄨˊ","變":"ㄅㄧㄢˋ","貓":"ㄇㄠ","賽":"ㄙㄞˋ","起":"ㄑㄧˇ","跑":"ㄆㄠˇ","路":"ㄌㄨˋ","跳":"ㄊㄧㄠˋ","較":"ㄐㄧㄠˋ","近":"ㄐㄧㄣˋ","這":"ㄓㄜˋ","通":"ㄊㄨㄥ","造":"ㄗㄠˋ","連":"ㄌㄧㄢˊ","進":"ㄐㄧㄣˋ","遍":"ㄅㄧㄢˋ","過":"ㄍㄨㄛˋ","道":"ㄉㄠˋ","選":"ㄒㄩㄢˇ","還":"ㄏㄞˊ","邊":"ㄅㄧㄢ","部":"ㄅㄨˋ","都":"ㄉㄡ","錯":"ㄘㄨㄛˋ","長":"ㄔㄤˊ","開":"ㄎㄞ","隻":"ㄓ","雙":"ㄕㄨㄤ","面":"ㄇㄧㄢˋ","鞋":"ㄒㄧㄝˊ","音":"ㄧㄣ","項":"ㄒㄧㄤˋ","順":"ㄕㄨㄣˋ","顆":"ㄎㄜ","題":"ㄊㄧˊ","馬":"ㄇㄚˇ","高":"ㄍㄠ","鵝":"ㄜˊ","麼":"˙ㄇㄜ","點":"ㄉㄧㄢˇ","鼠":"ㄕㄨˇ","龜":"ㄍㄨㄟ"}/*END*/;
+const ZY_C = /*ZY_C*/{"一":"ㄧ","七":"ㄑㄧ","三":"ㄙㄢ","上":"ㄕㄤˋ","下":"ㄒㄧㄚˋ","不":"ㄅㄨˋ","中":"ㄓㄨㄥ","串":"ㄔㄨㄢˋ","九":"ㄐㄧㄡˇ","了":"˙ㄌㄜ","二":"ㄦˋ","交":"ㄐㄧㄠ","亮":"ㄌㄧㄤˋ","人":"ㄖㄣˊ","什":"ㄕㄣˊ","代":"ㄉㄞˋ","以":"ㄧˇ","位":"ㄨㄟˋ","你":"ㄋㄧˇ","來":"ㄌㄞˊ","例":"ㄌㄧˋ","個":"ㄍㄜˋ","候":"ㄏㄡˋ","做":"ㄗㄨㄛˋ","像":"ㄒㄧㄤˋ","先":"ㄒㄧㄢ","兔":"ㄊㄨˋ","全":"ㄑㄩㄢˊ","兩":"ㄌㄧㄤˇ","八":"ㄅㄚ","共":"ㄍㄨㄥˋ","再":"ㄗㄞˋ","出":"ㄔㄨ","分":"ㄈㄣ","到":"ㄉㄠˋ","前":"ㄑㄧㄢˊ","動":"ㄉㄨㄥˋ","勾":"ㄍㄡ","十":"ㄕˊ","卷":"ㄐㄩㄢˋ","厚":"ㄏㄡˋ","句":"ㄐㄩˋ","只":"ㄓˇ","可":"ㄎㄜˇ","右":"ㄧㄡˋ","司":"ㄙ","吃":"ㄔ","合":"ㄏㄜˊ","名":"ㄇㄧㄥˊ","告":"ㄍㄠˋ","和":"ㄏㄜˊ","咪":"ㄇㄧ","哪":"ㄋㄚˇ","喔":"ㄛ","單":"ㄉㄢ","嗎":"˙ㄇㄚ","嘻":"ㄒㄧ","四":"ㄙˋ","回":"ㄏㄨㄟˊ","圈":"ㄑㄩㄢ","國":"ㄍㄨㄛˊ","圖":"ㄊㄨˊ","在":"ㄗㄞˋ","塊":"ㄎㄨㄞˋ","填":"ㄊㄧㄢˊ","多":"ㄉㄨㄛ","大":"ㄉㄚˋ","套":"ㄊㄠˋ","好":"ㄏㄠˇ","如":"ㄖㄨˊ","始":"ㄕˇ","媽":"ㄇㄚ","子":"ㄗˇ","字":"ㄗˋ","孩":"ㄏㄞˊ","學":"ㄒㄩㄝˊ","它":"ㄊㄨㄛ","完":"ㄨㄢˊ","察":"ㄔㄚˊ","寫":"ㄒㄧㄝˇ","寶":"ㄅㄠˇ","對":"ㄉㄨㄟˋ","小":"ㄒㄧㄠˇ","少":"ㄕㄠˇ","就":"ㄐㄧㄡˋ","尺":"ㄔˇ","左":"ㄗㄨㄛˇ","已":"ㄧˇ","師":"ㄕ","幾":"ㄐㄧˇ","序":"ㄒㄩˋ","往":"ㄨㄤˇ","後":"ㄏㄡˋ","從":"ㄘㄨㄥˊ","忘":"ㄨㄤˋ","念":"ㄋㄧㄢˋ","怎":"ㄗㄣˇ","想":"ㄒㄧㄤˇ","懂":"ㄉㄨㄥˇ","成":"ㄔㄥˊ","我":"ㄨㄛˇ","或":"ㄏㄨㄛˋ","所":"ㄙㄨㄛˇ","手":"ㄕㄡˇ","才":"ㄘㄞˊ","打":"ㄉㄚˇ","找":"ㄓㄠˇ","把":"ㄅㄚˇ","拔":"ㄅㄚˊ","括":"ㄍㄨㄚ","拼":"ㄆㄧㄣ","指":"ㄓˇ","排":"ㄆㄞˊ","接":"ㄐㄧㄝ","提":"ㄊㄧˊ","擦":"ㄘㄚ","擬":"ㄋㄧˇ","改":"ㄍㄞˇ","放":"ㄈㄤˋ","數":"ㄕㄨˋ","方":"ㄈㄤ","旁":"ㄆㄤˊ","是":"ㄕˋ","時":"ㄕˊ","最":"ㄗㄨㄟˋ","會":"ㄏㄨㄟˋ","有":"ㄧㄡˇ","板":"ㄅㄢˇ","枝":"ㄓ","查":"ㄔㄚˊ","根":"ㄍㄣ","格":"ㄍㄜˊ","桃":"ㄊㄠˊ","框":"ㄎㄨㄤ","案":"ㄢˋ","條":"ㄊㄧㄠˊ","棒":"ㄅㄤˋ","楚":"ㄔㄨˇ","模":"ㄇㄛˊ","樣":"ㄧㄤˋ","橡":"ㄒㄧㄤˋ","檢":"ㄐㄧㄢˇ","櫻":"ㄧㄥ","次":"ㄘˋ","歡":"ㄏㄨㄢ","正":"ㄓㄥˋ","步":"ㄅㄨˋ","每":"ㄇㄟˇ","比":"ㄅㄧˇ","毛":"ㄇㄠˊ","沒":"ㄇㄟˊ","河":"ㄏㄜˊ","法":"ㄈㄚˇ","注":"ㄓㄨˋ","清":"ㄑㄧㄥ","照":"ㄓㄠˋ","爸":"ㄅㄚˋ","物":"ㄨˋ","狂":"ㄎㄨㄤˊ","狸":"ㄌㄧˊ","現":"ㄒㄧㄢˋ","用":"ㄩㄥˋ","白":"ㄅㄞˊ","的":"˙ㄉㄜ","皮":"ㄆㄧˊ","盤":"ㄆㄢˊ","目":"ㄇㄨˋ","直":"ㄓˊ","看":"ㄎㄢˋ","真":"ㄓㄣ","知":"ㄓ","短":"ㄉㄨㄢˇ","矮":"ㄞˇ","確":"ㄑㄩㄝˋ","碼":"ㄇㄚˇ","示":"ㄕˋ","移":"ㄧˊ","空":"ㄎㄨㄥ","笑":"ㄒㄧㄠˋ","符":"ㄈㄨˊ","第":"ㄉㄧˋ","筆":"ㄅㄧˇ","答":"ㄉㄚˊ","算":"ㄙㄨㄢˋ","糕":"ㄍㄠ","紅":"ㄏㄨㄥˊ","經":"ㄐㄧㄥ","翹":"ㄑㄧㄠˊ","老":"ㄌㄠˇ","考":"ㄎㄠˇ","聲":"ㄕㄥ","聽":"ㄊㄧㄥ","能":"ㄋㄥˊ","與":"ㄩˇ","色":"ㄙㄜˋ","萄":"ㄊㄠˊ","葡":"ㄆㄨˊ","蔔":"˙ㄅㄛ","薄":"ㄅㄛˊ","蘿":"ㄌㄨㄛˊ","號":"ㄏㄠˋ","蛋":"ㄉㄢˋ","衣":"ㄧ","補":"ㄅㄨˇ","裡":"ㄌㄧˇ","要":"ㄧㄠˋ","觀":"ㄍㄨㄢ","訂":"ㄉㄧㄥˋ","記":"ㄐㄧˋ","訴":"ㄙㄨˋ","詞":"ㄘˊ","試":"ㄕˋ","認":"ㄖㄣˋ","語":"ㄩˇ","說":"ㄕㄨㄛ","調":"ㄊㄧㄠˊ","請":"ㄑㄧㄥˇ","謝":"ㄒㄧㄝˋ","讀":"ㄉㄨˊ","變":"ㄅㄧㄢˋ","貓":"ㄇㄠ","賽":"ㄙㄞˋ","起":"ㄑㄧˇ","跑":"ㄆㄠˇ","路":"ㄌㄨˋ","跳":"ㄊㄧㄠˋ","較":"ㄐㄧㄠˋ","近":"ㄐㄧㄣˋ","送":"ㄙㄨㄥˋ","這":"ㄓㄜˋ","通":"ㄊㄨㄥ","造":"ㄗㄠˋ","連":"ㄌㄧㄢˊ","進":"ㄐㄧㄣˋ","遍":"ㄅㄧㄢˋ","過":"ㄍㄨㄛˋ","道":"ㄉㄠˋ","選":"ㄒㄩㄢˇ","還":"ㄏㄞˊ","邊":"ㄅㄧㄢ","部":"ㄅㄨˋ","都":"ㄉㄡ","重":"ㄓㄨㄥˋ","錯":"ㄘㄨㄛˋ","長":"ㄔㄤˊ","開":"ㄎㄞ","隻":"ㄓ","雙":"ㄕㄨㄤ","面":"ㄇㄧㄢˋ","鞋":"ㄒㄧㄝˊ","音":"ㄧㄣ","項":"ㄒㄧㄤˋ","順":"ㄕㄨㄣˋ","顆":"ㄎㄜ","題":"ㄊㄧˊ","馬":"ㄇㄚˇ","高":"ㄍㄠ","鵝":"ㄜˊ","麼":"˙ㄇㄜ","點":"ㄉㄧㄢˇ","鼠":"ㄕㄨˇ","龜":"ㄍㄨㄟ"}/*END*/;
 const ZY_W = {
   '數一數': 'ㄕㄨˇ ㄧˋ ㄕㄨˇ', '數起': 'ㄕㄨˇ ㄑㄧˇ', '數到': 'ㄕㄨˇ ㄉㄠˋ', '數字': 'ㄕㄨˋ ㄗˋ', '數學': 'ㄕㄨˋ ㄒㄩㄝˊ',
   '一樣': 'ㄧˊ ㄧㄤˋ', '一條': 'ㄧˋ ㄊㄧㄠˊ', '一個': 'ㄧˊ ˙ㄍㄜ', '一遍': 'ㄧˊ ㄅㄧㄢˋ', '一選': 'ㄧˋ ㄒㄩㄢˇ', '一念': 'ㄧˊ ㄋㄧㄢˋ',
@@ -559,6 +568,7 @@ const ZY_W = {
   '不是': 'ㄅㄨˊ ㄕˋ', '一想': 'ㄧˋ ㄒㄧㄤˇ', '一排': 'ㄧˋ ㄆㄞˊ', '一大': 'ㄧˊ ㄉㄚˋ', '一題': 'ㄧˋ ㄊㄧˊ', '一邊': 'ㄧˋ ㄅㄧㄢ',
   '一次': 'ㄧˊ ㄘˋ', '一雙': 'ㄧˋ ㄕㄨㄤ', '一盤': 'ㄧˋ ㄆㄢˊ', '一串': 'ㄧˊ ㄔㄨㄢˋ', '一塊': 'ㄧˊ ㄎㄨㄞˋ', '這樣數': 'ㄓㄜˋ ㄧㄤˋ ㄕㄨˇ',
   '格子': 'ㄍㄜˊ ˙ㄗ', '括號': 'ㄎㄨㄛˋ ㄏㄠˋ', '算算': 'ㄙㄨㄢˋ ˙ㄙㄨㄢ', '看看': 'ㄎㄢˋ ˙ㄎㄢ', '念好': 'ㄋㄧㄢˋ ㄏㄠˇ', '看懂': 'ㄎㄢˋ ㄉㄨㄥˇ',
+  '爸爸': 'ㄅㄚˋ ˙ㄅㄚ', '媽媽': 'ㄇㄚ ˙ㄇㄚ', '孩子': 'ㄏㄞˊ ˙ㄗ', '一聲': 'ㄧ ㄕㄥ', '一遍': 'ㄧˊ ㄅㄧㄢˋ',
   '一勾': 'ㄧˋ ㄍㄡ', '不會': 'ㄅㄨˊ ㄏㄨㄟˋ', '對不對': 'ㄉㄨㄟˋ ˙ㄅㄨ ㄉㄨㄟˋ', '找找': 'ㄓㄠˇ ˙ㄓㄠ', '交卷': 'ㄐㄧㄠ ㄐㄩㄢˋ', '模擬': 'ㄇㄛˊ ㄋㄧˇ'
 };
 const ZY_FIX = { '它': 'ㄊㄚ', '個': '˙ㄍㄜ', '和': 'ㄏㄢˋ', '的': '˙ㄉㄜ', '數': 'ㄕㄨˋ', '薄': 'ㄅㄛˊ', '單': 'ㄉㄢ', '元': 'ㄩㄢˊ', '少': 'ㄕㄠˇ', '狸': 'ㄌㄧˊ' };
@@ -715,6 +725,12 @@ const Z3 = [
     { n: 2, q: 'ㄕㄨ', o: [['🎒', 'ㄕㄨ ㄅㄠ', '書包'], ['🌳', 'ㄉㄚˋ ㄕㄨˋ', '大樹'], ['🐭', 'ㄌㄠˇ ㄕㄨˇ', '老鼠']], a: 0, more: '讀書' },
     { n: 3, q: 'ㄓㄤˇ', o: [['📏', 'ㄔㄤˊ ㄉㄨㄢˇ', '長短'], ['🖐️', 'ㄕㄡˇ ㄓㄤˇ', '手掌'], ['🦯', 'ㄍㄨㄞˇ ㄓㄤˋ', '拐杖']], a: 1, more: '長大、校長' }] }
 ];
+
+// 國語三還可以造的詞的注音（手寫造詞時，這些都算對；不在這裡的詞請爸媽判斷）
+const MOREZ = { '烏鴉': 'ㄨ ㄧㄚ', '屋子': 'ㄨ ˙ㄗ', '雞腿': 'ㄐㄧ ㄊㄨㄟˇ', '積木': 'ㄐㄧ ㄇㄨˋ', '小雞': 'ㄒㄧㄠˇ ㄐㄧ', '雨傘': 'ㄩˇ ㄙㄢˇ', '雨衣': 'ㄩˇ ㄧ',
+  '麻雀': 'ㄇㄚˊ ㄑㄩㄝˋ', '開關': 'ㄎㄞ ㄍㄨㄢ', '關心': 'ㄍㄨㄢ ㄒㄧㄣ', '月餅': 'ㄩㄝˋ ㄅㄧㄥˇ', '香菇': 'ㄒㄧㄤ ㄍㄨ', '箱子': 'ㄒㄧㄤ ˙ㄗ',
+  '旗子': 'ㄑㄧˊ ˙ㄗ', '奇怪': 'ㄑㄧˊ ㄍㄨㄞˋ', '旁邊': 'ㄆㄤˊ ㄅㄧㄢ', '鞭炮': 'ㄅㄧㄢ ㄆㄠˋ', '比賽': 'ㄅㄧˇ ㄙㄞˋ', '下雨': 'ㄒㄧㄚˋ ㄩˇ',
+  '下課': 'ㄒㄧㄚˋ ㄎㄜˋ', '讀書': 'ㄉㄨˊ ㄕㄨ', '長大': 'ㄓㄤˇ ㄉㄚˋ', '校長': 'ㄒㄧㄠˋ ㄓㄤˇ' };
 
 /* 國語四、看圖，讀句子，選出正確答案，在（ ）中寫代號①、②、③。□ 是句子裡要填的地方。
  * 「天空上有月亮」考卷印成 ㄊㄧㄢ ㄊㄨㄥ，是打錯字，這裡改成 ㄊㄧㄢ ㄎㄨㄥ */
@@ -1118,12 +1134,14 @@ function isRight(u) {
   if (u.count) return !!v && v.length === u.ans;
   if (u.set) return u.set.includes(v) && !SEC.units.some(x => x !== u && x.grp === u.grp && x.pick === v && SEC.units.indexOf(x) < SEC.units.indexOf(u));
   if (u.kind === 'tone') return v === u.ans || (u.alt || []).includes(v);
+  if (u.kind === 'zyw') return u.pickOk != null ? u.pickOk : u.check(v) === true;
   return v === u.ans;
 }
 // 把孩子寫的答案畫出來（還沒批改）；bad＝批改後錯的，用紅色虛線標出來
 function xShow(u, bad) {
   const v = u.pick, cls = bad ? 'pkbad' : 'pk';
-  if (u.kind === 'num') { const el = $('#u-' + u.id); el.querySelector('.nv').textContent = v ?? ''; el.classList.toggle(cls, v != null); }
+  if (u.kind === 'zyw') u.paint(v === '?' ? '' : v, cls);
+  else if (u.kind === 'num') { const el = $('#u-' + u.id); el.querySelector('.nv').textContent = v ?? ''; el.classList.toggle(cls, v != null); }
   else if (u.kind === 'tone') { const el = $('#u-' + u.id); el.innerHTML = v == null ? '' : v === 5 ? '<span class="lt"></span>' : v === 1 ? '<span class="t1">－</span>' : ZY.toneSVG(v); el.classList.toggle(cls, v != null); }
   else if (u.link) drawLinks($('#lk-' + u.g));
   else if (u.step != null) { const m = EXAM.marks[u.grp] || []; $$(`#${u.grp} .mbox`).forEach((b, i) => { b.textContent = m[i] || ''; b.className = 'mbox' + (m[i] ? ' pk' : ''); }); }
@@ -1131,8 +1149,8 @@ function xShow(u, bad) {
   else { $$(`[data-u="${u.id}"][data-v]`).forEach(x => x.classList.toggle(cls, v != null && +x.dataset.v === v)); if (u.showPick) u.showPick(bad ? null : v); }
 }
 function xSave() {
-  const picks = {}; SEC.units.forEach(u => { if (u.pick != null) picks[u.id] = u.pick; });
-  store.set('x:' + EXAM.subj, { phase: EXAM.phase, cstep: EXAM.cstep, checks: EXAM.checks, marks: EXAM.marks, picks, graded: EXAM.graded, fixed: EXAM.fixed, score: EXAM.score });
+  const picks = {}, pok = {}; SEC.units.forEach(u => { if (u.pick != null) picks[u.id] = u.pick; if (u.pickOk != null) pok[u.id] = u.pickOk; });
+  store.set('x:' + EXAM.subj, { hw: EXAM.hw, pok, phase: EXAM.phase, cstep: EXAM.cstep, checks: EXAM.checks, marks: EXAM.marks, picks, graded: EXAM.graded, fixed: EXAM.fixed, score: EXAM.score });
 }
 function xChanged() { chime([740], .05, .06); xSave(); xRefresh(); }
 const xItems = () => [...new Set(SEC.units.map(itemOf).filter(Boolean))];
@@ -1141,6 +1159,8 @@ const xSecOf = u => xSecs().find(s => s.id === u.sec);
 
 function renderExam(subj) {
   closePad(); U = {}; KEYS = []; LINK.g = null; GD.step = -1;
+  const sv0 = store.get('x:' + subj, null);
+  if (sv0 && sv0.hw != null && sv0.phase) hwOn = sv0.hw;
   SEC = { id: 'x-' + subj, units: [], subj, restored: true };
   const secs = SECS.filter(s => s.subj === subj), name = subj === 'zh' ? '國語' : '數學';
   const body = secs.map(s => {
@@ -1152,7 +1172,8 @@ function renderExam(subj) {
   document.title = `${name}模擬考・期中考總復習`;
   app.className = subj;
   app.innerHTML = `<div class="topbar"><button class="iconbtn" type="button" data-act="home" aria-label="回選單">←</button>
-      <h1>${name}${T('模擬考')}</h1><span class="score" id="xcount"></span>
+      <h1>${name}模擬考</h1><span class="score" id="xcount"></span>
+      <button class="iconbtn" type="button" data-act="hw" aria-pressed="${hwOn}" aria-label="手寫開關" title="手寫">${hwOn ? '✍️' : '👆'}</button>
       <button class="iconbtn" type="button" data-act="sound" aria-label="聲音開關">${soundOn ? '🔊' : '🔈'}</button></div>
     <div class="pbar"><i id="pbar"></i></div>
     <div class="guide xintro"><div class="gmsg" id="xmsg"></div></div>
@@ -1166,14 +1187,14 @@ function renderExam(subj) {
   document.body.classList.add('xmode');
   // 還原：寫到哪、檢查到哪、批改結果
   const sv = store.get('x:' + subj, null) || {};
-  EXAM = { subj, phase: sv.phase || 'write', cstep: sv.cstep || 0, checks: sv.checks || [], marks: sv.marks || {}, graded: sv.graded || null, fixed: sv.fixed || {}, score: sv.score ?? null };
-  const picks = sv.picks || {};
-  SEC.units.forEach(u => { if (picks[u.id] != null) u.pick = picks[u.id]; });
+  EXAM = { subj, hw: hwOn, phase: sv.phase || 'write', cstep: sv.cstep || 0, checks: sv.checks || [], marks: sv.marks || {}, graded: sv.graded || null, fixed: sv.fixed || {}, score: sv.score ?? null };
+  const picks = sv.picks || {}, pok = sv.pok || {};
+  SEC.units.forEach(u => { if (picks[u.id] != null) u.pick = picks[u.id]; if (pok[u.id] != null) u.pickOk = pok[u.id]; });
   if (EXAM.phase === 'fix') { xApplyGrade(); EXAM.allFixed = SEC.units.every(u => u.st); }
   else SEC.units.forEach(u => xShow(u));
   $$('.lk').forEach(drawLinks);
   SEC.restored = false;
-  xStep(!!sv.phase);
+  xStep(!!sv.phase); hwStart();
   requestAnimationFrame(() => $$('.lk').forEach(drawLinks));
   if (document.fonts) document.fonts.ready.then(() => $$('.lk').forEach(drawLinks));
   scrollTo(0, 0);
@@ -1264,6 +1285,10 @@ function xRefresh() {
 }
 // 批改：對的直接顯示答案；錯的保留孩子寫的（紅色虛線），等著訂正
 function xGrade() {
+  // 手寫造的詞不在題庫裡：交卷時請爸媽判斷
+  SEC.units.filter(u => u.kind === 'zyw' && u.pick && u.pickOk == null && u.check(u.pick) === null).forEach(u => {
+    u.pickOk = confirm(`請爸爸媽媽看：用「${u.q}」造的詞，孩子寫成「${u.pick}」，是對的詞嗎？`);
+  });
   EXAM.graded = {}; SEC.units.forEach(u => { EXAM.graded[u.id] = isRight(u) ? 1 : 0; });
   const ok = SEC.units.filter(u => EXAM.graded[u.id]).length;
   EXAM.score = Math.round(ok / SEC.units.length * 100); EXAM.phase = 'fix'; EXAM.fixed = {}; EXAM.allFixed = ok === SEC.units.length;
@@ -1314,6 +1339,124 @@ function xRedo() {
   store.del('x:' + EXAM.subj); renderExam(EXAM.subj);
 }
 function xLeave() { EXAM = null; document.body.classList.remove('xmode', 'x-write', 'x-check'); const b = $('#xbar'); if (b) b.hidden = true; }
+
+/* =================================================================
+ * 手寫：數字格、聲調框、注音格點了開寫字板；勾、圈、叉、連線直接畫在考卷上（handwrite.js）
+ * ================================================================= */
+let hwOn = store.get('hw', false), HWWANT = null;
+function numAnswer(u, v, el) {
+  if (xWriting()) { u.pick = v; xShow(u); xChanged(); return; }
+  const ok = numOk(u, v); if (ok) u.val = v;
+  judge(u, ok, v, el || $('#u-' + u.id));
+}
+function toneAnswer(x, v) {
+  if (xWriting()) { x.pick = v; closePad(); xShow(x); xChanged(); return; }
+  const ok = v === x.ans || (x.alt || []).includes(v); if (ok) x.val = v;
+  judge(x, ok, v, $('#u-' + x.id));
+}
+// 模擬考寫的時候不能請爸媽看（會知道對不對）
+const hwParent = html => xWriting() ? null : { answerHTML: html };
+function hwNum(u) {
+  const right = u.set ? u.set.filter(v => numOk(u, v)) : [u.ans];
+  HW.pad({ kind: 'num', digits: 2, title: T('寫數字'), parent: hwParent(right.join(' 或 ')),
+    onResult: r => numAnswer(u, r.by === 'parent' ? (r.ok ? right[0] : -1) : r.value) });
+}
+function hwTone(u) {
+  HW.pad({ kind: 'tone', syl: u.base, title: T('寫聲調'), parent: hwParent(syl(ZY.withTone(u.base, u.ans))),
+    onResult: r => toneAnswer(u, r.by === 'parent' ? (r.ok ? u.ans : -1) : r.value) });
+}
+function hwCode(u) {
+  HW.pad({ kind: 'code', title: T('寫代號'), parent: hwParent('①②③'[u.ans]),
+    onResult: r => {
+      const v = r.by === 'parent' ? (r.ok ? u.ans : (u.ans + 1) % 3) : r.value - 1;
+      if (!(v >= 0 && v <= 2)) { coach('代號要寫 1、2 或 3 喔！', 'hint'); speak('代號要寫一、二或三喔！'); return; }
+      const b = $(`[data-u="${u.id}"][data-v="${v}"]`); if (b) b.click();
+    } });
+}
+function hwZy(u) {
+  HW.pad({ kind: 'zy', n: u.n, title: u.q ? `${T('用')} ${syl(u.q)} ${T('造詞')}` : T('再寫一遍'), parent: hwParent(ZY.word(u.ans)),
+    onResult: r => {
+      const el = $('#u-' + u.id);
+      if (r.by === 'parent') {
+        if (xWriting()) { u.pick = r.ok ? u.ans : '?'; u.pickOk = r.ok; xShow(u); xChanged(); return; }
+        if (r.ok) u.val = u.ans; judge(u, r.ok, null, el); return;
+      }
+      const z = r.value, c = u.check(z);
+      if (xWriting()) { u.pick = z; delete u.pickOk; xShow(u); xChanged(); return; }
+      if (c === null) {
+        HW.ask(`孩子寫的是 ${ZY.word(z)}<br>是有 ${syl(u.q)} 的詞嗎？`, () => { u.val = z; judge(u, true, z, el); }, () => judge(u, false, z, el));
+        return;
+      }
+      if (c) u.val = z;
+      judge(u, c, z, el);
+    } });
+}
+function hwToggle() {
+  // 模擬考寫了或交卷了就不能換（題目會不一樣）；按「再考一次」以後可以換
+  if (EXAM && (EXAM.phase === 'fix' || SEC.units.some(u => u.pick != null))) { coach('考試開始以後不能換，按「再考一次」以後再換喔。', 'hint'); return; }
+  hwOn = !hwOn; store.set('hw', hwOn);
+  speak(hwOn ? '好，用手寫。' : '好，用點的。');
+  route();
+}
+// 考卷上畫完一組筆畫：看畫在哪個作答的地方、是什麼形狀
+const HW_SEL = '[data-act="opt"],[data-act="mk"],[data-act="ci"],[data-act="nb"],[data-act="tb"],[data-act="hwz"],[data-act="hwcode"]';
+// 模擬考寫的時候，擦掉筆跡也擦掉答案；練習時答錯的筆跡變紅色
+const hwTagFor = (u, undo) => xWriting() ? { undo } : {};
+function hwInterpret(paper, info) {
+  // 連線：從一個點畫到另一邊的點
+  const lk = paper.querySelector('.lk');
+  if (lk && info.strokes.length === 1 && info.shape !== 'o') {
+    const dots = $$('.ldot', lk).map(d => { const r = d.getBoundingClientRect(); return { el: d.closest('.lit'), x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+    const near = q => dots.reduce((m, d) => { const dd = Math.hypot(d.x - q[0], d.y - q[1]); return dd < m.d ? { d: dd, el: d.el } : m; }, { d: 48, el: null }).el;
+    const A = near(info.start), B = near(info.end);
+    if (A && B && A.dataset.side !== B.dataset.side && !A.disabled && !B.disabled) {
+      const a = A.dataset.side === 'a' ? A : B, b = a === A ? B : A, u = U[`${a.dataset.g}-${a.dataset.k}`];
+      const before = u ? u.tries : 0;
+      a.click(); b.click();
+      const tag = hwTagFor(u, () => { if (u && u.pick === +b.dataset.k) { u.pick = null; drawLinks(lk); xChanged(); } });
+      if (u && !xWriting() && u.tries > before && !u.st) tag.bad = true;
+      return { tag };
+    }
+  }
+  // 找畫的中心落在哪裡（落在外面就找最近的，30px 內）
+  const area = el => { const r = el.getBoundingClientRect(); return r.width * r.height; };
+  let best = null, bd = 30;
+  $$(HW_SEL, paper).filter(el => !el.disabled).forEach(el => {
+    const r = el.getBoundingClientRect();
+    const d = Math.hypot(Math.max(r.left - info.cx, 0, info.cx - r.right), Math.max(r.top - info.cy, 0, info.cy - r.bottom));
+    if (d < bd || (d === 0 && bd === 0 && area(el) < area(best))) { bd = d; best = el; }
+  });
+  if (!best) return null;
+  const a = best.dataset.act, u = U[best.dataset.u];
+  if (['nb', 'tb', 'hwz', 'hwcode'].includes(a)) { best.click(); return { remove: true }; }
+  // 圈幾個：圈起來的都算
+  if (a === 'ci' && info.shape === 'o') {
+    const row = best.closest('.cis'), inside = $$('.ci', row).filter(x => { const r = x.getBoundingClientRect(); return HW.ink.inPoly(r.left + r.width / 2, r.top + r.height / 2, info.poly); });
+    const add = (inside.length ? inside : [best]).filter(x => !x.classList.contains('on'));
+    add.forEach(x => x.click());
+    return { tag: hwTagFor(null, () => { if (!u || !u.pick) return; const ks = add.map(x => +x.dataset.v); u.pick = u.pick.filter(k => !ks.includes(k)); xShow(u); xChanged(); }) };
+  }
+  if (a === 'mk') {
+    const g = best.dataset.g, v = +best.dataset.v, want = info.shape === 'x' ? '✗' : '✓';
+    const tu = SEC.units.find(x => x.grp === g && x.step != null && !x.st && x.mk === want), before = tu ? tu.tries : 0;
+    HWWANT = want; best.click(); HWWANT = null;
+    const tag = hwTagFor(null, () => { const m = EXAM.marks[g] || []; if (m[v] === want) { m[v] = ''; xShow(SEC.units.find(x => x.grp === g)); xChanged(); } });
+    if (tu && !xWriting() && tu.tries > before && !tu.st) tag.bad = true;
+    return { tag };
+  }
+  const before = u ? u.tries : 0;
+  best.click();
+  const tag = hwTagFor(null, () => { if (!u) return; if (u.count) { u.pick = (u.pick || []).filter(k => k !== +best.dataset.v); } else if (u.pick === +best.dataset.v) u.pick = null; xShow(u); xChanged(); });
+  if (u && !xWriting() && u.tries > before && !u.st) tag.bad = true;
+  return { tag };
+}
+// 寫字的時候點一下：當作按下面的東西
+function hwTap(el) { const t = el && el.closest('[data-act], button, summary, a'); if (t) t.click(); }
+function hwStart() {
+  document.body.classList.toggle('hwon', hwOn);
+  if (!hwOn || !SEC) { HW.ink.stop(); return; }
+  HW.ink.start($$('#app .paper').filter(p => !p.matches('.donecard,.key,.xend') && p.querySelector(HW_SEL + ',.lk')), hwInterpret, hwTap);
+}
 
 function showEl(el, force) {
   if (!el) return;
@@ -1482,6 +1625,26 @@ function rZ3() {
     const id = `z3-${bi}-${ii}`;
     if (it.ex) return `<div class="bitem ex"><div class="pn">${numLabel(it.n)}</div><div class="bq">${syl(it.q)}</div><div class="barr">↓</div>${boxes(it.ex[0], 0, it.q)}</div>`;
     const [, z, w] = it.o[it.a];
+    if (hwOn) {
+      // 手寫：在格子裡寫一個有這個音的詞（不能改聲調）
+      const ok = [z, ...it.more.split('、').map(m => MOREZ[m]).filter(Boolean)];
+      mkUnit(id, {
+        kind: 'zyw', n: 2, q: it.q, ans: z,
+        check(v) {
+          if (!v) return false;
+          if (ok.includes(v)) return true;
+          const ss = sylsOf(v);
+          return ss.length === 2 && ss.includes(it.q) ? null : false;
+        },
+        hint: v => { const same = v && sylsOf(v).find(x => baseOf(x) === baseOf(it.q) && x !== it.q); return same ? `你寫的 ${same} 聲調和 ${it.q} 不一樣，不能改聲調喔！` : `想一想，哪個詞有 ${it.q} 這個音？例如圖上的東西。`; },
+        say: () => w, explain: () => `可以造「${w}」（${z}），還可以造：${it.more}。`,
+        paint(v, cls) { const b = $('#u-' + id + ' .tzs'); if (b) b.innerHTML = [0, 1].map(i => { const x = v ? sylsOf(v)[i] : ''; return `<span class="tz">${x ? syl(x, { cls }) : ''}</span>`; }).join(''); },
+        solve(rev) { this.paint(this.val ?? z, rev ? 'reveal' : ''); const b = $('#u-' + id + ' .tzs'); if (b) b.disabled = true; $('#u-' + id).classList.add('done'); }
+      });
+      KEYS.push(`${it.n}. ${it.q} → ${w}　${z}（還可以：${it.more}）`);
+      return `<div class="bitem" id="u-${id}"><div class="pn">${numLabel(it.n)}</div><div class="bq">${syl(it.q)}</div><div class="barr">↓</div>
+        <button type="button" class="tzs" data-act="hwz" data-u="${id}" aria-label="寫注音">${[0, 1].map(() => '<span class="tz"></span>').join('')}</button></div>`;
+    }
     mkUnit(id, {
       ans: it.a,
       hint: v => {
@@ -1513,7 +1676,7 @@ function rZ4() {
     });
     KEYS.push(`${it.n}. （${'①②③'[it.a]}）${it.w}`);
     const sent = parseSent(it.s)[0].map(t => t.k === 's' ? syl(t.z) : t.k === 'p' ? punc(t.c) : rep('<span class="b4"></span>', n).join('')).join('');
-    return `<div class="qitem" id="u-${id}"><div class="qhead"><span class="pn">${it.n}.</span><span class="ansp">（<b></b>）</span></div><div class="ppic">${pic(it.p)}</div>
+    return `<div class="qitem" id="u-${id}"><div class="qhead"><span class="pn">${it.n}.</span>${hwOn ? `<button type="button" class="ansp" data-act="hwcode" data-u="${id}" aria-label="寫代號">（<b></b>）</button>` : '<span class="ansp">（<b></b>）</span>'}</div><div class="ppic">${pic(it.p)}</div>
       <div class="qbody"><div class="vcol">${sent}</div><div class="qopts">${it.o.map(([oz], v) => `<button type="button" class="qopt" data-act="opt" data-u="${id}" data-v="${v}"><span class="cn">${'①②③'[v]}</span>${word(oz)}</button>`).join('')}</div></div></div>`;
   }).join('')}</div></div>`).join('');
 }
@@ -1523,10 +1686,13 @@ const LINK = { g: null, side: null, k: null };
 function rZ5() {
   return Z5.map((B, bi) => {
     const g = `z5-${bi}`, ex = B.top.findIndex(t => t[0] === '例' || t[0] === '例如');
+    const inner = (z, cls = '') => { const ss = z ? sylsOf(z) : []; return B.kind === 'tz' ? [0, 1].map(k => `<span class="tz">${ss[k] ? syl(ss[k], { cls }) : ''}</span>`).join('')
+      : `<div class="tall">${[0, 1].map(k => `<span>${ss[k] ? syl(ss[k], { cls }) : ''}</span>`).join('')}</div>`; };
     const wr = (j, on) => {
-      const i = B.pair.indexOf(j), z = on ? B.z[i] : '', ss = z ? sylsOf(z) : [];
-      return B.kind === 'tz' ? `<div class="lwr" data-w="${j}">${[0, 1].map(k => `<span class="tz">${ss[k] ? syl(ss[k]) : ''}</span>`).join('')}</div>`
-        : `<div class="lwr" data-w="${j}"><div class="tall">${[0, 1].map(k => `<span>${ss[k] ? syl(ss[k]) : ''}</span>`).join('')}</div></div>`;
+      const i = B.pair.indexOf(j), wid = `z5w-${bi}-${i}`;
+      // 手寫：例題以外的格子要自己寫
+      if (hwOn && i !== ex) return `<button type="button" class="lwr" id="u-${wid}" data-act="hwz" data-u="${wid}" data-w="${j}" aria-label="寫一遍">${inner('')}</button>`;
+      return `<div class="lwr" data-w="${j}">${inner(on ? B.z[i] : '')}</div>`;
     };
     B.top.forEach(([n], i) => {
       if (i === ex) return;
@@ -1537,13 +1703,26 @@ function rZ5() {
         say: () => B.w[i], explain: () => `${B.top[i][2]} 連到 ${B.bot[B.pair[i]]}，「${B.w[i]}」${B.z[i]}。`,
         solve(rev) {
           const lk = $(`#lk-${g}`); this.rev = rev;
-          lk.querySelector(`.lwr[data-w="${B.pair[i]}"]`).outerHTML = wr(B.pair[i], 1);
+          if (!hwOn) lk.querySelector(`.lwr[data-w="${B.pair[i]}"]`).outerHTML = wr(B.pair[i], 1);
           lk.querySelector(`[data-side="a"][data-k="${i}"]`).disabled = true;
           lk.querySelector(`[data-side="b"][data-k="${B.pair[i]}"]`).disabled = true;
           drawLinks(lk);
         }
       });
       KEYS.push(`${n}. ${B.w[i]}　${B.z[i]}`);
+    });
+    // 手寫：連好以後，在下面的格子再寫一遍
+    if (hwOn) B.top.forEach((_, i) => {
+      if (i === ex) return;
+      const wid = `z5w-${bi}-${i}`;
+      mkUnit(wid, {
+        kind: 'zyw', n: sylsOf(B.z[i]).length, ans: B.z[i],
+        check: v => v === B.z[i],
+        hint: () => `「${B.w[i]}」念念看，一個符號一個符號寫，聲調寫在右上方。`,
+        say: () => B.w[i], explain: () => `「${B.w[i]}」寫成 ${B.z[i]}。`,
+        paint(v, cls) { const b = $('#u-' + wid); if (b) b.innerHTML = inner(v, cls); },
+        solve(rev) { this.paint(this.ans, rev ? 'reveal' : ''); const b = $('#u-' + wid); if (b) b.disabled = true; }
+      });
     });
     return `<div class="paper"><div class="lk" id="lk-${g}" data-g="${g}" data-ex="${ex}" data-exb="${B.pair[ex]}">
       <svg class="llines" aria-hidden="true"></svg>
@@ -1591,7 +1770,7 @@ function rZ6() {
       if (!box) return syl(s);
       const uid = `${id}-${k}`, alt = (it.alt && it.alt[k]) || [];
       mkUnit(uid, {
-        kind: 'tone', ans: t, alt,
+        kind: 'tone', ans: t, alt, base: b.join(''),
         hint: () => { setTimeout(() => speak(it.w), 1200); return `念念看「${it.w}」，${ss.length > 1 ? `第${CN_NUM[k]}個字` : '這個字'}是幾聲？`; },
         explain: () => `「${it.w}」的第${CN_NUM[k]}個字是${TONE_NAME[t]}${alt.length ? `（念${TONE_NAME[alt[0]]}也可以）` : ''}。`,
         say: () => it.w,
@@ -1845,6 +2024,9 @@ function renderHome() {
       ${subj('zh', '國語', '首冊全', LESSONS.map((l, i) => `<li><span class="ln">第${CN_NUM[i]}課</span> ${T(l)}</li>`).join(''), '國語課本、國語習作、國語練習簿、國語練習卷、歷屆試題（含小考）、自編講義（作業）')}
       ${subj('ma', '數學', '第一冊', UNITS.map((l, i) => `<li><span class="ln">第${CN_NUM[i]}單元</span> ${T(l)}</li>`).join(''), '數學課本、數學習作、數學作業簿、隨堂、數學練習卷、歷屆試題（含小考卷）')}
     </div>
+    <div class="card voice"><h2>✍️ ${T('手寫')}</h2>
+      <p class="vnote">打開以後，像在考卷上寫一樣：數字、聲調、注音點一下格子用手指寫（有橡皮擦、上一筆、重寫）；打勾、圈起來、打叉、連線直接畫在題目上。寫好會先給孩子看認出來的字，認錯可以再寫，也可以請爸媽看。</p>
+      <div class="vrow"><div class="seg"><button type="button" data-act="hwset" data-v="1" aria-pressed="${hwOn}">✍️ 手寫</button><button type="button" data-act="hwset" data-v="0" aria-pressed="${!hwOn}">👆 用點的</button></div></div></div>
     <div class="card voice"><h2>🧭 做題的順序</h2>
       <p class="vnote">每一大題照考試的做法練習：① 念題目 ② 看例題（沒有例題就想一想怎麼做）③ 照題號一題一題寫，不跳題（還沒輪到的題目會淡淡的，亮起來的才是現在要做的）④ 寫完從第一題檢查一遍。</p>
       <div class="vrow"><div class="seg"><button type="button" data-act="guide" data-v="1" aria-pressed="${guideOn}">🧭 照順序引導</button><button type="button" data-act="guide" data-v="0" aria-pressed="${!guideOn}">✏️ 自由寫</button></div></div></div>
@@ -1858,6 +2040,7 @@ function renderHome() {
       <li><b>國語三「造詞」</b>考卷要自己寫，這裡改成從三個詞選一個「同一個音、聲調也一樣」的詞，選對會寫進格子；每題答案下面也列出還可以造的詞，可以讓孩子口頭再說一個。</li>
       <li><b>數學七的紅字</b>（例如「第10個」「第3個」「第8個」「第13個」）是老師在題目上加的變化：排在最前面的那一個已經是第幾個了，從前面數要接著往下數；從後面數則不受影響。</li>
       <li><b>考卷上有一個打錯的注音：</b>國語四「天空上有月亮」印成「ㄊㄧㄢ ㄊㄨㄥ」，這裡已改成「ㄊㄧㄢ ㄎㄨㄥ」。國語六「豆腐」「玉米」「好朋友」的最後一個字，辭典念輕聲，填三聲或輕聲都算對。</li>
+      <li><b>✍️ 手寫。</b>打開手寫後，數字格、聲調框、注音格點一下會開寫字板（✏️ 寫字、🧽 橡皮擦、↩️ 上一筆、🔄 重寫、✅ 寫好了）；國語三改成自己寫一個有這個音的詞，國語四在（　）寫代號，國語五連好線再寫一遍。打勾、圈起來、打叉、連線直接用手指畫在題目上：右邊工具列切「寫字」時一根手指畫、兩根手指捲動，切「移動」可以照常捲動。數字和注音用程式辨識，寫好會先給孩子看認出來的字，認錯可以再寫；練習時也可以按「請爸媽看」由家長判斷對錯。孩子造的詞不在題庫裡時，也會請爸媽判斷。模擬考考到一半不能切換。</li>
       <li><b>📝 模擬考：全部寫完再檢查。</b>國語、數學各有一張把全部大題接在一起的考卷。寫的時候不告訴對錯；按「寫完了」先找出沒寫的題目（紅框）補寫，再一大題一大題檢查、可以改，勾完三個檢查項目才能交卷。交卷後打分數，對的打 ✓，錯的標 ✎ 讓孩子訂正（訂正時答錯有提示）。寫到一半離開，下次會接著寫。</li>
       <li><b>做題的順序。</b>考試時最常丟分的是沒看清楚題目、看錯例題、跳題漏寫。打開「🧭 照順序引導」，每一大題都會先念題目、看例題，再照題號一題一題亮起來（國語從右往左、數學從左往右），跳到後面的題目會提醒先做亮起來的那一題；寫完再勾三個檢查項目才算完成。熟練了可以改成「✏️ 自由寫」。</li>
       <li>每一大題最下面有「給家長看的答案」。紀錄只存在這台裝置的瀏覽器；想重寫可以按大題最下面的「重新寫一次」。</li>
@@ -1875,6 +2058,7 @@ function renderSec(id) {
   app.className = s.subj;
   app.innerHTML = `<div class="topbar"><button class="iconbtn" type="button" data-act="home" aria-label="回選單">←</button>
       <h1>${s.subj === 'zh' ? '國語' : '數學'} ${s.no}</h1><span class="score" id="score"></span>
+      <button class="iconbtn" type="button" data-act="hw" aria-pressed="${hwOn}" aria-label="手寫開關" title="手寫">${hwOn ? '✍️' : '👆'}</button>
       <button class="iconbtn" type="button" data-act="sound" aria-label="聲音開關">${soundOn ? '🔊' : '🔈'}</button></div>
     <div class="pbar"><i id="pbar"></i></div>
     <div class="ins"><span class="pn">${s.no}、</span>${T(s.title)}<button type="button" class="say" data-act="say" data-say="${esc(s.title.replace(/[（(]\s*[）)]/g, '括號'))}">🔊 念題目</button></div>
@@ -1893,12 +2077,13 @@ function renderSec(id) {
   SEC.units.forEach(u => { const r = saved[u.id]; if (r) { u.st = r[0]; if (r[1] != null) u.val = r[1]; } });
   SEC.units.filter(u => u.st).forEach(u => { u.solve(u.st === 'shown'); });
   $$('.cgroup').forEach(g => stepPrompt(g.id));
-  progress(); SEC.restored = false; guideStart();
+  progress(); SEC.restored = false; guideStart(); hwStart();
   requestAnimationFrame(() => $$('.lk').forEach(drawLinks));
   if (document.fonts) document.fonts.ready.then(() => $$('.lk').forEach(drawLinks));
   scrollTo(0, 0);
 }
 function route() {
+  HW.close(); HW.ink.stop(); document.body.classList.remove('hwon'); hwOn = store.get('hw', false);
   const id = location.hash.replace(/^#\/?/, ''), xm = id.match(/^exam\/(zh|ma)$/);
   if (!xm) xLeave();
   if (xm) renderExam(xm[1]);
@@ -1912,7 +2097,7 @@ document.addEventListener('click', e => {
   const t = e.target.closest('[data-act]'); if (!t || t.disabled) return;
   const a = t.dataset.act, u = U[t.dataset.u];
   // 引導第三步：只能做亮起來的題目
-  if (GD.step === 2 && (['opt', 'mk', 'ci', 'cdone', 'nb', 'tb'].includes(a) || (a === 'lk' && t.dataset.side === 'a'))) {
+  if (GD.step === 2 && (['opt', 'mk', 'ci', 'cdone', 'nb', 'tb', 'hwz', 'hwcode'].includes(a) || (a === 'lk' && t.dataset.side === 'a'))) {
     const tu = a === 'mk' ? SEC.units.find(x => x.grp === t.dataset.g && x.step != null && !x.st) : a === 'lk' ? U[`${t.dataset.g}-${t.dataset.k}`] : u;
     const cu = curUnit();
     if (tu && cu && !tu.st && itemOf(tu) !== itemOf(cu)) { guideSkip(); return; }
@@ -1922,7 +2107,7 @@ document.addEventListener('click', e => {
     else if (a === 'mk') {
       const g = t.dataset.g, v = +t.dataset.v, m = EXAM.marks[g] = EXAM.marks[g] || [];
       const cyc = $('#' + g).dataset.x === '1' ? ['', '✓', '✗'] : ['', '✓'];
-      m[v] = cyc[(cyc.indexOf(m[v] || '') + 1) % cyc.length];
+      m[v] = HWWANT ? (cyc.includes(HWWANT) ? HWWANT : '✓') : cyc[(cyc.indexOf(m[v] || '') + 1) % cyc.length];
       xShow(SEC.units.find(x => x.grp === g)); xChanged();
     } else if (a === 'ci') {
       if (!u || u.st) return; const v = +t.dataset.v, p = u.pick || [];
@@ -1936,7 +2121,7 @@ document.addEventListener('click', e => {
     judge(u, +t.dataset.v === u.ans, +t.dataset.v, t);
     if (!u.st && u.tries) t.classList.add('no');
   } else if (a === 'mk') {
-    const g = t.dataset.g, cur = SEC.units.find(x => x.grp === g && x.step != null && !x.st); if (!cur) return;
+    const g = t.dataset.g, cur = SEC.units.find(x => x.grp === g && x.step != null && !x.st && (!HWWANT || x.mk === HWWANT)) || SEC.units.find(x => x.grp === g && x.step != null && !x.st); if (!cur) return;
     const v = +t.dataset.v, done = SEC.units.filter(x => x.grp === g && x.st).map(x => x.ans);
     if (done.includes(v)) return;
     judge(cur, v === cur.ans, v, t);
@@ -1946,13 +2131,16 @@ document.addEventListener('click', e => {
     if (!u || u.st) return;
     const n = $$(`#u-${u.id} .ci.on`).length;
     judge(u, n === u.ans, n, $(`#u-${u.id} .cis`));
-  } else if (a === 'nb') { if (u) openPad(u, 'num'); }
-  else if (a === 'tb') { if (u) openPad(u, 'tone'); }
+  } else if (a === 'nb') { if (u && !u.st) hwOn ? hwNum(u) : openPad(u, 'num'); }
+  else if (a === 'tb') { if (u && !u.st) hwOn ? hwTone(u) : openPad(u, 'tone'); }
+  else if (a === 'hwz') { if (u && !u.st) hwZy(u); }
+  else if (a === 'hwcode') { if (u && !u.st) hwCode(u); }
+  else if (a === 'hw') hwToggle();
+  else if (a === 'hwset') { hwOn = t.dataset.v === '1'; store.set('hw', hwOn); renderHome(); speak(hwOn ? '好，用手寫。' : '好，用點的。'); }
   else if (a === 'key') padKey(t.dataset.k);
   else if (a === 'tone') {
     const v = +t.dataset.t, x = PAD.u; if (!x) return;
-    const ok = v === x.ans || (x.alt || []).includes(v); if (ok) x.val = v;
-    judge(x, ok, v, $('#u-' + x.id));
+    toneAnswer(x, v);
     if (x.st) closePad();
   } else if (a === 'padx') closePad();
   else if (a === 'lk') linkTap(t);
@@ -2013,6 +2201,7 @@ function confetti() {
   setTimeout(() => { box.innerHTML = ''; }, 5000);
 }
 
+HW.config({ T, ZY });
 renderToneKeys();
 route();
 </script>
