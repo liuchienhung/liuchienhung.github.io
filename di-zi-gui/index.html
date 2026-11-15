@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>弟子規背誦小幫手</title>
+<meta name="description" content="弟子規全文（含注音），可以聽、跟著念、遮字背誦、接下句與填字小測驗，並記錄每一組背到哪裡、安排複習。">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="弟子規">
+<meta name="theme-color" content="#0E7C66">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F3EC; --card:#FFFFFF; --ink:#1F2A24; --muted:#5D6A63; --line:#DCD8CB; --soft:#ECE8DC;
+  --brand:#0E7C66; --brand-ink:#FFFFFF; --brand-soft:#D6EFE8; --accent:#D9822B; --accent-soft:#FBE8D3;
+  --zy:#2F4FA2; --ok:#1B7F4B; --ok-soft:#DDF3E6; --bad:#B3361F; --bad-soft:#FBE3DD;
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 6px 18px rgba(0,0,0,.06);
+  --f-kai:"LXGW WenKai TC","BiauKai","Kaiti TC","DFKai-SB","TW-Kai",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --fs:2.3rem; --zy-font:var(--f-kai); --zr-size:.46em;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#121715; --card:#1B221F; --ink:#E7EEEA; --muted:#A3B0A9; --line:#2F3A35; --soft:#232B27;
+  --brand:#5CCBB0; --brand-ink:#0B1F1A; --brand-soft:#183A32; --accent:#F0AC5C; --accent-soft:#3A2A17;
+  --zy:#9DB4FF; --ok:#6FD39B; --ok-soft:#173A29; --bad:#F29A86; --bad-soft:#3F211A;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.25); color-scheme:dark;
+}}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding:0 max(16px,env(safe-area-inset-right,0px)) 72px max(16px,env(safe-area-inset-left,0px));-webkit-text-size-adjust:100%}
+.wrap{max-width:760px;margin:0 auto}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:var(--brand)}
+[hidden]{display:none!important}
+h2{font-size:1.05rem;margin:18px 0 6px}
+.muted{color:var(--muted);font-size:.92rem}
+
+.top{display:flex;align-items:center;gap:8px;padding:12px 0 8px;flex-wrap:wrap}
+.top h1{margin:0;font-size:1.3rem;flex:1;min-width:8em}
+.tbtn{min-height:40px;min-width:40px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:.95rem}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;background:var(--soft);padding:5px;border-radius:16px;margin:4px 0 12px}
+.tabs button{min-height:46px;border:0;border-radius:12px;background:transparent;font-size:1rem;font-weight:500;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--card);color:var(--ink);font-weight:700;box-shadow:var(--shadow)}
+
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:thin}
+.chips button{flex:0 0 auto;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:.98rem}
+.chips button[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:700}
+.btn{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:.98rem}
+.btn.pri{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:700}
+.btn.ok{background:var(--ok);color:#fff;border-color:var(--ok);font-weight:700}
+.btn:disabled{opacity:.45}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.seg{display:inline-flex;background:var(--soft);border-radius:999px;padding:4px;flex-wrap:wrap}
+.seg button{min-height:40px;border:0;border-radius:999px;background:transparent;padding:0 14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);font-weight:700;box-shadow:var(--shadow)}
+
+/* 一組四句 */
+.group{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:10px 14px 12px;margin:10px 0;box-shadow:var(--shadow)}
+.ghead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:.9rem}
+.ghead b{color:var(--ink)}
+.ghead .sp{flex:1}
+.ghead button{min-height:38px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font-size:.9rem}
+.badge{font-size:.8rem;padding:2px 10px;border-radius:999px;background:var(--soft)}
+.badge.b3{background:var(--ok-soft);color:var(--ok);font-weight:700}
+.badge.b1{background:var(--accent-soft)}
+.lines{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;margin-top:4px}
+@media (max-width:420px){.lines{grid-template-columns:1fr}}
+.line{display:flex;align-items:center;border-radius:14px;padding:6px 6px;border:0;background:none;text-align:left;min-width:0}
+.line.on{background:var(--accent-soft)}
+.lt{display:flex;flex-wrap:nowrap;align-items:center;font-family:var(--f-kai);font-size:var(--fs);line-height:1.18;color:var(--ink)}
+.ch{display:inline-flex;align-items:center;border:0;background:none;padding:0;margin:0;font:inherit;color:inherit;border-radius:.12em}
+.zr>.zv{color:var(--zy)}
+.ch.hid .bl{display:inline-block;width:1em;height:1.05em;border:.07em dashed var(--muted);border-radius:.16em;background:var(--soft);
+  text-align:center;line-height:1;font-size:.9em;color:var(--muted)}
+.ch.hid:active .bl{background:var(--brand-soft)}
+.nozy .ch:not(.show) .zr>.zv{visibility:hidden}
+.nozy .ch.show .zr>.zv{visibility:visible}
+.sheet-note{font-size:.85rem;color:var(--muted);margin:4px 2px}
+
+/* 背一背 */
+.nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nav span{color:var(--muted);font-size:.95rem;text-align:center;flex:1}
+.pgroup{--fs:clamp(1.9rem,8.4vw,2.9rem)}
+.pgroup .lines{grid-template-columns:1fr 1fr}
+@media (max-width:420px){.pgroup .lines{grid-template-columns:1fr 1fr}.pgroup{--fs:clamp(1.55rem,6.6vw,2rem)}}
+.result{padding:10px;border-radius:14px;margin:8px 0;font-weight:700;text-align:center}
+.result.ok{background:var(--ok-soft);color:var(--ok)}
+
+/* 考考你 */
+.qbar{height:8px;background:var(--soft);border-radius:99px;overflow:hidden;margin:6px 0 10px}
+.qbar i{display:block;height:100%;background:var(--brand);transition:width .25s}
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 14px;box-shadow:var(--shadow);--fs:clamp(1.8rem,7.6vw,2.6rem)}
+.qask{color:var(--muted);font-size:.95rem;margin:0 0 4px}
+.qline{display:flex;justify-content:center;padding:6px 0}
+.opts{display:grid;gap:8px;margin-top:8px}
+.opts.chars{grid-template-columns:1fr 1fr}
+.opt{min-height:60px;border-radius:16px;border:2px solid var(--line);background:var(--bg);display:flex;align-items:center;justify-content:center;padding:6px 10px}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{color:inherit}
+.blankch{display:inline-block;width:1em;height:1.05em;border-bottom:.08em solid var(--accent);text-align:center;color:var(--accent);font-size:.9em;line-height:1}
+.score{font-size:2.4rem;font-weight:700;text-align:center;margin:10px 0 0}
+.wlist{display:grid;gap:6px;margin-top:8px;--fs:1.5rem}
+
+/* 進度 */
+.chrow{display:grid;grid-template-columns:5.5em 1fr 4em;gap:10px;align-items:center;padding:6px 0}
+.bar{height:12px;background:var(--soft);border-radius:99px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.bar .m{background:var(--ok)} .bar .l{background:var(--accent)}
+.cnt{font-size:.88rem;color:var(--muted);text-align:right}
+.due{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:.95rem}
+.due span{flex:1}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#222;color:#fff;padding:10px 18px;border-radius:999px;font-size:.95rem;z-index:30;max-width:90vw}
+.foot-links{margin-top:28px;text-align:center}
+@media (prefers-reduced-motion:reduce){.qbar i{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>📜 弟子規背誦小幫手</h1>
+    <button class="tbtn" id="fsDown" aria-label="字縮小">A−</button>
+    <button class="tbtn" id="fsUp" aria-label="字放大">A＋</button>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-read" aria-selected="true" aria-controls="pane-read">讀一讀</button>
+    <button role="tab" id="tab-recite" aria-selected="false" aria-controls="pane-recite">背一背</button>
+    <button role="tab" id="tab-quiz" aria-selected="false" aria-controls="pane-quiz">考考你</button>
+    <button role="tab" id="tab-prog" aria-selected="false" aria-controls="pane-prog">進度</button>
+  </div>
+
+  <main>
+    <!-- 讀一讀：全文＋注音＋朗讀 -->
+    <section id="pane-read" role="tabpanel" aria-labelledby="tab-read">
+      <div class="chips" id="readChips"></div>
+      <div class="row">
+        <button class="btn pri" id="playChapter">🔊 連續念這一章</button>
+        <button class="btn" id="stopBtn">⏹ 停止</button>
+        <div class="seg" id="speedSeg" aria-label="速度">
+          <button data-r="0.7" aria-pressed="false">慢</button>
+          <button data-r="0.85" aria-pressed="true">中</button>
+          <button data-r="1" aria-pressed="false">快</button>
+        </div>
+      </div>
+      <p class="sheet-note">點任何一句可以聽那一句。「🗣 跟讀」會念一句、停一下，讓孩子跟著念。</p>
+      <div id="readList"></div>
+    </section>
+
+    <!-- 背一背：遮字練習 -->
+    <section id="pane-recite" role="tabpanel" aria-labelledby="tab-recite" hidden>
+      <div class="chips" id="reciteChips"></div>
+      <div class="nav">
+        <button class="btn" id="gPrev" aria-label="上一組">◀</button>
+        <span id="gPos"></span>
+        <button class="btn" id="gNext" aria-label="下一組">▶</button>
+      </div>
+      <div class="row">
+        <div class="seg" id="modeSeg" aria-label="遮字方式">
+          <button data-m="0" aria-pressed="true">看著念</button>
+          <button data-m="1" aria-pressed="false">遮下句</button>
+          <button data-m="2" aria-pressed="false">遮幾個字</button>
+          <button data-m="3" aria-pressed="false">全遮</button>
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn" id="zyToggle" aria-pressed="true">注音：顯示</button>
+        <button class="btn" id="reshuffle">🎲 重新抽字</button>
+        <button class="btn" id="revealAll">👀 全部看答案</button>
+      </div>
+      <div class="group pgroup" id="pGroup"></div>
+      <p class="sheet-note">點虛線框會顯示那個字。先在心裡（或大聲）背，再點開對答案。</p>
+      <div class="row">
+        <button class="btn" id="listenBtn">🔊 念給我聽</button>
+        <button class="btn" id="followBtn">🗣 跟讀</button>
+      </div>
+      <div class="row">
+        <button class="btn ok" id="gotIt">✓ 我背出來了</button>
+        <button class="btn" id="again">再練一次</button>
+      </div>
+      <div id="pResult"></div>
+    </section>
+
+    <!-- 考考你：選擇題 -->
+    <section id="pane-quiz" role="tabpanel" aria-labelledby="tab-quiz" hidden>
+      <div class="row">
+        <div class="seg" id="scopeSeg" aria-label="範圍">
+          <button data-s="ch" aria-pressed="true">這一章</button>
+          <button data-s="all" aria-pressed="false">全部</button>
+        </div>
+        <button class="btn pri" id="startQuiz">開始（10 題）</button>
+      </div>
+      <p class="sheet-note" id="quizScopeNote"></p>
+      <div id="quizBox"></div>
+    </section>
+
+    <!-- 進度 -->
+    <section id="pane-prog" role="tabpanel" aria-labelledby="tab-prog" hidden>
+      <div id="progBox"></div>
+      <h2>今天該複習的</h2>
+      <p class="muted" style="margin:0">背熟的段落會隔 1、3、7、14 天再出現，越熟隔越久，這樣才記得牢。</p>
+      <div id="dueBox"></div>
+      <div class="row" style="margin-top:20px"><button class="btn" id="resetBtn">清除所有進度</button></div>
+      <p class="muted">進度只存在這支手機（瀏覽器）裡，不會上傳。</p>
+    </section>
+  </main>
+
+  <p class="foot-links"><a href="../">← 回服務首頁</a></p>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="../tw-speech.js"></script>
+<script src="../zhuyin-layout.js"></script>
+<script src="data.js"></script>
+<script>
+'use strict';
+const D = window.DZG_DATA, Z = window.ZhuyinLayout;
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const rnd = n => Math.floor(Math.random() * n);
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/* ---------- 存檔（只存在這支手機） ---------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('dzg1:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('dzg1:' + k, JSON.stringify(v)); } catch (e) { /* 私密瀏覽存不了也沒關係 */ } }
+};
+const today = () => Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 864e5);
+const GAPS = [0, 1, 3, 7, 14];                 // 熟練度 0~4 對應的複習間隔（天）
+let mast = store.get('mast', {});              // { '章-組': { b: 熟練度, due: 複習日, n: 練習次數 } }
+const gid = (ci, gi) => ci + '-' + gi;
+const boxOf = id => (mast[id] && mast[id].b) || 0;
+function mark(id, ok) {
+  const m = mast[id] || { b: 0, due: 0, n: 0 };
+  m.n++;
+  m.b = ok ? Math.min(4, m.b + 1) : Math.max(0, m.b - 1);
+  m.due = today() + (ok ? GAPS[m.b] : 0);
+  mast[id] = m; store.set('mast', mast);
+}
+let toastT = 0;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 1800); }
+
+/* ---------- 字的大小 ---------- */
+const FS = [1.7, 2.0, 2.3, 2.7, 3.2];
+let fsi = Math.min(FS.length - 1, Math.max(0, store.get('fs', 2)));
+function applyFs() { document.documentElement.style.setProperty('--fs', FS[fsi] + 'rem'); $('#fsDown').disabled = fsi === 0; $('#fsUp').disabled = fsi === FS.length - 1; }
+$('#fsDown').onclick = () => { fsi--; store.set('fs', fsi); applyFs(); };
+$('#fsUp').onclick = () => { fsi++; store.set('fs', fsi); applyFs(); };
+applyFs();
+
+/* ---------- 念出來 ---------- */
+let voice = null, rate = store.get('rate', 0.85), playTok = 0, playingEl = null;
+if ('speechSynthesis' in window) { const pv = () => { voice = TWSpeech.pickVoice(); }; pv(); speechSynthesis.onvoiceschanged = pv; }
+function say(t, done) {
+  if (!('speechSynthesis' in window)) { if (done) setTimeout(done, 1200); return; }
+  try {
+    const u = new SpeechSynthesisUtterance(TWSpeech.text(t));
+    u.lang = TWSpeech.langOf(voice); if (voice) u.voice = voice; u.rate = rate;
+    if (done) { u.onend = done; u.onerror = done; }
+    speechSynthesis.speak(u);
+  } catch (e) { if (done) done(); }
+}
+function stopAll() {
+  playTok++;
+  if ('speechSynthesis' in window) try { speechSynthesis.cancel(); } catch (e) { /* 沒有語音也沒關係 */ }
+  if (playingEl) { playingEl.classList.remove('on'); playingEl = null; }
+}
+// 依序念很多句：follow＝念完一句停一下讓孩子跟著念
+function playSeq(items, follow) {   // items: [{ text, el }]
+  stopAll(); const tok = playTok; let i = 0;
+  (function next() {
+    if (tok !== playTok) return;
+    if (playingEl) playingEl.classList.remove('on');
+    if (i >= items.length) { playingEl = null; return; }
+    const it = items[i++]; playingEl = it.el || null;
+    if (playingEl) { playingEl.classList.add('on'); playingEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+    say(it.text, () => setTimeout(next, follow ? 700 + it.text.length * 450 / rate : 250));
+  })();
+}
+$('#stopBtn').onclick = stopAll;
+$$('#speedSeg button').forEach(b => {
+  b.setAttribute('aria-pressed', String(+b.dataset.r === rate));
+  b.onclick = () => { rate = +b.dataset.r; store.set('rate', rate); $$('#speedSeg button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); };
+});
+
+/* ---------- 畫一句：國字＋右邊注音 ---------- */
+const zyOf = l => l.z.split(' ');
+function lineHTML(l, li, o = {}) {
+  const zs = zyOf(l);
+  return `<span class="lt" data-li="${li}">${[...l.t].map((c, i) => {
+    if (o.hide && o.hide.has(li + '.' + i) && !(o.shown && o.shown.has(li + '.' + i)))
+      return `<button class="ch hid" data-k="${li}.${i}" aria-label="第${i + 1}個字，點一下看答案"><span class="zr"><span class="bl">？</span>${Z.syl(zs[i])}</span></button>`;
+    return `<span class="ch${o.hide ? ' show' : ''}">${Z.ruby(c, zs[i])}</span>`;
+  }).join('')}</span>`;
+}
+const textOf = g => g.map(l => l.t).join('，') + '。';
+
+/* ---------- 分頁 ---------- */
+const TABS = ['read', 'recite', 'quiz', 'prog'];
+let cur = store.get('chap', 0); if (!D[cur]) cur = 0;
+let gcur = 0;
+function showTab(name) {
+  stopAll();
+  TABS.forEach(t => { const on = t === name; $('#tab-' + t).setAttribute('aria-selected', on); $('#pane-' + t).hidden = !on; });
+  if (name === 'read') renderRead(); else if (name === 'recite') renderRecite(); else if (name === 'quiz') renderQuizHome(); else renderProg();
+  window.scrollTo(0, 0);
+}
+TABS.forEach(t => { $('#tab-' + t).onclick = () => showTab(t); });
+function chapterChips(el, onPick) {
+  el.innerHTML = D.map((c, i) => `<button data-i="${i}" aria-pressed="${i === cur}">${esc(c.name)}</button>`).join('');
+  el.querySelectorAll('button').forEach(b => b.onclick = () => { cur = +b.dataset.i; gcur = 0; store.set('chap', cur); onPick(); });
+}
+
+/* ---------- 讀一讀 ---------- */
+function badge(id) {
+  const b = boxOf(id);
+  return b >= 3 ? '<span class="badge b3">⭐ 背熟了</span>' : b >= 1 ? '<span class="badge b1">練習中</span>' : '';
+}
+function renderRead() {
+  chapterChips($('#readChips'), renderRead);
+  const c = D[cur];
+  $('#readList').innerHTML = `<p class="muted">${esc(c.name)}｜${esc(c.sub)}（${c.groups.length} 組）</p>` + c.groups.map((g, gi) => `
+    <div class="group" data-gi="${gi}">
+      <div class="ghead"><b>第 ${gi + 1} 組</b>${badge(gid(cur, gi))}<span class="sp"></span>
+        <button data-a="say">🔊 念</button><button data-a="follow">🗣 跟讀</button><button data-a="go">✏️ 去背</button></div>
+      <div class="lines">${g.map((l, li) => `<button class="line" data-li="${li}">${lineHTML(l, li)}</button>`).join('')}</div>
+    </div>`).join('');
+}
+$('#readList').addEventListener('click', e => {
+  const grp = e.target.closest('.group'); if (!grp) return;
+  const gi = +grp.dataset.gi, g = D[cur].groups[gi];
+  const lineEl = e.target.closest('.line'), btn = e.target.closest('[data-a]');
+  const els = [...grp.querySelectorAll('.line')];
+  if (btn) {
+    const a = btn.dataset.a;
+    if (a === 'go') { gcur = gi; showTab('recite'); return; }
+    playSeq(g.map((l, i) => ({ text: l.t + '。', el: els[i] })), a === 'follow');
+  } else if (lineEl) {
+    const li = +lineEl.dataset.li; playSeq([{ text: g[li].t + '。', el: lineEl }], false);
+  }
+});
+$('#playChapter').onclick = () => {
+  const items = [];
+  $$('#readList .group').forEach(grp => {
+    const g = D[cur].groups[+grp.dataset.gi], els = [...grp.querySelectorAll('.line')];
+    g.forEach((l, i) => items.push({ text: l.t + (i % 2 ? '。' : '，'), el: els[i] }));
+  });
+  playSeq(items, false);
+};
+
+/* ---------- 背一背 ---------- */
+let mode = 0, showZy = true, hide = new Set(), shown = new Set();
+function buildHide() {
+  hide = new Set(); shown = new Set();
+  const g = D[cur].groups[gcur];
+  g.forEach((l, li) => {
+    const n = [...l.t].length;
+    if (mode === 1 && li % 2 === 1) for (let i = 0; i < n; i++) hide.add(li + '.' + i);
+    else if (mode === 3) for (let i = 0; i < n; i++) hide.add(li + '.' + i);
+    else if (mode === 2) {
+      const pick = shuffle([...Array(n).keys()]).slice(0, 1 + rnd(2));   // 每句遮 1～2 個字
+      pick.forEach(i => hide.add(li + '.' + i));
+    }
+  });
+}
+function renderRecite() {
+  chapterChips($('#reciteChips'), () => { buildHide(); renderRecite(); });
+  const c = D[cur], g = c.groups[gcur];
+  $('#gPos').innerHTML = `${esc(c.name)}　第 ${gcur + 1} / ${c.groups.length} 組 ${badge(gid(cur, gcur))}`;
+  $('#gPrev').disabled = gcur === 0; $('#gNext').disabled = gcur === c.groups.length - 1;
+  $$('#modeSeg button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.m === mode)));
+  $('#zyToggle').textContent = '注音：' + (showZy ? '顯示' : '隱藏'); $('#zyToggle').setAttribute('aria-pressed', showZy);
+  const grp = $('#pGroup'); grp.classList.toggle('nozy', !showZy);
+  grp.innerHTML = `<div class="lines">${g.map((l, li) => `<div class="line" data-li="${li}">${lineHTML(l, li, mode ? { hide, shown } : {})}</div>`).join('')}</div>`;
+  $('#pResult').innerHTML = '';
+  $('#reshuffle').hidden = mode !== 2; $('#revealAll').hidden = !mode;
+}
+$('#pGroup').addEventListener('click', e => {
+  const h = e.target.closest('.ch.hid');
+  if (h) { shown.add(h.dataset.k); const li = +h.dataset.k.split('.')[0]; const l = D[cur].groups[gcur][li]; if (hide.size && [...hide].filter(k => +k.split('.')[0] === li).every(k => shown.has(k))) say(l.t + '。'); renderRecite(); return; }
+  const line = e.target.closest('.line'); if (line) { stopAll(); say(D[cur].groups[gcur][+line.dataset.li].t + '。'); }
+});
+$$('#modeSeg button').forEach(b => b.onclick = () => { mode = +b.dataset.m; buildHide(); renderRecite(); });
+$('#zyToggle').onclick = () => { showZy = !showZy; renderRecite(); };
+$('#reshuffle').onclick = () => { buildHide(); renderRecite(); };
+$('#revealAll').onclick = () => { hide.forEach(k => shown.add(k)); renderRecite(); };
+$('#again').onclick = () => { buildHide(); renderRecite(); };
+$('#gPrev').onclick = () => { if (gcur > 0) { gcur--; buildHide(); renderRecite(); } };
+$('#gNext').onclick = () => { if (gcur < D[cur].groups.length - 1) { gcur++; buildHide(); renderRecite(); } };
+$('#listenBtn').onclick = () => { const els = $$('#pGroup .line'); playSeq(D[cur].groups[gcur].map((l, i) => ({ text: l.t + '。', el: els[i] })), false); };
+$('#followBtn').onclick = () => { const els = $$('#pGroup .line'); playSeq(D[cur].groups[gcur].map((l, i) => ({ text: l.t + '。', el: els[i] })), true); };
+$('#gotIt').onclick = () => {
+  const id = gid(cur, gcur); mark(id, true); const b = boxOf(id), last = gcur === D[cur].groups.length - 1;
+  $('#pResult').innerHTML = `<div class="result ok">太棒了！${b >= 3 ? '⭐ 這一組背熟了' : '熟練度 ' + b + ' / 4'}，${b ? GAPS[b] ? GAPS[b] + ' 天後再複習一次' : '今天再練一次' : ''}</div>
+    <div class="row">${last ? '' : '<button class="btn pri" id="goNext">下一組 ▶</button>'}<button class="btn" id="goQuiz">去考考看</button></div>`;
+  const nx = $('#goNext'); if (nx) nx.onclick = () => { gcur++; buildHide(); renderRecite(); window.scrollTo(0, 0); };
+  $('#goQuiz').onclick = () => showTab('quiz');
+};
+
+/* ---------- 考考你 ---------- */
+let scope = 'ch', Q = null;
+function poolLines(s) {
+  const out = [];
+  D.forEach((c, ci) => { if (s === 'all' || ci === cur) c.groups.forEach((g, gi) => g.forEach((l, li) => out.push({ ci, gi, li, l }))); });
+  return out;
+}
+function renderQuizHome() {
+  $$('#scopeSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.s === scope)));
+  $('#quizScopeNote').textContent = scope === 'ch' ? `範圍：${D[cur].name}（到「讀一讀」或「背一背」換章）。題型有「接下一句」和「填缺的字」。` : '範圍：弟子規全部。題型有「接下一句」和「填缺的字」。';
+  if (!Q) $('#quizBox').innerHTML = '';
+}
+$$('#scopeSeg button').forEach(b => b.onclick = () => { scope = b.dataset.s; Q = null; renderQuizHome(); });
+$('#startQuiz').onclick = startQuiz;
+function startQuiz() {
+  stopAll();
+  const pool = poolLines(scope), qs = [];
+  const nextable = shuffle(pool.filter(p => p.li < 3)), any = shuffle(pool);
+  for (let i = 0; i < 10; i++) {
+    if (i % 2 === 0 && nextable.length) {
+      const p = nextable.pop(), ans = D[p.ci].groups[p.gi][p.li + 1];
+      const ds = shuffle(pool.filter(x => x.l.t !== ans.t && x.l.t !== p.l.t)).slice(0, 2).map(x => x.l);
+      qs.push({ type: 'next', p, ans, opts: shuffle([ans, ...ds]) });
+    } else {
+      const p = any.pop(); if (!p) break;
+      const idx = rnd(3), ch = [...p.l.t][idx], z = zyOf(p.l)[idx], seen = new Set([ch]), opts = [{ c: ch, z }];
+      for (const x of shuffle(pool.concat(pool))) {   // 干擾的字：同一範圍裡別的字，連它的注音一起帶來
+        const j = rnd(3), c2 = [...x.l.t][j]; if (seen.has(c2)) continue;
+        seen.add(c2); opts.push({ c: c2, z: zyOf(x.l)[j] }); if (opts.length === 4) break;
+      }
+      qs.push({ type: 'fill', p, idx, ans: opts[0], opts: shuffle(opts) });
+    }
+  }
+  Q = { qs, i: 0, right: 0, wrong: [] }; renderQ();
+}
+function renderQ() {
+  const box = $('#quizBox');
+  if (Q.i >= Q.qs.length) return renderQEnd();
+  const q = Q.qs[Q.i], l = q.p.l, pct = Q.i / Q.qs.length * 100;
+  let body;
+  if (q.type === 'next') {
+    body = `<p class="qask">接下去是哪一句？</p><div class="qline">${lineHTML(l, 0)}</div>
+      <div class="opts">${q.opts.map((o, k) => `<button class="opt" data-k="${k}">${lineHTML(o, 0)}</button>`).join('')}</div>`;
+  } else {
+    const zs = zyOf(l), cs = [...l.t];
+    const line = cs.map((c, i) => i === q.idx ? `<span class="ch"><span class="zr"><span class="blankch">　</span>${Z.syl(zs[i])}</span></span>` : `<span class="ch">${Z.ruby(c, zs[i])}</span>`).join('');
+    body = `<p class="qask">缺的是哪一個字？（看注音想一想）</p><div class="qline"><span class="lt">${line}</span></div>
+      <div class="opts chars">${q.opts.map((o, k) => `<button class="opt" data-k="${k}"><span class="lt">${Z.ruby(o.c, o.z)}</span></button>`).join('')}</div>`;
+  }
+  box.innerHTML = `<div class="muted">第 ${Q.i + 1} / ${Q.qs.length} 題　答對 ${Q.right}</div><div class="qbar"><i style="width:${pct}%"></i></div>
+    <div class="qcard">${body}</div><div class="row" id="qNextRow"></div>`;
+  box.querySelectorAll('.opt').forEach(b => b.onclick = () => answer(+b.dataset.k));
+}
+function answer(k) {
+  const q = Q.qs[Q.i], ok = q.opts[k] === q.ans;
+  $$('#quizBox .opt').forEach((b, i) => { b.disabled = true; if (q.opts[i] === q.ans) b.classList.add('right'); else if (i === k) b.classList.add('wrong'); });
+  const id = gid(q.p.ci, q.p.gi);
+  if (ok) Q.right++; else Q.wrong.push(q);
+  mark(id, ok);
+  say(q.p.l.t + '，' + D[q.p.ci].groups[q.p.gi][Math.min(3, q.p.li + 1)].t + '。');
+  const last = Q.i === Q.qs.length - 1;
+  $('#qNextRow').innerHTML = `<span class="result ${ok ? 'ok' : ''}" style="flex:1;${ok ? '' : 'background:var(--bad-soft);color:var(--bad)'}">${ok ? '答對了！' : '再記一下～正確答案已標出來'}</span><button class="btn pri" id="qNext">${last ? '看成績' : '下一題 ▶'}</button>`;
+  $('#qNext').onclick = () => { stopAll(); Q.i++; renderQ(); };
+  $('#qNext').focus({ preventScroll: true });
+}
+function renderQEnd() {
+  const n = Q.qs.length, r = Q.right, stars = r === n ? '🏆 全對！' : r >= n * 0.8 ? '👍 很棒！' : r >= n * 0.6 ? '💪 再加油！' : '🌱 多讀幾遍再來';
+  const seenG = new Set(), w = Q.wrong.filter(q => { const k = gid(q.p.ci, q.p.gi); if (seenG.has(k)) return false; seenG.add(k); return true; }).map(q => { return `<div class="group" style="margin:0;padding:6px 10px"><div class="muted">${esc(D[q.p.ci].name)} 第 ${q.p.gi + 1} 組</div>
+    ${D[q.p.ci].groups[q.p.gi].map((l, li) => `<div>${lineHTML(l, li)}</div>`).join('')}</div>`; }).join('');
+  $('#quizBox').innerHTML = `<div class="qcard"><div class="score">${r} / ${n}</div><p style="text-align:center;font-size:1.2rem;margin:4px 0">${stars}</p>
+    ${w ? `<h2>答錯的這幾組，再讀一讀</h2><div class="wlist">${w}</div>` : ''}
+    <div class="row" style="justify-content:center;margin-top:14px"><button class="btn pri" id="qAgain">再考一次</button><button class="btn" id="qProg">看進度</button></div></div>`;
+  $('#qAgain').onclick = startQuiz; $('#qProg').onclick = () => showTab('prog');
+  Q = null;
+}
+
+/* ---------- 進度 ---------- */
+function renderProg() {
+  let tot = 0, done = 0, mid = 0;
+  const rows = D.map((c, ci) => {
+    const t = c.groups.length; let m = 0, l = 0;
+    c.groups.forEach((_, gi) => { const b = boxOf(gid(ci, gi)); if (b >= 3) m++; else if (b >= 1) l++; });
+    tot += t; done += m; mid += l;
+    return `<div class="chrow"><span>${esc(c.name)}</span><div class="bar"><i class="m" style="width:${m / t * 100}%"></i><i class="l" style="width:${l / t * 100}%"></i></div><span class="cnt">${m}/${t}</span></div>`;
+  }).join('');
+  $('#progBox').innerHTML = `<div class="group"><div class="score" style="font-size:1.9rem;margin:0">⭐ ${done} / ${tot} 組背熟了</div>
+    <p class="muted" style="text-align:center;margin:2px 0 8px">另有 ${mid} 組正在練習。綠色＝背熟，橘色＝練習中。</p>${rows}</div>`;
+  const t = today(), due = [];
+  D.forEach((c, ci) => c.groups.forEach((g, gi) => { const m = mast[gid(ci, gi)]; if (m && m.n && m.due <= t) due.push({ ci, gi, g }); }));
+  due.sort((a, b) => boxOf(gid(a.ci, a.gi)) - boxOf(gid(b.ci, b.gi)));
+  $('#dueBox').innerHTML = due.length ? due.slice(0, 30).map(d => `<div class="due"><span>${esc(D[d.ci].name)} 第 ${d.gi + 1} 組：${esc(d.g[0].t)}…</span><button class="btn" data-c="${d.ci}" data-g="${d.gi}">去複習</button></div>`).join('')
+    : '<p class="muted">今天沒有要複習的，休息一下！到「背一背」挑新的一組吧。</p>';
+}
+$('#dueBox').addEventListener('click', e => {
+  const b = e.target.closest('button[data-c]'); if (!b) return;
+  cur = +b.dataset.c; gcur = +b.dataset.g; store.set('chap', cur); mode = 3; buildHide(); showTab('recite');
+});
+$('#resetBtn').onclick = () => { if (confirm('確定要清除所有背誦進度嗎？')) { mast = {}; store.set('mast', mast); renderProg(); toast('進度已清除'); } };
+
+/* ---------- 開始 ---------- */
+buildHide(); renderRead();
+</script>
+</body>
+</html>
